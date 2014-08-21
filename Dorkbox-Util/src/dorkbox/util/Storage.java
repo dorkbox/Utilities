@@ -25,8 +25,6 @@ import com.esotericsoftware.kryo.io.Output;
  * Nothing spectacular about this storage -- it allows for persistent storage of objects to disk.
  */
 public class Storage {
-    // TODO: add snappy compression to storage objects??
-
     private static final Logger logger = LoggerFactory.getLogger(Storage.class);
 
     private static Map<File, Storage> storages = new HashMap<File, Storage>(1);
@@ -48,7 +46,6 @@ public class Storage {
         if (loadIntoObject == null) {
             throw new IllegalArgumentException("loadIntoObject cannot be null!");
         }
-
 
         // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
         // without saving the existing storage first --- whoops!
@@ -76,7 +73,7 @@ public class Storage {
                         storage.objectReference = new WeakReference(loadIntoObject);
                     }
 
-                    if (source != null) {
+                    if (source != null && source != orig) {
                         copyFields(source, loadIntoObject);
                     }
                 }
@@ -294,45 +291,57 @@ public class Storage {
 
     private static void copyFields(Object source, Object dest) {
         Class<? extends Object> sourceClass = source.getClass();
-        Field[] destFields = dest.getClass().getDeclaredFields();
+        Class<? extends Object> destClass = dest.getClass();
 
-        for (Field destField : destFields) {
-            String name = destField.getName();
-            try {
-                Field sourceField = sourceClass.getDeclaredField(name);
-                destField.setAccessible(true);
-                sourceField.setAccessible(true);
+        if (sourceClass != destClass) {
+            throw new IllegalArgumentException("Source and Dest objects are not of the same class!");
+        }
 
-                Object sourceObj = sourceField.get(source);
+        // have to walk up the object hierarchy.
+        while (destClass != Object.class) {
+            Field[] destFields = destClass.getDeclaredFields();
 
-                if (sourceObj instanceof Map) {
-                    Object destObj = destField.get(dest);
-                    if (destObj == null) {
-                        destField.set(dest, sourceObj);
-                    } else if (destObj instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<Object, Object> sourceMap = (Map<Object, Object>) sourceObj;
-                        @SuppressWarnings("unchecked")
-                        Map<Object, Object> destMap = (Map<Object, Object>) destObj;
+            for (Field destField : destFields) {
+                String name = destField.getName();
+                try {
+                    Field sourceField = sourceClass.getDeclaredField(name);
+                    destField.setAccessible(true);
+                    sourceField.setAccessible(true);
 
-                        destMap.clear();
-                        Iterator<?> entries = sourceMap.entrySet().iterator();
-                        while (entries.hasNext()) {
-                            Map.Entry<?, ?> entry = (Map.Entry<?, ?>)entries.next();
-                            Object key = entry.getKey();
-                            Object value = entry.getValue();
-                            destMap.put(key, value);
+                    Object sourceObj = sourceField.get(source);
+
+                    if (sourceObj instanceof Map) {
+                        Object destObj = destField.get(dest);
+                        if (destObj == null) {
+                            destField.set(dest, sourceObj);
+                        } else if (destObj instanceof Map) {
+                            @SuppressWarnings("unchecked")
+                            Map<Object, Object> sourceMap = (Map<Object, Object>) sourceObj;
+                            @SuppressWarnings("unchecked")
+                            Map<Object, Object> destMap = (Map<Object, Object>) destObj;
+
+                            destMap.clear();
+                            Iterator<?> entries = sourceMap.entrySet().iterator();
+                            while (entries.hasNext()) {
+                                Map.Entry<?, ?> entry = (Map.Entry<?, ?>)entries.next();
+                                Object key = entry.getKey();
+                                Object value = entry.getValue();
+                                destMap.put(key, value);
+                            }
+
+                        } else {
+                            logger.error("Incompatible field type! '{}'", name);
                         }
-
                     } else {
-                        logger.error("Incompatible field type! '{}'", name);
+                        destField.set(dest, sourceObj);
                     }
-                } else {
-                    destField.set(dest, sourceObj);
+                } catch (Exception e) {
+                    logger.error("Unable to copy field: {}", name, e);
                 }
-            } catch (Exception e) {
-                logger.error("Unable to copy field: {}", name, e);
             }
+
+            destClass = destClass.getSuperclass();
+            sourceClass = sourceClass.getSuperclass();
         }
     }
 
