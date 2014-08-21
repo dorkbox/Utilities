@@ -60,7 +60,7 @@ public class DelayTimer {
                 @Override
                 public void run() {
                     DelayTimer.this.listener.execute();
-                    cancel();
+                    DelayTimer.this.cancel();
                 }
             };
             this.timer.schedule(t, delay);

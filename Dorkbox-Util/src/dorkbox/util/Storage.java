@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +36,8 @@ public class Storage {
     private long milliSeconds = 3000L;
     private DelayTimer timer;
     private WeakReference<?> objectReference;
+
+    private Kryo kryo;
 
     @SuppressWarnings({"rawtypes","unchecked"})
     public static Storage load(File file, Object loadIntoObject) {
@@ -58,7 +63,7 @@ public class Storage {
                 // why load it from disk again? just copy out the values!
                 synchronized (storage) {
                     // have to load from disk!
-                    Object source = load(file, loadIntoObject.getClass());
+                    Object source = storage.load(file, loadIntoObject.getClass());
 
                     Object orig = storage.objectReference.get();
                     if (orig != null) {
@@ -81,7 +86,7 @@ public class Storage {
                 storages.put(file, storage);
 
                 // have to load from disk!
-                Object source = load(file, loadIntoObject.getClass());
+                Object source = storage.load(file, loadIntoObject.getClass());
                 if (source != null) {
                     copyFields(source, loadIntoObject);
                 }
@@ -105,6 +110,9 @@ public class Storage {
         if (parentFile != null) {
             parentFile.mkdirs();
         }
+
+        this.kryo = new Kryo();
+        this.kryo.setRegistrationRequired(false);
 
         this.objectReference = new WeakReference(loadIntoObject);
         this.timer = new DelayTimer("Storage Writer", new DelayTimer.Callback() {
@@ -185,18 +193,20 @@ public class Storage {
             return;
         }
 
+        Class<? extends Object> class1 = object.getClass();
+
         RandomAccessFile raf = null;
         Output output = null;
         try {
             raf = new RandomAccessFile(this.file, "rw");
-            FileOutputStream outputStream = new FileOutputStream(raf.getFD());
+            OutputStream outputStream = new DeflaterOutputStream(new FileOutputStream(raf.getFD()));
             output = new Output(outputStream, 1024); // write 1024 at a time
 
-
-            Kryo kryo = new Kryo();
-            kryo.setRegistrationRequired(false);
-            kryo.writeObject(output, object);
+            this.kryo.writeObject(output, object);
             output.flush();
+
+            load(this.file, class1);
+
         } catch (Exception e) {
             Storage.logger.error("Error saving the data!", e);
         } finally {
@@ -214,7 +224,7 @@ public class Storage {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> T load(File file, Class<? extends Object> clazz) {
+    private synchronized <T> T load(File file, Class<? extends Object> clazz) {
         if (file.length() == 0) {
             return null;
         }
@@ -223,11 +233,9 @@ public class Storage {
         Input input = null;
         try {
             raf = new RandomAccessFile(file, "r");
-            input = new Input(new FileInputStream(raf.getFD()), 1024); // read 1024 at a time
+            input = new Input(new InflaterInputStream(new FileInputStream(raf.getFD())), 1024); // read 1024 at a time
 
-            Kryo kryo = new Kryo();
-            kryo.setRegistrationRequired(false);
-            Object readObject = kryo.readObject(input, clazz);
+            Object readObject = this.kryo.readObject(input, clazz);
             return (T) readObject;
         } catch (Exception e) {
             logger.error("Error reading from '{}'! Perhaps the file is corrupt?", file.getAbsolutePath());
