@@ -12,6 +12,7 @@ import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
+import org.slf4j.Logger;
 
 public class InputConsole {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InputConsole.class);
@@ -96,10 +97,13 @@ public class InputConsole {
             terminal.setEchoEnabled(true);
             this.isIDE = terminal instanceof IDE_Terminal;
 
-            if (this.isIDE) {
-                logger.debug("Terminal is in IDE (best guess). Unable to support single key input. Only line input available.");
-            } else {
-                logger.debug("Terminal Type: {}", terminal.getClass().getSimpleName());
+            Logger logger2 = logger;
+            if (logger2.isDebugEnabled()) {
+                if (this.isIDE) {
+                    logger2.debug("Terminal is in IDE (best guess). Unable to support single key input. Only line input available.");
+                } else {
+                    logger2.debug("Terminal Type: {}", terminal.getClass().getSimpleName());
+                }
             }
         } catch (UnsupportedEncodingException ignored) {
         } catch (IOException ignored) {
@@ -225,8 +229,9 @@ public class InputConsole {
     }
 
     private final void run() {
+        Logger logger2 = logger;
         if (this.jlineReader == null) {
-            logger.error("Unable to start Console Reader");
+            logger2.error("Unable to start Console Reader");
             return;
         }
 
@@ -264,7 +269,9 @@ public class InputConsole {
                 while ((typedChar = this.jlineReader.readCharacter()) != -1) {
                     char asChar = (char) typedChar;
 
-                    logger.trace("READ: {} ({})", asChar, typedChar);
+                    if (logger2.isTraceEnabled()) {
+                        logger2.trace("READ: {} ({})", asChar, typedChar);
+                    }
 
                     // notify everyone waiting for a character.
                     synchronized (this.inputLockSingle) {

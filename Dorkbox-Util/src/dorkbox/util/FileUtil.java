@@ -126,7 +126,10 @@ public class FileUtil {
             parentOut.mkdirs();
         }
 
-        logger.trace("Copying file: {}  -->  {}", in, out);
+        Logger logger2 = logger;
+        if (logger2.isTraceEnabled()) {
+            logger2.trace("Copying file: {}  -->  {}", in, out);
+        }
 
         FileChannel sourceChannel = null;
         FileChannel destinationChannel = null;
@@ -221,7 +224,10 @@ public class FileUtil {
             // if directory not exists, create it
             if (!dest.exists()) {
                 dest.mkdir();
-                logger.trace("Directory copied from  {}  -->  {}", src, dest);
+                Logger logger2 = logger;
+                if (logger2.isTraceEnabled()) {
+                    logger2.trace("Directory copied from  {}  -->  {}", src, dest);
+                }
             }
 
             // list all the directory contents
@@ -266,7 +272,10 @@ public class FileUtil {
             // if directory not exists, create it
             if (!dest.exists()) {
                 dest.mkdir();
-                logger.trace("Directory copied from  {}  -->  {}", src, dest);
+                Logger logger2 = logger;
+                if (logger2.isTraceEnabled()) {
+                    logger2.trace("Directory copied from  {}  -->  {}", src, dest);
+                }
             }
 
             // list all the directory contents
@@ -301,18 +310,23 @@ public class FileUtil {
      * Deletes a file or directory and all files and sub-directories under it.
      */
     public static boolean delete(File file) {
+        Logger logger2 = logger;
         if (file.exists() && file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0, n = files.length; i < n; i++) {
                 if (files[i].isDirectory()) {
                     delete(files[i].getAbsolutePath());
                 } else {
-                    logger.trace("Deleting file: {}", files[i]);
+                    if (logger2.isTraceEnabled()) {
+                        logger2.trace("Deleting file: {}", files[i]);
+                    }
                     files[i].delete();
                 }
             }
         }
-        logger.trace("Deleting file: {}", file);
+        if (logger2.isTraceEnabled()) {
+            logger2.trace("Deleting file: {}", file);
+        }
 
         return file.delete();
     }
@@ -328,7 +342,10 @@ public class FileUtil {
 
         String path = location.getAbsolutePath();
         if (location.mkdirs()) {
-            logger.trace("Created directory: {}", path);
+            Logger logger2 = logger;
+            if (logger2.isTraceEnabled()) {
+                logger2.trace("Created directory: {}", path);
+            }
         }
 
         return path;
