@@ -106,23 +106,24 @@ public class Crypto {
         /**
          * Return the hash of the file or NULL if file is invalid
          */
-        public static final byte[] hashFile(File file, Digest digest) throws IOException {
+        public static final byte[] hashFile(File file, Digest digest) {
             return hashFile(file, digest, 0L);
         }
 
         /**
          * Return the hash of the file or NULL if file is invalid
          */
-        public static final byte[] hashFile(File file, Digest digest, long lengthFromEnd) throws IOException {
+        public static final byte[] hashFile(File file, Digest digest, long lengthFromEnd) {
             if (file.isFile() && file.canRead()) {
-                InputStream inputStream = new FileInputStream(file);
-                long size = file.length();
-
-                if (lengthFromEnd > 0 && lengthFromEnd < size) {
-                    size -= lengthFromEnd;
-                }
-
+                InputStream inputStream = null;
                 try {
+                    inputStream = new FileInputStream(file);
+                    long size = file.length();
+
+                    if (lengthFromEnd > 0 && lengthFromEnd < size) {
+                        size -= lengthFromEnd;
+                    }
+
                     int bufferSize = 4096;
                     byte[] buffer = new byte[bufferSize];
 
@@ -141,8 +142,16 @@ public class Crypto {
 
                         digest.update(buffer, 0, readBytes);
                     }
+                } catch (IOException e) {
+                    logger.error("Error hashing file: {}", file.getAbsolutePath(), e);
                 } finally {
-                    inputStream.close();
+                    if (inputStream != null) {
+                        try {
+                            inputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
 
                 byte[] digestBytes = new byte[digest.getDigestSize()];
@@ -793,13 +802,13 @@ public class Crypto {
             try {
                 actualLength += aesEngine.doFinal(outBuf, actualLength);
             } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
+                logger.debug("Unable to perform AES cipher.", e);
                 return new byte[0];
             } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
+                logger.debug("Unable to perform AES cipher.", e);
                 return new byte[0];
             } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+                logger.debug("Unable to perform AES cipher.", e);
                 return new byte[0];
             }
 
