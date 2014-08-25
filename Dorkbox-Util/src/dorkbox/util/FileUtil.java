@@ -589,16 +589,18 @@ public class FileUtil {
             while (directories.peek() != null) {
                 File dir = directories.poll();
                 File[] listFiles = dir.listFiles();
-                for (File file : listFiles) {
-                    if (file.isDirectory()) {
-                        directories.add(file);
-                    } else {
-                        if (extensionsToMatch == null) {
-                            jarList.add(file);
+                if (listFiles != null) {
+                    for (File file : listFiles) {
+                        if (file.isDirectory()) {
+                            directories.add(file);
                         } else {
-                            for (String e : extensionsToMatch) {
-                                if (file.getAbsolutePath().endsWith(e)) {
-                                    jarList.add(file);
+                            if (extensionsToMatch == null || extensionsToMatch.length == 0 || extensionsToMatch[0] == null) {
+                                jarList.add(file);
+                            } else {
+                                for (String e : extensionsToMatch) {
+                                    if (file.getAbsolutePath().endsWith(e)) {
+                                        jarList.add(file);
+                                    }
                                 }
                             }
                         }

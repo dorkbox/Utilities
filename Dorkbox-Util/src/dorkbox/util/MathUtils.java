@@ -25,39 +25,55 @@ public class MathUtils {
 
     private static ThreadLocal<MersenneTwisterFast> random = new ThreadLocal<MersenneTwisterFast>();
 
+    /**
+     * Creates the thread local MersenneTwister (as it's not thread safe), if necessary
+     * @return the MersenneTwister.
+     */
+    public static MersenneTwisterFast random() {
+        MersenneTwisterFast mersenneTwisterFast = random.get();
+
+        if (mersenneTwisterFast == null) {
+            mersenneTwisterFast = new MersenneTwisterFast();
+            random.set(mersenneTwisterFast);
+            return mersenneTwisterFast;
+        } else {
+            return mersenneTwisterFast;
+        }
+    }
+
     /** Returns a random integer */
     static public final int randomInt () {
-        return random.get().nextInt();
+        return random().nextInt();
     }
 
     /** Returns a random number between 0 (inclusive) and the specified value (inclusive). */
     static public final int randomInt (int range) {
-        return random.get().nextInt(range + 1);
+        return random().nextInt(range + 1);
     }
 
     /** Returns a random number between start (inclusive) and end (inclusive). */
     static public final int randomInt (int start, int end) {
-        return start + random.get().nextInt(end - start + 1);
+        return start + random().nextInt(end - start + 1);
     }
 
     /** Returns a random boolean value. */
     static public final boolean randomBoolean () {
-        return random.get().nextBoolean();
+        return random().nextBoolean();
     }
 
     /** Returns random number between 0.0 (inclusive) and 1.0 (exclusive). */
     static public final float randomFloat () {
-        return random.get().nextFloat();
+        return random().nextFloat();
     }
 
     /** Returns a random number between 0 (inclusive) and the specified value (exclusive). */
     static public final float randomFloat (float range) {
-        return random.get().nextFloat() * range;
+        return random().nextFloat() * range;
     }
 
     /** Returns a random number between start (inclusive) and end (exclusive). */
     static public final float randomFloat (float start, float end) {
-        return start + random.get().nextFloat() * (end - start);
+        return start + random().nextFloat() * (end - start);
     }
 
     // ---

@@ -235,7 +235,7 @@ public class Storage {
             Object readObject = this.kryo.readObject(input, clazz);
             return (T) readObject;
         } catch (Exception e) {
-            logger.error("Error reading from '{}'! Perhaps the file is corrupt?", file.getAbsolutePath());
+            logger.error("Error reading from '{}'! Perhaps the file is corrupt?", file.getAbsolutePath(), e);
             return null;
         } finally {
             if (input != null) {
