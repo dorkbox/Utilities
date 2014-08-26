@@ -8,14 +8,41 @@ import java.util.Arrays;
 public final class ByteArrayWrapper {
     private final byte[] data;
 
-    public ByteArrayWrapper(byte[] data) {
+    /**
+     * Makes a safe copy of the byte array, so that changes to the original do not affect the wrapper.
+     * Side affect is additional memory is used.
+     */
+    public static ByteArrayWrapper copy(byte[] data) {
+        return new ByteArrayWrapper(data, true);
+    }
+
+
+    /**
+     * Does not make a copy of the data, so changes to the original will also affect the wrapper.
+     * Side affect is no extra memory is needed.
+     */
+    public static ByteArrayWrapper noCopy(byte[] data) {
+        return new ByteArrayWrapper(data, false);
+    }
+
+    /**
+     * Permits the re-use of a byte array.
+     * @param copyBytes if TRUE, then the byteArray is copies. if FALSE, the byte array is uses as-is.
+     *                    Using FALSE IS DANGEROUS!!!! If the underlying byte array is modified, this changes as well.
+     */
+    private ByteArrayWrapper(byte[] data, boolean copyBytes) {
         if (data == null) {
             throw new NullPointerException();
         }
         int length = data.length;
-        this.data = new byte[length];
-        // copy so it's immutable as a key.
-        System.arraycopy(data, 0, this.data, 0, length);
+
+        if (copyBytes) {
+            this.data = new byte[length];
+            // copy so it's immutable as a key.
+            System.arraycopy(data, 0, this.data, 0, length);
+        } else {
+            this.data = data;
+        }
     }
 
     public byte[] getBytes() {
