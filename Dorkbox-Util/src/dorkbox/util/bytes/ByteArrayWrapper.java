@@ -21,7 +21,7 @@ public final class ByteArrayWrapper {
      * Does not make a copy of the data, so changes to the original will also affect the wrapper.
      * Side affect is no extra memory is needed.
      */
-    public static ByteArrayWrapper noCopy(byte[] data) {
+    public static ByteArrayWrapper wrap(byte[] data) {
         return new ByteArrayWrapper(data, false);
     }
 
