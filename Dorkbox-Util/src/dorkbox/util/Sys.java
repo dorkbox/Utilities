@@ -650,8 +650,6 @@ public class Sys {
                           name.charAt(length-2) == 's' &&
                           name.charAt(length-1) == 's'; // make sure it's a class file
 
-
-
         return isValid;
     }
 }
