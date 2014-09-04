@@ -9,14 +9,20 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.net.JarURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
+
+import dorkbox.urlHandler.BoxURLConnection;
 
 public class Sys {
     public static final int     KILOBYTE = 1024;
@@ -544,60 +550,41 @@ public class Sys {
 
         if (packageName != null && !packageName.isEmpty()) {
             packageName = packageName.replace('.', '/');
+        } else {
+            packageName = ""; // cannot be null!
         }
 
         // look for all annotated classes in the projects package.
         try {
-            LinkedList<Class<?>> classesThatWereAnnotated = new LinkedList<Class<?>>();
+            LinkedList<Class<?>> annotatedClasses = new LinkedList<Class<?>>();
 
             URL url;
             Enumeration<URL> resources = classLoader.getResources(packageName);
 
-            // this means we want to search EVERYTHING
-            if (packageName == null || packageName.isEmpty()) {
-                // lengthy, but it will traverse how we want.
-                while (resources.hasMoreElements()) {
-                    url = resources.nextElement();
-
-                    // go through and look at the subdirs there. run a package search on THOSE.
-                    File urlFile = new File(url.getPath());
-                    File[] listFiles = urlFile.listFiles();
-                    if (listFiles != null) {
-                        for (File file : listFiles) {
-                            if (file.isDirectory()) {
-                                findSubClasses(classLoader, null, annotation, file, urlFile.getAbsolutePath(), classesThatWereAnnotated);
-                            }
-                        }
-                    }
-                }
-            } else {
-                // lengthy, but it will traverse how we want.
-                while (resources.hasMoreElements()) {
-                    url = resources.nextElement();
-                    String externalForm = url.toExternalForm();
-
-                    if (externalForm.charAt(externalForm.length()-1) != '/') {
-                        if (url.getProtocol().equals("file")) {
-                            File directory = new File(url.getFile()).getAbsoluteFile();
-                            findSubClasses(classLoader, packageName, annotation, directory, directory.getParent(), classesThatWereAnnotated);
-                        }
-                    }
+            // lengthy, but it will traverse how we want.
+            while (resources.hasMoreElements()) {
+                url = resources.nextElement();
+                if (url.getProtocol().equals("file")) {
+                    File file = new File(url.getFile());
+                    findAnnotatedClassesRecursive(classLoader, packageName, annotation, file, file.getAbsolutePath(), annotatedClasses);
+                } else {
+                    findModulesInJar(classLoader, packageName, annotation, url, annotatedClasses);
                 }
             }
 
-            return classesThatWereAnnotated;
+            return annotatedClasses;
         } catch (Exception e) {
-            System.err.println("Problem registering build classes. ABORTING!");
+            System.err.println("Problem finding annotated classes for: " + annotation.getSimpleName());
             System.exit(-1);
         }
 
         return null;
     }
 
-    private static final void findSubClasses(ClassLoader classLoader, String packageName,
+    private static final void findAnnotatedClassesRecursive(ClassLoader classLoader, String packageName,
                                              Class<? extends Annotation> annotation, File directory,
                                              String rootPath,
-                                             List<Class<?>> classesThatWereAnnotated) throws ClassNotFoundException {
+                                             List<Class<?>> annotatedClasses) throws ClassNotFoundException {
 
         File[] files = directory.listFiles();
 
@@ -607,12 +594,12 @@ public class Sys {
                 String fileName = file.getName();
 
                 if (file.isDirectory()) {
-                    findSubClasses(classLoader, packageName , annotation, file, rootPath, classesThatWereAnnotated);
+                    findAnnotatedClassesRecursive(classLoader, packageName , annotation, file, rootPath, annotatedClasses);
                 }
                 else if (isValid(fileName)) {
                     String classPath = absolutePath.substring(rootPath.length() + 1, absolutePath.length() - 6);
 
-                    if (packageName != null) {
+                    if (packageName.isEmpty()) {
                         if (!classPath.startsWith(packageName)) {
                             return;
                         }
@@ -622,10 +609,71 @@ public class Sys {
 
                     Class<?> clazz = Class.forName(toDots, false, classLoader);
                     if (clazz.getAnnotation(annotation) != null) {
-                        classesThatWereAnnotated.add(clazz);
+                        annotatedClasses.add(clazz);
                     }
                 }
             }
+        }
+    }
+
+
+    private static final void findModulesInJar(ClassLoader classLoader, String searchLocation,
+            Class<? extends Annotation> annotation, URL resource, List<Class<?>> annotatedClasses)
+                    throws IOException, ClassNotFoundException {
+
+        URLConnection connection = resource.openConnection();
+
+        // Regular JAR
+        if (connection instanceof JarURLConnection) {
+            JarURLConnection jarURLConnection = (JarURLConnection) connection;
+
+            JarFile jarFile = jarURLConnection.getJarFile();
+            String fileResource = jarURLConnection.getEntryName();
+
+            Enumeration<JarEntry> entries = jarFile.entries();
+
+            // read all the jar entries.
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = entries.nextElement();
+                String name = jarEntry.getName();
+
+                if (name.startsWith(fileResource) && // make sure it's at least the correct package
+                        isValid(name)) {
+
+                    String classPath = name.replace(File.separatorChar, '.').substring(0, name.lastIndexOf("."));
+
+                    String toDots = classPath.replaceAll(File.separator, ".");
+
+                    Class<?> clazz = Class.forName(toDots, false, classLoader);
+                    if (clazz.getAnnotation(annotation) != null) {
+                        annotatedClasses.add(clazz);
+                    }
+                }
+            }
+            jarFile.close();
+
+        }
+        // Files inside of box deployment
+        else if (connection instanceof BoxURLConnection) {
+            BoxURLConnection hiveJarURLConnection = (BoxURLConnection) connection;
+
+            // class files will not have an entry name, which is reserved for resources only
+            String name = hiveJarURLConnection.getResourceName();
+
+            if (isValid(name)) {
+                String classPath = name.substring(0, name.lastIndexOf('.'));
+                classPath = classPath.replace('/', '.');
+
+                String toDots = classPath.replaceAll(File.separator, ".");
+
+                Class<?> clazz = Class.forName(toDots, false, classLoader);
+                if (clazz.getAnnotation(annotation) != null) {
+                    annotatedClasses.add(clazz);
+                }
+            }
+        }
+        else {
+            return;
         }
     }
 
