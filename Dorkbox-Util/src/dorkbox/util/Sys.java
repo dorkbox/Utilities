@@ -520,14 +520,22 @@ public class Sys {
     }
 
     public static void printArray(byte[] bytes, int length, boolean includeByteCount) {
+        printArray(bytes, length, includeByteCount, 40);
+    }
+
+    public static void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength) {
         if (includeByteCount) {
             System.err.println("Bytes: " + length);
         }
 
-        int mod = 40;
         int comma = length-1;
 
-        StringBuilder builder = new StringBuilder(length + length/mod + 2);
+        StringBuilder builder;
+        if (lineLength > 0) {
+            builder = new StringBuilder(length + comma + length/lineLength + 2);
+        } else {
+            builder = new StringBuilder(length + comma + 2);
+        }
         builder.append("{");
 
         for (int i = 0; i < length; i++) {
@@ -535,7 +543,7 @@ public class Sys {
             if (i < comma) {
                 builder.append(",");
             }
-            if (i > 0 && i%mod == 0) {
+            if (i > 0 && lineLength > 0 && i%lineLength == 0) {
                 builder.append(OS.LINE_SEPARATOR);
             }
         }

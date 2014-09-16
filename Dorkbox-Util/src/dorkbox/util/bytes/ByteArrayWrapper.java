@@ -54,11 +54,14 @@ public final class ByteArrayWrapper {
         if (!(other instanceof ByteArrayWrapper)) {
             return false;
         }
+
+        // CANNOT be null, so we don't have to null check!
         return Arrays.equals(this.data, ((ByteArrayWrapper) other).data);
     }
 
     @Override
     public int hashCode() {
+        // CANNOT be null, so we don't have to null check!
         return Arrays.hashCode(this.data);
     }
 }

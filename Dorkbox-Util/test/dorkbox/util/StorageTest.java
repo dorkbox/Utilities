@@ -1,64 +1,438 @@
 package dorkbox.util;
 
-
 import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OptionalDataException;
 import java.util.Arrays;
 
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import dorkbox.util.storage.Storage;
+
+/**
+ * Simple test class for the RecordsFile example. To run the test, set you CLASSPATH and then type
+ * "java hamner.dbtest.TestRecords"
+ */
 public class StorageTest {
 
+    private static final String TEST_DB = "sampleFile.records";
+
+    static void log(String s) {
+        System.err.println(s);
+    }
+
+    @Before
+    public void deleteDB() {
+        Storage.delete(new File(TEST_DB));
+    }
+
+    @After
+    public void delete2DB() {
+        Storage.delete(new File(TEST_DB));
+    }
+
+
     @Test
-    public void storageTest() throws IOException {
-        File tempFile = FileUtil.tempFile("storageTest");
-        tempFile.deleteOnExit();
+    public void testCreateDB() throws IOException {
+        Storage storage = Storage.open(TEST_DB);
 
-        Data data = new Data();
-        Storage storage = Storage.load(tempFile, data);
-        storage.setSaveDelay(0);
+        int numberOfRecords1 = storage.size();
+        long size1 = storage.getFileSize();
 
-        if (data.bytes != null) {
-            fail("storage has data when it shouldn't");
-        }
+        Assert.assertEquals("count is not correct", numberOfRecords1, 0);
+        Assert.assertEquals("size is not correct", size1, 208L);  // NOTE this will change based on the data size added!
 
-        makeData(data);
-        storage.save();
+        Storage.close(storage);
+
+        storage = Storage.open(TEST_DB);
+        int numberOfRecords2 = storage.size();
+        long size2 = storage.getFileSize();
+
+        Assert.assertEquals("Record count is not the same", numberOfRecords1, numberOfRecords2);
+        Assert.assertEquals("size is not the same", size1, size2);
+
+        Storage.close(storage);
+    }
 
 
-        Data data2 = new Data();
-        storage.load(data2);
+  @Test
+  public void testAddAsOne() throws IOException, ClassNotFoundException {
+      int total = 100;
 
-        if (!data.equals(data2)) {
-            fail("storage test not equal");
-        }
+      try {
+          Storage storage = Storage.open(TEST_DB);
+          for (int i=0;i<total;i++) {
+              add(storage, i);
+          }
 
-        data.string = "A different string entirely!";
-        storage.setSaveDelay(3000);
-        storage.save();
+          Storage.close(storage);
+          storage = Storage.open(TEST_DB);
+          for (int i=0;i<total;i++) {
+              String record1Data = createData(i);
+              String readRecord = readRecord(storage, i);
 
-        data2 = new Data();
-        storage.load(data2);
-        if (!data.equals(data2)) {
-            fail("storage test not copying fields on the fly.");
-        }
+              Assert.assertEquals("Object is not the same", record1Data, readRecord);
+          }
 
-        data2 = new Data();
-        storage.load(data2);
-        if (!data.equals(data2)) {
-            fail("storage test not equal");
-        }
+          Storage.close(storage);
+      } catch (Exception e) {
+          e.printStackTrace();
+          fail("Error!");
+      }
+  }
 
+    @Test
+    public void testAddNoKeyRecords() throws IOException, ClassNotFoundException {
+        int total = 100;
 
         try {
-            Storage.load(tempFile, null);
-            fail("storage test allowing null objects");
-        } catch (Exception e) {
-        }
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                log("adding record " + i + "...");
+                String addRecord = createData(i);
+                storage.save(addRecord);
 
-        Storage.shutdown();
+                log("reading record " + i + "...");
+                String readData = storage.get();
+
+                Assert.assertEquals("Object is not the same", addRecord, readData);
+            }
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+
+            String dataCheck = createData(total-1);
+            log("reading record " + (total-1) + "...");
+            String readData = storage.get();
+
+            Assert.assertEquals("Object is not the same", dataCheck, readData);
+
+            int numberOfRecords1 = storage.size();
+            long size1 = storage.getFileSize();
+
+            Assert.assertEquals("count is not correct", numberOfRecords1, 1);
+            Assert.assertEquals("size is not correct", size1, 235L); // NOTE this will change based on the data size added!
+
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+    @Test
+    public void testAddRecords_DelaySaveA() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                add(storage, i);
+            }
+
+            synchronized (Thread.currentThread()) {
+                Thread.currentThread().wait(storage.getSaveDelay() + 1000L);
+            }
+
+            for (int i=0;i<total;i++) {
+                String record1Data = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", record1Data, readRecord);
+            }
+
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String dataCheck = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+            }
+
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+    @Test
+    public void testAddRecords_DelaySaveB() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                add(storage, i);
+            }
+
+            for (int i=0;i<total;i++) {
+                String record1Data = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", record1Data, readRecord);
+            }
+
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String dataCheck = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+            }
+
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+    @Test
+    public void testLoadRecords() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String addRecord = add(storage, i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", addRecord, readRecord);
+            }
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String dataCheck = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+            }
+
+            // now test loading data
+            Data data = new Data();
+            String createKey = createKey(63);
+            makeData(data);
+
+            storage.save(createKey, data);
+
+            Data data2 = new Data();
+            storage.load(createKey, data2);
+            Assert.assertEquals("Object is not the same", data, data2);
+
+            Storage.close(storage);
+            storage = Storage.open(TEST_DB);
+
+            data2 = new Data();
+            storage.load(createKey, data2);
+            Assert.assertEquals("Object is not the same", data, data2);
+
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+
+    @Test
+    public void testAddRecordsDelete1Record() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String addRecord = add(storage, i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", addRecord, readRecord);
+            }
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String dataCheck = createData(i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+            }
+
+            // make sure now that we can delete one of the records.
+            deleteRecord(storage, 3);
+
+            String readRecord = readRecord(storage, 9);
+            String dataCheck = createData(9);
+
+            Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+
+
+            if (storage.contains(createKey(3))) {
+                fail("record NOT successfully deleted.");
+            }
+
+            // now we add 3 back
+            String addRecord = add(storage, 3);
+            dataCheck = createData(3);
+
+            Assert.assertEquals("Object is not the same", dataCheck, addRecord);
+
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+
+            // check 9 again
+            readRecord = readRecord(storage, 9);
+            dataCheck = createData(9);
+            Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+
+            // check 3 again
+            readRecord = readRecord(storage, 3);
+            dataCheck = createData(3);
+            Assert.assertEquals("Object is not the same", dataCheck, readRecord);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+    @Test
+    public void testUpdateRecords() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String addRecord = add(storage, i);
+                String readRecord = readRecord(storage, i);
+
+                Assert.assertEquals("Object is not the same", addRecord, readRecord);
+            }
+            Storage.close(storage);
+
+            storage = Storage.open(TEST_DB);
+
+            String updateRecord = updateRecord(storage, 3, createData(3) + "new");
+            String readRecord = readRecord(storage, 3);
+            Assert.assertEquals("Object is not the same", updateRecord, readRecord);
+
+            Storage.close(storage);
+            storage = Storage.open(TEST_DB);
+
+            readRecord = readRecord(storage, 3);
+            Assert.assertEquals("Object is not the same", updateRecord, readRecord);
+
+            updateRecord = updateRecord(storage, 3, createData(3));
+
+            Storage.close(storage);
+            storage = Storage.open(TEST_DB);
+
+            readRecord = readRecord(storage, 3);
+            Assert.assertEquals("Object is not the same", updateRecord, readRecord);
+
+            Storage.close(storage);
+            storage = Storage.open(TEST_DB);
+
+            updateRecord = updateRecord(storage, 0, createData(0) + "new");
+            readRecord = readRecord(storage, 0);
+            Assert.assertEquals("Object is not the same", updateRecord, readRecord);
+
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+
+    @Test
+    public void testSaveAllRecords() throws IOException, ClassNotFoundException {
+        int total = 100;
+
+        try {
+            Storage storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                Data data = new Data();
+                makeData(data);
+                String createKey = createKey(i);
+
+                storage.register(createKey, data);
+            }
+            Storage.close(storage);
+
+            Data data = new Data();
+            makeData(data);
+
+            storage = Storage.open(TEST_DB);
+            for (int i=0;i<total;i++) {
+                String createKey = createKey(i);
+
+                Data data2 = new Data();
+                storage.load(createKey, data2);
+                Assert.assertEquals("Object is not the same", data, data2);
+            }
+            Storage.close(storage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error!");
+        }
+    }
+
+
+
+
+
+    private String createData(int number) {
+        return number + " data for record # " + number;
+    }
+
+    public String add(Storage storage, int number) throws IOException {
+        String record1Data = createData(number);
+        String record1Key = createKey(number);
+
+        log("adding record " + number + "...");
+        storage.save(record1Key, record1Data);
+        return record1Data;
+    }
+
+    public String readRecord(Storage storage, int number) throws OptionalDataException, ClassNotFoundException, IOException {
+        String record1Key = createKey(number);
+
+        log("reading record " + number + "...");
+
+        String readData = storage.get(record1Key);
+        log("\trecord " + number + " data: '" + readData + "'");
+        return readData;
+    }
+
+    public void deleteRecord(Storage storage, int nNumber) throws OptionalDataException, ClassNotFoundException, IOException {
+        String record1Key = createKey(nNumber);
+
+        log("deleting record " + nNumber + "...");
+        storage.delete(record1Key);
+    }
+
+    private String updateRecord(Storage storage, int number, String newData) throws IOException {
+        String record1Key = createKey(number);
+
+        log("updating record " + number + "...");
+        storage.save(record1Key, newData);
+
+        return newData;
+    }
+
+    private String createKey(int number) {
+        return "foo" + number;
     }
 
 

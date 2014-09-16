@@ -13,15 +13,23 @@ public class DelayTimer {
     private final String name;
     private final Callback listener;
 
-    private Timer timer;
+    private volatile Timer timer;
+    private final boolean isDaemon;
 
     public DelayTimer(Callback listener) {
-        this(null, listener);
+        this(null, true, listener);
     }
 
-    public DelayTimer(String name, Callback listener) {
+    /**
+     * Sometimes you want to make sure that this timer will complete, even if the calling thread has terminated.
+     * @param name the name of the thread (if you want to specify one)
+     * @param isDaemon true if you want this timer to be run on a daemon thread
+     * @param listener the callback listener to execute
+     */
+    public DelayTimer(String name, boolean isDaemon, Callback listener) {
         this.name = name;
         this.listener = listener;
+        this.isDaemon = isDaemon;
     }
 
     /**
@@ -50,11 +58,10 @@ public class DelayTimer {
 
         if (delay > 0) {
             if (this.name != null) {
-                this.timer = new Timer(this.name, true);
+                this.timer = new Timer(this.name, this.isDaemon);
             } else {
-                this.timer = new Timer(true);
+                this.timer = new Timer(this.isDaemon);
             }
-
 
             TimerTask t = new TimerTask() {
                 @Override
