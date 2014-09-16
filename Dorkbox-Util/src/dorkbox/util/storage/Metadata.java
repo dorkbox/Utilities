@@ -240,7 +240,7 @@ public class Metadata {
     /**
      * Writes data to the end of the file (which is where the datapointer is at)
      */
-    void writeDataToEndOfFile(Kryo kryo, Object data, DeflaterOutputStream outputStream) throws IOException {
+    void writeDataFast(Kryo kryo, Object data, DeflaterOutputStream outputStream) throws IOException {
         Output output = new Output(outputStream, 1024); // write 1024 at a time
         kryo.writeClassAndObject(output, data);
         output.flush();

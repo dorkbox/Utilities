@@ -327,20 +327,28 @@ public class StorageBase {
         if (metaData != null) {
             // now we have to UPDATE instead of add!
             try {
-                ByteArrayOutputStream dataStream = metaData.getDataStream(this.kryo, object, deflater);
+                if (this.memoryIndex.size() == 1) {
+                    // if we are the ONLY one, then we can do things differently.
+                    // just dump the data agian to disk.
+                    this.file.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
+                    metaData.writeDataFast(this.kryo, object, fileOutputStream);
+                } else {
+                    // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
+                    ByteArrayOutputStream dataStream = metaData.getDataStream(this.kryo, object, deflater);
 
-                int size = dataStream.size();
-                if (size > metaData.dataCapacity) {
-                    deleteRecordData(metaData);
-                    // stuff this record to the end of the file, since it won't fit in it's current location
-                    metaData.dataPointer = this.file.length();
-                    // have to make sure that the CAPACITY of the new one is the SIZE of the new data!
-                    // and since it is going to the END of the file, we do that.
-                    metaData.dataCapacity = size;
-                    metaData.dataCount = 0;
+                    int size = dataStream.size();
+                    if (size > metaData.dataCapacity) {
+                        deleteRecordData(metaData);
+                        // stuff this record to the end of the file, since it won't fit in it's current location
+                        metaData.dataPointer = this.file.length();
+                        // have to make sure that the CAPACITY of the new one is the SIZE of the new data!
+                        // and since it is going to the END of the file, we do that.
+                        metaData.dataCapacity = size;
+                        metaData.dataCount = 0;
+                    }
+                    metaData.writeData(dataStream, this.file);
                 }
 
-                metaData.writeData(dataStream, this.file);
                 metaData.writeDataInfo(this.file);
             } catch (IOException e) {
                 this.logger.error("Error while saving data to disk", e);
@@ -368,7 +376,7 @@ public class StorageBase {
                 // there are some tricks we can use.
                 this.file.seek(length); // this is the end of the file, we know this ahead-of-time
 
-                metaData.writeDataToEndOfFile(this.kryo, object, fileOutputStream);
+                metaData.writeDataFast(this.kryo, object, fileOutputStream);
 
                 metaData.dataCount = deflater.getTotalOut();
                 metaData.dataCapacity = metaData.dataCount;
@@ -418,11 +426,19 @@ public class StorageBase {
                 previous.dataCapacity += deletedRecord.dataCapacity;
                 previous.writeDataInfo(this.file);
             } else {
-                // the record to delete is the FIRST (of many) in the file.
-                // the FASTEST way to delete is to grow the records!
-                // Another option is to move the #2 data to the first data, but then there is the same gap after #2.
-                Metadata secondRecord = index_getMetaDataFromData(deletedRecord.dataPointer + deletedRecord.dataCapacity + 1);
-                setDataPosition(this.file, secondRecord.dataPointer);
+                // because there is no "previous", that means we MIGHT be the FIRST record
+                Metadata first = index_getMetaDataFromData(this.dataPosition);
+
+                if (first == deletedRecord) {
+                    // the record to delete is the FIRST (of many) in the file.
+                    // the FASTEST way to delete is to grow the number of allowed records!
+                    // Another option is to move the #2 data to the first data, but then there is the same gap after #2.
+                    setDataPosition(this.file, deletedRecord.dataPointer + deletedRecord.dataCapacity);
+                } else {
+                    // well, we're not the first record. which one is RIGHT before us?
+                    // it should be "previous", so something fucked up
+                    this.logger.error("Trying to delete an object, and it's in a weird state");
+                }
             }
         }
 

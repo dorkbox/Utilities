@@ -366,7 +366,7 @@ public class StorageTest {
                 makeData(data);
                 String createKey = createKey(i);
 
-                storage.register(createKey, data);
+                storage.save(createKey, data);
             }
             Storage.close(storage);
 

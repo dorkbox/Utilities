@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -222,6 +221,8 @@ public class Storage {
         synchronized(storages) {
             Collection<Storage> values = storages.values();
             for (Storage storage : values) {
+                while (!storage.decrementReference()) {
+                }
                 storage.close();
             }
             storages.clear();
@@ -262,8 +263,6 @@ public class Storage {
     private final ReentrantLock actionLock = new ReentrantLock();
     private volatile Map<ByteArrayWrapper, Object> actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
 
-    private Map<ByteArrayWrapper, Object> cacheMap = new HashMap<ByteArrayWrapper, Object>();
-
     private AtomicBoolean isOpen = new AtomicBoolean(false);
 
 
@@ -291,28 +290,7 @@ public class Storage {
                     actionLock2.unlock();
                 }
 
-                // anything in cacheMap must also be resaved, BUT ONLY IF IT's DIFFERENT!
-                Map<ByteArrayWrapper, Object> cacheMap2 = Storage.this.cacheMap;
-                StorageBase storage2 = Storage.this.storage;
-
-                synchronized (cacheMap2) {
-                    if (!cacheMap2.isEmpty()) {
-                        for (Entry<ByteArrayWrapper, Object> entry : cacheMap2.entrySet()) {
-                            ByteArrayWrapper key = entry.getKey();
-                            Object value = entry.getValue();
-
-                            if (value != null && key != null) {
-                                Object originalVersion = storage2.getCached(key);
-
-                                if (!value.equals(originalVersion)) {
-                                    actions.put(key, value);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                storage2.doActionThings(actions);
+                Storage.this.storage.doActionThings(actions);
             }
         });
 
@@ -345,32 +323,6 @@ public class Storage {
         }
 
         return this.storage.contains(wrap(key));
-    }
-
-    /**
-     * Registers this key/value (object) pair to be automatically saved in a save operation
-     *
-     * @param key the key to save/register this object under
-     */
-    public final void register(String key, Object object) {
-        ByteArrayWrapper wrap = wrap(key);
-
-        synchronized (this.cacheMap) {
-            this.cacheMap.put(wrap, object);
-        }
-    }
-
-    /**
-     * UN-Registers this key/value (object) pair, so it will no longer be automatically saved in a save operation.
-     *
-     * @param key the key to save/register this object under
-     */
-    public final void unregister(String key) {
-        ByteArrayWrapper wrap = wrap(key);
-
-        synchronized (this.cacheMap) {
-            this.cacheMap.remove(wrap);
-        }
     }
 
     /**
@@ -475,13 +427,6 @@ public class Storage {
         ByteArrayWrapper wrap = wrap(key);
         action(wrap, object);
 
-        synchronized (this.cacheMap) {
-            // if our cache has this key, update it!
-            if (this.cacheMap.containsKey(wrap)) {
-                this.cacheMap.put(wrap, object);
-            }
-        }
-
         // timer action runs on TIMER thread, not this thread
         this.timer.delay(this.milliSeconds);
     }
@@ -500,61 +445,12 @@ public class Storage {
         ByteArrayWrapper wrap = wrap(key);
         action(wrap, object);
 
-        synchronized (this.cacheMap) {
-            // if our cache has this key, update it!
-            if (this.cacheMap.containsKey(wrap)) {
-                this.cacheMap.put(wrap, object);
-            }
-        }
-
         // timer action runs on THIS thread, not timer thread
         this.timer.delay(0L);
     }
 
     /**
-     * Saves all of the registered objects (and pending operations) to storage
-     * <p>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    public final void saveRegistered(String key) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        ByteArrayWrapper wrap = wrap(key);
-
-        synchronized (this.cacheMap) {
-            if (this.cacheMap.containsKey(wrap)) {
-                // timer action runs on TIMER thread, not this thread
-                this.timer.delay(this.milliSeconds);
-            }
-        }
-    }
-
-    /**
-     * Immediately saves all of the registered objects (and pending operations) to storage
-     * <p>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    public final void saveRegisteredNow(String key) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        ByteArrayWrapper wrap = wrap(key);
-
-        synchronized (this.cacheMap) {
-            if (this.cacheMap.containsKey(wrap)) {
-                // timer action runs on THIS thread, not timer thread
-                this.timer.delay(0L);
-            }
-        }
-    }
-
-    /**
-     * Adds the given object to the storage using a default (blank) key
+     * Adds the given object to the storage using a default (blank) key, OR -- if it has been registered, using it's registered key
      * <p>
      * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
      * deleting the old data and adding the new.
@@ -615,7 +511,6 @@ public class Storage {
         this.timer.delay(0L);
 
         this.storage.close();
-        this.cacheMap.clear();
     }
 
     /**

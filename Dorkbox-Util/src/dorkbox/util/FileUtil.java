@@ -618,38 +618,157 @@ public class FileUtil {
     /**
      * Gets the relative path of a file to a specific directory in it's hierarchy.
      *
-     * For example: getRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
+     * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
      */
-    public static String getRelativeToDir(String fileName, String dirInHeirarchy) {
+    public static String getChildRelativeToDir(String fileName, String dirInHeirarchy) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }
 
-        return getRelativeToDir(new File(fileName), dirInHeirarchy);
+        return getChildRelativeToDir(new File(fileName), dirInHeirarchy);
     }
 
     /**
      * Gets the relative path of a file to a specific directory in it's hierarchy.
      *
-     * For example: getRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
+     * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
      * @return null if it cannot be found
      */
-    public static String getRelativeToDir(File file, String dirInHeirarchy) {
+    public static String getChildRelativeToDir(File file, String dirInHeirarchy) {
         if (file == null) {
             throw new IllegalArgumentException("file cannot be null.");
         }
+
+        if (dirInHeirarchy == null || dirInHeirarchy.isEmpty()) {
+            throw new IllegalArgumentException("dirInHeirarchy cannot be null.");
+        }
+
+        String[] split = dirInHeirarchy.split(File.separator);
+        int splitIndex = split.length-1;
 
         String absolutePath = file.getAbsolutePath();
 
         File parent = file;
         String parentName;
-        while ((parent = parent.getParentFile()) != null) {
-            parentName = parent.getName();
 
-            if (parentName.equals(dirInHeirarchy)) {
-                parentName = parent.getAbsolutePath();
+        if (splitIndex == 0) {
+            // match on ONE dir
+            while (parent != null) {
+                parentName = parent.getName();
 
-                return absolutePath.substring(parentName.length() + 1);
+                if (parentName.equals(dirInHeirarchy)) {
+                    parentName = parent.getAbsolutePath();
+
+                    return absolutePath.substring(parentName.length() + 1);
+                }
+                parent = parent.getParentFile();
+            }
+        }
+        else {
+            // match on MANY dir. They must be "in-order"
+            boolean matched = false;
+            while (parent != null) {
+                parentName = parent.getName();
+
+                if (matched) {
+                    if (parentName.equals(split[splitIndex])) {
+                        splitIndex--;
+                        if (splitIndex < 0) {
+                            parent = parent.getParentFile();
+                            parentName = parent.getAbsolutePath();
+                            return absolutePath.substring(parentName.length() + 1);
+                        }
+                    } else {
+                        // because it has to be "in-order", if it doesn't match, we immediately abort
+                        return null;
+                    }
+                } else {
+                    if (parentName.equals(split[splitIndex])) {
+                        matched = true;
+                        splitIndex--;
+                    }
+                }
+
+                parent = parent.getParentFile();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Gets the PARENT relative path of a file to a specific directory in it's hierarchy.
+     *
+     * For example: getParentRelativeToDir("/a/b/c/d/e.bah", "c") -> "/a/b"
+     */
+    public static String getParentRelativeToDir(String fileName, String dirInHeirarchy) {
+        if (fileName == null || fileName.isEmpty()) {
+            throw new IllegalArgumentException("fileName cannot be null.");
+        }
+
+        return getParentRelativeToDir(new File(fileName), dirInHeirarchy);
+    }
+
+    /**
+     * Gets the relative path of a file to a specific directory in it's hierarchy.
+     *
+     * For example: getParentRelativeToDir("/a/b/c/d/e.bah", "c") -> "/a/b"
+     * @return null if it cannot be found
+     */
+    public static String getParentRelativeToDir(File file, String dirInHeirarchy) {
+        if (file == null) {
+            throw new IllegalArgumentException("file cannot be null.");
+        }
+
+        if (dirInHeirarchy == null || dirInHeirarchy.isEmpty()) {
+            throw new IllegalArgumentException("dirInHeirarchy cannot be null.");
+        }
+
+        String[] split = dirInHeirarchy.split(File.separator);
+        int splitIndex = split.length-1;
+
+        File parent = file;
+        String parentName;
+
+        if (splitIndex == 0) {
+            // match on ONE dir
+            while (parent != null) {
+                parentName = parent.getName();
+
+                if (parentName.equals(dirInHeirarchy)) {
+                    parent = parent.getParentFile();
+                    parentName = parent.getAbsolutePath();
+                    return parentName;
+                }
+                parent = parent.getParentFile();
+            }
+        }
+        else {
+            // match on MANY dir. They must be "in-order"
+            boolean matched = false;
+            while (parent != null) {
+                parentName = parent.getName();
+
+                if (matched) {
+                    if (parentName.equals(split[splitIndex])) {
+                        splitIndex--;
+                        if (splitIndex < 0) {
+                            parent = parent.getParentFile();
+                            parentName = parent.getAbsolutePath();
+                            return parentName;
+                        }
+                    } else {
+                        // because it has to be "in-order", if it doesn't match, we immediately abort
+                        return null;
+                    }
+                } else {
+                    if (parentName.equals(split[splitIndex])) {
+                        matched = true;
+                        splitIndex--;
+                    }
+                }
+
+                parent = parent.getParentFile();
             }
         }
 

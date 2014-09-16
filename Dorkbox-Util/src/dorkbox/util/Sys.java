@@ -566,10 +566,13 @@ public class Sys {
         // find ALL ServerLoader classes and use reflection to load them.
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
+        String noDotsPackageName = packageName;
+        boolean isEmpty = true;
         if (packageName != null && !packageName.isEmpty()) {
-            packageName = packageName.replace('.', '/');
+            noDotsPackageName = packageName.replace('.', '/');
+            isEmpty = false;
         } else {
-            packageName = ""; // cannot be null!
+            noDotsPackageName = ""; // cannot be null!
         }
 
         // look for all annotated classes in the projects package.
@@ -577,16 +580,23 @@ public class Sys {
             LinkedList<Class<?>> annotatedClasses = new LinkedList<Class<?>>();
 
             URL url;
-            Enumeration<URL> resources = classLoader.getResources(packageName);
+            Enumeration<URL> resources = classLoader.getResources(noDotsPackageName);
 
             // lengthy, but it will traverse how we want.
             while (resources.hasMoreElements()) {
                 url = resources.nextElement();
                 if (url.getProtocol().equals("file")) {
                     File file = new File(url.getFile());
-                    findAnnotatedClassesRecursive(classLoader, packageName, annotation, file, file.getAbsolutePath(), annotatedClasses);
+                    if (!isEmpty) {
+                        String relativeToDir = FileUtil.getParentRelativeToDir(file, noDotsPackageName);
+                        if (relativeToDir != null) {
+                            findAnnotatedClassesRecursive(classLoader, noDotsPackageName, annotation, file, relativeToDir, annotatedClasses);
+                        }
+                    } else {
+                        findAnnotatedClassesRecursive(classLoader, noDotsPackageName, annotation, file, file.getAbsolutePath(), annotatedClasses);
+                    }
                 } else {
-                    findModulesInJar(classLoader, packageName, annotation, url, annotatedClasses);
+                    findModulesInJar(classLoader, noDotsPackageName, annotation, url, annotatedClasses);
                 }
             }
 
@@ -617,7 +627,7 @@ public class Sys {
                 else if (isValid(fileName)) {
                     String classPath = absolutePath.substring(rootPath.length() + 1, absolutePath.length() - 6);
 
-                    if (packageName.isEmpty()) {
+                    if (!packageName.isEmpty()) {
                         if (!classPath.startsWith(packageName)) {
                             return;
                         }
@@ -707,16 +717,25 @@ public class Sys {
         }
 
         int length = name.length();
-        boolean isValid = length > 6 &&
-                          name.charAt(length-1) != '/' && // remove directories from the search.
-                          name.charAt(length-6) == '.' &&
-                          name.charAt(length-5) == 'c' &&
-                          name.charAt(length-4) == 'l' &&
-                          name.charAt(length-3) == 'a' &&
-                          name.charAt(length-2) == 's' &&
-                          name.charAt(length-1) == 's'; // make sure it's a class file
 
-        return isValid;
+        if (name.charAt(length-1) == '/') { // remove directories from the search.)
+            return false;
+        }
+
+        // ALSO, cannot use classes such as "ServerBloah$4.class".
+        int newLength = length-6;
+        for (int i=0;i<newLength;i++) {
+            if (name.charAt(i) == '$') {
+                return false;
+            }
+        }
+
+        return name.charAt(length-6) == '.' &&
+               name.charAt(length-5) == 'c' &&
+               name.charAt(length-4) == 'l' &&
+               name.charAt(length-3) == 'a' &&
+               name.charAt(length-2) == 's' &&
+               name.charAt(length-1) == 's'; // make sure it's a class file
     }
 
     /**
