@@ -10,14 +10,13 @@ import java.util.Arrays;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import dorkbox.util.storage.Storage;
 
-/**
- * Simple test class for the RecordsFile example. To run the test, set you CLASSPATH and then type
- * "java hamner.dbtest.TestRecords"
- */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StorageTest {
 
     private static final String TEST_DB = "sampleFile.records";

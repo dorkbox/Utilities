@@ -93,6 +93,8 @@ public class StorageBase {
      * Creates or opens a new database file.
      */
     StorageBase(File filePath) throws IOException  {
+        this.logger.info("Opening storage file: '{}'", filePath.getAbsolutePath());
+
         this.baseFile = filePath;
 
         File parentFile = this.baseFile.getParentFile();
@@ -118,6 +120,14 @@ public class StorageBase {
             // have to make sure we can read header info (even if it's blank)
             this.file.setLength(indexPointer);
         }
+
+        if (this.file.length() < this.dataPosition) {
+            this.logger.error("Corrupted storage file!");
+            throw new IllegalArgumentException("Unable to parse header information from storage. Maybe it's corrupted?");
+        }
+
+        this.logger.info("Storage version: {}", this.databaseVersion);
+
 
         this.kryo = new Kryo();
         this.kryo.setRegistrationRequired(false);

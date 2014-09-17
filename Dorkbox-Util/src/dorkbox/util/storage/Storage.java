@@ -59,9 +59,7 @@ public class Storage {
                 storage.increaseReference();
             } else {
                 try {
-                    StorageBase storageBase = new StorageBase(file);
-
-                    storage = new Storage(storageBase);
+                    storage = new Storage(file);
                     storages.put(file, storage);
                 } catch (IOException e) {
                     logger.error("Unable to open storage", e);
@@ -270,8 +268,8 @@ public class Storage {
     /**
      * Creates or opens a new database file.
      */
-    private Storage(StorageBase _storage) {
-        this.storage = _storage;
+    private Storage(File storageFile) throws IOException {
+        this.storage = new StorageBase(storageFile);
         this.defaultKey = wrap("");
 
         this.timer = new DelayTimer("Storage Writer", false, new DelayTimer.Callback() {
