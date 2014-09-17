@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
@@ -84,6 +86,42 @@ public class Sys {
             e.printStackTrace();
         }
     }
+
+    /**
+     * FROM: https://www.cqse.eu/en/blog/string-replace-performance/
+     *
+     * Replaces all occurrences of keys of the given map in the given string
+     * with the associated value in that map.
+     *
+     * This method is semantically the same as calling
+     * {@link String#replace(CharSequence, CharSequence)} for each of the
+     * entries in the map, but may be significantly faster for many replacements
+     * performed on a short string, since
+     * {@link String#replace(CharSequence, CharSequence)} uses regular
+     * expressions internally and results in many String object allocations when
+     * applied iteratively.
+     *
+     * The order in which replacements are applied depends on the order of the
+     * map's entry set.
+     */
+    public static String replaceStringFast(String string, Map<String, String> replacements) {
+        StringBuilder sb = new StringBuilder(string);
+        for (Entry<String, String> entry : replacements.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            int start = sb.indexOf(key, 0);
+            while (start > -1) {
+                int end = start + key.length();
+                int nextSearchStart = start + value.length();
+                sb.replace(start, end, value);
+                start = sb.indexOf(key, nextSearchStart);
+            }
+        }
+
+        return sb.toString();
+    }
+
 
     public static String getSizePretty(final long size) {
         if (size > TERABYTE) {
