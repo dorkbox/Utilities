@@ -69,6 +69,8 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
+import dorkbox.urlHandler.Box;
+
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B
  * http://www.nsa.gov/ia/programs/suiteb_cryptography/
@@ -168,9 +170,7 @@ public class Crypto {
          * Specifically, to return the hash of the ALL files/directories inside the jar, minus the action specified (LGPL) files.
          */
         public static final byte[] hashJarContentsExcludeAction(JarFile jarFile, Digest digest, int action) throws IOException {
-            // repack token: ':|', from BoxHandler.
-            // if this is CHANGED, make sure to update it there as well.
-            String token = ":|";
+            String token = Box.repack;
 
             Enumeration<JarEntry> jarElements = jarFile.entries();
 

@@ -717,7 +717,6 @@ public class Sys {
                 }
             }
             jarFile.close();
-
         }
         // Files inside of box deployment
         else if (connection instanceof BoxURLConnection) {
@@ -742,7 +741,6 @@ public class Sys {
             return;
         }
     }
-
 
     /**
      * remove directories from the search. make sure it's a class file shortcut so we don't load ALL .class files!
