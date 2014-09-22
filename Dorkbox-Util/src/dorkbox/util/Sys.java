@@ -122,6 +122,22 @@ public class Sys {
         return sb.toString();
     }
 
+    /**
+     * Quickly finds a char in a string.
+     *
+     * @return index if it's there, -1 if not there
+     */
+    public static int searchStringFast(String string, char c) {
+        int length = string.length();
+        for (int i=0;i<length;i++) {
+            if (string.charAt(i) == c) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
 
     public static String getSizePretty(final long size) {
         if (size > TERABYTE) {
@@ -889,4 +905,7 @@ public class Sys {
 
         return null;
     }
+
+
+
 }
