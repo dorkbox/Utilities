@@ -76,7 +76,14 @@ Legal:
 
   - BouncyCastle - MIT X11 License
     http://www.bouncycastle.org
-    Copyright (c) 2000 - 2009 The Legion Of The Bouncy Castle
+    Copyright 2000 - 2009 The Legion Of The Bouncy Castle
+
+
+
+  - FastObjectPool - Apache 2.0 license
+    http://ashkrit.blogspot.com/2013/05/lock-less-java-object-pool.html
+    https://github.com/ashkrit/blog/tree/master/FastObjectPool
+    Copyright 2013 Ashkrit
 
 
 
@@ -88,7 +95,7 @@ Legal:
 
   - MathUtils, IntArray, IntMap - Apache 2.0 license
     http://github.com/libgdx/libgdx/
-    Copyright (c) 2013
+    Copyright 2013
     Mario Zechner <badlogicgames@gmail.com>
     Nathan Sweet <nathan.sweet@gmail.com>
 
@@ -96,5 +103,5 @@ Legal:
 
   - MersenneTwisterFast, v20 - BSD license
     http://www.cs.gmu.edu/~sean/research/mersenne/MersenneTwisterFast.java
-    Copyright (c) 2003 by Sean Luke.
-    Portions copyright (c) 1993 by Michael Lecuyer.
+    Copyright 2003 by Sean Luke
+    Portions copyright 1993 by Michael Lecuyer
