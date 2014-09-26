@@ -117,8 +117,8 @@ public class FileUtil {
         }
 
 
-        String normalizedIn = in.getCanonicalFile().getAbsolutePath();
-        String normalizedout = out.getCanonicalFile().getAbsolutePath();
+        String normalizedIn = FilenameUtils.normalize(in.getAbsolutePath());
+        String normalizedout = FilenameUtils.normalize(out.getAbsolutePath());
 
         // if out doesn't exist, then create it.
         File parentOut = out.getParentFile();

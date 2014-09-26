@@ -861,13 +861,15 @@ public class Sys {
         }
     }
 
+
     /**
      * This will retrieve your IP address via an HTTP server.
      * <p>
-     * <b>NOTE: Use DnsClient.getPublicIp() instead. It's much more reliable as it uses DNS.</b>
+     * <b>NOTE: Use DnsClient.getPublicIp() instead. It's much faster and more reliable as it uses DNS.</b>
      *
      * @return the public IP address if found, or null if it didn't find it
      */
+    @Deprecated
     public static String getPublicIpViaHttp() {
         // method 1: use DNS servers
         // dig +short myip.opendns.com @resolver1.opendns.com

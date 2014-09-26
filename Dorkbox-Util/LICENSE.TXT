@@ -80,10 +80,27 @@ Legal:
 
 
 
+  - ConcurrentHashMapV8 - CC0 License
+    http://www.bouncycastle.org
+    Written by Doug Lea with assistance from members of JCP JSR-166
+    Expert Group and released to the public domain, as explained at
+    http://creativecommons.org/publicdomain/zero/1.0/
+
+
+
   - FastObjectPool - Apache 2.0 license
     http://ashkrit.blogspot.com/2013/05/lock-less-java-object-pool.html
     https://github.com/ashkrit/blog/tree/master/FastObjectPool
     Copyright 2013 Ashkrit
+
+
+
+  - FilenameUtils.java, IOCase.java - Apache 2.0 license
+    http://commons.apache.org/proper/commons-io/
+    Copyright 2013 ASF
+    Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+             Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+             Jeremias Maerki, Stephen Colebourne
 
 
 

@@ -1,12 +1,12 @@
 package dorkbox.util.process;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import dorkbox.util.FilenameUtils;
 import dorkbox.util.OS;
 
 /**
@@ -50,19 +50,19 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
     }
 
     public final void addJvmClasspath(String classpathEntry) {
-        classpathEntries.add(classpathEntry);
+        this.classpathEntries.add(classpathEntry);
     }
 
     public final void addJvmClasspaths(List<String> paths) {
-        classpathEntries.addAll(paths);
+        this.classpathEntries.addAll(paths);
     }
 
     public final void addJvmOption(String argument) {
-        jvmOptions.add(argument);
+        this.jvmOptions.add(argument);
     }
 
     public final void addJvmOptions(List<String> paths) {
-        jvmOptions.addAll(paths);
+        this.jvmOptions.addAll(paths);
     }
 
     public final void setJarFile(String jarFile) {
@@ -72,14 +72,14 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
     private String getClasspath() {
         StringBuilder builder = new StringBuilder();
         int count = 0;
-        final int totalSize = classpathEntries.size();
+        final int totalSize = this.classpathEntries.size();
         final String pathseparator = File.pathSeparator;
 
         // DO NOT QUOTE the elements in the classpath!
-        for (String classpathEntry : classpathEntries) {
+        for (String classpathEntry : this.classpathEntries) {
             try {
                 // make sure the classpath is ABSOLUTE pathname
-                classpathEntry = new File(classpathEntry).getCanonicalFile().getAbsolutePath();
+                classpathEntry = FilenameUtils.normalize(new File(classpathEntry).getAbsolutePath());
 
                 // fix a nasty problem when spaces aren't properly escaped!
                 classpathEntry = classpathEntry.replaceAll(" ", "\\ ");
@@ -107,30 +107,30 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
 
     @Override
     public void start() {
-        setExecutable(javaLocation);
+        setExecutable(this.javaLocation);
 
         // save off the original arguments
-        List<String> origArguments = new ArrayList<String>(arguments.size());
-        origArguments.addAll(arguments);
-        arguments = new ArrayList<String>(0);
+        List<String> origArguments = new ArrayList<String>(this.arguments.size());
+        origArguments.addAll(this.arguments);
+        this.arguments = new ArrayList<String>(0);
 
 
         // two versions, java vs not-java
-        arguments.add("-Xms" + startingHeapSizeInMegabytes + "M");
-        arguments.add("-Xmx" + maximumHeapSizeInMegabytes + "M");
-        arguments.add("-server");
+        this.arguments.add("-Xms" + this.startingHeapSizeInMegabytes + "M");
+        this.arguments.add("-Xmx" + this.maximumHeapSizeInMegabytes + "M");
+        this.arguments.add("-server");
 
-        for (String option : jvmOptions) {
-            arguments.add(option);
+        for (String option : this.jvmOptions) {
+            this.arguments.add(option);
         }
 
         //same as -cp
         String classpath = getClasspath();
 
         // two more versions. jar vs classs
-        if (jarFile != null) {
-            arguments.add("-jar");
-            arguments.add(jarFile);
+        if (this.jarFile != null) {
+            this.arguments.add("-jar");
+            this.arguments.add(this.jarFile);
 
             // interesting note. You CANNOT have a classpath specified on the commandline
             // when using JARs!! It must be set in the jar's MANIFEST.
@@ -142,34 +142,34 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
 
         }
         // if we are running classes!
-        else if (mainClass != null) {
+        else if (this.mainClass != null) {
             if (!classpath.isEmpty()) {
-                arguments.add("-classpath");
-                arguments.add(classpath);
+                this.arguments.add("-classpath");
+                this.arguments.add(classpath);
             }
 
             // main class must happen AFTER the classpath!
-            arguments.add(mainClass);
+            this.arguments.add(this.mainClass);
         } else {
             System.err.println("WHOOPS. You must specify a jar or main class when running java!");
             System.exit(1);
         }
 
 
-        for (String arg : mainClassArguments) {
+        for (String arg : this.mainClassArguments) {
             if (arg.contains(" ")) {
                 // individual arguments MUST be in their own element in order to
                 //  be processed properly (this is how it works on the command line!)
                 String[] split = arg.split(" ");
                 for (String s : split) {
-                    arguments.add(s);
+                    this.arguments.add(s);
                 }
             } else {
-                arguments.add(arg);
+                this.arguments.add(arg);
             }
         }
 
-        arguments.addAll(origArguments);
+        this.arguments.addAll(origArguments);
 
         super.start();
     }
@@ -204,13 +204,10 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
         // even though the former is a symlink to the latter! To work around this, see if the
         // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
         if (OS.isMacOsX()) {
-            try {
-                File localVM = new File("/usr/bin/java").getCanonicalFile();
-                if (localVM.equals(new File(vmpath).getCanonicalFile())) {
-                    vmpath = "/usr/bin/java";
-                }
-            } catch (IOException ioe) {
-                System.err.println("Failed to check Mac OS canonical VM path." + ioe);
+            String localVM = FilenameUtils.normalize(new File("/usr/bin/java").getAbsolutePath());
+            String vmCheck = FilenameUtils.normalize(new File(vmpath).getAbsolutePath());
+            if (localVM.equals(vmCheck)) {
+                vmpath = "/usr/bin/java";
             }
         }
 
