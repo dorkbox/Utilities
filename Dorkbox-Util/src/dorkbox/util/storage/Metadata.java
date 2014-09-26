@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.nio.channels.FileLock;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
@@ -112,17 +113,22 @@ public class Metadata {
     static Metadata readHeader(RandomAccessFile file, int position) throws IOException {
         byte[] buf = new byte[KEY_SIZE];
         long origHeaderKeyPointer = Metadata.getMetaDataPointer(position);
+
+        FileLock lock = file.getChannel().lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
+        lock.release();
 
         Metadata r = new Metadata(ByteArrayWrapper.wrap(buf));
         r.indexPosition = position;
 
         long recordHeaderPointer = Metadata.getDataPointer(position);
+        lock = file.getChannel().lock(origHeaderKeyPointer, KEY_SIZE, true);
         file.seek(recordHeaderPointer);
         r.dataPointer = file.readLong();
         r.dataCapacity = file.readInt();
         r.dataCount = file.readInt();
+        lock.release();
 
         if (r.dataPointer == 0L || r.dataCapacity == 0L || r.dataCount == 0L) {
             return null;
@@ -131,26 +137,24 @@ public class Metadata {
         return r;
     }
 
-
-    void write(RandomAccessFile file) throws IOException {
-        writeMetaDataInfo(file);
-        writeDataInfo(file);
-    }
-
     void writeMetaDataInfo(RandomAccessFile file) throws IOException {
         long recordKeyPointer = Metadata.getMetaDataPointer(this.indexPosition);
 
+        FileLock lock = file.getChannel().lock(recordKeyPointer, KEY_SIZE, false);
         file.seek(recordKeyPointer);
         file.write(this.key.getBytes());
+        lock.release();
     }
 
     void writeDataInfo(RandomAccessFile file) throws IOException {
         long recordHeaderPointer = getDataPointer(this.indexPosition);
 
+        FileLock lock = file.getChannel().lock(recordHeaderPointer, POINTER_INFO_SIZE, false);
         file.seek(recordHeaderPointer);
         file.writeLong(this.dataPointer);
         file.writeInt(this.dataCapacity);
         file.writeInt(this.dataCount);
+        lock.release();
     }
 
     /**
@@ -160,12 +164,16 @@ public class Metadata {
         byte[] buf = new byte[KEY_SIZE];
 
         long origHeaderKeyPointer = Metadata.getMetaDataPointer(this.indexPosition);
+        FileLock lock = file.getChannel().lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
+        lock.release();
 
         long newHeaderKeyPointer = Metadata.getMetaDataPointer(newIndex);
+        lock = file.getChannel().lock(newHeaderKeyPointer, INDEX_ENTRY_LENGTH, false);
         file.seek(newHeaderKeyPointer);
         file.write(buf);
+        lock.release();
 
 //        System.err.println("updating ptr: " +  this.indexPosition + " -> " + newIndex + " @ " + newHeaderKeyPointer + "-" + (newHeaderKeyPointer+INDEX_ENTRY_LENGTH));
         this.indexPosition = newIndex;
@@ -184,6 +192,8 @@ public class Metadata {
         this.dataPointer = position;
         this.dataCapacity = this.dataCount;
 
+        FileLock lock = file.getChannel().lock(position, this.dataCount, false);
+
         // update the file size
         file.setLength(position + this.dataCount);
 
@@ -192,6 +202,7 @@ public class Metadata {
         // save the data
         file.seek(position);
         file.write(data);
+        lock.release();
 
         // update header pointer info
         writeDataInfo(file);
@@ -206,9 +217,12 @@ public class Metadata {
         byte[] buf = new byte[this.dataCount];
 //        System.err.print("Reading data: " + this.indexPosition + " @ " + this.dataPointer + "-" + (this.dataPointer+this.dataCount) + " -- ");
 
+        FileLock lock = file.getChannel().lock(this.dataPointer, this.dataCount, true);
         file.seek(this.dataPointer);
         file.readFully(buf);
+        lock.release();
 //        Sys.printArray(buf, buf.length, false, 0);
+
 
         return buf;
     }
@@ -251,10 +265,14 @@ public class Metadata {
 
     void writeData(ByteArrayOutputStream byteArrayOutputStream, RandomAccessFile file) throws IOException {
         this.dataCount = byteArrayOutputStream.size();
+
+        FileLock lock = file.getChannel().lock(this.dataPointer, this.dataCount, false);
+
         FileOutputStream out = new FileOutputStream(file.getFD());
         file.seek(this.dataPointer);
         byteArrayOutputStream.writeTo(out);
         out.flush();
+        lock.release();
     }
 
     @Override

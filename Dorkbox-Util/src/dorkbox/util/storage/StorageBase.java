@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.nio.channels.FileLock;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -24,6 +25,10 @@ import org.slf4j.LoggerFactory;
 import com.esotericsoftware.kryo.Kryo;
 
 import dorkbox.util.bytes.ByteArrayWrapper;
+
+// a note on file locking between c and java
+// http://panks-dev.blogspot.de/2008/04/linux-file-locks-java-and-others.html
+// Also, file locks on linux are ADVISORY. if an app doesn't care about locks, then it can do stuff -- even if locked by another app
 
 public class StorageBase {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -340,8 +345,10 @@ public class StorageBase {
                 if (this.memoryIndex.size() == 1) {
                     // if we are the ONLY one, then we can do things differently.
                     // just dump the data agian to disk.
+                    FileLock lock = this.file.getChannel().lock(this.dataPosition, Long.MAX_VALUE, false); // don't know how big it is, so max value it
                     this.file.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
                     metaData.writeDataFast(this.kryo, object, fileOutputStream);
+                    lock.release();
                 } else {
                     // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
                     ByteArrayOutputStream dataStream = metaData.getDataStream(this.kryo, object, deflater);
@@ -428,7 +435,9 @@ public class StorageBase {
     private void deleteRecordData(Metadata deletedRecord) throws IOException {
         if (this.file.length() == deletedRecord.dataPointer + deletedRecord.dataCapacity) {
             // shrink file since this is the last record in the file
+            FileLock lock = this.file.getChannel().lock(deletedRecord.dataPointer, Long.MAX_VALUE, false);
             this.file.setLength(deletedRecord.dataPointer);
+            lock.release();
         } else {
             Metadata previous = index_getMetaDataFromData(deletedRecord.dataPointer - 1);
             if (previous != null) {
@@ -474,8 +483,10 @@ public class StorageBase {
     private final void setVersionNumber(RandomAccessFile file, int versionNumber) throws IOException {
         this.databaseVersion = versionNumber;
 
+        FileLock lock = this.file.getChannel().lock(VERSION_HEADER_LOCATION, 4, false);
         file.seek(VERSION_HEADER_LOCATION);
         file.writeInt(versionNumber);
+        lock.release();
     }
 
     /**
@@ -484,8 +495,10 @@ public class StorageBase {
     private final void setRecordCount(RandomAccessFile file, int numberOfRecords) throws IOException {
         this.numberOfRecords = numberOfRecords;
 
+        FileLock lock = this.file.getChannel().lock(NUM_RECORDS_HEADER_LOCATION, 4, false);
         file.seek(NUM_RECORDS_HEADER_LOCATION);
         file.writeInt(numberOfRecords);
+        lock.release();
     }
 
     /**
@@ -494,8 +507,10 @@ public class StorageBase {
     private final void setDataPosition(RandomAccessFile file, long dataPositionPointer) throws IOException {
         this.dataPosition = dataPositionPointer;
 
+        FileLock lock = this.file.getChannel().lock(DATA_START_HEADER_LOCATION, 8, false);
         file.seek(DATA_START_HEADER_LOCATION);
         file.writeLong(dataPositionPointer);
+        lock.release();
     }
 
     int getVersion() {
@@ -516,15 +531,19 @@ public class StorageBase {
      * of the record data of the RecordHeader which is returned. Returns null if the location is not part of a record.
      * (O(n) mem accesses)
      */
-    private final Metadata index_getMetaDataFromData(long targetFp) {
+    private final Metadata index_getMetaDataFromData(long targetFp) throws IOException {
         Iterator<Metadata> iterator = this.memoryIndex.values().iterator();
 
+        FileLock lock = this.file.getChannel().lock(FILE_HEADERS_REGION_LENGTH, this.dataPosition, true);
         while (iterator.hasNext()) {
             Metadata next = iterator.next();
             if (targetFp >= next.dataPointer && targetFp < next.dataPointer + next.dataCapacity) {
+                lock.release();
                 return next;
             }
         }
+
+        lock.release();
         return null;
     }
 
