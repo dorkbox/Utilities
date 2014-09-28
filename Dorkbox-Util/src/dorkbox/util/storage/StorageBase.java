@@ -258,7 +258,7 @@ public class StorageBase {
             }
 
             return readRecordData;
-        } catch (IOException e) {
+        } catch (Exception e) {
             this.logger.error("Error while geting data from disk", e);
             return null;
         }
@@ -345,7 +345,7 @@ public class StorageBase {
                 if (this.memoryIndex.size() == 1) {
                     // if we are the ONLY one, then we can do things differently.
                     // just dump the data agian to disk.
-                    FileLock lock = this.file.getChannel().lock(this.dataPosition, Long.MAX_VALUE, false); // don't know how big it is, so max value it
+                    FileLock lock = this.file.getChannel().lock(this.dataPosition, Long.MAX_VALUE-this.dataPosition, false); // don't know how big it is, so max value it
                     this.file.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
                     metaData.writeDataFast(this.kryo, object, fileOutputStream);
                     lock.release();
@@ -435,7 +435,7 @@ public class StorageBase {
     private void deleteRecordData(Metadata deletedRecord) throws IOException {
         if (this.file.length() == deletedRecord.dataPointer + deletedRecord.dataCapacity) {
             // shrink file since this is the last record in the file
-            FileLock lock = this.file.getChannel().lock(deletedRecord.dataPointer, Long.MAX_VALUE, false);
+            FileLock lock = this.file.getChannel().lock(deletedRecord.dataPointer, Long.MAX_VALUE-deletedRecord.dataPointer, false);
             this.file.setLength(deletedRecord.dataPointer);
             lock.release();
         } else {
