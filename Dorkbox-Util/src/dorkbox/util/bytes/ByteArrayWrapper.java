@@ -7,7 +7,7 @@ import java.util.Arrays;
  */
 public final class ByteArrayWrapper {
     private final byte[] data;
-    private final int hashCode;
+    private Integer hashCode;
 
     /**
      * Makes a safe copy of the byte array, so that changes to the original do not affect the wrapper.
@@ -44,7 +44,6 @@ public final class ByteArrayWrapper {
         } else {
             this.data = data;
         }
-        this.hashCode = Arrays.hashCode(this.data);
     }
 
     public byte[] getBytes() {
@@ -63,12 +62,17 @@ public final class ByteArrayWrapper {
 
     @Override
     public int hashCode() {
-        // CANNOT be null, so we don't have to null check!
-        return this.hashCode;
+        // might be null for a thread because it's stale. who cares, get the value again
+        Integer hashCode = this.hashCode;
+        if (hashCode == null) {
+            hashCode = Arrays.hashCode(this.data);
+            this.hashCode = hashCode;
+        }
+        return hashCode;
     }
 
     @Override
     public String toString() {
-        return "ByteArrayWrapper [" + java.util.Arrays.toString(this.data) + "]";
+        return "ByteArrayWrapper " + java.util.Arrays.toString(this.data);
     }
 }
