@@ -3,11 +3,9 @@ package dorkbox.util.storage;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.channels.FileLock;
-import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
@@ -237,30 +235,16 @@ public class Metadata {
         return (T) readObject;
     }
 
-
-    ByteArrayOutputStream getDataStream(Kryo kryo, Object data, Deflater deflater) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        OutputStream outputStream = new DeflaterOutputStream(byteArrayOutputStream, deflater);
-        Output output = new Output(outputStream, 1024); // write 1024 at a time
-        kryo.writeClassAndObject(output, data);
-        output.flush();
-
-        outputStream.flush();
-        outputStream.close();
-
-        return byteArrayOutputStream;
-    }
-
     /**
      * Writes data to the end of the file (which is where the datapointer is at)
      */
     void writeDataFast(Kryo kryo, Object data, DeflaterOutputStream outputStream) throws IOException {
+        // HAVE TO LOCK BEFORE THIS IS CALLED! (AND FREE AFTERWARDS!)
         Output output = new Output(outputStream, 1024); // write 1024 at a time
         kryo.writeClassAndObject(output, data);
         output.flush();
 
-        outputStream.flush();
-        outputStream.finish(); // have to make sure that the outputstream finishes compressing data
+        outputStream.flush(); // sync-flush is enabled, so the output stream will finish compressing data.
     }
 
     void writeData(ByteArrayOutputStream byteArrayOutputStream, RandomAccessFile file) throws IOException {
