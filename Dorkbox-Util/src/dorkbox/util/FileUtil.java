@@ -608,7 +608,7 @@ public class FileUtil {
                 }
             }
         } else {
-            System.err.println("Cannot search dependencies, if it's a file name!");
+            System.err.println("Cannot search directory children if the dir is a file name: " + rootDirectory.getAbsolutePath());
         }
 
 
