@@ -1,5 +1,5 @@
 
-package dorkbox.util.primativeCollections;
+package dorkbox.util.collections;
 
 import com.esotericsoftware.kryo.util.ObjectMap;
 

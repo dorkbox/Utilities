@@ -16,7 +16,7 @@
 
 // slightly tweaked from libGDX
 
-package dorkbox.util.primativeCollections;
+package dorkbox.util.collections;
 
 
 import java.util.Iterator;

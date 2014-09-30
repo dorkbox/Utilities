@@ -3,7 +3,7 @@
  * Expert Group and released to the public domain, as explained at
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-package dorkbox.util;
+package dorkbox.util.collections;
 
 import java.io.ObjectStreamField;
 import java.io.Serializable;
