@@ -104,6 +104,33 @@ public class Storage {
         }
     }
 
+    public static void shutdown() {
+        synchronized(storages) {
+            Collection<Storage> values = storages.values();
+            for (Storage storage : values) {
+                while (!storage.decrementReference()) {
+                }
+                storage.close();
+            }
+            storages.clear();
+        }
+    }
+
+    public static void delete(File file) {
+        synchronized(storages) {
+            Storage remove = storages.remove(file);
+            if (remove != null) {
+                remove.close();
+            }
+            file.delete();
+        }
+    }
+
+    public static void delete(Storage storage) {
+        File file = storage.getFile();
+        delete(file);
+    }
+
 
     private static void copyFields(Object source, Object dest) {
         Class<? extends Object> sourceClass = source.getClass();
@@ -213,33 +240,6 @@ public class Storage {
         }
 
         return true;
-    }
-
-    public static void shutdown() {
-        synchronized(storages) {
-            Collection<Storage> values = storages.values();
-            for (Storage storage : values) {
-                while (!storage.decrementReference()) {
-                }
-                storage.close();
-            }
-            storages.clear();
-        }
-    }
-
-    public static void delete(File file) {
-        synchronized(storages) {
-            Storage remove = storages.remove(file);
-            if (remove != null) {
-                remove.close();
-            }
-            file.delete();
-        }
-    }
-
-    public static void delete(Storage storage) {
-        File file = storage.getFile();
-        delete(file);
     }
 
 
@@ -503,10 +503,11 @@ public class Storage {
      * Closes the database and file.
      */
     private final void close() {
-        this.isOpen.set(false);
-
         // timer action runs on THIS thread, not timer thread
         this.timer.delay(0L);
+
+        // have to "close" it after we run the timer!
+        this.isOpen.set(false);
 
         this.storage.close();
     }
