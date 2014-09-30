@@ -88,14 +88,14 @@ Legal:
 
 
 
-  - FastObjectPool - Apache 2.0 license
+  - FastObjectPool - Apache 2.0 License
     http://ashkrit.blogspot.com/2013/05/lock-less-java-object-pool.html
     https://github.com/ashkrit/blog/tree/master/FastObjectPool
     Copyright 2013 Ashkrit
 
 
 
-  - FilenameUtils.java, IOCase.java - Apache 2.0 license
+  - FilenameUtils.java, IOCase.java - Apache 2.0 License
     http://commons.apache.org/proper/commons-io/
     Copyright 2013 ASF
     Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
@@ -104,13 +104,19 @@ Legal:
 
 
 
-  - LAN HostDiscovery from Apache Commons JCS - Apache 2.0 license
+  - LAN HostDiscovery from Apache Commons JCS - Apache 2.0 License
     https://issues.apache.org/jira/browse/JCS-40
     Copyright 2001-2014 The Apache Software Foundation.
 
 
 
-  - MathUtils, IntArray, IntMap - Apache 2.0 license
+  - BinarySearch - MIT License
+    https://github.com/timboudreau/util
+    Copyright 2013 Tim Boudreau
+
+
+
+  - MathUtils, IntArray, IntMap - Apache 2.0 License
     http://github.com/libgdx/libgdx/
     Copyright 2013
     Mario Zechner <badlogicgames@gmail.com>
@@ -118,7 +124,7 @@ Legal:
 
 
 
-  - MersenneTwisterFast, v20 - BSD license
+  - MersenneTwisterFast, v20 - BSD License
     http://www.cs.gmu.edu/~sean/research/mersenne/MersenneTwisterFast.java
     Copyright 2003 by Sean Luke
     Portions copyright 1993 by Michael Lecuyer

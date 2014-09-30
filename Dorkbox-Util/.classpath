@@ -22,7 +22,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/Dependencies/asm/asm-5.0.3.jar" sourcepath="/Dependencies/asm/asm-5.0.3-src.zip"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/JavaLauncher-Util"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/JavaLauncher-Util"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
