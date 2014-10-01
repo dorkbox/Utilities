@@ -244,11 +244,11 @@ public class Sys {
         return baos.toByteArray();
     }
 
-    public static final byte[] arrayCloneBytes(byte[] src) {
-        return arrayCloneBytes(src, 0);
+    public static final byte[] copyBytes(byte[] src) {
+        return copyBytes(src, 0);
     }
 
-    public static final byte[] arrayCloneBytes(byte[] src, int position) {
+    public static final byte[] copyBytes(byte[] src, int position) {
         int length = src.length - position;
 
         byte[] b = new byte[length];
