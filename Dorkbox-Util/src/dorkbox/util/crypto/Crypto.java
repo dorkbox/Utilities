@@ -1,7 +1,6 @@
 package dorkbox.util.crypto;
 
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,7 +17,6 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarOutputStream;
 
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
@@ -215,114 +213,6 @@ public class Crypto {
             digest.doFinal(digestBytes, 0);
             return digestBytes;
         }
-
-        /**
-         * return the hash of the specified files/directories inside the jar.
-         */
-        public static final byte[] hashJarContents(JarFile jarFile, Digest digest, String... filesOrDirsToHash) throws IOException {
-            Enumeration<JarEntry> jarElements = jarFile.entries();
-
-            boolean okToHash = false;
-            byte[] buffer = new byte[2048];
-            int read = 0;
-            digest.reset();
-
-            while (jarElements.hasMoreElements()) {
-                JarEntry jarEntry = jarElements.nextElement();
-                String name = jarEntry.getName();
-                okToHash = !jarEntry.isDirectory();
-
-                if (!okToHash) {
-                    continue;
-                }
-
-                okToHash = false;
-                if (filesOrDirsToHash != null) {
-                    for (String dir : filesOrDirsToHash) {
-                        if (name.startsWith(dir)) {
-                            okToHash = true;
-                            break;
-                        }
-                    }
-                } else {
-                    okToHash = true;
-                }
-
-                if (okToHash) {
-                    InputStream inputStream = jarFile.getInputStream(jarEntry);
-
-                    while ((read = inputStream.read(buffer)) > 0) {
-                        digest.update(buffer, 0, read);
-                    }
-                    inputStream.close();
-                }
-            }
-
-            byte[] digestBytes = new byte[digest.getDigestSize()];
-
-            digest.doFinal(digestBytes, 0);
-            return digestBytes;
-        }
-
-        /**
-         * Encrypts the contents (avoiding the specified files/dirs) of a jar.
-         *
-         * This will KEEP the order of the contents of the jar!
-         * @throws IOException
-         */
-        public static void encryptJarContents(JarFile jarFile, GCMBlockCipher aesEngine, byte[] aesRaw, byte[] ivRaw,
-                                                String... filesOrdirectoriesToAvoid) throws IOException {
-
-            // encrypt to a stream, then save that stream BACK to the file... "in place encryption"
-            int blockSize = aesEngine.getUnderlyingCipher().getBlockSize();
-            byte[] aesKey = new byte[blockSize];
-            byte[] ivKey = new byte[blockSize];
-
-            System.arraycopy(aesRaw, 0, aesKey, 0, blockSize);
-            System.arraycopy(ivKey, 0, ivRaw, 0, blockSize);
-
-            // now encrypt the jar
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            JarOutputStream jarOutputStream = new JarOutputStream(new BufferedOutputStream(byteArrayOutputStream));
-            jarOutputStream.setLevel(9); // COMPRESSION LEVEL
-
-            boolean okToCrypt = false;
-
-            Enumeration<JarEntry> jarEntries = jarFile.entries();
-            while (jarEntries.hasMoreElements()) {
-                JarEntry jarEntry = jarEntries.nextElement();
-                String name = jarEntry.getName();
-
-                okToCrypt = !jarEntry.isDirectory();
-
-                if (!okToCrypt) {
-                    continue;
-                }
-
-                okToCrypt = true;
-                for (String dir : filesOrdirectoriesToAvoid) {
-                    if (name.startsWith(dir)) {
-                        okToCrypt = false;
-                        break;
-                    }
-                }
-
-                if (okToCrypt) {
-                    InputStream inputStream = jarFile.getInputStream(jarEntry);
-                    Crypto.AES.encryptStream(aesEngine, aesKey, ivKey, inputStream, jarOutputStream);
-                    inputStream.close();
-                    jarOutputStream.flush();
-                    jarOutputStream.closeEntry();
-                }
-            }
-
-            // finish the stream that we have been writing to
-            jarOutputStream.finish();
-            jarOutputStream.close();
-
-            jarFile.close();
-        }
-
 
         /**
          * Hash an input stream, based on the specified digest
