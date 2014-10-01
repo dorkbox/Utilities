@@ -324,14 +324,14 @@ public class Storage {
     }
 
     /**
-     * Reads a object using the default (blank) key
+     * Reads a object using the default (blank) key, and casts it to the expected class
      */
     public final <T> T get() {
         return get0(this.defaultKey);
     }
 
     /**
-     * Reads a object using the specific key.
+     * Reads a object using the specific key, and casts it to the expected class
      */
     public final <T> T get(String key) {
         ByteArrayWrapper wrap = wrap(key);

@@ -221,18 +221,18 @@ public class Metadata {
         lock.release();
 //        Sys.printArray(buf, buf.length, false, 0);
 
-
         return buf;
     }
 
    /**
     * Reads the record data for the given record header.
     */
-    @SuppressWarnings("unchecked")
+
     <T> T readData(Kryo kryo, InflaterInputStream inputStream) throws IOException {
         Input input = new Input(inputStream, 1024); // read 1024 at a time
-        Object readObject = kryo.readClassAndObject(input);
-        return (T) readObject;
+        @SuppressWarnings("unchecked")
+        T readObject = (T) kryo.readClassAndObject(input);
+        return readObject;
     }
 
     /**

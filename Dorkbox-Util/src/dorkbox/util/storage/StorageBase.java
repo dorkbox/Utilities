@@ -140,10 +140,10 @@ public class StorageBase {
         this.kryo.setRegistrationRequired(false);
 
         this.deflater = new Deflater(7, true);
-        this.outputStream = new DeflaterOutputStream(new FileOutputStream(this.file.getFD()), this.deflater, 1024, true);
+        this.outputStream = new DeflaterOutputStream(new FileOutputStream(this.file.getFD()), this.deflater, 65536, true);
 
         this.inflater = new Inflater(true);
-        this.inputStream = new InflaterInputStream(new FileInputStream(this.file.getFD()), this.inflater, 1024);
+        this.inputStream = new InflaterInputStream(new FileInputStream(this.file.getFD()), this.inflater, 65536);
 
         this.weight = .5F;
         this.memoryIndex = new ConcurrentHashMap<ByteArrayWrapper, Metadata>(this.numberOfRecords);
@@ -250,8 +250,7 @@ public class StorageBase {
             this.inflater.reset();
             this.file.seek(meta.dataPointer);
 
-            @SuppressWarnings("unchecked")
-            T readRecordData = (T) meta.readData(this.kryo, this.inputStream);
+            T readRecordData = meta.readData(this.kryo, this.inputStream);
 
             if (readRecordData != null) {
                 // now stuff it into our reference cache for future lookups!

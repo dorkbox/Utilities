@@ -1,4 +1,4 @@
-package dorkbox.util;
+package dorkbox.util.objectPool;
 
 /*
  *
@@ -22,13 +22,36 @@ package dorkbox.util;
 import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 import sun.misc.Unsafe;
 
 
 public class FastObjectPool<T> {
+    public static final Unsafe THE_UNSAFE;
+    static {
+        try {
+            final PrivilegedExceptionAction<Unsafe> action = new PrivilegedExceptionAction<Unsafe>() {
+                @Override
+                public Unsafe run() throws Exception {
+                    Class<sun.misc.Unsafe> unsafeClass = sun.misc.Unsafe.class;
+                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
+                    theUnsafe.setAccessible(true);
+                    Object unsafeObject = theUnsafe.get(null);
+                    if (unsafeClass.isInstance(unsafeObject)) {
+                        return unsafeClass.cast(unsafeObject);
+                    }
+
+                    throw new NoSuchFieldError("the Unsafe");
+                }
+            };
+
+            THE_UNSAFE = AccessController.doPrivileged(action);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to load unsafe", e);
+        }
+    }
 
     private Holder<T>[] objects;
 
@@ -43,21 +66,23 @@ public class FastObjectPool<T> {
     public ReentrantLock lock = new ReentrantLock();
     private ThreadLocal<Holder<T>> localValue = new ThreadLocal<>();
 
-    @SuppressWarnings("unchecked")
-    public FastObjectPool(PoolFactory<T> factory , int size)
-    {
+    public FastObjectPool(PoolFactory<T> factory, int size) {
 
-        int newSize=1;
-        while(newSize<size)
-        {
+        int newSize = 1;
+        while (newSize < size) {
             newSize = newSize << 1;
         }
+
         size = newSize;
-        this.objects = new Holder[size];
-        for(int x=0;x<size;x++)
-        {
+
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        Holder<T>[] stuff = new Holder[size];
+        this.objects = stuff;
+
+        for (int x=0;x<size;x++) {
             this.objects[x] = new Holder<T>(factory.create());
         }
+
         this.mask = size-1;
         this.releasePointer = size;
         this.BASE = THE_UNSAFE.arrayBaseOffset(Holder[].class);
@@ -65,29 +90,23 @@ public class FastObjectPool<T> {
         this.ASHIFT = 31 - Integer.numberOfLeadingZeros((int) this.INDEXSCALE);
     }
 
-    public Holder<T> take()
-    {
+    public Holder<T> take() {
         int localTakePointer;
 
         Holder<T> localObject = this.localValue.get();
-        if(localObject!=null)
-        {
-            if(localObject.state.compareAndSet(Holder.FREE, Holder.USED))
-            {
+        if (localObject != null) {
+            if(localObject.state.compareAndSet(Holder.FREE, Holder.USED)) {
                 return localObject;
             }
         }
 
-        while(this.releasePointer != (localTakePointer=this.takePointer) )
-        {
+        while (this.releasePointer != (localTakePointer=this.takePointer)) {
             int index = localTakePointer & this.mask;
             Holder<T> holder = this.objects[index];
             //if(holder!=null && THE_UNSAFE.compareAndSwapObject(objects, (index*INDEXSCALE)+BASE, holder, null))
-            if(holder!=null && THE_UNSAFE.compareAndSwapObject(this.objects, (index<<this.ASHIFT)+this.BASE, holder, null))
-            {
+            if (holder != null && THE_UNSAFE.compareAndSwapObject(this.objects, (index<<this.ASHIFT)+this.BASE, holder, null)) {
                 this.takePointer = localTakePointer+1;
-                if(holder.state.compareAndSet(Holder.FREE, Holder.USED))
-                {
+                if (holder.state.compareAndSet(Holder.FREE, Holder.USED)) {
                     this.localValue.set(holder);
                     return holder;
                 }
@@ -96,72 +115,24 @@ public class FastObjectPool<T> {
         return null;
     }
 
-    public void release(Holder<T> object) throws InterruptedException
-    {
+    public void release(Holder<T> object) throws InterruptedException {
         this.lock.lockInterruptibly();
-        try{
+
+        try {
             int localValue=this.releasePointer;
             //long index = ((localValue & mask) * INDEXSCALE ) + BASE;
             long index = ((localValue & this.mask)<<this.ASHIFT ) + this.BASE;
-            if(object.state.compareAndSet(Holder.USED, Holder.FREE))
-            {
+
+            if (object.state.compareAndSet(Holder.USED, Holder.FREE)) {
                 THE_UNSAFE.putOrderedObject(this.objects, index, object);
                 this.releasePointer = localValue+1;
             }
-            else
-            {
+            else {
                 throw new IllegalArgumentException("Invalid reference passed");
             }
         }
-        finally
-        {
+        finally {
             this.lock.unlock();
         }
     }
-
-    public static class Holder<T>
-    {
-        private T value;
-        public static final int FREE=0;
-        public static final int USED=1;
-
-        private AtomicInteger state = new AtomicInteger(FREE);
-        public Holder(T value)
-        {
-            this.value = value;
-        }
-
-        public T getValue() {
-            return this.value;
-        }
-    }
-
-    public static interface PoolFactory<T>
-    {
-        public T create();
-    }
-
-     public static final Unsafe THE_UNSAFE;
-        static
-        {
-            try
-            {
-                final PrivilegedExceptionAction<Unsafe> action = new PrivilegedExceptionAction<Unsafe>()
-                {
-                    @Override
-                    public Unsafe run() throws Exception
-                    {
-                        Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-                        theUnsafe.setAccessible(true);
-                        return (Unsafe) theUnsafe.get(null);
-                    }
-                };
-
-                THE_UNSAFE = AccessController.doPrivileged(action);
-            }
-            catch (Exception e)
-            {
-                throw new RuntimeException("Unable to load unsafe", e);
-            }
-        }
 }
