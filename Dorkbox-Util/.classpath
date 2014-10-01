@@ -24,5 +24,6 @@
 	<classpathentry kind="lib" path="/Dependencies/asm/asm-5.0.3.jar" sourcepath="/Dependencies/asm/asm-5.0.3-src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaLauncher-Util"/>
+	<classpathentry kind="lib" path="/Dependencies/jodaTime/joda-time-2.4.jar" sourcepath="/Dependencies/jodaTime/joda-time-2.4-sources.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
