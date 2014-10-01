@@ -157,6 +157,59 @@ public class FileUtil {
         return out;
     }
 
+    /**
+     * Copies the contents of file two onto the END of file one.
+     */
+    @SuppressWarnings("resource")
+    public static File concatFiles(File one, File two) throws IOException {
+        if (one == null) {
+            throw new IllegalArgumentException("one cannot be null.");
+        }
+        if (two == null) {
+            throw new IllegalArgumentException("two cannot be null.");
+        }
+
+        String normalizedOne = FilenameUtils.normalize(one.getAbsolutePath());
+        String normalizedTwo = FilenameUtils.normalize(two.getAbsolutePath());
+
+        Logger logger2 = logger;
+        if (logger2.isTraceEnabled()) {
+            logger2.trace("Cocating file: {}  -->  {}", one, two);
+        }
+
+        FileChannel channelOne = null;
+        FileChannel channelTwo = null;
+        try {
+            // open it in append mode
+            channelOne = new FileOutputStream(normalizedOne, true).getChannel();
+            channelTwo = new FileInputStream(normalizedTwo).getChannel();
+
+            long size = two.length();
+            while (size > 0) {
+                size -= channelOne.transferFrom(channelTwo, 0, size);
+            }
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        } finally {
+            try {
+                if (channelOne != null) {
+                    channelOne.close();
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                if (channelTwo != null) {
+                    channelTwo.close();
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        one.setLastModified(System.currentTimeMillis());
+
+        return one;
+    }
+
 
     /**
      * Moves a file, overwriting any existing file at the destination.
