@@ -745,9 +745,7 @@ public class Sys {
                 String classPath = name.substring(0, name.lastIndexOf('.'));
                 classPath = classPath.replace('/', '.');
 
-                String toDots = classPath.replaceAll(File.separator, ".");
-
-                Class<?> clazz = Class.forName(toDots, false, classLoader);
+                Class<?> clazz = Class.forName(classPath, false, classLoader);
                 if (clazz.getAnnotation(annotation) != null) {
                     annotatedClasses.add(clazz);
                 }
