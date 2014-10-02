@@ -16,11 +16,10 @@ import org.slf4j.Logger;
 
 public class InputConsole {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InputConsole.class);
-    private static final InputConsole consoleProxyReader;
+    private static final InputConsole consoleProxyReader = new InputConsole();
     private static final char[] emptyLine = new char[0];
 
     static {
-        consoleProxyReader = new InputConsole();
         // setup (if necessary) the JLINE console logger.
         // System.setProperty("jline.internal.Log.trace", "TRUE");
         // System.setProperty("jline.internal.Log.debug", "TRUE");
@@ -75,7 +74,7 @@ public class InputConsole {
     }
 
 
-    private ConsoleReader jlineReader;
+    private final ConsoleReader jlineReader;
 
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
@@ -85,28 +84,41 @@ public class InputConsole {
     private volatile char[] readLine = null;
     private volatile int readChar = -1;
 
-    private boolean isIDE;
+    private final boolean isIDE;
 
     // the streams are ALREADY buffered!
     //
     private InputConsole() {
+        boolean isIDECheck = false;
+        Terminal terminal = null;
+        ConsoleReader console = null;
         try {
-            this.jlineReader = new ConsoleReader();
+            console = new ConsoleReader();
 
-            Terminal terminal = this.jlineReader.getTerminal();
+            terminal = console.getTerminal();
             terminal.setEchoEnabled(true);
-            this.isIDE = terminal instanceof IDE_Terminal;
-
-            Logger logger2 = logger;
-            if (logger2.isDebugEnabled()) {
-                if (this.isIDE) {
-                    logger2.debug("Terminal is in IDE (best guess). Unable to support single key input. Only line input available.");
-                } else {
-                    logger2.debug("Terminal Type: {}", terminal.getClass().getSimpleName());
-                }
-            }
+            isIDECheck = terminal instanceof IDE_Terminal;
         } catch (UnsupportedEncodingException ignored) {
         } catch (IOException ignored) {
+        }
+
+        this.isIDE = isIDECheck;
+        this.jlineReader = console;
+
+        Logger logger2 = logger;
+        if (logger2.isDebugEnabled()) {
+            if (isIDECheck) {
+                logger2.debug("Terminal is in IDE (best guess). Unable to support single key input. Only line input available.");
+            } else {
+                String terminalType;
+                if (terminal != null) {
+                    terminalType = terminal.getClass().getSimpleName();
+                } else {
+                    terminalType = "NULL";
+                }
+
+                logger2.debug("Terminal Type: {}", terminalType);
+            }
         }
     }
 
@@ -152,7 +164,6 @@ public class InputConsole {
             @Override
             public void run() {
                 InputConsole.this.jlineReader.shutdown();
-                InputConsole.this.jlineReader = null;
             }});
         thread.setDaemon(true);
         thread.setName("Console Input Shutdown");
@@ -195,24 +206,67 @@ public class InputConsole {
 
     /** return null if no data */
     private final char[] readLinePassword0() {
-        startInputConsole();
-
         // don't bother in an IDE. it won't work.
         return readLine0();
     }
+
+    ThreadLocal<Integer> indexOfStringForReadChar = new ThreadLocal<Integer>() {
+        @Override
+        protected Integer initialValue() {
+            return -1;
+        }
+    };
 
     /** return -1 if no data */
     private final int read0() {
         startInputConsole();
 
-        synchronized (this.inputLockSingle) {
-            try {
-                this.inputLockSingle.wait();
-            } catch (InterruptedException e) {
-                return -1;
+        // if we are reading data (because we are in IDE mode), we want to return ALL
+        // the chars of the line!
+
+        // so, readChar is REALLY the index at which we return letters (until the whole string is returned
+        if (this.isIDE) {
+            int integer = this.indexOfStringForReadChar.get();
+
+            if (integer == -1) {
+                // we have to wait for more data.
+                synchronized (this.inputLockLine) {
+                    try {
+                        this.inputLockLine.wait();
+                    } catch (InterruptedException e) {
+                        return -1;
+                    }
+                    integer = 0;
+                    this.indexOfStringForReadChar.set(0);
+                }
             }
+
+            // EACH thread will have it's own count!
+            char[] readLine2 = this.readLine;
+
+            if (readLine2 == null) {
+                return -1;
+            } else if (integer == readLine2.length) {
+                this.indexOfStringForReadChar.set(-1);
+                return '\n';
+            } else {
+                this.indexOfStringForReadChar.set(integer+1);
+            }
+
+            char c = readLine2[integer];
+            return c;
         }
-        return this.readChar;
+        else {
+            // we can read like normal.
+            synchronized (this.inputLockSingle) {
+                try {
+                    this.inputLockSingle.wait();
+                } catch (InterruptedException e) {
+                    return -1;
+                }
+            }
+            return this.readChar;
+        }
     }
 
     /**
