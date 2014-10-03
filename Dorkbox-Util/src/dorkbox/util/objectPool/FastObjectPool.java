@@ -19,44 +19,21 @@ package dorkbox.util.objectPool;
  * limitations under the License.
  */
 
-import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.locks.ReentrantLock;
 
-import sun.misc.Unsafe;
+import dorkbox.util.Sys;
 
 
-public class FastObjectPool<T> {
-    public static final Unsafe THE_UNSAFE;
-    static {
-        try {
-            final PrivilegedExceptionAction<Unsafe> action = new PrivilegedExceptionAction<Unsafe>() {
-                @Override
-                public Unsafe run() throws Exception {
-                    Class<sun.misc.Unsafe> unsafeClass = sun.misc.Unsafe.class;
-                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
-                    theUnsafe.setAccessible(true);
-                    Object unsafeObject = theUnsafe.get(null);
-                    if (unsafeClass.isInstance(unsafeObject)) {
-                        return unsafeClass.cast(unsafeObject);
-                    }
+class FastObjectPool<T> implements ObjectPool<T> {
 
-                    throw new NoSuchFieldError("the Unsafe");
-                }
-            };
+    private static final boolean FREE = true;
+    private static final boolean USED = false;
 
-            THE_UNSAFE = AccessController.doPrivileged(action);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load unsafe", e);
-        }
-    }
-
-    private Holder<T>[] objects;
+    private final ObjectPoolHolder<T>[] objects;
+    private final PoolableObject<T> poolableObject;
 
     private volatile int takePointer;
-    private int releasePointer;
+    private volatile int releasePointer;
 
     private final int mask;
     private final long BASE;
@@ -64,10 +41,11 @@ public class FastObjectPool<T> {
     private final long ASHIFT;
 
     public ReentrantLock lock = new ReentrantLock();
-    private ThreadLocal<Holder<T>> localValue = new ThreadLocal<>();
+    private ThreadLocal<ObjectPoolHolder<T>> localValue = new ThreadLocal<>();
 
-    public FastObjectPool(PoolFactory<T> factory, int size) {
+    FastObjectPool(PoolableObject<T> poolableObject, int size) {
 
+        this.poolableObject = poolableObject;
         int newSize = 1;
         while (newSize < size) {
             newSize = newSize << 1;
@@ -76,38 +54,48 @@ public class FastObjectPool<T> {
         size = newSize;
 
         @SuppressWarnings({"unchecked", "rawtypes"})
-        Holder<T>[] stuff = new Holder[size];
+        ObjectPoolHolder<T>[] stuff = new ObjectPoolHolder[size];
         this.objects = stuff;
 
         for (int x=0;x<size;x++) {
-            this.objects[x] = new Holder<T>(factory.create());
+            this.objects[x] = new ObjectPoolHolder<T>(poolableObject.create());
         }
 
         this.mask = size-1;
         this.releasePointer = size;
-        this.BASE = THE_UNSAFE.arrayBaseOffset(Holder[].class);
-        this.INDEXSCALE = THE_UNSAFE.arrayIndexScale(Holder[].class);
+        this.BASE = Sys.unsafe.arrayBaseOffset(ObjectPoolHolder[].class);
+        this.INDEXSCALE = Sys.unsafe.arrayIndexScale(ObjectPoolHolder[].class);
         this.ASHIFT = 31 - Integer.numberOfLeadingZeros((int) this.INDEXSCALE);
     }
 
-    public Holder<T> take() {
+    @Override
+    public ObjectPoolHolder<T> take() {
         int localTakePointer;
 
-        Holder<T> localObject = this.localValue.get();
+        // if we have an object available in the cache, use it instead.
+        ObjectPoolHolder<T> localObject = this.localValue.get();
         if (localObject != null) {
-            if(localObject.state.compareAndSet(Holder.FREE, Holder.USED)) {
+            if (localObject.state.compareAndSet(FREE, USED)) {
+                this.poolableObject.activate(localObject.getValue());
                 return localObject;
             }
         }
 
+        sun.misc.Unsafe unsafe = Sys.unsafe;
+
         while (this.releasePointer != (localTakePointer=this.takePointer)) {
             int index = localTakePointer & this.mask;
-            Holder<T> holder = this.objects[index];
+
+            ObjectPoolHolder<T> holder = this.objects[index];
             //if(holder!=null && THE_UNSAFE.compareAndSwapObject(objects, (index*INDEXSCALE)+BASE, holder, null))
-            if (holder != null && THE_UNSAFE.compareAndSwapObject(this.objects, (index<<this.ASHIFT)+this.BASE, holder, null)) {
+            if (holder != null && unsafe.compareAndSwapObject(this.objects, (index<<this.ASHIFT)+this.BASE, holder, null)) {
                 this.takePointer = localTakePointer+1;
-                if (holder.state.compareAndSet(Holder.FREE, Holder.USED)) {
+
+                // the use of a threadlocal reference here helps eliminates contention. This also checks OTHER threads,
+                // as they might have one sitting on the cache
+                if (holder.state.compareAndSet(FREE, USED)) {
                     this.localValue.set(holder);
+                    this.poolableObject.activate(holder.getValue());
                     return holder;
                 }
             }
@@ -115,17 +103,19 @@ public class FastObjectPool<T> {
         return null;
     }
 
-    public void release(Holder<T> object) throws InterruptedException {
+    @Override
+    public void release(ObjectPoolHolder<T> object) throws InterruptedException {
         this.lock.lockInterruptibly();
 
         try {
-            int localValue=this.releasePointer;
+            int localValue = this.releasePointer;
             //long index = ((localValue & mask) * INDEXSCALE ) + BASE;
             long index = ((localValue & this.mask)<<this.ASHIFT ) + this.BASE;
 
-            if (object.state.compareAndSet(Holder.USED, Holder.FREE)) {
-                THE_UNSAFE.putOrderedObject(this.objects, index, object);
+            if (object.state.compareAndSet(USED, FREE)) {
+                Sys.unsafe.putOrderedObject(this.objects, index, object);
                 this.releasePointer = localValue+1;
+                this.poolableObject.passivate(object.getValue());
             }
             else {
                 throw new IllegalArgumentException("Invalid reference passed");
