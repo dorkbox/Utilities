@@ -17,6 +17,8 @@ import java.net.NetworkInterface;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -31,9 +33,16 @@ import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
+import com.esotericsoftware.kryo.util.Util;
+
 import dorkbox.urlHandler.BoxURLConnection;
 
 public class Sys {
+    public static final int javaVersion = getJavaVersion();
+    public static final boolean isAndroid = Util.isAndroid;
+
+    public static final sun.misc.Unsafe unsafe = getUNSAFE();
+
     public static final int     KILOBYTE = 1024;
     public static final int     MEGABYTE = 1024 * KILOBYTE;
     public static final int     GIGABYTE = 1024 * MEGABYTE;
@@ -49,6 +58,51 @@ public class Sys {
         return charArray;
     }
 
+    private static int getJavaVersion() {
+        String fullJavaVersion = System.getProperty("java.version");
+
+        // Converts a java version string, such as "1.7u45", and converts it into 7
+        char versionChar;
+        if (fullJavaVersion.startsWith("1.")) {
+            versionChar = fullJavaVersion.charAt(2);
+        } else {
+            versionChar = fullJavaVersion.charAt(0);
+        }
+
+        switch (versionChar) {
+            case '4': return 4;
+            case '5': return 5;
+            case '6': return 6;
+            case '7': return 7;
+            case '8': return 8;
+            case '9': return 9;
+            default: return -1;
+        }
+    }
+
+    private static sun.misc.Unsafe getUNSAFE() {
+        try {
+            final PrivilegedExceptionAction<sun.misc.Unsafe> action = new PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                @Override
+                public sun.misc.Unsafe run() throws Exception {
+                    Class<sun.misc.Unsafe> unsafeClass = sun.misc.Unsafe.class;
+                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
+                    theUnsafe.setAccessible(true);
+                    Object unsafeObject = theUnsafe.get(null);
+                    if (unsafeClass.isInstance(unsafeObject)) {
+                        return unsafeClass.cast(unsafeObject);
+                    }
+
+                    throw new NoSuchFieldError("the Unsafe");
+                }
+            };
+
+            return AccessController.doPrivileged(action);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to load unsafe", e);
+        }
+    }
 
     public static final void eraseString(String string) {
 //      You can change the value of the inner char[] using reflection.

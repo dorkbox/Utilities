@@ -375,6 +375,9 @@ public class StorageBase {
                         metaData.dataCapacity = size;
                         metaData.dataCount = 0;
                     }
+
+                    // TODO: should check to see if the data is different. IF SO, then we write, otherwise nothing!
+
                     metaData.writeData(dataStream, this.file);
                 }
 

@@ -27,7 +27,6 @@ public class MathUtils {
 
     /**
      * Creates the thread local MersenneTwister (as it's not thread safe), if necessary
-     * @return the MersenneTwister.
      */
     public static MersenneTwisterFast random() {
         MersenneTwisterFast mersenneTwisterFast = random.get();
