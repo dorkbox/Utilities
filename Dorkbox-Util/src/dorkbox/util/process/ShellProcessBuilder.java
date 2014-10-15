@@ -115,7 +115,10 @@ public class ShellProcessBuilder {
             } else {
                 // *nix
                 executableName = "/bin/bash";
-                // executableName = "/bin/sh";
+                File file = new File(executableName);
+                if (!file.canExecute()) {
+                    executableName = "/bin/sh";
+                }
                 arguments.add(0, "-c");
             }
         } else if (workingDirectory != null) {

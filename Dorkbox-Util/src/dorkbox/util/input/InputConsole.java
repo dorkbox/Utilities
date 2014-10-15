@@ -1,29 +1,30 @@
-package dorkbox.util;
+package dorkbox.util.input;
 
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.Reader;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import jline.IDE_Terminal;
-import jline.Terminal;
-import jline.console.ConsoleReader;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 
+import dorkbox.util.OS;
+import dorkbox.util.input.posix.UnixTerminal;
+import dorkbox.util.input.unsupported.UnsupportedTerminal;
+import dorkbox.util.input.windows.WindowsTerminal;
+
 public class InputConsole {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InputConsole.class);
     private static final InputConsole consoleProxyReader = new InputConsole();
     private static final char[] emptyLine = new char[0];
-
-    static {
-        // setup (if necessary) the JLINE console logger.
-        // System.setProperty("jline.internal.Log.trace", "TRUE");
-        // System.setProperty("jline.internal.Log.debug", "TRUE");
-    }
 
     /**
      * empty method to allow code to initialize the input console.
@@ -31,7 +32,23 @@ public class InputConsole {
     public static void init() {
     }
 
-    public static final void destroy() {
+    // this is run by our init...
+    {
+        AnsiConsole.systemInstall();
+
+        // don't forget we have to shut down the ansi console as well
+        // alternatively, shut everything down when the JVM closes.
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                AnsiConsole.systemUninstall();
+                InputConsole.destroy();
+            }
+        });
+    }
+
+    // called by our shutdown thread
+    private static final void destroy() {
         consoleProxyReader.destroy0();
     }
 
@@ -74,8 +91,6 @@ public class InputConsole {
     }
 
 
-    private final ConsoleReader jlineReader;
-
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
 
@@ -84,42 +99,87 @@ public class InputConsole {
     private volatile char[] readLine = null;
     private volatile int readChar = -1;
 
-    private final boolean isIDE;
+    private final boolean unsupported;
 
-    // the streams are ALREADY buffered!
-    //
+    private final Terminal terminal;
+    private Reader reader;
+    private final String encoding;
+
+
+
     private InputConsole() {
-        boolean isIDECheck = false;
-        Terminal terminal = null;
-        ConsoleReader console = null;
-        try {
-            console = new ConsoleReader();
+        Logger logger = InputConsole.logger;
+        boolean unsupported = false;
 
-            terminal = console.getTerminal();
-            terminal.setEchoEnabled(true);
-            isIDECheck = terminal instanceof IDE_Terminal;
-        } catch (UnsupportedEncodingException ignored) {
-        } catch (IOException ignored) {
+        String type = System.getProperty(TerminalType.TYPE, TerminalType.AUTO).toLowerCase();
+        if ("dumb".equals(System.getenv("TERM"))) {
+            type = "none";
+            logger.debug("$TERM=dumb; setting type={}", type);
         }
 
-        this.isIDE = isIDECheck;
-        this.jlineReader = console;
+        logger.debug("Creating terminal; type={}", type);
 
-        Logger logger2 = logger;
-        if (logger2.isDebugEnabled()) {
-            if (isIDECheck) {
-                logger2.debug("Terminal is in IDE (best guess). Unable to support single key input. Only line input available.");
+        Terminal t;
+        try {
+            if (type.equals(TerminalType.UNIX)) {
+                t = new UnixTerminal();
+            }
+            else if (type.equals(TerminalType.WIN) || type.equals(TerminalType.WINDOWS)) {
+                t = new WindowsTerminal();
+            }
+            else if (type.equals(TerminalType.NONE) || type.equals(TerminalType.OFF) || type.equals(TerminalType.FALSE)) {
+                t = new UnsupportedTerminal();
+                unsupported = true;
             } else {
-                String terminalType;
-                if (terminal != null) {
-                    terminalType = terminal.getClass().getSimpleName();
+                if (isIDEAutoDetect()) {
+                    logger.debug("Terminal is in UNSUPPORTED (best guess). Unable to support single key input. Only line input available.");
+                    t = new UnsupportedTerminal();
+                    unsupported = true;
                 } else {
-                    terminalType = "NULL";
+                    if (OS.isWindows()) {
+                        t = new WindowsTerminal();
+                    } else {
+                        t = new UnixTerminal();
+                    }
                 }
-
-                logger2.debug("Terminal Type: {}", terminalType);
             }
         }
+        catch (Exception e) {
+            logger.error("Failed to construct terminal, falling back to unsupported");
+            t = new UnsupportedTerminal();
+            unsupported = true;
+        }
+
+        InputStream in;
+
+        try {
+            t.init();
+            in = t.wrapInIfNeeded(System.in);
+        }
+        catch (Throwable e) {
+            logger.error("Terminal initialization failed, falling back to unsupported");
+            t = new UnsupportedTerminal();
+            unsupported = true;
+            in = System.in;
+
+            try {
+                t.init();
+            } catch (IOException e1) {
+                // UnsupportedTerminal can't do this
+            }
+        }
+
+        this.encoding = this.encoding != null ? this.encoding : getEncoding();
+        this.reader = new InputStreamReader(in, this.encoding);
+
+        if (unsupported) {
+            this.reader = new BufferedReader(this.reader);
+        }
+
+        this.unsupported = unsupported;
+        this.terminal = t;
+
+        logger.debug("Created Terminal: {}", this.terminal);
     }
 
     /**
@@ -145,6 +205,7 @@ public class InputConsole {
 
     private void destroy0() {
         // Don't change this, because we don't want to enable reading, etc from this once it's destroyed.
+        // so we pretend that it's still running
         // isRunning.set(false);
 
         if (this.isInShutdown.compareAndSet(true, true)) {
@@ -159,34 +220,22 @@ public class InputConsole {
             this.inputLockLine.notifyAll();
         }
 
-        // we want to make sure this happens in a new thread, since this can BLOCK our main event dispatch thread
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                InputConsole.this.jlineReader.shutdown();
-            }});
-        thread.setDaemon(true);
-        thread.setName("Console Input Shutdown");
-        thread.start();
+        try {
+            InputConsole inputConsole = InputConsole.this;
+
+            inputConsole.terminal.restore();
+            inputConsole.reader.close();
+        } catch (IOException ignored) {
+            ignored.printStackTrace();
+        }
     }
 
     private void echo0(boolean enableEcho) {
-        if (this.jlineReader != null) {
-            Terminal terminal = this.jlineReader.getTerminal();
-            if (terminal != null) {
-                terminal.setEchoEnabled(enableEcho);
-            }
-        }
+        this.terminal.setEchoEnabled(enableEcho);
     }
 
     private boolean echo0() {
-        if (this.jlineReader != null) {
-            Terminal terminal = this.jlineReader.getTerminal();
-            if (terminal != null) {
-                return terminal.isEchoEnabled();
-            }
-        }
-        return false;
+        return this.terminal.isEchoEnabled();
     }
 
 
@@ -225,7 +274,7 @@ public class InputConsole {
         // the chars of the line!
 
         // so, readChar is REALLY the index at which we return letters (until the whole string is returned
-        if (this.isIDE) {
+        if (this.unsupported) {
             int integer = this.indexOfStringForReadChar.get();
 
             if (integer == -1) {
@@ -284,15 +333,15 @@ public class InputConsole {
 
     private final void run() {
         Logger logger2 = logger;
-        if (this.jlineReader == null) {
-            logger2.error("Unable to start Console Reader");
-            return;
-        }
 
-        // if we are eclipse, we MUST do this per line! (per character DOESN'T work.)
-        if (this.isIDE) {
+        // if we are eclipse/etc, we MUST do this per line! (per character DOESN'T work.)
+        // char readers will get looped for the WHOLE string, so reading by char will work,
+        // it just waits until \n until it triggers
+        if (this.unsupported) {
+            BufferedReader reader = (BufferedReader) this.reader;
+
             try {
-                while ((this.readLine = this.jlineReader.readLine()) != null) {
+                while ((this.readLine = reader.readLine().toCharArray()) != null) {
                     // notify everyone waiting for a line of text.
                     synchronized (this.inputLockSingle) {
                         if (this.readLine.length > 0) {
@@ -309,8 +358,8 @@ public class InputConsole {
             } catch (Exception ignored) {
                 ignored.printStackTrace();
             }
-        } else {
-
+        }
+        else {
             try {
                 final boolean ansiEnabled = Ansi.isEnabled();
                 Ansi ansi = Ansi.ansi();
@@ -320,7 +369,7 @@ public class InputConsole {
 
                 // don't type ; in a bash shell, it quits everything
                 // \n is replaced by \r in unix terminal?
-                while ((typedChar = this.jlineReader.readCharacter()) != -1) {
+                while ((typedChar = this.reader.read()) != -1) {
                     char asChar = (char) typedChar;
 
                     if (logger2.isTraceEnabled()) {
@@ -339,26 +388,30 @@ public class InputConsole {
 
                         // clear ourself + one extra.
                         if (ansiEnabled) {
-                            int amtToBackspace = 2; // ConsoleReader.getPrintableCharacters(typedChar).length();
+                            // size of the buffer BEFORE our backspace was typed
                             int length = buf.length();
+                            int amtToOverwrite = 2; // backspace is always 2 chars (^?)
+
                             if (length > 1) {
                                 char charAt = buf.charAt(length-1);
-                                amtToBackspace += ConsoleReader.getPrintableCharacters(charAt).length();
-                                buf.delete(length-1, length);
+                                amtToOverwrite += getPrintableCharacters(charAt);
 
-                                length--;
+                                // delete last item in our buffer
+                                buf.setLength(--length);
 
-                                // now figure out where the cursor is at.
+                                // now figure out where the cursor is really at.
+                                // this is more memory friendly than buf.toString.length
                                 for (int i=0;i<length;i++) {
                                     charAt = buf.charAt(i);
-                                    position += ConsoleReader.getPrintableCharacters(charAt).length();
+                                    position += getPrintableCharacters(charAt);
                                 }
                                 position++;
                             }
 
-                            char[] overwrite = new char[amtToBackspace];
-                            for (int i=0;i<amtToBackspace;i++) {
-                                overwrite[i] = ' ';
+                            char[] overwrite = new char[amtToOverwrite];
+                            char c = ' ';
+                            for (int i=0;i<amtToOverwrite;i++) {
+                                overwrite[i] = c;
                             }
 
                             // move back however many, over write, then go back again
@@ -372,7 +425,7 @@ public class InputConsole {
                         continue;
                     }
 
-                    // ignoring \r, because \n is ALWAYS the last character in a new line sequence.
+                    // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
                     if (asChar == '\n') {
                         int length = buf.length();
 
@@ -399,5 +452,113 @@ public class InputConsole {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    /**
+    +     * Get the default encoding.  Will first look at the LC_CTYPE environment variable, then the input.encoding
+    +     * system property, then the default charset according to the JVM.
+    +     *
+    +     * @return The default encoding to use when none is specified.
+    +     */
+    public static String getEncoding() {
+        // LC_CTYPE is usually in the form en_US.UTF-8
+        String envEncoding = extractEncodingFromCtype(System.getenv("LC_CTYPE"));
+        if (envEncoding != null) {
+            return envEncoding;
+        }
+        return System.getProperty("input.encoding", Charset.defaultCharset().name());
+    }
+
+    /**
+     * Parses the LC_CTYPE value to extract the encoding according to the POSIX standard, which says that the LC_CTYPE
+     * environment variable may be of the format <code>[language[_territory][.codeset][@modifier]]</code>
+     *
+     * @param ctype The ctype to parse, may be null
+     * @return The encoding, if one was present, otherwise null
+     */
+    static String extractEncodingFromCtype(String ctype) {
+        if (ctype != null && ctype.indexOf('.') > 0) {
+            String encodingAndModifier = ctype.substring(ctype.indexOf('.') + 1);
+            if (encodingAndModifier.indexOf('@') > 0) {
+                return encodingAndModifier.substring(0, encodingAndModifier.indexOf('@'));
+            } else {
+                return encodingAndModifier;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * try to guess if we are running inside an IDE
+     */
+    private boolean isIDEAutoDetect() {
+        try {
+            // Get the location of this class
+            ProtectionDomain pDomain = getClass().getProtectionDomain();
+            CodeSource cSource = pDomain.getCodeSource();
+            URL loc = cSource.getLocation();  // file:/X:/workspace/xxxx/classes/  when it's in eclipse
+
+            // if we are in eclipse, this won't be a jar -- it will be a class directory.
+            File locFile = new File(loc.getFile());
+            return locFile.isDirectory();
+
+        } catch (Exception e) {
+        }
+
+        // fall-back to unsupported
+        return true;
+    }
+
+
+    /**
+     * Return the number of characters that will be printed when the specified
+     * character is echoed to the screen
+     *
+     * Adapted from cat by Torbjorn Granlund, as repeated in stty by David MacKenzie.
+     */
+    public static int getPrintableCharacters(final int ch) {
+//        StringBuilder sbuff = new StringBuilder();
+
+        if (ch >= 32) {
+            if (ch < 127) {
+//                sbuff.append((char) ch);
+                return 1;
+            }
+            else if (ch == 127) {
+//                sbuff.append('^');
+//                sbuff.append('?');
+                return 2;
+            }
+            else {
+//                sbuff.append('M');
+//                sbuff.append('-');
+                int count = 2;
+
+                if (ch >= 128 + 32) {
+                    if (ch < 128 + 127) {
+//                        sbuff.append((char) (ch - 128));
+                        count++;
+                    }
+                    else {
+//                        sbuff.append('^');
+//                        sbuff.append('?');
+                        count += 2;
+                    }
+                }
+                else {
+//                    sbuff.append('^');
+//                    sbuff.append((char) (ch - 128 + 64));
+                    count += 2;
+                }
+                return count;
+            }
+        }
+        else {
+//            sbuff.append('^');
+//            sbuff.append((char) (ch + 64));
+            return 2;
+        }
+
+//        return sbuff;
     }
 }

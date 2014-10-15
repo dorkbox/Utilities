@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -533,6 +534,28 @@ public class FileUtil {
     }
 
     /**
+     * Unzips a ZIP file. Will close the input stream.
+     *
+     * @return The path to the output directory.
+     */
+    public static void unzip(ZipInputStream inputStream, String outputDir) throws IOException {
+        if (outputDir == null) {
+            throw new IllegalArgumentException("outputDir cannot be null.");
+        }
+
+        unzip(inputStream, new File(outputDir));
+    }
+
+    /**
+     * Unzips a ZIP file. Will close the input stream.
+     *
+     * @return The path to the output directory.
+     */
+    public static void unzip(ZipInputStream inputStream, File outputDir) throws IOException {
+        unzipJar(inputStream, outputDir, true);
+    }
+
+    /**
      * Unzips a ZIP file
      *
      * @return The path to the output directory.
@@ -564,7 +587,21 @@ public class FileUtil {
         unjarzip0(zipFile, outputDir, extractManifest);
     }
 
+    /**
+     * Unzips a ZIP file. Will close the input stream.
+     *
+     * @return The path to the output directory.
+     */
+    public static void unzipJar(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws IOException {
+        if (inputStream == null) {
+            throw new IllegalArgumentException("inputStream cannot be null.");
+        }
+        if (outputDir == null) {
+            throw new IllegalArgumentException("outputDir cannot be null.");
+        }
 
+        unjarzip1(inputStream, outputDir, extractManifest);
+    }
 
     /**
      * Unzips a ZIP or JAR file (and handles the manifest if requested)
@@ -582,15 +619,20 @@ public class FileUtil {
             throw new RuntimeException("Source filesize is too large!");
         }
 
+        ZipInputStream inputStream = new ZipInputStream(new FileInputStream(zipFile));
 
-        ZipInputStream inputStrem = new ZipInputStream(new FileInputStream(zipFile));
+        unjarzip1(inputStream, outputDir, extractManifest);
+    }
+
+    /**
+     * Unzips a ZIP file
+     *
+     * @return The path to the output directory.
+     */
+    private static void unjarzip1(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws FileNotFoundException, IOException {
         try {
-            while (true) {
-                ZipEntry entry = inputStrem.getNextEntry();
-                if (entry == null) {
-                    break;
-                }
-
+            ZipEntry entry = null;
+            while ((entry = inputStream.getNextEntry()) != null) {
                 String name = entry.getName();
 
                 if (!extractManifest && name.startsWith("META-INF/")) {
@@ -607,13 +649,13 @@ public class FileUtil {
 
                 FileOutputStream output = new FileOutputStream(file);
                 try {
-                    Sys.copyStream(inputStrem, output);
+                    Sys.copyStream(inputStream, output);
                 } finally {
-                    output.close();
+                    Sys.close(output);
                 }
             }
         } finally {
-            inputStrem.close();
+            Sys.close(inputStream);
         }
     }
 

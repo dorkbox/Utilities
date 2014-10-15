@@ -89,6 +89,9 @@ import dorkbox.urlHandler.Box;
  *  1) Necessary
  *  2) Compatible with GWT
  *
+ *
+ * To determine if we have hardware acclerated AES
+ * java -XX:+PrintFlagsFinal -version | grep UseAES
  */
 public class Crypto {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Crypto.class);

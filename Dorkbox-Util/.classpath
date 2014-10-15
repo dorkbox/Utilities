@@ -12,8 +12,6 @@
 	<classpathentry kind="lib" path="/Dependencies/kryo/reflectasm.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/javassist/javassist.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/jlzma/lzma-java-1.1.jar" sourcepath="/Dependencies/jlzma/lzma-java-1.1-sources.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/jline/jline2b.jar" sourcepath="/Dependencies/jline/jline2b-source.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/jline/jansi-1.11b.jar" sourcepath="/Dependencies/jline/jansi-1.11b-source.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151-src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcprov-debug-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcprov-jdk15on-151-src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/netty/netty-all-4.1.0.jar" sourcepath="/Dependencies/netty/netty-all-4.1.0-sources.zip">
@@ -25,5 +23,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaLauncher-Util"/>
 	<classpathentry kind="lib" path="/Dependencies/jodaTime/joda-time-2.4.jar" sourcepath="/Dependencies/jodaTime/joda-time-2.4-sources.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/jna/jna-4.1.0.jar" sourcepath="/Dependencies/jna/jna-4.1.0-sources.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/jansi/jansi-1.11b.jar" sourcepath="/Dependencies/jansi/jansi-1.11b-source.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
