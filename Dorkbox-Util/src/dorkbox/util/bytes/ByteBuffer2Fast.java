@@ -3,9 +3,9 @@ package dorkbox.util.bytes;
 import java.nio.BufferUnderflowException;
 
 /**
- * Cleanroom implementation of a self-growing bytebuffer
+ * Cleanroom implementation of a self-growing bytebuffer. NOT SYNCHRONIZED!
  */
-public class ByteBuffer2 {
+public class ByteBuffer2Fast {
 
     private byte[] bytes;
 
@@ -13,25 +13,25 @@ public class ByteBuffer2 {
     private int mark = -1;
     private int limit = 0;
 
-    public static ByteBuffer2 wrap(byte[] buffer) {
-        return new ByteBuffer2(buffer);
+    public static ByteBuffer2Fast wrap(byte[] buffer) {
+        return new ByteBuffer2Fast(buffer);
     }
 
-    public static ByteBuffer2 allocate(int capacity) {
-        ByteBuffer2 byteBuffer2 = new ByteBuffer2(new byte[capacity]);
+    public static ByteBuffer2Fast allocate(int capacity) {
+        ByteBuffer2Fast byteBuffer2 = new ByteBuffer2Fast(new byte[capacity]);
         byteBuffer2.clear();
         return byteBuffer2;
     }
 
-    public ByteBuffer2() {
+    public ByteBuffer2Fast() {
         this(0);
     }
 
-    public ByteBuffer2(int size) {
+    public ByteBuffer2Fast(int size) {
         this(new byte[size]);
     }
 
-    public ByteBuffer2(byte[] bytes) {
+    public ByteBuffer2Fast(byte[] bytes) {
         this.bytes = bytes;
         clear();
         this.position = bytes.length;
@@ -91,16 +91,16 @@ public class ByteBuffer2 {
         }
     }
 
-    public final synchronized void put(ByteBuffer2 buffer) {
+    public final void put(ByteBuffer2Fast buffer) {
         putBytes(buffer.array(), buffer.position, buffer.limit);
         buffer.position = buffer.limit;
     }
 
-    public final synchronized ByteBuffer2 putBytes(byte[] src) {
+    public final ByteBuffer2Fast putBytes(byte[] src) {
         return putBytes(src, 0, src.length);
     }
 
-    public final synchronized ByteBuffer2 putBytes(byte[] src, int offset, int length) {
+    public final ByteBuffer2Fast putBytes(byte[] src, int offset, int length) {
         checkBuffer(this.position + length - offset);
 
         System.arraycopy(src, offset, this.bytes, this.position, length);
@@ -109,25 +109,25 @@ public class ByteBuffer2 {
         return this;
     }
 
-    public final synchronized ByteBuffer2 putByte(byte b) {
+    public final ByteBuffer2Fast putByte(byte b) {
         checkBuffer(this.position + 1);
 
         _put(b);
         return this;
     }
 
-    public final synchronized void putByte(int position, byte b) {
+    public final void putByte(int position, byte b) {
         this.position = position;
         putByte(b);
     }
 
-    public final synchronized void putChar(char c) {
+    public final void putChar(char c) {
         checkBuffer(this.position + 2);
 
         putBytes(BigEndian.Char_.toBytes(c));
     }
 
-    public final synchronized char getChar() {
+    public final char getChar() {
         return BigEndian.Char_.fromBytes(getByte(), getByte());
     }
 
@@ -137,12 +137,12 @@ public class ByteBuffer2 {
 
     public void getChars(int srcStart, int srcLength, char[] dest, int destStart) {
         for (int i=srcStart;i<srcLength;i+=2) {
-            char c = BigEndian.Char_.fromBytes(getByte(), getByte());
+            char c = BigEndian.Char_.fromBytes(getByte(i), getByte(i+1));
             dest[destStart++] = c;
         }
     }
 
-    public final synchronized ByteBuffer2 putShort(short x) {
+    public final ByteBuffer2Fast putShort(short x) {
         checkBuffer(this.position + 2);
 
         putBytes(BigEndian.Short_.toBytes(x));
@@ -150,7 +150,7 @@ public class ByteBuffer2 {
         return this;
     }
 
-    public final synchronized short getShort() {
+    public final short getShort() {
         return BigEndian.Short_.fromBytes(getByte(), getByte());
     }
 
@@ -158,13 +158,13 @@ public class ByteBuffer2 {
         return BigEndian.Short_.fromBytes(getByte(i++), getByte(i));
     }
 
-    public final synchronized void putInt(int x) {
+    public final void putInt(int x) {
         checkBuffer(this.position + 4);
 
         putBytes(BigEndian.Int_.toBytes(x));
     }
 
-    public final synchronized int getInt() {
+    public final int getInt() {
         return BigEndian.Int_.fromBytes(getByte(), getByte(), getByte(), getByte());
     }
 
@@ -172,13 +172,13 @@ public class ByteBuffer2 {
         return BigEndian.Int_.fromBytes(getByte(i++), getByte(i++), getByte(i++), getByte(i++));
     }
 
-    public final synchronized void putLong(long x) {
+    public final void putLong(long x) {
         checkBuffer(this.position + 8);
 
         putBytes(BigEndian.Long_.toBytes(x));
     }
 
-    public final synchronized long getLong() {
+    public final long getLong() {
         return BigEndian.Long_.fromBytes(getByte(), getByte(), getByte(), getByte(), getByte(), getByte(), getByte(), getByte());
     }
 
@@ -196,7 +196,7 @@ public class ByteBuffer2 {
     /**
      * Returns a copy of the backing array of this buffer
      */
-    public final synchronized byte[] arrayCopy() {
+    public final byte[] arrayCopy() {
         int length = this.bytes.length - this.position;
 
         byte[] b = new byte[length];
@@ -214,7 +214,7 @@ public class ByteBuffer2 {
     /**
      * Sets this buffer's position.
      */
-    public final synchronized ByteBuffer2 position(int position) {
+    public final ByteBuffer2Fast position(int position) {
         if (position > this.bytes.length || position < 0) {
             throw new IllegalArgumentException();
         }
@@ -231,7 +231,7 @@ public class ByteBuffer2 {
      * Returns the number of elements between the current position and the
      * limit.
      */
-    public final synchronized int remaining() {
+    public final int remaining() {
         return this.limit - this.position;
     }
 
@@ -239,14 +239,14 @@ public class ByteBuffer2 {
      * Tells whether there are any elements between the current position and
      * the limit.
      */
-    public final synchronized boolean hasRemaining() {
+    public final boolean hasRemaining() {
         return this.position < this.limit;
     }
 
     /**
      * Sets this buffer's limit.
      */
-    public final synchronized void limit(int limit) {
+    public final void limit(int limit) {
         this.limit = limit;
         if (this.position > limit) {
             this.position = limit;
@@ -279,7 +279,7 @@ public class ByteBuffer2 {
      *  The buffer's position is set to the number of bytes copied, rather than to zero, so that an invocation of this method
      *  can be followed immediately by an invocation of another relative put method.
      */
-    public final synchronized void compact() {
+    public final void compact() {
         this.mark = -1;
         System.arraycopy(this.bytes, this.position, this.bytes, 0, remaining());
 
@@ -294,7 +294,7 @@ public class ByteBuffer2 {
      * the position is set to zero.  If the mark is defined then it is
      * discarded.
      */
-    public final synchronized void flip() {
+    public final void flip() {
         this.limit = this.position;
         this.position = 0;
         this.mark = -1;
@@ -304,7 +304,7 @@ public class ByteBuffer2 {
      * Clears this buffer.  The position is set to zero, the limit is set to
      * the capacity, and the mark is discarded.
      */
-    public final synchronized void clear() {
+    public final void clear() {
         this.position = 0;
         this.limit = capacity();
         this.mark = -1;
@@ -314,7 +314,7 @@ public class ByteBuffer2 {
      * Rewinds this buffer.  The position is set to zero and the mark is
      * discarded.
      */
-    public final synchronized void rewind() {
+    public final void rewind() {
         this.position = 0;
         this.mark = -1;
     }
@@ -322,7 +322,7 @@ public class ByteBuffer2 {
     /**
      * Sets this buffer's mark at its position.
      */
-    public final synchronized void mark() {
+    public final void mark() {
         this.mark = this.position;
     }
 

@@ -54,7 +54,6 @@ public class WindowsTerminal extends Terminal
     public void init() throws IOException {
         this.originalMode = WindowsSupport.getConsoleMode();
         WindowsSupport.setConsoleMode(this.originalMode & ~ConsoleMode.ENABLE_ECHO_INPUT.code);
-        setEchoEnabled(false);
     }
 
     /**

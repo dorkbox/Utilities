@@ -5,18 +5,21 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 
 import dorkbox.util.OS;
+import dorkbox.util.Sys;
+import dorkbox.util.bytes.ByteBuffer2Fast;
 import dorkbox.util.input.posix.UnixTerminal;
 import dorkbox.util.input.unsupported.UnsupportedTerminal;
 import dorkbox.util.input.windows.WindowsTerminal;
@@ -36,20 +39,31 @@ public class InputConsole {
     {
         AnsiConsole.systemInstall();
 
+        Thread consoleThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                consoleProxyReader.run();
+            }
+        });
+        consoleThread.setDaemon(true);
+        consoleThread.setName("Console Input Reader");
+
+        consoleThread.start();
+
+        // has to be NOT DAEMON thread, since it must run before the app closes.
+
         // don't forget we have to shut down the ansi console as well
         // alternatively, shut everything down when the JVM closes.
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        Thread shutdownThread = new Thread() {
             @Override
             public void run() {
                 AnsiConsole.systemUninstall();
-                InputConsole.destroy();
-            }
-        });
-    }
 
-    // called by our shutdown thread
-    private static final void destroy() {
-        consoleProxyReader.destroy0();
+                consoleProxyReader.shutdown0();
+            }
+        };
+        shutdownThread.setName("Console Input Shutdown");
+        Runtime.getRuntime().addShutdownHook(shutdownThread);
     }
 
     /** return null if no data */
@@ -94,9 +108,17 @@ public class InputConsole {
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
 
-    private AtomicBoolean isRunning = new AtomicBoolean(false);
-    private AtomicBoolean isInShutdown = new AtomicBoolean(false);
-    private volatile char[] readLine = null;
+    private ThreadLocal<ByteBuffer2Fast> threadBufferForRead = new ThreadLocal<ByteBuffer2Fast>();
+    private CopyOnWriteArrayList<ByteBuffer2Fast> threadBuffersForRead = new CopyOnWriteArrayList<ByteBuffer2Fast>();
+
+    ThreadLocal<Integer> indexOfStringForReadChar = new ThreadLocal<Integer>() {
+        @Override
+        protected Integer initialValue() {
+            return -1;
+        }
+    };
+
+
     private volatile int readChar = -1;
 
     private final boolean unsupported;
@@ -119,7 +141,7 @@ public class InputConsole {
 
         logger.debug("Creating terminal; type={}", type);
 
-        Terminal t;
+        Terminal    t;
         try {
             if (type.equals(TerminalType.UNIX)) {
                 t = new UnixTerminal();
@@ -182,36 +204,8 @@ public class InputConsole {
         logger.debug("Created Terminal: {}", this.terminal);
     }
 
-    /**
-     * make sure the input console reader thread is started.
-     */
-    private void startInputConsole() {
-        // protected by atomic!
-        if (!this.isRunning.compareAndSet(false, true) || this.isInShutdown.get()) {
-            return;
-        }
-
-        Thread consoleThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                consoleProxyReader.run();
-            }
-        });
-        consoleThread.setDaemon(true);
-        consoleThread.setName("Console Input Reader");
-
-        consoleThread.start();
-    }
-
-    private void destroy0() {
-        // Don't change this, because we don't want to enable reading, etc from this once it's destroyed.
-        // so we pretend that it's still running
-        // isRunning.set(false);
-
-        if (this.isInShutdown.compareAndSet(true, true)) {
-            return;
-        }
-
+    // called when the JVM is shutting down.
+    private void shutdown0() {
         synchronized (this.inputLockSingle) {
             this.inputLockSingle.notifyAll();
         }
@@ -224,7 +218,8 @@ public class InputConsole {
             InputConsole inputConsole = InputConsole.this;
 
             inputConsole.terminal.restore();
-            inputConsole.reader.close();
+            // this will 'hang' our shutdown, and honestly, who cares? We're shutting down anyways.
+            // inputConsole.reader.close(); // hangs on shutdown
         } catch (IOException ignored) {
             ignored.printStackTrace();
         }
@@ -241,7 +236,11 @@ public class InputConsole {
 
     /** return null if no data */
     private final char[] readLine0() {
-        startInputConsole();
+        if (this.threadBufferForRead.get() == null) {
+            ByteBuffer2Fast buffer = ByteBuffer2Fast.allocate(0);
+            this.threadBufferForRead.set(buffer);
+            this.threadBuffersForRead.add(buffer);
+        }
 
         synchronized (this.inputLockLine) {
             try {
@@ -250,34 +249,53 @@ public class InputConsole {
                 return emptyLine;
             }
         }
-        return this.readLine;
+
+        ByteBuffer2Fast stringBuffer = this.threadBufferForRead.get();
+        int len = stringBuffer.position();
+        if (len == 0) {
+            return emptyLine;
+        }
+
+        char[] chars = new char[len/2]; // because 2 chars is 1 bytes
+        stringBuffer.getChars(0, len, chars, 0);
+
+        // dump the chars in the buffer (safer for passwords, etc)
+        stringBuffer.clear();
+        stringBuffer.putBytes(new byte[0]);
+
+        this.threadBufferForRead.set(null);
+        this.threadBuffersForRead.remove(stringBuffer);  // TODO: use object pool!
+
+        return chars;
     }
 
     /** return null if no data */
     private final char[] readLinePassword0() {
-        // don't bother in an IDE. it won't work.
-        return readLine0();
-    }
-
-    ThreadLocal<Integer> indexOfStringForReadChar = new ThreadLocal<Integer>() {
-        @Override
-        protected Integer initialValue() {
-            return -1;
+        if (this.threadBufferForRead.get() == null) {
+            ByteBuffer2Fast buffer = ByteBuffer2Fast.allocate(0);
+            this.threadBufferForRead.set(buffer);
+            this.threadBuffersForRead.add(buffer);
         }
-    };
+
+        // don't bother in an IDE. it won't work.
+        boolean echoEnabled = this.terminal.isEchoEnabled();
+        this.terminal.setEchoEnabled(false);
+        char[] readLine0 = readLine0();
+        this.terminal.setEchoEnabled(echoEnabled);
+
+        return readLine0;
+    }
 
     /** return -1 if no data */
     private final int read0() {
-        startInputConsole();
-
         // if we are reading data (because we are in IDE mode), we want to return ALL
         // the chars of the line!
 
         // so, readChar is REALLY the index at which we return letters (until the whole string is returned
         if (this.unsupported) {
-            int integer = this.indexOfStringForReadChar.get();
+            int readerCount = this.indexOfStringForReadChar.get();
 
-            if (integer == -1) {
+            if (readerCount == -1) {
                 // we have to wait for more data.
                 synchronized (this.inputLockLine) {
                     try {
@@ -285,24 +303,23 @@ public class InputConsole {
                     } catch (InterruptedException e) {
                         return -1;
                     }
-                    integer = 0;
+                    readerCount = 0;
                     this.indexOfStringForReadChar.set(0);
                 }
             }
 
-            // EACH thread will have it's own count!
-            char[] readLine2 = this.readLine;
 
-            if (readLine2 == null) {
-                return -1;
-            } else if (integer == readLine2.length) {
+            // EACH thread will have it's own count!
+            ByteBuffer2Fast stringBuffer = this.threadBufferForRead.get();
+
+           if (readerCount == stringBuffer.position()) {
                 this.indexOfStringForReadChar.set(-1);
                 return '\n';
             } else {
-                this.indexOfStringForReadChar.set(integer+1);
+                this.indexOfStringForReadChar.set(readerCount+1);
             }
 
-            char c = readLine2[integer];
+            char c = stringBuffer.getChar(readerCount);
             return c;
         }
         else {
@@ -339,19 +356,30 @@ public class InputConsole {
         // it just waits until \n until it triggers
         if (this.unsupported) {
             BufferedReader reader = (BufferedReader) this.reader;
+            String line = null;
+            char[] readLine = null;
 
             try {
-                while ((this.readLine = reader.readLine().toCharArray()) != null) {
+                while ((line = reader.readLine()) != null) {
+                    readLine = line.toCharArray();
+
                     // notify everyone waiting for a line of text.
                     synchronized (this.inputLockSingle) {
-                        if (this.readLine.length > 0) {
-                            this.readChar = this.readLine[0];
+                        if (readLine.length > 0) {
+                            this.readChar = readLine[0];
                         } else {
                             this.readChar = -1;
                         }
                         this.inputLockSingle.notifyAll();
                     }
                     synchronized (this.inputLockLine) {
+                        byte[] charToBytes = Sys.charToBytes(readLine);
+
+                        for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
+                            buffer.clear();
+                            buffer.putBytes(charToBytes);
+                        }
+
                         this.inputLockLine.notifyAll();
                     }
                 }
@@ -360,12 +388,13 @@ public class InputConsole {
             }
         }
         else {
+            // from a 'regular' console
             try {
                 final boolean ansiEnabled = Ansi.isEnabled();
                 Ansi ansi = Ansi.ansi();
+                PrintStream out = AnsiConsole.out;
 
                 int typedChar;
-                StringBuilder buf = new StringBuilder();
 
                 // don't type ; in a bash shell, it quits everything
                 // \n is replaced by \r in unix terminal?
@@ -388,65 +417,57 @@ public class InputConsole {
 
                         // clear ourself + one extra.
                         if (ansiEnabled) {
-                            // size of the buffer BEFORE our backspace was typed
-                            int length = buf.length();
-                            int amtToOverwrite = 2; // backspace is always 2 chars (^?)
+                            for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
+                                // size of the buffer BEFORE our backspace was typed
+                                int length = buffer.position();
+                                int amtToOverwrite = 2 * 2; // backspace is always 2 chars (^?) * 2 because it's bytes
 
-                            if (length > 1) {
-                                char charAt = buf.charAt(length-1);
-                                amtToOverwrite += getPrintableCharacters(charAt);
+                                if (length > 1) {
+                                    char charAt = buffer.getChar(length-2);
+                                    amtToOverwrite += getPrintableCharacters(charAt);
 
-                                // delete last item in our buffer
-                                buf.setLength(--length);
+                                    // delete last item in our buffer
+                                    length -= 2;
+                                    buffer.position(length);
 
-                                // now figure out where the cursor is really at.
-                                // this is more memory friendly than buf.toString.length
-                                for (int i=0;i<length;i++) {
-                                    charAt = buf.charAt(i);
-                                    position += getPrintableCharacters(charAt);
+                                    // now figure out where the cursor is really at.
+                                    // this is more memory friendly than buf.toString.length
+                                    for (int i=0;i<length;i+=2) {
+                                        charAt = buffer.getChar(i);
+                                        position += getPrintableCharacters(charAt);
+                                    }
+
+                                    position++;
                                 }
-                                position++;
-                            }
 
-                            char[] overwrite = new char[amtToOverwrite];
-                            char c = ' ';
-                            for (int i=0;i<amtToOverwrite;i++) {
-                                overwrite[i] = c;
-                            }
+                                char[] overwrite = new char[amtToOverwrite];
+                                char c = ' ';
+                                for (int i=0;i<amtToOverwrite;i++) {
+                                    overwrite[i] = c;
+                                }
 
-                            // move back however many, over write, then go back again
-                            AnsiConsole.out.print(ansi.cursorToColumn(position));
-                            AnsiConsole.out.print(overwrite);
-                            AnsiConsole.out.print(ansi.cursorToColumn(position));
-                            AnsiConsole.out.flush();
+                                // move back however many, over write, then go back again
+                                out.print(ansi.cursorToColumn(position));
+                                out.print(overwrite);
+                                out.print(ansi.cursorToColumn(position));
+                                out.flush();
+                            }
                         }
 
-                        // readline will ignore backspace
+                        // read-line will ignore backspace
                         continue;
                     }
 
                     // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
                     if (asChar == '\n') {
-                        int length = buf.length();
-
                         synchronized (this.inputLockLine) {
-                            if (length > 0) {
-                                this.readLine = new char[length];
-                                buf.getChars(0, length, this.readLine, 0);
-                            } else {
-                                this.readLine = emptyLine;
-                            }
-
                             this.inputLockLine.notifyAll();
-                        }
-
-                        // dump the characters in the backing array (slightly safer for passwords when using this method)
-                        if (length > 0) {
-                            buf.delete(0, buf.length());
                         }
                     } else if (asChar != '\r') {
                         // only append if we are not a new line.
-                        buf.append(asChar);
+                        for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
+                            buffer.putChar(asChar);
+                        }
                     }
                 }
             } catch (IOException ignored) {
@@ -455,11 +476,11 @@ public class InputConsole {
     }
 
     /**
-    +     * Get the default encoding.  Will first look at the LC_CTYPE environment variable, then the input.encoding
-    +     * system property, then the default charset according to the JVM.
-    +     *
-    +     * @return The default encoding to use when none is specified.
-    +     */
+     * Get the default encoding.  Will first look at the LC_CTYPE environment variable, then the input.encoding
+     * system property, then the default charset according to the JVM.
+     *
+     * @return The default encoding to use when none is specified.
+     */
     public static String getEncoding() {
         // LC_CTYPE is usually in the form en_US.UTF-8
         String envEncoding = extractEncodingFromCtype(System.getenv("LC_CTYPE"));
@@ -481,9 +502,8 @@ public class InputConsole {
             String encodingAndModifier = ctype.substring(ctype.indexOf('.') + 1);
             if (encodingAndModifier.indexOf('@') > 0) {
                 return encodingAndModifier.substring(0, encodingAndModifier.indexOf('@'));
-            } else {
-                return encodingAndModifier;
             }
+            return encodingAndModifier;
         }
         return null;
     }
