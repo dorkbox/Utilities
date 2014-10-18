@@ -2,6 +2,11 @@ package dorkbox.util.bytes;
 
 import java.nio.ByteBuffer;
 
+/**
+ * This is intel/amd/arm arch!
+ *
+ * arm is technically bi-endian
+ */
 public class LittleEndian {
     // the following are ALL in Little-Endian (big is to the right, first byte is least significant, unsigned bytes)
 
@@ -24,10 +29,9 @@ public class LittleEndian {
                            (b0 & 0xFF) << 0);
         }
 
-
         public static final byte[] toBytes(char x) {
-            return new byte[] {(byte) (x >> 8),
-                               (byte) (x >> 0)
+            return new byte[] {(byte) (x >> 0),
+                               (byte) (x >> 8)
                               };
         }
 

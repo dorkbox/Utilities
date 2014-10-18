@@ -46,22 +46,8 @@ public enum ConsoleMode {
      * discarded by ReadFile or ReadConsole, even when this mode is enabled.
      */
     ENABLE_MOUSE_INPUT(16),
+    ;
 
-    /**
-     * When enabled, text entered in a console window will be inserted at the
-     * current cursor location and all text following that location will not be
-     * overwritten. When disabled, all following text will be overwritten. An OR
-     * operation must be performed with this flag and the ENABLE_EXTENDED_FLAGS
-     * flag to enable this functionality.
-     */
-    ENABLE_PROCESSED_OUTPUT(1),
-
-    /**
-     * This flag enables the user to use the mouse to select and edit text. To
-     * enable this option, use the OR to combine this flag with
-     * ENABLE_EXTENDED_FLAGS.
-     */
-    ENABLE_WRAP_AT_EOL_OUTPUT(2),;
 
     public final int code;
 

@@ -373,8 +373,8 @@ public class Sys {
         // NOTE: this saves the char array in UTF-16 format of bytes.
         byte[] bytes = new byte[text.length*2];
         for(int i=0; i<text.length; i++) {
-            bytes[2*i] = (byte) ((text[i] & 0xFF00)>>8);
-            bytes[2*i+1] = (byte) (text[i] & 0x00FF);
+            bytes[2*i] = (byte) (text[i] >> 8);
+            bytes[2*i+1] = (byte) text[i];
         }
 
         return bytes;
@@ -754,7 +754,7 @@ public class Sys {
 
 
     private static final void findModulesInJar(ClassLoader classLoader, String searchLocation,
-            Class<? extends Annotation> annotation, URL resource, List<Class<?>> annotatedClasses)
+                                               Class<? extends Annotation> annotation, URL resource, List<Class<?>> annotatedClasses)
                     throws IOException, ClassNotFoundException {
 
         URLConnection connection = resource.openConnection();
@@ -764,7 +764,6 @@ public class Sys {
             JarURLConnection jarURLConnection = (JarURLConnection) connection;
 
             JarFile jarFile = jarURLConnection.getJarFile();
-            String fileResource = jarURLConnection.getEntryName();
 
             Enumeration<JarEntry> entries = jarFile.entries();
 
@@ -773,8 +772,8 @@ public class Sys {
                 JarEntry jarEntry = entries.nextElement();
                 String name = jarEntry.getName();
 
-                if (name.startsWith(fileResource) && // make sure it's at least the correct package
-                        isValid(name)) {
+                if (name.startsWith(searchLocation) && // make sure it's at least the correct package
+                    isValid(name)) {
 
                     String classPath = name.replace(File.separatorChar, '.').substring(0, name.lastIndexOf("."));
 
@@ -795,7 +794,9 @@ public class Sys {
             // class files will not have an entry name, which is reserved for resources only
             String name = hiveJarURLConnection.getResourceName();
 
-            if (isValid(name)) {
+            if (name.startsWith(searchLocation) && // make sure it's at least the correct package
+                isValid(name)) {
+
                 String classPath = name.substring(0, name.lastIndexOf('.'));
                 classPath = classPath.replace('/', '.');
 

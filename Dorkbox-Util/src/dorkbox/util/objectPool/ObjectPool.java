@@ -9,5 +9,5 @@ public interface ObjectPool<T> {
     /**
     * Return object to the pool
     */
-    public void release(ObjectPoolHolder<T> object) throws InterruptedException;
+    public void release(ObjectPoolHolder<T> object);
 }

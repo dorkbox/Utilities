@@ -6,7 +6,7 @@
  *
  * http://www.opensource.org/licenses/bsd-license.php
  */
-package dorkbox.util.input;
+package dorkbox.util.input.posix;
 
 import java.io.IOException;
 import java.io.InputStream;

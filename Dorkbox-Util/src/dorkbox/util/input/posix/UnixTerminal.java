@@ -1,6 +1,7 @@
 package dorkbox.util.input.posix;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 
 import com.sun.jna.Native;
@@ -18,10 +19,15 @@ public class UnixTerminal extends Terminal {
     private volatile TermiosStruct termInfoDefault = new TermiosStruct();
     private volatile TermiosStruct termInfo = new TermiosStruct();
 
+    private Reader reader;
+
     private PosixTerminalControl term;
     private ByteBuffer windowSizeBuffer = ByteBuffer.allocate(8);
 
-    public UnixTerminal() throws Exception {
+
+    public UnixTerminal(String encoding) throws Exception {
+        this.reader = new InputStreamReader(System.in, encoding);
+
         this.term = (PosixTerminalControl) Native.loadLibrary("c", PosixTerminalControl.class);
 
         // save off the defaults
@@ -54,7 +60,6 @@ public class UnixTerminal extends Terminal {
 //        t->c_cc[VMIN] = 1;
 //        t->c_cc[VTIME] = 0;
 
-
         if (this.term.tcgetattr(0, this.termInfo) !=0) {
             throw new IOException("Failed to get terminal info");
         }
@@ -86,7 +91,7 @@ public class UnixTerminal extends Terminal {
      * used after calling this method.
      */
     @Override
-    public void restore() throws IOException {
+    public final void restore() throws IOException {
         if (this.term.tcsetattr(0, PosixTerminalControl.TCSANOW, this.termInfoDefault) != 0) {
             throw new IOException("Can not reset terminal to defaults");
         }
@@ -96,7 +101,7 @@ public class UnixTerminal extends Terminal {
      * Returns number of columns in the terminal.
      */
     @Override
-    public int getWidth() {
+    public final int getWidth() {
         if (this.term.ioctl(0, PosixTerminalControl.TIOCGWINSZ, this.windowSizeBuffer) != 0) {
             return DEFAULT_WIDTH;
         }
@@ -109,7 +114,7 @@ public class UnixTerminal extends Terminal {
      * Returns number of rows in the terminal.
      */
     @Override
-    public int getHeight() {
+    public final int getHeight() {
         if (this.term.ioctl(0, PosixTerminalControl.TIOCGWINSZ, this.windowSizeBuffer) != 0) {
             return DEFAULT_HEIGHT;
         }
@@ -119,7 +124,7 @@ public class UnixTerminal extends Terminal {
     }
 
     @Override
-    public synchronized void setEchoEnabled(final boolean enabled) {
+    public final synchronized void setEchoEnabled(final boolean enabled) {
         // have to reget them, since flags change everything
         if (this.term.tcgetattr(0, this.termInfo) !=0) {
             this.logger.error("Failed to get terminal info");
@@ -139,29 +144,38 @@ public class UnixTerminal extends Terminal {
         super.setEchoEnabled(enabled);
     }
 
-    public void disableInterruptCharacter() {
-        // have to re-get them, since flags change everything
-        if (this.term.tcgetattr(0, this.termInfo) !=0) {
-            this.logger.error("Failed to get terminal info");
-        }
+//    public final void disableInterruptCharacter() {
+//        // have to re-get them, since flags change everything
+//        if (this.term.tcgetattr(0, this.termInfo) !=0) {
+//            this.logger.error("Failed to get terminal info");
+//        }
+//
+//        this.termInfo.c_cc[PosixTerminalControl.VINTR] = 0; // interrupt disabled
+//
+//        if (this.term.tcsetattr(0, PosixTerminalControl.TCSANOW, this.termInfo) != 0) {
+//            this.logger.error("Can not set terminal flags");
+//        }
+//    }
+//
+//    public final void enableInterruptCharacter() {
+//        // have to re-get them, since flags change everything
+//        if (this.term.tcgetattr(0, this.termInfo) !=0) {
+//            this.logger.error("Failed to get terminal info");
+//        }
+//
+//        this.termInfo.c_cc[PosixTerminalControl.VINTR] = 3; // interrupt is ctrl-c
+//
+//        if (this.term.tcsetattr(0, PosixTerminalControl.TCSANOW, this.termInfo) != 0) {
+//            this.logger.error("Can not set terminal flags");
+//        }
+//    }
 
-        this.termInfo.c_cc[PosixTerminalControl.VINTR] = 0; // interrupt disabled
-
-        if (this.term.tcsetattr(0, PosixTerminalControl.TCSANOW, this.termInfo) != 0) {
-            this.logger.error("Can not set terminal flags");
-        }
-    }
-
-    public void enableInterruptCharacter() {
-        // have to re-get them, since flags change everything
-        if (this.term.tcgetattr(0, this.termInfo) !=0) {
-            this.logger.error("Failed to get terminal info");
-        }
-
-        this.termInfo.c_cc[PosixTerminalControl.VINTR] = 3; // interrupt is ctrl-c
-
-        if (this.term.tcsetattr(0, PosixTerminalControl.TCSANOW, this.termInfo) != 0) {
-            this.logger.error("Can not set terminal flags");
+    @Override
+    public final int read() {
+        try {
+            return this.reader.read();
+        } catch (IOException ignored) {
+            return -1;
         }
     }
 }

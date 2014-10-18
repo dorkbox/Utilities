@@ -8,11 +8,11 @@
  */
 package dorkbox.util.input.windows;
 
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.PrintStream;
 
+import org.fusesource.jansi.internal.Kernel32.INPUT_RECORD;
+import org.fusesource.jansi.internal.Kernel32.KEY_EVENT_RECORD;
 import org.fusesource.jansi.internal.WindowsSupport;
 
 import dorkbox.util.input.Terminal;
@@ -26,34 +26,26 @@ import dorkbox.util.input.Terminal;
  * url=/library/en-us/dllproc/base/getconsolemode.asp">GetConsoleMode</a> to
  * disable character echoing.
  * <p/>
- * <p>
- * By default, the {@link #wrapInIfNeeded(java.io.InputStream)} method will attempt
- * to test to see if the specified {@link InputStream} is {@link System#in} or a wrapper
- * around {@link FileDescriptor#in}, and if so, will bypass the character reading to
- * directly invoke the readc() method in the JNI library. This is so the class
- * can read special keys (like arrow keys) which are otherwise inaccessible via
- * the {@link System#in} stream. Using JNI reading can be bypassed by setting
- * the <code>jline.WindowsTerminal.directConsole</code> system property
- * to <code>false</code>.
- * </p>
- *
- * @author <a href="mailto:mwp1@cornell.edu">Marc Prud'hommeaux</a>
- * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @since 2.0
+ * @since 2.0 (customized)
  */
-public class WindowsTerminal extends Terminal
-{
-    public static final String DIRECT_CONSOLE = WindowsTerminal.class.getName() + ".directConsole";
-
-    private int originalMode;
+public class WindowsTerminal extends Terminal {
+    private volatile int originalMode;
+    private final PrintStream out;
 
     public WindowsTerminal() {
+        this.out = System.out;
     }
 
     @Override
-    public void init() throws IOException {
+    public final void init() throws IOException {
         this.originalMode = WindowsSupport.getConsoleMode();
-        WindowsSupport.setConsoleMode(this.originalMode & ~ConsoleMode.ENABLE_ECHO_INPUT.code);
+
+        // Must set these four modes at the same time to make it work fine.
+        WindowsSupport.setConsoleMode(this.originalMode |
+                                      ConsoleMode.ENABLE_LINE_INPUT.code |
+                                      ConsoleMode.ENABLE_ECHO_INPUT.code |
+                                      ConsoleMode.ENABLE_PROCESSED_INPUT.code |
+                                      ConsoleMode.ENABLE_WINDOW_INPUT.code);
     }
 
     /**
@@ -62,69 +54,71 @@ public class WindowsTerminal extends Terminal
      * used after calling this method.
      */
     @Override
-    public void restore() throws IOException {
+    public final void restore() throws IOException {
         // restore the old console mode
         WindowsSupport.setConsoleMode(this.originalMode);
     }
 
     @Override
-    public int getWidth() {
+    public final int getWidth() {
         int w = WindowsSupport.getWindowsTerminalWidth();
         return w < 1 ? DEFAULT_WIDTH : w;
     }
 
     @Override
-    public int getHeight() {
+    public final int getHeight() {
         int h = WindowsSupport.getWindowsTerminalHeight();
         return h < 1 ? DEFAULT_HEIGHT : h;
     }
 
     @Override
-    public void setEchoEnabled(final boolean enabled) {
-        // Must set these four modes at the same time to make it work fine.
-        if (enabled) {
-            WindowsSupport.setConsoleMode(WindowsSupport.getConsoleMode() |
-                           ConsoleMode.ENABLE_ECHO_INPUT.code |
-                           ConsoleMode.ENABLE_LINE_INPUT.code |
-                           ConsoleMode.ENABLE_PROCESSED_INPUT.code |
-                           ConsoleMode.ENABLE_WINDOW_INPUT.code);
+    public final int read() {
+        int input = readInput();
+
+        if (isEchoEnabled()) {
+            char asChar = (char) input;
+            if (asChar == '\n') {
+                this.out.println();
+            } else {
+                this.out.print(asChar);
+            }
+            // have to flush, otherwise we'll never see the chars on screen
+            this.out.flush();
         }
-        else {
-            WindowsSupport.setConsoleMode(WindowsSupport.getConsoleMode() &
-                ~(ConsoleMode.ENABLE_LINE_INPUT.code |
-                  ConsoleMode.ENABLE_ECHO_INPUT.code |
-                  ConsoleMode.ENABLE_PROCESSED_INPUT.code |
-                  ConsoleMode.ENABLE_WINDOW_INPUT.code));
-        }
-        super.setEchoEnabled(enabled);
+
+        return input;
     }
 
+    private final int readInput() {
+        // this HOOKS the input event, and prevents it from going to the console "proper"
+        try {
+            INPUT_RECORD[] events = null;
+            while (true) {
+                // we ALWAYS read until we have an event we care about!
+                events = WindowsSupport.readConsoleInput(1);
 
-    @Override
-    public InputStream wrapInIfNeeded(InputStream in) throws IOException {
-        if (isSystemIn(in)) {
-            return new InputStream() {
-                @Override
-                public int read() throws IOException {
-                    return WindowsSupport.readByte();
+                if (events != null) {
+                    for (int i = 0; i < events.length; i++ ) {
+                        KEY_EVENT_RECORD keyEvent = events[i].keyEvent;
+                        //Log.trace(keyEvent.keyDown? "KEY_DOWN" : "KEY_UP", "key code:", keyEvent.keyCode, "char:", (long)keyEvent.uchar);
+                        if (keyEvent.keyDown) {
+                            if (keyEvent.uchar > 0) {
+                                char uchar = keyEvent.uchar;
+                                if (uchar == '\r') {
+                                    // we purposefully swallow input after \r, and substitute it with \n
+                                    return '\n';
+                                }
+
+                                return uchar;
+                            }
+                        }
+                    }
                 }
-            };
-        } else {
-            return in;
-        }
-    }
-
-    private boolean isSystemIn(final InputStream in) throws IOException {
-        if (in == null) {
-            return false;
-        }
-        else if (in == System.in) {
-            return true;
-        }
-        else if (in instanceof FileInputStream && ((FileInputStream) in).getFD() == FileDescriptor.in) {
-            return true;
+            }
+        } catch (IOException e) {
+            this.logger.error("Windows console input error: ", e);
         }
 
-        return false;
+        return -1;
     }
 }

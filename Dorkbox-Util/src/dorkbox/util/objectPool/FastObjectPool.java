@@ -104,10 +104,10 @@ class FastObjectPool<T> implements ObjectPool<T> {
     }
 
     @Override
-    public void release(ObjectPoolHolder<T> object) throws InterruptedException {
-        this.lock.lockInterruptibly();
-
+    public void release(ObjectPoolHolder<T> object) {
         try {
+            this.lock.lockInterruptibly();
+
             int localValue = this.releasePointer;
             //long index = ((localValue & mask) * INDEXSCALE ) + BASE;
             long index = ((localValue & this.mask)<<this.ASHIFT ) + this.BASE;
@@ -120,6 +120,7 @@ class FastObjectPool<T> implements ObjectPool<T> {
             else {
                 throw new IllegalArgumentException("Invalid reference passed");
             }
+        } catch (InterruptedException e) {
         }
         finally {
             this.lock.unlock();

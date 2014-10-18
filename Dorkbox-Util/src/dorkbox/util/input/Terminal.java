@@ -1,7 +1,6 @@
 package dorkbox.util.input;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 public abstract class Terminal {
     protected final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
@@ -60,7 +59,15 @@ public abstract class Terminal {
     public abstract int getWidth();
     public abstract int getHeight();
 
-    public InputStream wrapInIfNeeded(InputStream in) throws IOException {
-        return in;
+    /**
+     * @return a character from whatever underlying input method the terminal has available.
+     */
+    public abstract int read();
+
+    /**
+     * Only needed for unsupported character input.
+     */
+    public boolean wasSequence() {
+        return false;
     }
 }

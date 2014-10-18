@@ -1,14 +1,11 @@
 package dorkbox.util.input;
 
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,11 +15,14 @@ import org.fusesource.jansi.AnsiConsole;
 import org.slf4j.Logger;
 
 import dorkbox.util.OS;
-import dorkbox.util.Sys;
-import dorkbox.util.bytes.ByteBuffer2Fast;
+import dorkbox.util.bytes.ByteBuffer2;
+import dorkbox.util.bytes.ByteBuffer2Poolable;
 import dorkbox.util.input.posix.UnixTerminal;
 import dorkbox.util.input.unsupported.UnsupportedTerminal;
 import dorkbox.util.input.windows.WindowsTerminal;
+import dorkbox.util.objectPool.ObjectPool;
+import dorkbox.util.objectPool.ObjectPoolFactory;
+import dorkbox.util.objectPool.ObjectPoolHolder;
 
 public class InputConsole {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(InputConsole.class);
@@ -108,30 +108,15 @@ public class InputConsole {
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
 
-    private ThreadLocal<ByteBuffer2Fast> threadBufferForRead = new ThreadLocal<ByteBuffer2Fast>();
-    private CopyOnWriteArrayList<ByteBuffer2Fast> threadBuffersForRead = new CopyOnWriteArrayList<ByteBuffer2Fast>();
-
-    ThreadLocal<Integer> indexOfStringForReadChar = new ThreadLocal<Integer>() {
-        @Override
-        protected Integer initialValue() {
-            return -1;
-        }
-    };
-
+    private final ObjectPool<ByteBuffer2> pool = ObjectPoolFactory.create(new ByteBuffer2Poolable());
+    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> threadBufferForRead = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
+    private CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>> threadBuffersForRead = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
 
     private volatile int readChar = -1;
-
-    private final boolean unsupported;
-
     private final Terminal terminal;
-    private Reader reader;
-    private final String encoding;
-
-
 
     private InputConsole() {
         Logger logger = InputConsole.logger;
-        boolean unsupported = false;
 
         String type = System.getProperty(TerminalType.TYPE, TerminalType.AUTO).toLowerCase();
         if ("dumb".equals(System.getenv("TERM"))) {
@@ -141,48 +126,42 @@ public class InputConsole {
 
         logger.debug("Creating terminal; type={}", type);
 
-        Terminal    t;
+
+        String encoding = Encoding.get();
+        Terminal t;
         try {
             if (type.equals(TerminalType.UNIX)) {
-                t = new UnixTerminal();
+                t = new UnixTerminal(encoding);
             }
             else if (type.equals(TerminalType.WIN) || type.equals(TerminalType.WINDOWS)) {
                 t = new WindowsTerminal();
             }
             else if (type.equals(TerminalType.NONE) || type.equals(TerminalType.OFF) || type.equals(TerminalType.FALSE)) {
-                t = new UnsupportedTerminal();
-                unsupported = true;
+                t = new UnsupportedTerminal(encoding);
             } else {
                 if (isIDEAutoDetect()) {
                     logger.debug("Terminal is in UNSUPPORTED (best guess). Unable to support single key input. Only line input available.");
-                    t = new UnsupportedTerminal();
-                    unsupported = true;
+                    t = new UnsupportedTerminal(encoding);
                 } else {
                     if (OS.isWindows()) {
                         t = new WindowsTerminal();
                     } else {
-                        t = new UnixTerminal();
+                        t = new UnixTerminal(encoding);
                     }
                 }
             }
         }
         catch (Exception e) {
             logger.error("Failed to construct terminal, falling back to unsupported");
-            t = new UnsupportedTerminal();
-            unsupported = true;
+            t = new UnsupportedTerminal(encoding);
         }
-
-        InputStream in;
 
         try {
             t.init();
-            in = t.wrapInIfNeeded(System.in);
         }
         catch (Throwable e) {
             logger.error("Terminal initialization failed, falling back to unsupported");
-            t = new UnsupportedTerminal();
-            unsupported = true;
-            in = System.in;
+            t = new UnsupportedTerminal(encoding);
 
             try {
                 t.init();
@@ -191,17 +170,10 @@ public class InputConsole {
             }
         }
 
-        this.encoding = this.encoding != null ? this.encoding : getEncoding();
-        this.reader = new InputStreamReader(in, this.encoding);
+        t.setEchoEnabled(true);
 
-        if (unsupported) {
-            this.reader = new BufferedReader(this.reader);
-        }
-
-        this.unsupported = unsupported;
         this.terminal = t;
-
-        logger.debug("Created Terminal: {}", this.terminal);
+        logger.debug("Created Terminal: {} ({}x{})", this.terminal.getClass().getSimpleName(), t.getWidth(), t.getHeight());
     }
 
     // called when the JVM is shutting down.
@@ -237,9 +209,9 @@ public class InputConsole {
     /** return null if no data */
     private final char[] readLine0() {
         if (this.threadBufferForRead.get() == null) {
-            ByteBuffer2Fast buffer = ByteBuffer2Fast.allocate(0);
-            this.threadBufferForRead.set(buffer);
-            this.threadBuffersForRead.add(buffer);
+            ObjectPoolHolder<ByteBuffer2> holder = this.pool.take();
+            this.threadBufferForRead.set(holder);
+            this.threadBuffersForRead.add(holder);
         }
 
         synchronized (this.inputLockLine) {
@@ -250,33 +222,28 @@ public class InputConsole {
             }
         }
 
-        ByteBuffer2Fast stringBuffer = this.threadBufferForRead.get();
-        int len = stringBuffer.position();
+        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.threadBufferForRead.get();
+        ByteBuffer2 buffer = objectPoolHolder.getValue();
+        int len = buffer.position();
         if (len == 0) {
             return emptyLine;
         }
 
-        char[] chars = new char[len/2]; // because 2 chars is 1 bytes
-        stringBuffer.getChars(0, len, chars, 0);
+        buffer.rewind();
+        char[] readChars = buffer.readChars(len/2); // java always stores chars in 2 bytes
 
         // dump the chars in the buffer (safer for passwords, etc)
-        stringBuffer.clear();
-        stringBuffer.putBytes(new byte[0]);
+        buffer.clearSecure();
 
+        this.threadBuffersForRead.remove(objectPoolHolder);
+        this.pool.release(objectPoolHolder);
         this.threadBufferForRead.set(null);
-        this.threadBuffersForRead.remove(stringBuffer);  // TODO: use object pool!
 
-        return chars;
+        return readChars;
     }
 
     /** return null if no data */
     private final char[] readLinePassword0() {
-        if (this.threadBufferForRead.get() == null) {
-            ByteBuffer2Fast buffer = ByteBuffer2Fast.allocate(0);
-            this.threadBufferForRead.set(buffer);
-            this.threadBuffersForRead.add(buffer);
-        }
-
         // don't bother in an IDE. it won't work.
         boolean echoEnabled = this.terminal.isEchoEnabled();
         this.terminal.setEchoEnabled(false);
@@ -288,51 +255,15 @@ public class InputConsole {
 
     /** return -1 if no data */
     private final int read0() {
-        // if we are reading data (because we are in IDE mode), we want to return ALL
-        // the chars of the line!
-
-        // so, readChar is REALLY the index at which we return letters (until the whole string is returned
-        if (this.unsupported) {
-            int readerCount = this.indexOfStringForReadChar.get();
-
-            if (readerCount == -1) {
-                // we have to wait for more data.
-                synchronized (this.inputLockLine) {
-                    try {
-                        this.inputLockLine.wait();
-                    } catch (InterruptedException e) {
-                        return -1;
-                    }
-                    readerCount = 0;
-                    this.indexOfStringForReadChar.set(0);
-                }
+        synchronized (this.inputLockSingle) {
+            try {
+                this.inputLockSingle.wait();
+            } catch (InterruptedException e) {
+                return -1;
             }
-
-
-            // EACH thread will have it's own count!
-            ByteBuffer2Fast stringBuffer = this.threadBufferForRead.get();
-
-           if (readerCount == stringBuffer.position()) {
-                this.indexOfStringForReadChar.set(-1);
-                return '\n';
-            } else {
-                this.indexOfStringForReadChar.set(readerCount+1);
-            }
-
-            char c = stringBuffer.getChar(readerCount);
-            return c;
         }
-        else {
-            // we can read like normal.
-            synchronized (this.inputLockSingle) {
-                try {
-                    this.inputLockSingle.wait();
-                } catch (InterruptedException e) {
-                    return -1;
-                }
-            }
-            return this.readChar;
-        }
+
+        return this.readChar;
     }
 
     /**
@@ -351,161 +282,96 @@ public class InputConsole {
     private final void run() {
         Logger logger2 = logger;
 
-        // if we are eclipse/etc, we MUST do this per line! (per character DOESN'T work.)
-        // char readers will get looped for the WHOLE string, so reading by char will work,
-        // it just waits until \n until it triggers
-        if (this.unsupported) {
-            BufferedReader reader = (BufferedReader) this.reader;
-            String line = null;
-            char[] readLine = null;
+        final boolean ansiEnabled = Ansi.isEnabled();
+        Ansi ansi = Ansi.ansi();
+        PrintStream out = AnsiConsole.out;
 
-            try {
-                while ((line = reader.readLine()) != null) {
-                    readLine = line.toCharArray();
+        int typedChar;
+        char asChar;
 
-                    // notify everyone waiting for a line of text.
-                    synchronized (this.inputLockSingle) {
-                        if (readLine.length > 0) {
-                            this.readChar = readLine[0];
-                        } else {
-                            this.readChar = -1;
-                        }
-                        this.inputLockSingle.notifyAll();
-                    }
-                    synchronized (this.inputLockLine) {
-                        byte[] charToBytes = Sys.charToBytes(readLine);
+        // don't type ; in a bash shell, it quits everything
+        // \n is replaced by \r in unix terminal?
+        while ((typedChar = this.terminal.read()) != -1) {
+            asChar = (char) typedChar;
 
-                        for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
-                            buffer.clear();
-                            buffer.putBytes(charToBytes);
-                        }
-
-                        this.inputLockLine.notifyAll();
-                    }
-                }
-            } catch (Exception ignored) {
-                ignored.printStackTrace();
+            if (logger2.isTraceEnabled()) {
+                logger2.trace("READ: {} ({})", asChar, typedChar);
             }
-        }
-        else {
-            // from a 'regular' console
-            try {
-                final boolean ansiEnabled = Ansi.isEnabled();
-                Ansi ansi = Ansi.ansi();
-                PrintStream out = AnsiConsole.out;
 
-                int typedChar;
+            // notify everyone waiting for a character.
+            synchronized (this.inputLockSingle) {
+                if (this.terminal.wasSequence() && typedChar == '\n') {
+                    // don't want to forward \n if it was a part of a sequence in the unsupported terminal
+                    // the JIT will short-cut this out if we are not the unsupported terminal
+                } else {
+                    this.readChar = typedChar;
+                    this.inputLockSingle.notifyAll();
+                }
+            }
 
-                // don't type ; in a bash shell, it quits everything
-                // \n is replaced by \r in unix terminal?
-                while ((typedChar = this.reader.read()) != -1) {
-                    char asChar = (char) typedChar;
+            // if we type a backspace key, swallow it + previous in READLINE. READCHAR will have it passed.
+            if (typedChar == '\b') {
+                int position = 0;
 
-                    if (logger2.isTraceEnabled()) {
-                        logger2.trace("READ: {} ({})", asChar, typedChar);
-                    }
+                // clear ourself + one extra.
+                if (ansiEnabled) {
+                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                        ByteBuffer2 buffer = objectPoolHolder.getValue();
+                        // size of the buffer BEFORE our backspace was typed
+                        int length = buffer.position();
+                        int amtToOverwrite = 2 * 2; // backspace is always 2 chars (^?) * 2 because it's bytes
 
-                    // notify everyone waiting for a character.
-                    synchronized (this.inputLockSingle) {
-                        this.readChar = typedChar;
-                        this.inputLockSingle.notifyAll();
-                    }
+                        if (length > 1) {
+                            char charAt = buffer.readChar(length-2);
+                            amtToOverwrite += getPrintableCharacters(charAt);
 
-                    // if we type a backspace key, swallow it + previous in READLINE. READCHAR will have it passed.
-                    if (typedChar == 127) {
-                        int position = 0;
+                            // delete last item in our buffer
+                            length -= 2;
+                            buffer.setPosition(length);
 
-                        // clear ourself + one extra.
-                        if (ansiEnabled) {
-                            for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
-                                // size of the buffer BEFORE our backspace was typed
-                                int length = buffer.position();
-                                int amtToOverwrite = 2 * 2; // backspace is always 2 chars (^?) * 2 because it's bytes
-
-                                if (length > 1) {
-                                    char charAt = buffer.getChar(length-2);
-                                    amtToOverwrite += getPrintableCharacters(charAt);
-
-                                    // delete last item in our buffer
-                                    length -= 2;
-                                    buffer.position(length);
-
-                                    // now figure out where the cursor is really at.
-                                    // this is more memory friendly than buf.toString.length
-                                    for (int i=0;i<length;i+=2) {
-                                        charAt = buffer.getChar(i);
-                                        position += getPrintableCharacters(charAt);
-                                    }
-
-                                    position++;
-                                }
-
-                                char[] overwrite = new char[amtToOverwrite];
-                                char c = ' ';
-                                for (int i=0;i<amtToOverwrite;i++) {
-                                    overwrite[i] = c;
-                                }
-
-                                // move back however many, over write, then go back again
-                                out.print(ansi.cursorToColumn(position));
-                                out.print(overwrite);
-                                out.print(ansi.cursorToColumn(position));
-                                out.flush();
+                            // now figure out where the cursor is really at.
+                            // this is more memory friendly than buf.toString.length
+                            for (int i=0;i<length;i+=2) {
+                                charAt = buffer.readChar(i);
+                                position += getPrintableCharacters(charAt);
                             }
+
+                            position++;
                         }
 
-                        // read-line will ignore backspace
-                        continue;
-                    }
+                        char[] overwrite = new char[amtToOverwrite];
+                        char c = ' ';
+                        for (int i=0;i<amtToOverwrite;i++) {
+                            overwrite[i] = c;
+                        }
 
-                    // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
-                    if (asChar == '\n') {
-                        synchronized (this.inputLockLine) {
-                            this.inputLockLine.notifyAll();
-                        }
-                    } else if (asChar != '\r') {
-                        // only append if we are not a new line.
-                        for (ByteBuffer2Fast buffer : this.threadBuffersForRead) {
-                            buffer.putChar(asChar);
-                        }
+                        // move back however many, over write, then go back again
+                        out.print(ansi.cursorToColumn(position));
+                        out.print(overwrite);
+                        out.print(ansi.cursorToColumn(position));
+                        out.flush();
                     }
                 }
-            } catch (IOException ignored) {
+
+                // read-line will ignore backspace
+                continue;
+            }
+
+            // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
+            if (asChar == '\n') {
+                synchronized (this.inputLockLine) {
+                    this.inputLockLine.notifyAll();
+                }
+            } else {
+                // our windows console PREVENTS us from returning '\r' (it truncates '\r\n', and returns just '\n')
+
+                // only append if we are not a new line.
+                for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                    ByteBuffer2 buffer = objectPoolHolder.getValue();
+                    buffer.writeChar(asChar);
+                }
             }
         }
-    }
-
-    /**
-     * Get the default encoding.  Will first look at the LC_CTYPE environment variable, then the input.encoding
-     * system property, then the default charset according to the JVM.
-     *
-     * @return The default encoding to use when none is specified.
-     */
-    public static String getEncoding() {
-        // LC_CTYPE is usually in the form en_US.UTF-8
-        String envEncoding = extractEncodingFromCtype(System.getenv("LC_CTYPE"));
-        if (envEncoding != null) {
-            return envEncoding;
-        }
-        return System.getProperty("input.encoding", Charset.defaultCharset().name());
-    }
-
-    /**
-     * Parses the LC_CTYPE value to extract the encoding according to the POSIX standard, which says that the LC_CTYPE
-     * environment variable may be of the format <code>[language[_territory][.codeset][@modifier]]</code>
-     *
-     * @param ctype The ctype to parse, may be null
-     * @return The encoding, if one was present, otherwise null
-     */
-    static String extractEncodingFromCtype(String ctype) {
-        if (ctype != null && ctype.indexOf('.') > 0) {
-            String encodingAndModifier = ctype.substring(ctype.indexOf('.') + 1);
-            if (encodingAndModifier.indexOf('@') > 0) {
-                return encodingAndModifier.substring(0, encodingAndModifier.indexOf('@'));
-            }
-            return encodingAndModifier;
-        }
-        return null;
     }
 
     /**

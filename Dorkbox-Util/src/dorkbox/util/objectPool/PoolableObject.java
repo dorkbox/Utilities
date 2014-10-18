@@ -10,10 +10,10 @@ public interface PoolableObject<T> {
     /**
     * invoked on every instance that is borrowed from the pool
     */
-    public void activate(T t);
+    public void activate(T object);
 
     /**
     * invoked on every instance that is returned to the pool
     */
-    public void passivate(T t);
+    public void passivate(T object);
 }

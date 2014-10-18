@@ -76,7 +76,7 @@ class SlowObjectPool<T> implements ObjectPool<T> {
     }
 
     @Override
-    public void release(ObjectPoolHolder<T> object) throws InterruptedException {
+    public void release(ObjectPoolHolder<T> object) {
         if (object.state.compareAndSet(USED, FREE)) {
             this.queue.offer(object);
             this.poolableObject.passivate(object.getValue());

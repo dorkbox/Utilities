@@ -21,10 +21,6 @@ import dorkbox.util.OS;
  */
 public class ShellProcessBuilder {
 
-    // TODO: see  http://mark.koli.ch/2009/12/uac-prompt-from-java-createprocess-error740-the-requested-operation-requires-elevation.html
-    // for more information on copying files in windows with UAC protections.
-    // maybe we want to hook into our launcher executor so that we can "auto elevate" commands?
-
     private String workingDirectory = null;
     private String executableName = null;
     private String executableDirectory = null;
@@ -56,9 +52,9 @@ public class ShellProcessBuilder {
     }
 
     public ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
-        outputStream = out;
-        errorStream = err;
-        inputStream = in;
+        this.outputStream = out;
+        this.errorStream = err;
+        this.inputStream = in;
     }
 
     /**
@@ -71,19 +67,19 @@ public class ShellProcessBuilder {
     }
 
     public final ShellProcessBuilder addArgument(String argument) {
-        arguments.add(argument);
+        this.arguments.add(argument);
         return this;
     }
 
     public final ShellProcessBuilder addArguments(String... paths) {
         for (String path : paths) {
-            arguments.add(path);
+            this.arguments.add(path);
         }
         return this;
     }
 
     public final ShellProcessBuilder addArguments(List<String> paths) {
-        arguments.addAll(paths);
+        this.arguments.addAll(paths);
         return this;
     }
 
@@ -106,39 +102,39 @@ public class ShellProcessBuilder {
 
     public void start() {
         // if no executable, then use the command shell
-        if (executableName == null) {
+        if (this.executableName == null) {
             if (OS.isWindows()) {
                 // windows
-                executableName = "cmd";
-                arguments.add(0, "/c");
+                this.executableName = "cmd";
+                this.arguments.add(0, "/c");
 
             } else {
                 // *nix
-                executableName = "/bin/bash";
-                File file = new File(executableName);
+                this.executableName = "/bin/bash";
+                File file = new File(this.executableName);
                 if (!file.canExecute()) {
-                    executableName = "/bin/sh";
+                    this.executableName = "/bin/sh";
                 }
-                arguments.add(0, "-c");
+                this.arguments.add(0, "-c");
             }
-        } else if (workingDirectory != null) {
-            if (!workingDirectory.endsWith("/") && !workingDirectory.endsWith("\\")) {
-                workingDirectory += File.separator;
+        } else if (this.workingDirectory != null) {
+            if (!this.workingDirectory.endsWith("/") && !this.workingDirectory.endsWith("\\")) {
+                this.workingDirectory += File.separator;
             }
         }
 
-        if (executableDirectory != null) {
-            if (!executableDirectory.endsWith("/") && !executableDirectory.endsWith("\\")) {
-                executableDirectory += File.separator;
+        if (this.executableDirectory != null) {
+            if (!this.executableDirectory.endsWith("/") && !this.executableDirectory.endsWith("\\")) {
+                this.executableDirectory += File.separator;
             }
 
-            executableName = executableDirectory + executableName;
+            this.executableName = this.executableDirectory + this.executableName;
         }
 
         List<String> argumentsList = new ArrayList<String>();
-        argumentsList.add(executableName);
+        argumentsList.add(this.executableName);
 
-        for (String arg : arguments) {
+        for (String arg : this.arguments) {
             if (arg.contains(" ")) {
                 // individual arguments MUST be in their own element in order to
                 //  be processed properly (this is how it works on the command line!)
@@ -154,7 +150,7 @@ public class ShellProcessBuilder {
 
         // if we don't want output... TODO: i think we want to "exec" (this calls exec -c, which calls our program)
         // this code as well, since calling it directly won't work
-        boolean pipeToNull = errorStream == null || outputStream == null;
+        boolean pipeToNull = this.errorStream == null || this.outputStream == null;
         if (pipeToNull) {
             if (OS.isWindows()) {
                 // >NUL on windows
@@ -165,22 +161,22 @@ public class ShellProcessBuilder {
             }
         }
 
-        if (debugInfo) {
-            errorStream.print("Executing: ");
+        if (this.debugInfo) {
+            this.errorStream.print("Executing: ");
             Iterator<String> iterator = argumentsList.iterator();
             while (iterator.hasNext()) {
                 String s = iterator.next();
-                errorStream.print(s);
+                this.errorStream.print(s);
                 if (iterator.hasNext()) {
-                    errorStream.print(" ");
+                    this.errorStream.print(" ");
                 }
             }
-            errorStream.print(OS.LINE_SEPARATOR);
+            this.errorStream.print(OS.LINE_SEPARATOR);
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(argumentsList);
-        if (workingDirectory != null) {
-            processBuilder.directory(new File(workingDirectory));
+        if (this.workingDirectory != null) {
+            processBuilder.directory(new File(this.workingDirectory));
         }
 
         // combine these so output is properly piped to null.
@@ -189,23 +185,23 @@ public class ShellProcessBuilder {
         }
 
         try {
-            process = processBuilder.start();
+            this.process = processBuilder.start();
         } catch (Exception ex) {
-            errorStream.println("There was a problem executing the program.  Details:\n");
-            ex.printStackTrace(errorStream);
+            this.errorStream.println("There was a problem executing the program.  Details:\n");
+            ex.printStackTrace(this.errorStream);
 
-            if (process != null) {
+            if (this.process != null) {
                 try {
-                    process.destroy();
-                    process = null;
+                    this.process.destroy();
+                    this.process = null;
                 } catch (Exception e) {
-                    errorStream.println("Error destroying process: \n");
-                    e.printStackTrace(errorStream);
+                    this.errorStream.println("Error destroying process: \n");
+                    e.printStackTrace(this.errorStream);
                 }
             }
         }
 
-        if (process != null) {
+        if (this.process != null) {
             ProcessProxy writeToProcess_input;
             ProcessProxy readFromProcess_output;
             ProcessProxy readFromProcess_error;
@@ -218,7 +214,7 @@ public class ShellProcessBuilder {
 
                 // readers (read process -> write console)
                 // have to keep the output buffers from filling in the target process.
-                readFromProcess_output = new ProcessProxy("Process Reader: " + executableName, process.getInputStream(), nullOutputStream);
+                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName, this.process.getInputStream(), nullOutputStream);
                 readFromProcess_error = null;
             }
             // we want to pipe our input/output from process to ourselves
@@ -228,21 +224,21 @@ public class ShellProcessBuilder {
                  * to the user's window. This is important or the spawned process could block.
                  */
                 // readers (read process -> write console)
-                readFromProcess_output = new ProcessProxy("Process Reader: " + executableName, process.getInputStream(), outputStream);
-                if (errorStream != outputStream) {
-                    readFromProcess_error = new ProcessProxy("Process Reader: " + executableName, process.getErrorStream(), errorStream);
+                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName, this.process.getInputStream(), this.outputStream);
+                if (this.errorStream != this.outputStream) {
+                    readFromProcess_error = new ProcessProxy("Process Reader: " + this.executableName, this.process.getErrorStream(), this.errorStream);
                 } else {
                     processBuilder.redirectErrorStream(true);
                     readFromProcess_error = null;
                 }
             }
 
-            if (inputStream != null) {
+            if (this.inputStream != null) {
                 /**
                  * Proxy System.in from the user's window to the spawned process
                  */
                 // writer (read console -> write process)
-                writeToProcess_input = new ProcessProxy("Process Writer: " + executableName, inputStream, process.getOutputStream());
+                writeToProcess_input = new ProcessProxy("Process Writer: " + this.executableName, this.inputStream, this.process.getOutputStream());
             } else {
                 writeToProcess_input = null;
             }
@@ -254,10 +250,10 @@ public class ShellProcessBuilder {
             Thread hook = new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        if (debugInfo) {
-                            errorStream.println("Terminating process: " + executableName);
+                        if (ShellProcessBuilder.this.debugInfo) {
+                            ShellProcessBuilder.this.errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
                         }
-                        process.destroy();
+                        ShellProcessBuilder.this.process.destroy();
                     }
                 }
              );
@@ -273,10 +269,10 @@ public class ShellProcessBuilder {
             }
 
             try {
-                process.waitFor();
+                this.process.waitFor();
 
                 @SuppressWarnings("unused")
-                int exitValue = process.exitValue();
+                int exitValue = this.process.exitValue();
 
                 // wait for the READER threads to die (meaning their streams have closed/EOF'd)
                 if (writeToProcess_input != null) {
@@ -294,7 +290,7 @@ public class ShellProcessBuilder {
 
                 // forcibly terminate the process when it's streams have closed.
                 // this is for cleanup ONLY, not to actually do anything.
-                process.destroy();
+                this.process.destroy();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
