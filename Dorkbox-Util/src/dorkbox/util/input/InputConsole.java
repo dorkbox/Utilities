@@ -8,7 +8,9 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
@@ -104,13 +106,13 @@ public class InputConsole {
         return consoleProxyReader.echo0();
     }
 
-
+    private final ReentrantLock inputLock = new ReentrantLock();
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
 
     private final ObjectPool<ByteBuffer2> pool = ObjectPoolFactory.create(new ByteBuffer2Poolable());
-    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> threadBufferForRead = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
-    private CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>> threadBuffersForRead = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
+    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> threadBuffer = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
+    private List<ObjectPoolHolder<ByteBuffer2>> threadBuffersForRead = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
 
     private volatile int readChar = -1;
     private final Terminal terminal;
@@ -120,7 +122,7 @@ public class InputConsole {
 
         String type = System.getProperty(TerminalType.TYPE, TerminalType.AUTO).toLowerCase();
         if ("dumb".equals(System.getenv("TERM"))) {
-            type = "none";
+            type = TerminalType.NONE;
             logger.debug("$TERM=dumb; setting type={}", type);
         }
 
@@ -205,13 +207,44 @@ public class InputConsole {
         return this.terminal.isEchoEnabled();
     }
 
+    /** return -1 if no data or bunged-up */
+    private final int read0() {
+        synchronized (this.inputLockSingle) {
+            try {
+                this.inputLockSingle.wait();
+            } catch (InterruptedException e) {
+                return -1;
+            }
+        }
 
-    /** return null if no data */
+        return this.readChar;
+    }
+
+    /** return empty char[] if no data */
+    private final char[] readLinePassword0() {
+        // don't bother in an IDE. it won't work.
+        boolean echoEnabled = this.terminal.isEchoEnabled();
+        this.terminal.setEchoEnabled(false);
+        char[] readLine0 = readLine0();
+        this.terminal.setEchoEnabled(echoEnabled);
+
+        return readLine0;
+    }
+
+    /** return empty char[] if no data */
     private final char[] readLine0() {
-        if (this.threadBufferForRead.get() == null) {
-            ObjectPoolHolder<ByteBuffer2> holder = this.pool.take();
-            this.threadBufferForRead.set(holder);
-            this.threadBuffersForRead.add(holder);
+        synchronized (this.inputLock) {
+            // empty here, because we don't want to register a readLine WHILE we are still processing
+            // the current line info.
+
+            // the threadBufferForRead getting added is the part that is important
+            if (this.threadBuffer.get() == null) {
+                ObjectPoolHolder<ByteBuffer2> holder = this.pool.take();
+                this.threadBuffer.set(holder);
+                this.threadBuffersForRead.add(holder);
+            } else {
+                this.threadBuffer.get().getValue().clear();
+            }
         }
 
         synchronized (this.inputLockLine) {
@@ -222,7 +255,7 @@ public class InputConsole {
             }
         }
 
-        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.threadBufferForRead.get();
+        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.threadBuffer.get();
         ByteBuffer2 buffer = objectPoolHolder.getValue();
         int len = buffer.position();
         if (len == 0) {
@@ -237,33 +270,9 @@ public class InputConsole {
 
         this.threadBuffersForRead.remove(objectPoolHolder);
         this.pool.release(objectPoolHolder);
-        this.threadBufferForRead.set(null);
+        this.threadBuffer.set(null);
 
         return readChars;
-    }
-
-    /** return null if no data */
-    private final char[] readLinePassword0() {
-        // don't bother in an IDE. it won't work.
-        boolean echoEnabled = this.terminal.isEchoEnabled();
-        this.terminal.setEchoEnabled(false);
-        char[] readLine0 = readLine0();
-        this.terminal.setEchoEnabled(echoEnabled);
-
-        return readLine0;
-    }
-
-    /** return -1 if no data */
-    private final int read0() {
-        synchronized (this.inputLockSingle) {
-            try {
-                this.inputLockSingle.wait();
-            } catch (InterruptedException e) {
-                return -1;
-            }
-        }
-
-        return this.readChar;
     }
 
     /**
@@ -292,83 +301,87 @@ public class InputConsole {
         // don't type ; in a bash shell, it quits everything
         // \n is replaced by \r in unix terminal?
         while ((typedChar = this.terminal.read()) != -1) {
-            asChar = (char) typedChar;
+            synchronized (this.inputLock) {
+                // don't let anyone add a new reader while we are still processing the current actions
 
-            if (logger2.isTraceEnabled()) {
-                logger2.trace("READ: {} ({})", asChar, typedChar);
-            }
+                asChar = (char) typedChar;
 
-            // notify everyone waiting for a character.
-            synchronized (this.inputLockSingle) {
-                if (this.terminal.wasSequence() && typedChar == '\n') {
-                    // don't want to forward \n if it was a part of a sequence in the unsupported terminal
-                    // the JIT will short-cut this out if we are not the unsupported terminal
-                } else {
-                    this.readChar = typedChar;
-                    this.inputLockSingle.notifyAll();
+                if (logger2.isTraceEnabled()) {
+                    logger2.trace("READ: {} ({})", asChar, typedChar);
                 }
-            }
 
-            // if we type a backspace key, swallow it + previous in READLINE. READCHAR will have it passed.
-            if (typedChar == '\b') {
-                int position = 0;
-
-                // clear ourself + one extra.
-                if (ansiEnabled) {
-                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
-                        ByteBuffer2 buffer = objectPoolHolder.getValue();
-                        // size of the buffer BEFORE our backspace was typed
-                        int length = buffer.position();
-                        int amtToOverwrite = 2 * 2; // backspace is always 2 chars (^?) * 2 because it's bytes
-
-                        if (length > 1) {
-                            char charAt = buffer.readChar(length-2);
-                            amtToOverwrite += getPrintableCharacters(charAt);
-
-                            // delete last item in our buffer
-                            length -= 2;
-                            buffer.setPosition(length);
-
-                            // now figure out where the cursor is really at.
-                            // this is more memory friendly than buf.toString.length
-                            for (int i=0;i<length;i+=2) {
-                                charAt = buffer.readChar(i);
-                                position += getPrintableCharacters(charAt);
-                            }
-
-                            position++;
-                        }
-
-                        char[] overwrite = new char[amtToOverwrite];
-                        char c = ' ';
-                        for (int i=0;i<amtToOverwrite;i++) {
-                            overwrite[i] = c;
-                        }
-
-                        // move back however many, over write, then go back again
-                        out.print(ansi.cursorToColumn(position));
-                        out.print(overwrite);
-                        out.print(ansi.cursorToColumn(position));
-                        out.flush();
+                // notify everyone waiting for a character.
+                synchronized (this.inputLockSingle) {
+                    if (this.terminal.wasSequence() && typedChar == '\n') {
+                        // don't want to forward \n if it was a part of a sequence in the unsupported terminal
+                        // the JIT will short-cut this out if we are not the unsupported terminal
+                    } else {
+                        this.readChar = typedChar;
+                        this.inputLockSingle.notifyAll();
                     }
                 }
 
-                // read-line will ignore backspace
-                continue;
-            }
+                // if we type a backspace key, swallow it + previous in READLINE. READCHAR will have it passed.
+                if (typedChar == '\b') {
+                    int position = 0;
 
-            // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
-            if (asChar == '\n') {
-                synchronized (this.inputLockLine) {
-                    this.inputLockLine.notifyAll();
+                    // clear ourself + one extra.
+                    if (ansiEnabled) {
+                        for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                            ByteBuffer2 buffer = objectPoolHolder.getValue();
+                            // size of the buffer BEFORE our backspace was typed
+                            int length = buffer.position();
+                            int amtToOverwrite = 2 * 2; // backspace is always 2 chars (^?) * 2 because it's bytes
+
+                            if (length > 1) {
+                                char charAt = buffer.readChar(length-2);
+                                amtToOverwrite += getPrintableCharacters(charAt);
+
+                                // delete last item in our buffer
+                                length -= 2;
+                                buffer.setPosition(length);
+
+                                // now figure out where the cursor is really at.
+                                // this is more memory friendly than buf.toString.length
+                                for (int i=0;i<length;i+=2) {
+                                    charAt = buffer.readChar(i);
+                                    position += getPrintableCharacters(charAt);
+                                }
+
+                                position++;
+                            }
+
+                            char[] overwrite = new char[amtToOverwrite];
+                            char c = ' ';
+                            for (int i=0;i<amtToOverwrite;i++) {
+                                overwrite[i] = c;
+                            }
+
+                            // move back however many, over write, then go back again
+                            out.print(ansi.cursorToColumn(position));
+                            out.print(overwrite);
+                            out.print(ansi.cursorToColumn(position));
+                            out.flush();
+                        }
+                    }
+
+                    // read-line will ignore backspace
+                    continue;
                 }
-            } else {
-                // our windows console PREVENTS us from returning '\r' (it truncates '\r\n', and returns just '\n')
 
-                // only append if we are not a new line.
-                for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
-                    ByteBuffer2 buffer = objectPoolHolder.getValue();
-                    buffer.writeChar(asChar);
+                // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
+                if (asChar == '\n') {
+                    synchronized (this.inputLockLine) {
+                        this.inputLockLine.notifyAll();
+                    }
+                } else {
+                    // only append if we are not a new line.
+                    // our windows console PREVENTS us from returning '\r' (it truncates '\r\n', and returns just '\n')
+
+                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                        ByteBuffer2 buffer = objectPoolHolder.getValue();
+                        buffer.writeChar(asChar);
+                    }
                 }
             }
         }
