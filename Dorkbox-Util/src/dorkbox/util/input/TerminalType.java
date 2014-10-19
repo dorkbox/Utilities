@@ -2,6 +2,7 @@ package dorkbox.util.input;
 
 public class TerminalType {
     public static final String TYPE = "input.terminal";
+    public static final String READERS = "input.terminal.readers";
 
     public static final String AUTO = "auto";
     public static final String UNIX = "unix";

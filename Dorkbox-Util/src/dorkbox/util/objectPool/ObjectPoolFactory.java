@@ -8,14 +8,6 @@ public class ObjectPoolFactory {
     }
 
     /**
-     * Creates a pool with the max number of available processors as the pool size (padded by 2x as many).
-     */
-    public static <T> ObjectPool<T> create(PoolableObject<T> poolableObject) {
-        return create(poolableObject, Runtime.getRuntime().availableProcessors() * 2);
-    }
-
-
-    /**
      * Creates a pool of the specified size
      */
     public static <T> ObjectPool<T> create(PoolableObject<T> poolableObject, int size) {

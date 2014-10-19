@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 
 import com.sun.jna.Native;
 
+import dorkbox.util.input.Encoding;
 import dorkbox.util.input.Terminal;
 
 /**
@@ -25,7 +26,8 @@ public class UnixTerminal extends Terminal {
     private ByteBuffer windowSizeBuffer = ByteBuffer.allocate(8);
 
 
-    public UnixTerminal(String encoding) throws Exception {
+    public UnixTerminal() throws Exception {
+        String encoding = Encoding.get();
         this.reader = new InputStreamReader(System.in, encoding);
 
         this.term = (PosixTerminalControl) Native.loadLibrary("c", PosixTerminalControl.class);

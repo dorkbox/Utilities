@@ -109,52 +109,70 @@ public class InputConsole {
     private final Object inputLockSingle = new Object();
     private final Object inputLockLine = new Object();
 
-    private final ObjectPool<ByteBuffer2> pool = ObjectPoolFactory.create(new ByteBuffer2Poolable());
-    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> threadBuffer = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
-    private List<ObjectPoolHolder<ByteBuffer2>> threadBuffersForRead = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
+    private final ObjectPool<ByteBuffer2> pool;
 
-    private volatile int readChar = -1;
+    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> readBuff = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
+    private List<ObjectPoolHolder<ByteBuffer2>> readBuffers = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
+    private ThreadLocal<Integer> threadBufferCounter = new ThreadLocal<Integer>();
+
+    private ThreadLocal<ObjectPoolHolder<ByteBuffer2>> readLineBuff = new ThreadLocal<ObjectPoolHolder<ByteBuffer2>>();
+    private List<ObjectPoolHolder<ByteBuffer2>> readLineBuffers = new CopyOnWriteArrayList<ObjectPoolHolder<ByteBuffer2>>();
+
     private final Terminal terminal;
 
     private InputConsole() {
         Logger logger = InputConsole.logger;
 
+        String readers = System.getProperty(TerminalType.READERS);
+        int readers2 = 32;
+        if (readers != null) {
+            try {
+                readers2 = Integer.parseInt(readers);
+            } catch (Exception e) {
+            }
+        }
+        this.pool = ObjectPoolFactory.create(new ByteBuffer2Poolable(), readers2);
+
+
         String type = System.getProperty(TerminalType.TYPE, TerminalType.AUTO).toLowerCase();
         if ("dumb".equals(System.getenv("TERM"))) {
             type = TerminalType.NONE;
-            logger.debug("$TERM=dumb; setting type={}", type);
+            if (logger.isTraceEnabled()) {
+                logger.trace("System environment 'TERM'=dumb, creating type=" + type);
+            }
+        } else {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Creating terminal, type=" + type);
+            }
         }
 
-        logger.debug("Creating terminal; type={}", type);
 
-
-        String encoding = Encoding.get();
         Terminal t;
         try {
             if (type.equals(TerminalType.UNIX)) {
-                t = new UnixTerminal(encoding);
+                t = new UnixTerminal();
             }
             else if (type.equals(TerminalType.WIN) || type.equals(TerminalType.WINDOWS)) {
                 t = new WindowsTerminal();
             }
             else if (type.equals(TerminalType.NONE) || type.equals(TerminalType.OFF) || type.equals(TerminalType.FALSE)) {
-                t = new UnsupportedTerminal(encoding);
+                t = new UnsupportedTerminal();
             } else {
                 if (isIDEAutoDetect()) {
                     logger.debug("Terminal is in UNSUPPORTED (best guess). Unable to support single key input. Only line input available.");
-                    t = new UnsupportedTerminal(encoding);
+                    t = new UnsupportedTerminal();
                 } else {
                     if (OS.isWindows()) {
                         t = new WindowsTerminal();
                     } else {
-                        t = new UnixTerminal(encoding);
+                        t = new UnixTerminal();
                     }
                 }
             }
         }
         catch (Exception e) {
             logger.error("Failed to construct terminal, falling back to unsupported");
-            t = new UnsupportedTerminal(encoding);
+            t = new UnsupportedTerminal();
         }
 
         try {
@@ -162,7 +180,7 @@ public class InputConsole {
         }
         catch (Throwable e) {
             logger.error("Terminal initialization failed, falling back to unsupported");
-            t = new UnsupportedTerminal(encoding);
+            t = new UnsupportedTerminal();
 
             try {
                 t.init();
@@ -174,7 +192,7 @@ public class InputConsole {
         t.setEchoEnabled(true);
 
         this.terminal = t;
-        logger.debug("Created Terminal: {} ({}x{})", this.terminal.getClass().getSimpleName(), t.getWidth(), t.getHeight());
+        logger.debug("Created Terminal: {} ({}x{})", t.getClass().getSimpleName(), t.getWidth(), t.getHeight());
     }
 
     // called when the JVM is shutting down.
@@ -208,15 +226,41 @@ public class InputConsole {
 
     /** return -1 if no data or bunged-up */
     private final int read0() {
-        synchronized (this.inputLockSingle) {
-            try {
-                this.inputLockSingle.wait();
-            } catch (InterruptedException e) {
-                return -1;
+        Integer bufferCounter = this.threadBufferCounter.get();
+        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.readBuff.get();
+        ByteBuffer2 buffer = null;
+
+        if (objectPoolHolder == null) {
+            bufferCounter = 0;
+            this.threadBufferCounter.set(bufferCounter);
+
+            ObjectPoolHolder<ByteBuffer2> holder = this.pool.take();
+            buffer = holder.getValue();
+            this.readBuff.set(holder);
+            this.readBuffers.add(holder);
+        } else {
+            buffer = objectPoolHolder.getValue();
+        }
+
+        if (bufferCounter == buffer.position()) {
+            synchronized (this.inputLockSingle) {
+                buffer.setPosition(0);
+                this.threadBufferCounter.set(0);
+
+                try {
+                    this.inputLockSingle.wait();
+                } catch (InterruptedException e) {
+                    return -1;
+                }
             }
         }
 
-        return this.readChar;
+        bufferCounter = this.threadBufferCounter.get();
+        char c = buffer.readChar(bufferCounter);
+        bufferCounter += 2;
+
+        this.threadBufferCounter.set(bufferCounter);
+        return c;
     }
 
     /** return empty char[] if no data */
@@ -237,12 +281,12 @@ public class InputConsole {
             // the current line info.
 
             // the threadBufferForRead getting added is the part that is important
-            if (this.threadBuffer.get() == null) {
+            if (this.readLineBuff.get() == null) {
                 ObjectPoolHolder<ByteBuffer2> holder = this.pool.take();
-                this.threadBuffer.set(holder);
-                this.threadBuffersForRead.add(holder);
+                this.readLineBuff.set(holder);
+                this.readLineBuffers.add(holder);
             } else {
-                this.threadBuffer.get().getValue().clear();
+                this.readLineBuff.get().getValue().clear();
             }
         }
 
@@ -254,7 +298,7 @@ public class InputConsole {
             }
         }
 
-        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.threadBuffer.get();
+        ObjectPoolHolder<ByteBuffer2> objectPoolHolder = this.readLineBuff.get();
         ByteBuffer2 buffer = objectPoolHolder.getValue();
         int len = buffer.position();
         if (len == 0) {
@@ -267,9 +311,9 @@ public class InputConsole {
         // dump the chars in the buffer (safer for passwords, etc)
         buffer.clearSecure();
 
-        this.threadBuffersForRead.remove(objectPoolHolder);
+        this.readLineBuffers.remove(objectPoolHolder);
         this.pool.release(objectPoolHolder);
-        this.threadBuffer.set(null);
+        this.readLineBuff.set(null);
 
         return readChars;
     }
@@ -302,7 +346,6 @@ public class InputConsole {
         while ((typedChar = this.terminal.read()) != -1) {
             synchronized (this.inputLock) {
                 // don't let anyone add a new reader while we are still processing the current actions
-
                 asChar = (char) typedChar;
 
                 if (logger2.isTraceEnabled()) {
@@ -311,22 +354,25 @@ public class InputConsole {
 
                 // notify everyone waiting for a character.
                 synchronized (this.inputLockSingle) {
-                    if (this.terminal.wasSequence() && typedChar == '\n') {
-                        // don't want to forward \n if it was a part of a sequence in the unsupported terminal
-                        // the JIT will short-cut this out if we are not the unsupported terminal
-                    } else {
-                        this.readChar = typedChar;
-                        this.inputLockSingle.notifyAll();
+                    // have to do readChar first (readLine has to deal with \b and \n
+                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.readBuffers) {
+                        ByteBuffer2 buffer = objectPoolHolder.getValue();
+                        buffer.writeChar(asChar);
                     }
+
+                    this.inputLockSingle.notifyAll();
                 }
 
+
+                // now to handle readLine stuff
+
                 // if we type a backspace key, swallow it + previous in READLINE. READCHAR will have it passed.
-                if (typedChar == '\b') {
+                if (asChar == '\b') {
                     int position = 0;
 
                     // clear ourself + one extra.
                     if (ansiEnabled) {
-                        for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                        for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.readLineBuffers) {
                             ByteBuffer2 buffer = objectPoolHolder.getValue();
                             // size of the buffer BEFORE our backspace was typed
                             int length = buffer.position();
@@ -363,21 +409,17 @@ public class InputConsole {
                             out.flush();
                         }
                     }
-
-                    // read-line will ignore backspace
-                    continue;
                 }
-
-                // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
-                if (asChar == '\n') {
+                else if (asChar == '\n') {
+                    // ignoring \r, because \n is ALWAYS the last character in a new line sequence. (even for windows)
                     synchronized (this.inputLockLine) {
                         this.inputLockLine.notifyAll();
                     }
-                } else {
+                }
+                else {
                     // only append if we are not a new line.
                     // our windows console PREVENTS us from returning '\r' (it truncates '\r\n', and returns just '\n')
-
-                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.threadBuffersForRead) {
+                    for (ObjectPoolHolder<ByteBuffer2> objectPoolHolder : this.readLineBuffers) {
                         ByteBuffer2 buffer = objectPoolHolder.getValue();
                         buffer.writeChar(asChar);
                     }
