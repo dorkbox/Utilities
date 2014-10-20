@@ -6,7 +6,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import dorkbox.util.FilenameUtils;
+import dorkbox.util.FileUtil;
 import dorkbox.util.OS;
 
 /**
@@ -79,7 +79,7 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
         for (String classpathEntry : this.classpathEntries) {
             try {
                 // make sure the classpath is ABSOLUTE pathname
-                classpathEntry = FilenameUtils.normalize(new File(classpathEntry).getAbsolutePath());
+                classpathEntry = FileUtil.normalize(new File(classpathEntry).getAbsolutePath());
 
                 // fix a nasty problem when spaces aren't properly escaped!
                 classpathEntry = classpathEntry.replaceAll(" ", "\\ ");
@@ -204,8 +204,8 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
         // even though the former is a symlink to the latter! To work around this, see if the
         // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
         if (OS.isMacOsX()) {
-            String localVM = FilenameUtils.normalize(new File("/usr/bin/java").getAbsolutePath());
-            String vmCheck = FilenameUtils.normalize(new File(vmpath).getAbsolutePath());
+            String localVM = FileUtil.normalize(new File("/usr/bin/java").getAbsolutePath());
+            String vmCheck = FileUtil.normalize(new File(vmpath).getAbsolutePath());
             if (localVM.equals(vmCheck)) {
                 vmpath = "/usr/bin/java";
             }

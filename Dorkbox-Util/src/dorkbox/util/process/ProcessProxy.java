@@ -38,7 +38,6 @@ public class ProcessProxy extends Thread {
                 }
             } else {
                 while ((readInt = this.is.read()) != -1) {
-                    System.err.println("READ : " + (char)readInt);
                     this.os.write(readInt);
                     // always flush
                     this.os.flush();

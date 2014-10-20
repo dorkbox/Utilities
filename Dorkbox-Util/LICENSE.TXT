@@ -94,7 +94,7 @@ Legal:
 
 
 
-  - FilenameUtils.java, IOCase.java - Apache 2.0 License
+  - FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
     http://commons.apache.org/proper/commons-io/
     Copyright 2013 ASF
     Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
