@@ -103,6 +103,12 @@ Legal:
 
 
 
+  - JNA - Apache 2.0 License
+    https://github.com/twall/jna
+    Copyright (c) 2011 Timothy Wall
+
+
+
   - LAN HostDiscovery from Apache Commons JCS - Apache 2.0 License
     https://issues.apache.org/jira/browse/JCS-40
     Copyright 2001-2014 The Apache Software Foundation.
