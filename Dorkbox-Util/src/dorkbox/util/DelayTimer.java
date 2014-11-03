@@ -11,10 +11,11 @@ public class DelayTimer {
     }
 
     private final String name;
+    private final boolean isDaemon;
     private final Callback listener;
 
-    private volatile Timer timer;
-    private final boolean isDaemon;
+    private Timer timer;
+    private long delay;
 
     public DelayTimer(Callback listener) {
         this(null, true, listener);
@@ -54,6 +55,7 @@ public class DelayTimer {
      * @param delay milliseconds to wait
      */
     public synchronized void delay(long delay) {
+        this.delay = delay;
         cancel();
 
         if (delay > 0) {
@@ -75,5 +77,9 @@ public class DelayTimer {
             this.listener.execute();
             this.timer = null;
         }
+    }
+
+    public synchronized long getDelay() {
+        return this.delay;
     }
 }
