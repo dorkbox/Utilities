@@ -62,6 +62,8 @@ public class FileUtil {
     }
 
 
+    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+
     public static byte[] ZIP_HEADER = { 'P', 'K', 0x3, 0x4 };
 
     /**
@@ -1395,5 +1397,15 @@ public class FileUtil {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
 
-
+    /**
+     * Gets the extension of a file
+     */
+    public static String getExtension(String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot > -1) {
+            return fileName.substring(dot + 1);
+        } else {
+            return null;
+        }
+    }
 }
