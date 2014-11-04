@@ -703,6 +703,19 @@ public class FileUtil {
      * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
      * @return the list of all files in the root+sub-dirs.
      */
+    public static List<File> parseDir(String rootDirectory) {
+        if (rootDirectory == null) {
+            throw new IllegalArgumentException("rootDirectory cannot be null");
+        }
+        return parseDir(new File(rootDirectory), (String) null);
+    }
+
+    /**
+     * Parses the specified root directory for <b>ALL</b> files that are in it. All of the sub-directories are searched as well.
+     * <p>
+     * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
+     * @return the list of all files in the root+sub-dirs.
+     */
     public static List<File> parseDir(File rootDirectory) {
         return parseDir(rootDirectory, (String) null);
     }
@@ -958,6 +971,14 @@ public class FileUtil {
 
 
   //-----------------------------------------------------------------------
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Normalizes a path, removing double and single dot path steps.
      * <p>
@@ -1002,6 +1023,66 @@ public class FileUtil {
         return doNormalize(filename, SYSTEM_SEPARATOR, true);
     }
 
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
+    /**
+     * Normalizes a path, removing double and single dot path steps.
+     * <p>
+     * This method normalizes a path to a standard format.
+     * The input may contain separators in either Unix or Windows format.
+     * The output will contain separators in the format of the system.
+     * <p>
+     * A trailing slash will be retained.
+     * A double slash will be merged to a single slash (but UNC names are handled).
+     * A single dot path segment will be removed.
+     * A double dot will cause that path segment and the one before to be removed.
+     * If the double dot has no parent path segment to work with, {@code null}
+     * is returned.
+     * <p>
+     * The output will be the same on both Unix and Windows except
+     * for the separator character.
+     * <pre>
+     * /foo//               -->   /foo/
+     * /foo/./              -->   /foo/
+     * /foo/../bar          -->   /bar
+     * /foo/../bar/         -->   /bar/
+     * /foo/../bar/../baz   -->   /baz
+     * //foo//./bar         -->   /foo/bar
+     * /../                 -->   null
+     * ../foo               -->   null
+     * foo/bar/..           -->   foo/
+     * foo/../../bar        -->   null
+     * foo/../bar           -->   bar
+     * //server/foo/../bar  -->   //server/bar
+     * //server/../bar      -->   null
+     * C:\foo\..\bar        -->   C:\bar
+     * C:\..\bar            -->   null
+     * ~/foo/../bar/        -->   ~/bar/
+     * ~/../bar             -->   null
+     * </pre>
+     * (Note the file separator returned will be correct for Windows/Unix)
+     *
+     * @param filename  the filename to normalize, null returns null
+     * @return the normalized filename, or null if invalid
+     */
+    public static String normalizeAsFile(String filename) {
+        return doNormalize(new File(filename).getAbsolutePath(), SYSTEM_SEPARATOR, true);
+    }
+
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Normalizes a path, removing double and single dot path steps.
      * <p>
@@ -1055,7 +1136,14 @@ public class FileUtil {
         return new File(asString);
     }
 
-
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Normalizes a path, removing double and single dot path steps.
      * <p>
@@ -1106,6 +1194,14 @@ public class FileUtil {
     }
 
     //-----------------------------------------------------------------------
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Normalizes a path, removing double and single dot path steps,
      * and removing any final directory separator.
@@ -1151,6 +1247,14 @@ public class FileUtil {
         return doNormalize(filename, SYSTEM_SEPARATOR, false);
     }
 
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Normalizes a path, removing double and single dot path steps,
      * and removing any final directory separator.
@@ -1199,6 +1303,14 @@ public class FileUtil {
         return doNormalize(filename, separator, false);
     }
 
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Internal method to perform the normalization.
      *
@@ -1215,6 +1327,7 @@ public class FileUtil {
         if (size == 0) {
             return filename;
         }
+
         int prefix = getPrefixLength(filename);
         if (prefix < 0) {
             return null;
@@ -1301,6 +1414,14 @@ public class FileUtil {
     }
 
     //-----------------------------------------------------------------------
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Returns the length of the filename prefix, such as <code>C:/</code> or <code>~/</code>.
      * <p>
@@ -1387,6 +1508,14 @@ public class FileUtil {
     }
 
     //-----------------------------------------------------------------------
+    /*
+     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
+     *   http://commons.apache.org/proper/commons-io/
+     *   Copyright 2013 ASF
+     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
+     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+     *            Jeremias Maerki, Stephen Colebourne
+     */
     /**
      * Checks if the character is a separator.
      *
@@ -1396,6 +1525,7 @@ public class FileUtil {
     private static boolean isSeparator(char ch) {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
+
 
     /**
      * Gets the extension of a file

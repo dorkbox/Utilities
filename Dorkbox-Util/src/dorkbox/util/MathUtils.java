@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// pruned/limited version from libGDX
+// pruned/limited version from libGDX, modified by dorkbox, llc
 
 package dorkbox.util;
 

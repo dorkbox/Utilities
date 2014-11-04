@@ -1,7 +1,4 @@
-package dorkbox.util.objectPool;
-
 /*
- *
  * from: http://ashkrit.blogspot.de/2013/05/lock-less-java-object-pool.html
  *       https://github.com/ashkrit/blog/tree/master/FastObjectPool
  * copyright ashkrit 2013
@@ -17,7 +14,10 @@ package dorkbox.util.objectPool;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modified by dorkbox, llc
  */
+package dorkbox.util.objectPool;
 
 import java.util.concurrent.locks.ReentrantLock;
 

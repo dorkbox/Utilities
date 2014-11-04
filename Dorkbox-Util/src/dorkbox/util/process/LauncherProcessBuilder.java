@@ -1,9 +1,19 @@
+/*
+ * Copyright 2010 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.process;
-
-
-
-
-
 
 import java.io.File;
 import java.io.InputStream;
@@ -35,11 +45,11 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
     }
 
     public final void addJvmClasspath(String classpathEntry) {
-        classpathEntries.add(classpathEntry);
+        this.classpathEntries.add(classpathEntry);
     }
 
     public final void addJvmClasspaths(List<String> paths) {
-        classpathEntries.addAll(paths);
+        this.classpathEntries.addAll(paths);
     }
 
     public final void setJarFile(String jarFile) {
@@ -49,10 +59,10 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
     private String getClasspath() {
         StringBuilder builder = new StringBuilder();
         int count = 0;
-        final int totalSize = classpathEntries.size();
+        final int totalSize = this.classpathEntries.size();
         final String pathseparator = File.pathSeparator;
 
-        for (String classpathEntry : classpathEntries) {
+        for (String classpathEntry : this.classpathEntries) {
             // fix a nasty problem when spaces aren't properly escaped!
             classpathEntry = classpathEntry.replaceAll(" ", "\\ ");
             builder.append(classpathEntry);
@@ -74,21 +84,21 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
 
 
         // save off the original arguments
-        List<String> origArguments = new ArrayList<String>(arguments.size());
-        origArguments.addAll(arguments);
-        arguments = new ArrayList<String>(0);
+        List<String> origArguments = new ArrayList<String>(this.arguments.size());
+        origArguments.addAll(this.arguments);
+        this.arguments = new ArrayList<String>(0);
 
-        arguments.add("-Xms40M");
-        arguments.add("-Xmx256M");
+        this.arguments.add("-Xms40M");
+        this.arguments.add("-Xmx256M");
 //        arguments.add("-XX:PermSize=256M"); // default is 96
 
-        arguments.add("-server");
+        this.arguments.add("-server");
 
         //same as -cp
         String classpath = getClasspath();
 
         // two more versions. jar vs classs
-        if (jarFile != null) {
+        if (this.jarFile != null) {
             // JAR is added by the launcher (based in the ini file!)
 //            arguments.add("-jar");
 //            arguments.add(jarFile);
@@ -103,12 +113,12 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
 
         }
         // if we are running classes!
-        else if (mainClass != null) {
-            arguments.add(mainClass);
+        else if (this.mainClass != null) {
+            this.arguments.add(this.mainClass);
 
             if (!classpath.isEmpty()) {
-                arguments.add("-classpath");
-                arguments.add(classpath);
+                this.arguments.add("-classpath");
+                this.arguments.add(classpath);
             }
         } else {
             System.err.println("WHOOPS. You must specify a jar or main class when running java!");
@@ -116,20 +126,20 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
         }
 
 
-        for (String arg : mainClassArguments) {
+        for (String arg : this.mainClassArguments) {
             if (arg.contains(" ")) {
                 // individual arguments MUST be in their own element in order to
                 //  be processed properly (this is how it works on the command line!)
                 String[] split = arg.split(" ");
                 for (String s : split) {
-                    arguments.add(s);
+                    this.arguments.add(s);
                 }
             } else {
-                arguments.add(arg);
+                this.arguments.add(arg);
             }
         }
 
-        arguments.addAll(origArguments);
+        this.arguments.addAll(origArguments);
 
         super.start();
     }

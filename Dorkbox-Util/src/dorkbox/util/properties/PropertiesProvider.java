@@ -1,5 +1,19 @@
+/*
+ * Copyright 2010 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.properties;
-
 
 import java.awt.Color;
 import java.io.File;
@@ -32,14 +46,14 @@ public class PropertiesProvider {
     }
 
     private final void _load() {
-        if (!propertiesFile.canRead() || !propertiesFile.exists()) {
+        if (!this.propertiesFile.canRead() || !this.propertiesFile.exists()) {
             // in this case, our properties file doesn't exist yet... create one!
             _save();
         }
 
         try {
-            FileInputStream fis = new FileInputStream(propertiesFile);
-            properties.load(fis);
+            FileInputStream fis = new FileInputStream(this.propertiesFile);
+            this.properties.load(fis);
             fis.close();
 
         } catch (FileNotFoundException e) {
@@ -54,8 +68,8 @@ public class PropertiesProvider {
 
     private final void _save() {
         try {
-            FileOutputStream fos = new FileOutputStream(propertiesFile);
-            properties.store(fos, "Settings and configuration file. Strings must be escape formatted!");
+            FileOutputStream fos = new FileOutputStream(this.propertiesFile);
+            this.properties.store(fos, "Settings and configuration file. Strings must be escape formatted!");
             fos.flush();
             fos.close();
 
@@ -71,7 +85,7 @@ public class PropertiesProvider {
 
 
     public synchronized final void remove(final String key) {
-        properties.remove(key);
+        this.properties.remove(key);
         _save();
     }
 
@@ -84,7 +98,7 @@ public class PropertiesProvider {
             value = ((Color)value).getRGB();
         }
 
-        properties.setProperty(key, value.toString());
+        this.properties.setProperty(key, value.toString());
 
         _save();
     }
@@ -95,7 +109,7 @@ public class PropertiesProvider {
             return null;
         }
 
-        String property = properties.getProperty(key);
+        String property = this.properties.getProperty(key);
         if (property == null) {
             return null;
         }
@@ -122,6 +136,6 @@ public class PropertiesProvider {
 
     @Override
     public String toString() {
-        return "PropertiesProvider [" + propertiesFile + "]";
+        return "PropertiesProvider [" + this.propertiesFile + "]";
     }
 }

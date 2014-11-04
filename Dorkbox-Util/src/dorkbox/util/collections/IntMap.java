@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-// slightly tweaked from libGDX
+// slightly tweaked from libGDX, by dorkbox, llc
 
 package dorkbox.util.collections;
 
