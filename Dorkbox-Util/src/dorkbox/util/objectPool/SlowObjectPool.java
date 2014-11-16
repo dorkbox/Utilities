@@ -29,7 +29,6 @@ class SlowObjectPool<T> implements ObjectPool<T> {
 
 
     private final LinkedBlockingDeque<ObjectPoolHolder<T>> queue;
-    private final PoolableObject<T> poolableObject;
 
     private ThreadLocal<ObjectPoolHolder<T>> localValue = new ThreadLocal<>();
 
@@ -37,7 +36,6 @@ class SlowObjectPool<T> implements ObjectPool<T> {
 
         this.queue = new LinkedBlockingDeque<ObjectPoolHolder<T>>(size);
 
-        this.poolableObject = poolableObject;
         for (int x=0;x<size;x++) {
             this.queue.add(new ObjectPoolHolder<T>(poolableObject.create()));
         }
@@ -49,7 +47,6 @@ class SlowObjectPool<T> implements ObjectPool<T> {
         ObjectPoolHolder<T> localObject = this.localValue.get();
         if (localObject != null) {
             if (localObject.state.compareAndSet(FREE, USED)) {
-                this.poolableObject.activate(localObject.getValue());
                 return localObject;
             }
         }
@@ -64,7 +61,6 @@ class SlowObjectPool<T> implements ObjectPool<T> {
         // as they might have one sitting on the cache
         if (holder.state.compareAndSet(FREE, USED)) {
             this.localValue.set(holder);
-            this.poolableObject.activate(holder.getValue());
             return holder;
         } else {
             // put it back into the queue
@@ -77,7 +73,6 @@ class SlowObjectPool<T> implements ObjectPool<T> {
     public void release(ObjectPoolHolder<T> object) {
         if (object.state.compareAndSet(USED, FREE)) {
             this.queue.offer(object);
-            this.poolableObject.passivate(object.getValue());
         }
         else {
             throw new IllegalArgumentException("Invalid reference passed");

@@ -30,7 +30,6 @@ class FastObjectPool<T> implements ObjectPool<T> {
     private static final boolean USED = false;
 
     private final ObjectPoolHolder<T>[] objects;
-    private final PoolableObject<T> poolableObject;
 
     private volatile int takePointer;
     private volatile int releasePointer;
@@ -45,7 +44,6 @@ class FastObjectPool<T> implements ObjectPool<T> {
 
     FastObjectPool(PoolableObject<T> poolableObject, int size) {
 
-        this.poolableObject = poolableObject;
         int newSize = 1;
         while (newSize < size) {
             newSize = newSize << 1;
@@ -76,7 +74,6 @@ class FastObjectPool<T> implements ObjectPool<T> {
         ObjectPoolHolder<T> localObject = this.localValue.get();
         if (localObject != null) {
             if (localObject.state.compareAndSet(FREE, USED)) {
-                this.poolableObject.activate(localObject.getValue());
                 return localObject;
             }
         }
@@ -95,7 +92,6 @@ class FastObjectPool<T> implements ObjectPool<T> {
                 // as they might have one sitting on the cache
                 if (holder.state.compareAndSet(FREE, USED)) {
                     this.localValue.set(holder);
-                    this.poolableObject.activate(holder.getValue());
                     return holder;
                 }
             }
@@ -115,7 +111,6 @@ class FastObjectPool<T> implements ObjectPool<T> {
             if (object.state.compareAndSet(USED, FREE)) {
                 Sys.unsafe.putOrderedObject(this.objects, index, object);
                 this.releasePointer = localValue+1;
-                this.poolableObject.passivate(object.getValue());
             }
             else {
                 throw new IllegalArgumentException("Invalid reference passed");
