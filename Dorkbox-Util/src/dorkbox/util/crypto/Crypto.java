@@ -98,7 +98,7 @@ public class Crypto {
 
     public static final void addProvider() {
         // make sure we only add it once (in case it's added elsewhere...)
-        Provider provider = Security.getProvider("BC");
+        Provider provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
         if (provider == null) {
             Security.addProvider(new BouncyCastleProvider());
         }
