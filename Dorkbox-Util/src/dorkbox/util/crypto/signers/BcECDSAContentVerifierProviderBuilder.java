@@ -18,6 +18,7 @@ import org.bouncycastle.operator.bc.BcContentVerifierProviderBuilder;
 
 public class BcECDSAContentVerifierProviderBuilder extends BcContentVerifierProviderBuilder {
 
+    @SuppressWarnings("unused")
     public BcECDSAContentVerifierProviderBuilder(DigestAlgorithmIdentifierFinder digestAlgorithmFinder) {
     }
 

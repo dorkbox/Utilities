@@ -126,6 +126,7 @@ public class CryptoX509 {
         /**
          * @return true if saving the x509 certificate to a PEM format file was successful
          */
+        @SuppressWarnings("unused")
         public static boolean convertToPemFile(X509Certificate x509cert, String fileName) {
             boolean failed = false;
             Writer output = null;
@@ -1255,6 +1256,7 @@ public class CryptoX509 {
      *
      * Code is present but commented out, as it was a PITA to figure it out, as documentation is lacking....
      */
+    @SuppressWarnings("unused")
     public static void loadKeystore(String keystoreLocation, String alias, char[] passwd, char[] keypasswd) {
 //            FileInputStream fileIn = new FileInputStream(keystoreLocation);
 //          KeyStore keyStore = KeyStore.getInstance("JKS");
