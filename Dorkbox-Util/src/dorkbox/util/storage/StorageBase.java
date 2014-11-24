@@ -1,3 +1,18 @@
+/*
+ * Copyright 2014 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.storage;
 
 import java.io.ByteArrayOutputStream;
@@ -24,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Output;
 
 import dorkbox.util.bytes.ByteArrayWrapper;
@@ -264,6 +280,9 @@ public class StorageBase {
             }
 
             return readRecordData;
+        } catch (KryoException e) {
+            this.logger.error("Error while geting data from disk. Ignoring previous value.");
+            return null;
         } catch (Exception e) {
             this.logger.error("Error while geting data from disk", e);
             return null;
@@ -589,7 +608,7 @@ public class StorageBase {
      * of the record data of the RecordHeader which is returned. Returns null if the location is not part of a record.
      * (O(n) mem accesses)
      */
-    private final Metadata index_getMetaDataFromData(long targetFp) throws IOException {
+    private final Metadata index_getMetaDataFromData(long targetFp) {
         Iterator<Metadata> iterator = this.memoryIndex.values().iterator();
 
         while (iterator.hasNext()) {

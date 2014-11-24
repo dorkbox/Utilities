@@ -1,3 +1,18 @@
+/*
+ * Copyright 2014 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.storage;
 
 import java.io.File;
@@ -187,63 +202,6 @@ public class Storage {
             sourceClass = sourceClass.getSuperclass();
         }
     }
-
-    /**
-     * @return true if all of the fields in the two objects are the same.
-     *
-     *       NOTE: This is SLIGHTLY different than .equals(), in that there doesn't have to
-     *             be an EXPLICIT .equals() method in the object
-     */
-    private static boolean compareFields(Object source, Object dest) {
-        Class<? extends Object> sourceClass = source.getClass();
-        Class<? extends Object> destClass = dest.getClass();
-
-        if (sourceClass != destClass) {
-            throw new IllegalArgumentException("Source and Dest objects are not of the same class!");
-        }
-
-        // have to walk up the object hierarchy.
-        while (destClass != Object.class) {
-            Field[] destFields = destClass.getDeclaredFields();
-
-            for (Field destField : destFields) {
-                String name = destField.getName();
-                try {
-                    Field sourceField = sourceClass.getDeclaredField(name);
-                    destField.setAccessible(true);
-                    sourceField.setAccessible(true);
-
-                    Object sourceObj = sourceField.get(source);
-                    Object destObj = destField.get(dest);
-
-                    if (sourceObj == null) {
-                        if (destObj == null) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        if (destObj == null) {
-                            return false;
-                        } else {
-                            return destObj.equals(sourceObj);
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.error("Unable to copy field: {}", name, e);
-                    return false;
-                }
-            }
-
-            destClass = destClass.getSuperclass();
-            sourceClass = sourceClass.getSuperclass();
-        }
-
-        return true;
-    }
-
-
-
 
 
 
