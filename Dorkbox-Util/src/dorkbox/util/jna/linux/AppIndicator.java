@@ -17,7 +17,6 @@ import dorkbox.util.jna.linux.Gobject.GObjectStruct;
 public interface AppIndicator extends Library {
     public static AppIndicator INSTANCE = (AppIndicator) Native.loadLibrary("appindicator", AppIndicator.class);
 
-
     public static final int CATEGORY_APPLICATION_STATUS = 0;
     public static final int CATEGORY_COMMUNICATIONS     = 1;
     public static final int CATEGORY_SYSTEM_SERVICES    = 2;

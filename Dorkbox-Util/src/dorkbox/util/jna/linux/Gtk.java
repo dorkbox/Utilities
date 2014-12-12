@@ -47,7 +47,21 @@ public interface Gtk extends Library {
     }
 
     public void gtk_init(int argc, String[] argv);
+
+    /**
+     * Runs the main loop until gtk_main_quit() is called.
+     * You can nest calls to gtk_main(). In that case gtk_main_quit() will make the innermost invocation of the main loop return.
+     */
     public void gtk_main();
+    /**
+     * Makes the innermost invocation of the main loop return when it regains control.
+     */
+    public void gtk_main_quit();
+
+    public void gdk_threads_init();
+    public void gdk_threads_enter();
+    public void gdk_threads_leave();
+
 
     public Pointer gtk_menu_new();
     public Pointer gtk_menu_item_new_with_label(String label);

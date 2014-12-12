@@ -67,7 +67,8 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 
-import dorkbox.urlHandler.Box;
+import dorkbox.util.OS;
+import dorkbox.util.bytes.LittleEndian;
 
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B
@@ -167,15 +168,16 @@ public class Crypto {
             }
         }
 
+        // CUSTOM_HEADER USE
+        private static byte[] CUSTOM_HEADER = new byte[] {-54, -98, 98, 120};
         /**
          * Specifically, to return the hash of the ALL files/directories inside the jar, minus the action specified (LGPL) files.
          */
         public static final byte[] hashJarContentsExcludeAction(JarFile jarFile, Digest digest, int action) throws IOException {
-            String token = Box.repack;
-
             Enumeration<JarEntry> jarElements = jarFile.entries();
 
             boolean okToHash = false;
+            boolean hasAction = false;
             byte[] buffer = new byte[2048];
             int read = 0;
             digest.reset();
@@ -189,21 +191,49 @@ public class Crypto {
                     continue;
                 }
 
-                okToHash = false;
-                int startIndex = name.lastIndexOf(token); // lastIndexOf, in case there are multiple box files stacked in eachother
-                if (startIndex > -1) {
-                    String type = name.substring(startIndex + 2);
-                    int parseInt = Integer.parseInt(type);
+                okToHash = true;
+                hasAction = false;
 
-                    if ((parseInt & action) != action) {
-                        okToHash = true;
+                byte[] extraData = jarEntry.getExtra();
+                if (extraData != null && extraData.length > 4) {
+                    for (int i = 0; i < CUSTOM_HEADER.length; i++) {
+                        if (extraData[i] != CUSTOM_HEADER[i]) {
+                            // can hash if we don't have an action assigned (LGPL will ALWAYS have an action assigned)
+                            okToHash = false;
+                            break;
+                        }
+                    }
+
+                    // this means we matched our header
+                    int fileAction = 0;
+
+                    if (okToHash) {
+                        if (extraData[4] > 0) {
+                            hasAction = true;
+                            // we have an ACTION describing how it was compressed, etc
+                            fileAction = LittleEndian.Int_.fromBytes(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
+                        }
+
+                        if ((fileAction & action) == action) {
+                            okToHash = false;
+                        }
                     }
                 }
 
                 // skips hashing lgpl files. (technically, whatever our action bitmask is...)
+                // we want to hash everything BY DEFAULT. we ALSO want to hash the NAME, LOAD ACTION TYPE, and the contents
                 if (okToHash) {
-                    InputStream inputStream = jarFile.getInputStream(jarEntry);
+                    // hash the file name
+                    byte[] bytes = name.getBytes(OS.US_ASCII);
+                    digest.update(bytes, 0, bytes.length);
 
+                    if (hasAction) {
+                        // hash the action
+                        digest.update(extraData, 5, 4);
+                    }
+
+                    // hash the contents
+                    InputStream inputStream = jarFile.getInputStream(jarEntry);
                     while ((read = inputStream.read(buffer)) > 0) {
                         digest.update(buffer, 0, read);
                     }
