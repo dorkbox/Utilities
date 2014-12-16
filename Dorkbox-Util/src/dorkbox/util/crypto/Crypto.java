@@ -169,76 +169,91 @@ public class Crypto {
         }
 
         // CUSTOM_HEADER USE
-        private static byte[] CUSTOM_HEADER = new byte[] {-54, -98, 98, 120};
+        private static byte[] CUSTOM_HEADER = new byte[] {-2, -54, -54, -98};
         /**
          * Specifically, to return the hash of the ALL files/directories inside the jar, minus the action specified (LGPL) files.
          */
-        public static final byte[] hashJarContentsExcludeAction(JarFile jarFile, Digest digest, int action) throws IOException {
-            Enumeration<JarEntry> jarElements = jarFile.entries();
+        public static final byte[] hashJarContentsExcludeAction(File jarDestFilename, Digest digest, int action) throws IOException {
+            JarFile jarDestFile = new JarFile(jarDestFilename);
 
-            boolean okToHash = false;
-            boolean hasAction = false;
-            byte[] buffer = new byte[2048];
-            int read = 0;
-            digest.reset();
+            try {
+                Enumeration<JarEntry> jarElements = jarDestFile.entries();
 
-            while (jarElements.hasMoreElements()) {
-                JarEntry jarEntry = jarElements.nextElement();
-                String name = jarEntry.getName();
-                okToHash = !jarEntry.isDirectory();
+                boolean okToHash = false;
+                boolean hasAction = false;
+                byte[] buffer = new byte[2048];
+                int read = 0;
+                digest.reset();
 
-                if (!okToHash) {
-                    continue;
-                }
+                while (jarElements.hasMoreElements()) {
+                    JarEntry jarEntry = jarElements.nextElement();
+                    String name = jarEntry.getName();
+                    okToHash = !jarEntry.isDirectory();
 
-                okToHash = true;
-                hasAction = false;
-
-                byte[] extraData = jarEntry.getExtra();
-                if (extraData != null && extraData.length > 4) {
-                    for (int i = 0; i < CUSTOM_HEADER.length; i++) {
-                        if (extraData[i] != CUSTOM_HEADER[i]) {
-                            // can hash if we don't have an action assigned (LGPL will ALWAYS have an action assigned)
-                            okToHash = false;
-                            break;
-                        }
+                    if (!okToHash) {
+                        continue;
                     }
 
-                    // this means we matched our header
-                    int fileAction = 0;
+                    // data with NO extra data will NOT BE HASHED
+                    // data that matches our action bitmask WILL NOT BE HASHED
 
-                    if (okToHash) {
+                    okToHash = false;
+                    hasAction = false;
+
+                    byte[] extraData = jarEntry.getExtra();
+                    if (extraData == null || extraData.length == 0) {
+                        okToHash = false;
+                    } else if (extraData.length >= 4) {
+                        for (int i = 0; i < CUSTOM_HEADER.length; i++) {
+                            if (extraData[i] != CUSTOM_HEADER[i]) {
+                                throw new RuntimeException("Unexpected extra data in zip assigned. Aborting");
+                            }
+                        }
+
+                        // this means we matched our header
                         if (extraData[4] > 0) {
                             hasAction = true;
+
                             // we have an ACTION describing how it was compressed, etc
-                            fileAction = LittleEndian.Int_.fromBytes(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
+                            int fileAction = LittleEndian.Int_.fromBytes(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
+
+                            if ((fileAction & action) != action) {
+                                okToHash = true;
+                            }
+                        } else {
+                            okToHash = true;
+                        }
+                    } else {
+                        throw new RuntimeException("Unexpected extra data in zip assigned. Aborting");
+                    }
+
+                    // skips hashing lgpl files. (technically, whatever our action bitmask is...)
+                    // we want to hash everything BY DEFAULT. we ALSO want to hash the NAME, LOAD ACTION TYPE, and the contents
+                    if (okToHash) {
+                        // System.err.println("HASHING: " + name);
+                        // hash the file name
+                        byte[] bytes = name.getBytes(OS.US_ASCII);
+                        digest.update(bytes, 0, bytes.length);
+
+                        if (hasAction) {
+                            // hash the action - since we don't want to permit anyone to change this after we sign the file
+                            digest.update(extraData, 5, 4);
                         }
 
-                        if ((fileAction & action) == action) {
-                            okToHash = false;
+                        // hash the contents
+                        InputStream inputStream = jarDestFile.getInputStream(jarEntry);
+                        while ((read = inputStream.read(buffer)) > 0) {
+                            digest.update(buffer, 0, read);
                         }
+                        inputStream.close();
+                    } else {
+//                        System.err.println("Skipping: " + name);
                     }
                 }
-
-                // skips hashing lgpl files. (technically, whatever our action bitmask is...)
-                // we want to hash everything BY DEFAULT. we ALSO want to hash the NAME, LOAD ACTION TYPE, and the contents
-                if (okToHash) {
-                    // hash the file name
-                    byte[] bytes = name.getBytes(OS.US_ASCII);
-                    digest.update(bytes, 0, bytes.length);
-
-                    if (hasAction) {
-                        // hash the action
-                        digest.update(extraData, 5, 4);
-                    }
-
-                    // hash the contents
-                    InputStream inputStream = jarFile.getInputStream(jarEntry);
-                    while ((read = inputStream.read(buffer)) > 0) {
-                        digest.update(buffer, 0, read);
-                    }
-                    inputStream.close();
-                }
+            } catch (Exception e) {
+                throw new RuntimeException("Unexpected extra data in zip assigned. Aborting");
+            } finally {
+                jarDestFile.close();
             }
 
             byte[] digestBytes = new byte[digest.getDigestSize()];
