@@ -90,3 +90,10 @@
     http://www.cs.gmu.edu/~sean/research/mersenne/MersenneTwisterFast.java
     Copyright 2003 by Sean Luke
     Portions copyright 1993 by Michael Lecuyer
+
+
+
+  - jOOU, Unsigned Numbers for Java - Apache 2.0 License
+    https://github.com/jOOQ/jOOU/tree/master/jOOU
+    Copyright 2011-2013, Lukas Eder, lukas.eder@gmail.com
+
