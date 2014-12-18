@@ -215,7 +215,7 @@ public class Crypto {
                             hasAction = true;
 
                             // we have an ACTION describing how it was compressed, etc
-                            int fileAction = LittleEndian.Int_.fromBytes(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
+                            int fileAction = LittleEndian.Int_.from(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
 
                             if ((fileAction & action) != action) {
                                 okToHash = true;
