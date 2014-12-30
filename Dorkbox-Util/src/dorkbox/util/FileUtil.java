@@ -1,3 +1,18 @@
+/*
+ * Copyright 2010 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util;
 
 import java.io.BufferedInputStream;
@@ -19,7 +34,6 @@ import java.util.zip.ZipInputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 /**
  * File related utilities.
@@ -158,6 +172,12 @@ public class FileUtil {
         String normalizedIn = normalize(in.getAbsolutePath());
         String normalizedout = normalize(out.getAbsolutePath());
 
+        if (normalizedIn.equalsIgnoreCase(normalizedout)) {
+            logger.warn("Source equals destination! " + normalizedIn);
+            return out;
+        }
+
+
         // if out doesn't exist, then create it.
         File parentOut = out.getParentFile();
         if (!parentOut.canWrite()) {
@@ -174,6 +194,11 @@ public class FileUtil {
         try {
             sourceChannel = new FileInputStream(normalizedIn).getChannel();
             destinationChannel = new FileOutputStream(normalizedout).getChannel();
+
+            if (sourceChannel.size() == 0) {
+                logger2.warn("Source size is ZERO: " + normalizedIn);
+            }
+
             sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
         } finally {
             try {
@@ -252,7 +277,7 @@ public class FileUtil {
     /**
      * Moves a file, overwriting any existing file at the destination.
      */
-    public static File moveFile(String in, String out) {
+    public static File moveFile(String in, String out) throws IOException {
         if (in == null || in.isEmpty()) {
             throw new IllegalArgumentException("in cannot be null.");
         }
@@ -266,7 +291,7 @@ public class FileUtil {
     /**
      * Moves a file, overwriting any existing file at the destination.
      */
-    public static File moveFile(File in, File out) {
+    public static File moveFile(File in, File out) throws IOException {
         if (in == null) {
             throw new IllegalArgumentException("in cannot be null.");
         }
@@ -274,17 +299,13 @@ public class FileUtil {
             throw new IllegalArgumentException("out cannot be null.");
         }
 
-        System.err.println("\t\t: Moving file");
-        System.err.println("\t\t:   " + in.getAbsolutePath());
-        System.err.println("\t\t:     " + out.getAbsolutePath());
-
         if (out.canRead()) {
             out.delete();
         }
 
         boolean renameSuccess = renameTo(in, out);
         if (!renameSuccess) {
-            throw new RuntimeException("Unable to move file: '" + in.getAbsolutePath() + "' -> '" + out.getAbsolutePath() + "'");
+            throw new IOException("Unable to move file: '" + in.getAbsolutePath() + "' -> '" + out.getAbsolutePath() + "'");
         }
         return out;
     }
@@ -300,7 +321,10 @@ public class FileUtil {
     /**
      * Copies a directory from one location to another
      */
-    public static void copyDirectory(File src, File dest, String... dirNamesToIgnore) throws IOException {
+    public static void copyDirectory(File src_, File dest_, String... dirNamesToIgnore) throws IOException {
+        File src = FileUtil.normalize(src_);
+        File dest = FileUtil.normalize(dest_);
+
         if (dirNamesToIgnore.length > 0) {
             String name = src.getName();
             for (String ignore : dirNamesToIgnore) {
@@ -388,37 +412,80 @@ public class FileUtil {
 
     /**
      * Deletes a file or directory and all files and sub-directories under it.
+     * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
      */
-    public static boolean delete(String fileName) {
+    public static boolean delete(String fileName, String... namesToIgnore) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }
 
-        return delete(new File(fileName));
+        return delete(new File(fileName), namesToIgnore);
     }
 
     /**
      * Deletes a file or directory and all files and sub-directories under it.
+     * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
      */
-    public static boolean delete(File file) {
+    public static boolean delete(File file, String... namesToIgnore) {
+        boolean ignored = false;
         Logger logger2 = logger;
         if (file.exists() && file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0, n = files.length; i < n; i++) {
+                boolean delete = true;
+                String name2 = files[i].getName();
+
                 if (files[i].isDirectory()) {
-                    delete(files[i].getAbsolutePath());
-                } else {
-                    if (logger2.isTraceEnabled()) {
-                        logger2.trace("Deleting file: {}", files[i]);
+                    for (String name : namesToIgnore) {
+                        if (name.startsWith("/") && name.equals(name2)) {
+                            if (logger2.isTraceEnabled()) {
+                                logger2.trace("Skipping delete dir: {}", files[i]);
+                            }
+                            ignored = true;
+                            delete = false;
+                            break;
+                        }
                     }
-                    files[i].delete();
+
+                    if (delete) {
+                        if (logger2.isTraceEnabled()) {
+                            logger2.trace("Deleting dir: {}", files[i]);
+                        }
+                        delete(files[i], namesToIgnore);
+                    }
+                } else {
+                    for (String name : namesToIgnore) {
+                        if (!name.startsWith("/") && name.equals(name2)) {
+                            if (logger2.isTraceEnabled()) {
+                                logger2.trace("Skipping delete file: {}", files[i]);
+                            }
+                            ignored = true;
+                            delete = false;
+                            break;
+                        }
+                    }
+
+                    if (delete) {
+                        if (logger2.isTraceEnabled()) {
+                            logger2.trace("Deleting file: {}", files[i]);
+                        }
+                        files[i].delete();
+                    }
                 }
             }
         }
+
+        // don't try to delete the dir if there was an ignored file in it
+        if (ignored) {
+            if (logger2.isTraceEnabled()) {
+                logger2.trace("Skipping deleting file: {}", file);
+            }
+            return true;
+        }
+
         if (logger2.isTraceEnabled()) {
             logger2.trace("Deleting file: {}", file);
         }
-
         return file.delete();
     }
 
@@ -703,7 +770,7 @@ public class FileUtil {
      * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
      * @return the list of all files in the root+sub-dirs.
      */
-    public static List<File> parseDir(String rootDirectory) {
+    public static List<File> parseDir(String rootDirectory) throws IOException {
         if (rootDirectory == null) {
             throw new IllegalArgumentException("rootDirectory cannot be null");
         }
@@ -716,7 +783,7 @@ public class FileUtil {
      * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
      * @return the list of all files in the root+sub-dirs.
      */
-    public static List<File> parseDir(File rootDirectory) {
+    public static List<File> parseDir(File rootDirectory) throws IOException {
         return parseDir(rootDirectory, (String) null);
     }
 
@@ -724,9 +791,11 @@ public class FileUtil {
      * Parses the specified root directory for files that end in the extension to match. All of the sub-directories are searched as well.
      * @return the list of all files in the root+sub-dirs that match the given extension.
      */
-    public static List<File> parseDir(File rootDirectory, String... extensionsToMatch) {
+    public static List<File> parseDir(File rootDirectory, String... extensionsToMatch) throws IOException {
         List<File> jarList = new LinkedList<File>();
         LinkedList<File> directories = new LinkedList<File>();
+
+        rootDirectory = FileUtil.normalize(rootDirectory.getAbsoluteFile());
 
         if (rootDirectory.isDirectory()) {
             directories.add(rootDirectory);
@@ -753,7 +822,7 @@ public class FileUtil {
                 }
             }
         } else {
-            System.err.println("Cannot search directory children if the dir is a file name: " + rootDirectory.getAbsolutePath());
+            throw new IOException("Cannot search directory children if the dir is a file name: " + rootDirectory.getAbsolutePath());
         }
 
 
@@ -1133,7 +1202,7 @@ public class FileUtil {
             return null;
         }
 
-        return new File(asString);
+        return new File(asString).getAbsoluteFile();
     }
 
     /*

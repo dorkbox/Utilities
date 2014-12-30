@@ -66,6 +66,12 @@
 
 
 
+  - jOOU, Unsigned Numbers for Java - Apache 2.0 License
+    https://github.com/jOOQ/jOOU/tree/master/jOOU
+    Copyright 2011-2013, Lukas Eder, lukas.eder@gmail.com
+
+
+
   - Kryo - New BSD License
     https://github.com/EsotericSoftware/kryo
     Copyright 2008, Nathan Sweet, All rights reserved.
@@ -93,7 +99,8 @@
 
 
 
-  - jOOU, Unsigned Numbers for Java - Apache 2.0 License
-    https://github.com/jOOQ/jOOU/tree/master/jOOU
-    Copyright 2011-2013, Lukas Eder, lukas.eder@gmail.com
+  - migbase64 - High performance base64 encoder & decoder - BSD License
+    http://migbase64.sourceforge.net/
+    Copyright 2004, Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)
+
 

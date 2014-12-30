@@ -1,3 +1,18 @@
+/*
+ * Copyright 2011 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.gwt;
 
 import io.netty.util.CharsetUtil;
@@ -13,7 +28,7 @@ public class GwtSymbolMapParser {
     private final Map<String, String> symbolMap;
 
     public GwtSymbolMapParser() {
-        symbolMap = new HashMap<String, String>();
+        this.symbolMap = new HashMap<String, String>();
     }
 
     /**
@@ -56,7 +71,7 @@ public class GwtSymbolMapParser {
     }
 
     public Map<String, String> getSymbolMap() {
-        return symbolMap;
+        return this.symbolMap;
     }
 
     public void processLine(String line) {
@@ -107,12 +122,12 @@ public class GwtSymbolMapParser {
             // also, ignore if the source/dest name are the same, since that doesn't do any good for obfuscated names anyways.
             if (memberName.isEmpty() && !jsName.equals(className)) {
 //            System.err.println(jsName + "  :  " + memberName + "  :  " + className);
-                symbolMap.put(jsName, className);
+                this.symbolMap.put(jsName, className);
             }
         } else {
             // version 2
             // The list has already been pruned, so always put everything into the symbol map
-            symbolMap.put(symbolInfo[0], symbolInfo[1]);
+            this.symbolMap.put(symbolInfo[0], symbolInfo[1]);
         }
     }
 }

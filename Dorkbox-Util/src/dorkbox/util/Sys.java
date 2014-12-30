@@ -17,38 +17,29 @@ package dorkbox.util;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
-import java.net.JarURLConnection;
 import java.net.NetworkInterface;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
-
-import dorkbox.urlHandler.BoxURLConnection;
 
 public class Sys {
     public static final int javaVersion = getJavaVersion();
@@ -680,189 +671,6 @@ public class Sys {
 
         builder.append("}");
         System.err.println(builder.toString());
-    }
-
-    /**
-     * Finds a list of classes that are annotated with the specified annotation.
-     */
-    public static final List<Class<?>> findAnnotatedClasses(Class<? extends Annotation> annotation) {
-        return findAnnotatedClasses("", annotation);
-    }
-
-    /**
-     * Finds a list of classes in the specific package that are annotated with the specified annotation.
-     */
-    public static final List<Class<?>> findAnnotatedClasses(String packageName, Class<? extends Annotation> annotation) {
-        // find ALL ServerLoader classes and use reflection to load them.
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
-        String noDotsPackageName = packageName;
-        boolean isEmpty = true;
-        if (packageName != null && !packageName.isEmpty()) {
-            noDotsPackageName = packageName.replace('.', '/');
-            isEmpty = false;
-        } else {
-            noDotsPackageName = ""; // cannot be null!
-        }
-
-        // look for all annotated classes in the projects package.
-        try {
-            LinkedList<Class<?>> annotatedClasses = new LinkedList<Class<?>>();
-
-            URL url;
-            Enumeration<URL> resources = classLoader.getResources(noDotsPackageName);
-
-            // lengthy, but it will traverse how we want.
-            while (resources.hasMoreElements()) {
-                url = resources.nextElement();
-                if (url.getProtocol().equals("file")) {
-                    File file = new File(url.getFile());
-                    if (!isEmpty) {
-                        String relativeToDir = FileUtil.getParentRelativeToDir(file, noDotsPackageName);
-                        if (relativeToDir != null) {
-                            findAnnotatedClassesRecursive(classLoader, noDotsPackageName, annotation, file, relativeToDir, annotatedClasses);
-                        }
-                    } else {
-                        findAnnotatedClassesRecursive(classLoader, noDotsPackageName, annotation, file, file.getAbsolutePath(), annotatedClasses);
-                    }
-                } else {
-                    findModulesInJar(classLoader, noDotsPackageName, annotation, url, annotatedClasses);
-                }
-            }
-
-            return annotatedClasses;
-        } catch (Exception e) {
-            System.err.println("Problem finding annotated classes for: " + annotation.getSimpleName());
-            System.exit(-1);
-        }
-
-        return null;
-    }
-
-    private static final void findAnnotatedClassesRecursive(ClassLoader classLoader, String packageName,
-                                             Class<? extends Annotation> annotation, File directory,
-                                             String rootPath,
-                                             List<Class<?>> annotatedClasses) throws ClassNotFoundException {
-
-        File[] files = directory.listFiles();
-
-        if (files != null) {
-            for (File file : files) {
-                String absolutePath = file.getAbsolutePath();
-                String fileName = file.getName();
-
-                if (file.isDirectory()) {
-                    findAnnotatedClassesRecursive(classLoader, packageName , annotation, file, rootPath, annotatedClasses);
-                }
-                else if (isValid(fileName)) {
-                    String classPath = absolutePath.substring(rootPath.length() + 1, absolutePath.length() - 6);
-
-                    if (!packageName.isEmpty()) {
-                        if (!classPath.startsWith(packageName)) {
-                            return;
-                        }
-                    }
-
-                    String toDots = classPath.replaceAll(File.separator, ".");
-
-                    Class<?> clazz = Class.forName(toDots, false, classLoader);
-                    if (clazz.getAnnotation(annotation) != null) {
-                        annotatedClasses.add(clazz);
-                    }
-                }
-            }
-        }
-    }
-
-
-    private static final void findModulesInJar(ClassLoader classLoader, String searchLocation,
-                                               Class<? extends Annotation> annotation, URL resource, List<Class<?>> annotatedClasses)
-                    throws IOException, ClassNotFoundException {
-
-        URLConnection connection = resource.openConnection();
-
-        // Regular JAR
-        if (connection instanceof JarURLConnection) {
-            JarURLConnection jarURLConnection = (JarURLConnection) connection;
-
-            JarFile jarFile = jarURLConnection.getJarFile();
-
-            Enumeration<JarEntry> entries = jarFile.entries();
-
-            // read all the jar entries.
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = entries.nextElement();
-                String name = jarEntry.getName();
-
-                if (name.startsWith(searchLocation) && // make sure it's at least the correct package
-                    isValid(name)) {
-
-                    String classPath = name.replace(File.separatorChar, '.').substring(0, name.lastIndexOf("."));
-
-                    String toDots = classPath.replaceAll(File.separator, ".");
-
-                    Class<?> clazz = Class.forName(toDots, false, classLoader);
-                    if (clazz.getAnnotation(annotation) != null) {
-                        annotatedClasses.add(clazz);
-                    }
-                }
-            }
-            jarFile.close();
-        }
-        // Files inside of box deployment
-        else if (connection instanceof BoxURLConnection) {
-            BoxURLConnection hiveJarURLConnection = (BoxURLConnection) connection;
-
-            // class files will not have an entry name, which is reserved for resources only
-            String name = hiveJarURLConnection.getResourceName();
-
-            if (name.startsWith(searchLocation) && // make sure it's at least the correct package
-                isValid(name)) {
-
-                String classPath = name.substring(0, name.lastIndexOf('.'));
-                classPath = classPath.replace('/', '.');
-
-                Class<?> clazz = Class.forName(classPath, false, classLoader);
-                if (clazz.getAnnotation(annotation) != null) {
-                    annotatedClasses.add(clazz);
-                }
-            }
-        }
-        else {
-            return;
-        }
-    }
-
-    /**
-     * remove directories from the search. make sure it's a class file shortcut so we don't load ALL .class files!
-     *
-     **/
-    private static boolean isValid(String name) {
-
-        if (name == null) {
-            return false;
-        }
-
-        int length = name.length();
-
-        if (name.charAt(length-1) == '/') { // remove directories from the search.)
-            return false;
-        }
-
-        // ALSO, cannot use classes such as "ServerBloah$4.class".
-        int newLength = length-6;
-        for (int i=0;i<newLength;i++) {
-            if (name.charAt(i) == '$') {
-                return false;
-            }
-        }
-
-        return name.charAt(length-6) == '.' &&
-               name.charAt(length-5) == 'c' &&
-               name.charAt(length-4) == 'l' &&
-               name.charAt(length-3) == 'a' &&
-               name.charAt(length-2) == 's' &&
-               name.charAt(length-1) == 's'; // make sure it's a class file
     }
 
     /**

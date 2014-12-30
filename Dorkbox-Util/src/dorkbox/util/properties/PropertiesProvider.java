@@ -23,17 +23,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import dorkbox.util.FileUtil;
+
 public class PropertiesProvider {
 
     // the basePath for properties based settings. In JAVA proper, this is by default relative to the jar location.
     // in ANDROID dalvik, this must be specified to be the location of the APK plus some extra info. This must be set by the android app.
     public static String basePath = "";
 
+    private String comments = "Settings and configuration file. Strings must be escape formatted!";
     private final Properties properties = new SortedProperties();
     private final File propertiesFile;
 
+    public PropertiesProvider(String propertiesFile) {
+        this(new File(propertiesFile));
+    }
+
     public PropertiesProvider(File propertiesFile) {
-        propertiesFile = propertiesFile.getAbsoluteFile();
+        if (propertiesFile == null) {
+            throw new NullPointerException("propertiesFile");
+        }
+
+        propertiesFile = FileUtil.normalize(propertiesFile);
         // make sure the parent dir exists...
         File parentFile = propertiesFile.getParentFile();
         if (parentFile != null) {
@@ -43,6 +54,10 @@ public class PropertiesProvider {
         this.propertiesFile = propertiesFile;
 
         _load();
+    }
+
+    public void setComments(String comments) {
+        this.comments = comments;
     }
 
     private final void _load() {
@@ -69,7 +84,7 @@ public class PropertiesProvider {
     private final void _save() {
         try {
             FileOutputStream fos = new FileOutputStream(this.propertiesFile);
-            this.properties.store(fos, "Settings and configuration file. Strings must be escape formatted!");
+            this.properties.store(fos, this.comments);
             fos.flush();
             fos.close();
 
