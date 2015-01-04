@@ -4,8 +4,6 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry exported="true" kind="lib" path="/Dependencies/logging/slf4j-api-1.7.5.jar" sourcepath="/Dependencies/logging/slf4j-api-1.7.5-sources.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/Dependencies/kryo/kryo2-debug.jar" sourcepath="/Dependencies/kryo/kryo2-source.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/kryo/objenesis-1.2.jar" sourcepath="/Dependencies/kryo/objenesis-1.2-sources.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/logging/logback-classic-1.0.13.jar" sourcepath="/Dependencies/logging/logback-classic-1.0.13-sources.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/logging/logback-core-1.0.13.jar" sourcepath="/Dependencies/logging/logback-core-1.0.13-sources.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/logging/minlog-1.2-to-slf4j.jar" sourcepath="/Dependencies/logging/minlog-1.2-to-slf4j-sources.zip"/>
@@ -25,5 +23,7 @@
 	<classpathentry kind="lib" path="/Dependencies/jna/jna-4.1.0.jar" sourcepath="/Dependencies/jna/jna-4.1.0-sources.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/jansi/jansi-1.11b.jar" sourcepath="/Dependencies/jansi/jansi-1.11b-source.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/lzma-java/lzma-java-1.1.jar"/>
+	<classpathentry kind="lib" path="/Dependencies/kryo/objenesis-2.1.jar" sourcepath="/Dependencies/kryo/objenesis-2.1-srcs.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/kryo/kryo3-debug.jar"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
