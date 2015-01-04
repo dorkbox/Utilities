@@ -427,9 +427,13 @@ public class FileUtil {
      * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
      */
     public static boolean delete(File file, String... namesToIgnore) {
+        if (!file.exists()) {
+            return false;
+        }
+
         boolean ignored = false;
         Logger logger2 = logger;
-        if (file.exists() && file.isDirectory()) {
+        if (file.isDirectory()) {
             File[] files = file.listFiles();
             for (int i = 0, n = files.length; i < n; i++) {
                 boolean delete = true;
@@ -486,6 +490,7 @@ public class FileUtil {
         if (logger2.isTraceEnabled()) {
             logger2.trace("Deleting file: {}", file);
         }
+
         return file.delete();
     }
 
