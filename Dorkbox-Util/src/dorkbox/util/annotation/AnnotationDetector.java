@@ -180,14 +180,11 @@ public final class AnnotationDetector implements Builder, Cursor {
     // "(Ljava/lang/String;II)I"  String, int, int as arguments, return type int
     private String methodDescriptor;
 
-    private AnnotationDetector(final File[] filesOrDirectories, final String[] pkgNameFilter) {
-        this(Thread.currentThread().getContextClassLoader(), filesOrDirectories, null, pkgNameFilter);
-    }
-
     private AnnotationDetector(ClassLoader loader, final File[] filesOrDirectories, ClassIterator iterator, final String[] pkgNameFilter) {
         this.loader = loader;
         if (iterator == null) {
             this.cfIterator = new ClassFileIterator(filesOrDirectories, pkgNameFilter);
+
             if (filesOrDirectories.length == 0) {
                 LOG.warn("No files or directories to scan!");
             } else if (LOG.isTraceEnabled()) {
@@ -213,7 +210,6 @@ public final class AnnotationDetector implements Builder, Cursor {
         throws IOException {
 
         final ClassLoader loader = Thread.currentThread().getContextClassLoader();
-
         return scanClassPath(loader, packageNames);
     }
 
@@ -225,27 +221,67 @@ public final class AnnotationDetector implements Builder, Cursor {
     public static Builder scanClassPath(ClassLoader loader, final String... packageNames)
         throws IOException {
 
-        final Set<File> files = new HashSet<File>();
         final String[] pkgNameFilter;
-        if (packageNames.length == 0) {
-            pkgNameFilter = null;
-            final String[] fileNames = System.getProperty("java.class.path").split(File.pathSeparator);
-            for (int i = 0; i < fileNames.length; ++i) {
-                files.add(new File(fileNames[i]));
-            }
-        } else {
-            pkgNameFilter = new String[packageNames.length];
-            for (int i = 0; i < pkgNameFilter.length; ++i) {
-                pkgNameFilter[i] = packageNames[i].replace('.', '/');
-                if (!pkgNameFilter[i].endsWith("/")) {
-                    pkgNameFilter[i] = pkgNameFilter[i].concat("/");
+
+        // DORKBOX added
+        boolean isCustomLoader = "dorkbox.classloader.ClassLoader" == loader.getClass().getName();
+        if (isCustomLoader) {
+            final List<URL> fileNames;
+
+            // scanning the classpath
+            if (packageNames.length == 0) {
+                pkgNameFilter = null;
+                List<String> asList = Arrays.asList(System.getProperty("java.class.path").split(File.pathSeparator));
+                fileNames = new ArrayList<URL>(asList.size());
+                for (String s : asList) {
+                    File file = new File(s);
+                    fileNames.add(file.toURI().toURL());
                 }
             }
-            for (final String packageName : pkgNameFilter) {
-                addFiles(loader, packageName, files);
+            // scanning specific packages
+            else {
+                pkgNameFilter = new String[packageNames.length];
+                for (int i = 0; i < pkgNameFilter.length; ++i) {
+                    pkgNameFilter[i] = packageNames[i].replace('.', '/');
+                    if (!pkgNameFilter[i].endsWith("/")) {
+                        pkgNameFilter[i] = pkgNameFilter[i].concat("/");
+                    }
+                }
+
+                fileNames = new ArrayList<URL>();
+                for (final String packageName : pkgNameFilter) {
+                    final Enumeration<URL> resourceEnum = loader.getResources(packageName);
+                    while (resourceEnum.hasMoreElements()) {
+                        final URL url = resourceEnum.nextElement();
+                        fileNames.add(url);
+                    }
+                }
             }
+
+            return new AnnotationDetector(loader, null, new CustomClassloaderIterator(fileNames, packageNames), pkgNameFilter);
+        } else {
+            final Set<File> files = new HashSet<File>();
+
+            if (packageNames.length == 0) {
+                pkgNameFilter = null;
+                final String[] fileNames = System.getProperty("java.class.path").split(File.pathSeparator);
+                for (int i = 0; i < fileNames.length; ++i) {
+                    files.add(new File(fileNames[i]));
+                }
+            } else {
+                pkgNameFilter = new String[packageNames.length];
+                for (int i = 0; i < pkgNameFilter.length; ++i) {
+                    pkgNameFilter[i] = packageNames[i].replace('.', '/');
+                    if (!pkgNameFilter[i].endsWith("/")) {
+                        pkgNameFilter[i] = pkgNameFilter[i].concat("/");
+                    }
+                }
+                for (final String packageName : pkgNameFilter) {
+                    addFiles(loader, packageName, files);
+                }
+            }
+            return new AnnotationDetector(loader, files.toArray(new File[files.size()]), null, pkgNameFilter);
         }
-        return new AnnotationDetector(loader, files.toArray(new File[files.size()]), null, pkgNameFilter);
     }
 
     /**
@@ -269,7 +305,7 @@ public final class AnnotationDetector implements Builder, Cursor {
      * Scan all files in the specified jar files and directories.
      */
     public static Builder scanFiles(final File... filesOrDirectories) {
-        return new AnnotationDetector(filesOrDirectories, null);
+        return new AnnotationDetector(Thread.currentThread().getContextClassLoader(), filesOrDirectories, null, null);
     }
 
     /**
@@ -515,8 +551,9 @@ public final class AnnotationDetector implements Builder, Cursor {
             // Handle JBoss VFS URL's which look like (example package 'nl.dvelop'):
             // vfs:/foo/bar/website.war/WEB-INF/classes/nl/dvelop/
             // vfs:/foo/bar/website.war/WEB-INF/lib/dwebcore-0.0.1.jar/nl/dvelop/
-            final boolean isVfs = "vfs".equals(url.getProtocol());
-            if ("file".equals(url.getProtocol()) || isVfs) {
+            String protocol = url.getProtocol();
+            final boolean isVfs = "vfs".equals(protocol);
+            if ("file".equals(protocol) || isVfs) {
                 final File dir = toFile(url);
                 if (dir.isDirectory()) {
                     files.add(dir);
