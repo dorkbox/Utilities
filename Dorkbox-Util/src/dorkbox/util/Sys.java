@@ -24,8 +24,10 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.AccessController;
@@ -786,6 +788,74 @@ public class Sys {
                 }
             } catch (Exception e){
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Tries to retrieve the IP address from the NIC. Order is ETHx -> EMx -> WLANx
+     * @return null if not found
+     */
+    public static InetAddress getIpAddressesFromNic() {
+        try {
+            Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
+            while (nets.hasMoreElements()) {
+                NetworkInterface nextElement = nets.nextElement();
+                String name = nextElement.getName();
+
+                // we only want to use ethX addresses!
+                if (name.startsWith("eth")) {
+                    Enumeration<InetAddress> inetAddresses = nextElement.getInetAddresses();
+
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress address = inetAddresses.nextElement();
+                        // we only support IPV4 addresses.
+                        if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
+                            return address;
+                        }
+                    }
+                }
+            }
+
+            // it didn't work with ethX, so try emX!
+            while (nets.hasMoreElements()) {
+                NetworkInterface nextElement = nets.nextElement();
+                String name = nextElement.getName();
+
+                // we only want to use wlanX addresses!
+                if (name.startsWith("em")) {
+                    Enumeration<InetAddress> inetAddresses = nextElement.getInetAddresses();
+
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress address = inetAddresses.nextElement();
+                        // we only support IPV4 addresses.
+                        if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
+                            return address;
+                        }
+                    }
+                }
+            }
+
+            // it didn't work with ethX, so try wifi!
+            while (nets.hasMoreElements()) {
+                NetworkInterface nextElement = nets.nextElement();
+                String name = nextElement.getName();
+
+                // we only want to use wlanX addresses!
+                if (name.startsWith("wlan")) {
+                    Enumeration<InetAddress> inetAddresses = nextElement.getInetAddresses();
+
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress address = inetAddresses.nextElement();
+                        // we only support IPV4 addresses.
+                        if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
+                            return address;
+                        }
+                    }
+                }
+            }
+        } catch (SocketException e) {
         }
 
         return null;
