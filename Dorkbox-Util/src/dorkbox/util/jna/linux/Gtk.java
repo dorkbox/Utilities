@@ -54,7 +54,8 @@ public interface Gtk extends Library {
      */
     public void gtk_main();
     /**
-     * Makes the innermost invocation of the main loop return when it regains control.
+     * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS
+     * you know what you're doing!
      */
     public void gtk_main_quit();
 

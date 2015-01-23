@@ -5,12 +5,12 @@ import java.util.concurrent.CountDownLatch;
 
 public class GtkSupport {
     public static final boolean isSupported;
+    private static boolean hasSwt = false;
 
     static {
         if (Gtk.INSTANCE != null && AppIndicator.INSTANCE != null && Gobject.INSTANCE != null && GThread.INSTANCE != null) {
             isSupported = true;
 
-            boolean hasSwt = false;
             try {
                 Class<?> swtClass = Class.forName("org.eclipse.swt.widgets.Display");
                 if (swtClass != null) {
@@ -18,7 +18,8 @@ public class GtkSupport {
                 }
             } catch (Exception ignore) {}
 
-            // swt already init's gtk. If we are using GTK, we need to make sure the event loop is runnign
+            // If we are using GTK, we need to make sure the event loop is running. There can be multiple/nested loops.
+            // since SWT uses one already, it's not necessary to have two.
             if (!hasSwt) {
                 Gtk instance = Gtk.INSTANCE;
                 instance.gtk_init(0, null);
@@ -57,5 +58,11 @@ public class GtkSupport {
 
     public static void init() {
         // placeholder to init GTK
+    }
+
+    public static void shutdownGTK() {
+        if (!hasSwt) {
+            Gtk.INSTANCE.gtk_main_quit();
+        }
     }
 }
