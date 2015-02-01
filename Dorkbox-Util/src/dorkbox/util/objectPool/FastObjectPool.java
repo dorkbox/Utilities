@@ -19,12 +19,15 @@
  */
 package dorkbox.util.objectPool;
 
+import java.lang.reflect.Field;
+import java.security.AccessController;
+import java.security.PrivilegedExceptionAction;
 import java.util.concurrent.locks.ReentrantLock;
-
-import dorkbox.util.Sys;
 
 
 class FastObjectPool<T> implements ObjectPool<T> {
+
+    private final sun.misc.Unsafe unsafe;
 
     private static final boolean FREE = true;
     private static final boolean USED = false;
@@ -43,6 +46,28 @@ class FastObjectPool<T> implements ObjectPool<T> {
     private ThreadLocal<ObjectPoolHolder<T>> localValue = new ThreadLocal<>();
 
     FastObjectPool(PoolableObject<T> poolableObject, int size) {
+        try {
+            final PrivilegedExceptionAction<sun.misc.Unsafe> action = new PrivilegedExceptionAction<sun.misc.Unsafe>() {
+                @Override
+                public sun.misc.Unsafe run() throws Exception {
+                    Class<sun.misc.Unsafe> unsafeClass = sun.misc.Unsafe.class;
+                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
+                    theUnsafe.setAccessible(true);
+                    Object unsafeObject = theUnsafe.get(null);
+                    if (unsafeClass.isInstance(unsafeObject)) {
+                        return unsafeClass.cast(unsafeObject);
+                    }
+
+                    throw new NoSuchFieldError("the Unsafe");
+                }
+            };
+
+            this.unsafe = AccessController.doPrivileged(action);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Unable to load unsafe", e);
+        }
+
 
         int newSize = 1;
         while (newSize < size) {
@@ -61,8 +86,8 @@ class FastObjectPool<T> implements ObjectPool<T> {
 
         this.mask = size-1;
         this.releasePointer = size;
-        this.BASE = Sys.unsafe.arrayBaseOffset(ObjectPoolHolder[].class);
-        this.INDEXSCALE = Sys.unsafe.arrayIndexScale(ObjectPoolHolder[].class);
+        this.BASE = this.unsafe.arrayBaseOffset(ObjectPoolHolder[].class);
+        this.INDEXSCALE = this.unsafe.arrayIndexScale(ObjectPoolHolder[].class);
         this.ASHIFT = 31 - Integer.numberOfLeadingZeros((int) this.INDEXSCALE);
     }
 
@@ -78,7 +103,7 @@ class FastObjectPool<T> implements ObjectPool<T> {
             }
         }
 
-        sun.misc.Unsafe unsafe = Sys.unsafe;
+        sun.misc.Unsafe unsafe = this.unsafe;
 
         while (this.releasePointer != (localTakePointer=this.takePointer)) {
             int index = localTakePointer & this.mask;
@@ -109,7 +134,7 @@ class FastObjectPool<T> implements ObjectPool<T> {
             long index = ((localValue & this.mask)<<this.ASHIFT ) + this.BASE;
 
             if (object.state.compareAndSet(USED, FREE)) {
-                Sys.unsafe.putOrderedObject(this.objects, index, object);
+                this.unsafe.putOrderedObject(this.objects, index, object);
                 this.releasePointer = localValue+1;
             }
             else {

@@ -30,8 +30,6 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -46,8 +44,6 @@ import org.bouncycastle.crypto.digests.SHA256Digest;
 public class Sys {
     public static final int javaVersion = getJavaVersion();
     public static final boolean isAndroid = getIsAndroid();
-
-    public static final sun.misc.Unsafe unsafe = getUNSAFE();
 
     public static final int     KILOBYTE = 1024;
     public static final int     MEGABYTE = 1024 * KILOBYTE;
@@ -95,29 +91,7 @@ public class Sys {
         }
     }
 
-    private static sun.misc.Unsafe getUNSAFE() {
-        try {
-            final PrivilegedExceptionAction<sun.misc.Unsafe> action = new PrivilegedExceptionAction<sun.misc.Unsafe>() {
-                @Override
-                public sun.misc.Unsafe run() throws Exception {
-                    Class<sun.misc.Unsafe> unsafeClass = sun.misc.Unsafe.class;
-                    Field theUnsafe = unsafeClass.getDeclaredField("theUnsafe");
-                    theUnsafe.setAccessible(true);
-                    Object unsafeObject = theUnsafe.get(null);
-                    if (unsafeClass.isInstance(unsafeObject)) {
-                        return unsafeClass.cast(unsafeObject);
-                    }
 
-                    throw new NoSuchFieldError("the Unsafe");
-                }
-            };
-
-            return AccessController.doPrivileged(action);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unable to load unsafe", e);
-        }
-    }
 
     public static final void eraseString(String string) {
 //      You can change the value of the inner char[] using reflection.
@@ -137,9 +111,13 @@ public class Sys {
           valueField.set(string, new char[0]); // replace it.
 
           // set count to 0
-          Field countField = String.class.getDeclaredField("count");
-          countField.setAccessible(true);
-          countField.set(string, 0);
+          try {
+              // newer versions of java don't have this field
+              Field countField = String.class.getDeclaredField("count");
+              countField.setAccessible(true);
+              countField.set(string, 0);
+          } catch (Exception ignored) {
+          }
 
           // set hash to 0
           Field hashField = String.class.getDeclaredField("hash");
