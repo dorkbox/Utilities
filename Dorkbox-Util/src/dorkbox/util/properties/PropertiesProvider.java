@@ -27,10 +27,6 @@ import dorkbox.util.FileUtil;
 
 public class PropertiesProvider {
 
-    // the basePath for properties based settings. In JAVA proper, this is by default relative to the jar location.
-    // in ANDROID dalvik, this must be specified to be the location of the APK plus some extra info. This must be set by the android app.
-    public static String basePath = "";
-
     private String comments = "Settings and configuration file. Strings must be escape formatted!";
     private final Properties properties = new SortedProperties();
     private final File propertiesFile;
