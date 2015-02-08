@@ -16,7 +16,6 @@
 package dorkbox.util.crypto;
 
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -297,16 +296,6 @@ public class Crypto {
             digest.doFinal(digestBytes, 0);
             return digestBytes;
         }
-
-        /**
-         * Hash an input stream (auto-converts to an output stream first), based on the specified digest
-         */
-        public static byte[] hashStream(Digest digest, ByteArrayOutputStream outputStream) throws IOException {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-
-            return hashStream(digest, inputStream);
-        }
-
 
         /**
          * Secure way to generate an AES key based on a password. Will '*' out the passed-in password
