@@ -25,5 +25,12 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1.jar" sourcepath="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1_src.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/dorkbox/multimbassador/MultiMBassador_v1.1.jar" sourcepath="/Dependencies/dorkbox/multimbassador/MultiMBassador_v1.1_src.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/concurrent-locks/concurrent-locks-1.0.0.jar" sourcepath="/Dependencies/concurrent-locks/concurrent-locks-1.0.0-sources.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/disruptor/disruptor-3.3.0.jar" sourcepath="/Dependencies/disruptor/disruptor-3.3.0-sources.zip">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/Dependencies/disruptor/disruptor-3.3.0-javadoc.zip!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
