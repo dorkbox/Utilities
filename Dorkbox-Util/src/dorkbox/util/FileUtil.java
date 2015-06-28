@@ -15,16 +15,10 @@
  */
 package dorkbox.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.io.Reader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -32,21 +26,19 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * File related utilities.
- *
- *
+ * <p/>
+ * <p/>
  * Contains code from FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
  * http://commons.apache.org/proper/commons-io/
  * Copyright 2013 ASF
  * Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
- *          Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
- *          Jeremias Maerki, Stephen Colebourne
+ * Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
+ * Jeremias Maerki, Stephen Colebourne
  */
-public class FileUtil {
+public
+class FileUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
     /**
      * The Unix separator character.
@@ -67,10 +59,12 @@ public class FileUtil {
      * The separator character that is the opposite of the system separator.
      */
     private static final char OTHER_SEPARATOR;
+
     static {
         if (OS.isWindows()) {
             OTHER_SEPARATOR = UNIX_SEPARATOR;
-        } else {
+        }
+        else {
             OTHER_SEPARATOR = WINDOWS_SEPARATOR;
         }
     }
@@ -78,14 +72,15 @@ public class FileUtil {
 
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-    public static byte[] ZIP_HEADER = { 'P', 'K', 0x3, 0x4 };
+    public static byte[] ZIP_HEADER = {'P', 'K', 0x3, 0x4};
 
     /**
      * Renames a file. Windows has all sorts of problems which are worked around.
      *
      * @return true if successful, false otherwise
      */
-    public static boolean renameTo(File source, File dest) {
+    public static
+    boolean renameTo(File source, File dest) {
         // if we're on a civilized operating system we may be able to simple
         // rename it
         if (source.renameTo(dest)) {
@@ -120,6 +115,8 @@ public class FileUtil {
             fin = new FileInputStream(source);
             fout = new FileOutputStream(dest);
             Sys.copyStream(fin, fout);
+
+            Sys.close(fin);
             if (!source.delete()) {
                 logger.warn("Failed to delete {} after brute force copy to {}.", source, dest);
             }
@@ -139,11 +136,13 @@ public class FileUtil {
      * Reads the contents of the supplied input stream into a list of lines.
      * Closes the reader on successful or failed completion.
      */
-    public static List<String> readLines(Reader in) throws IOException {
+    public static
+    List<String> readLines(Reader in) throws IOException {
         List<String> lines = new ArrayList<String>();
         try {
             BufferedReader bin = new BufferedReader(in);
-            for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {}
+            for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {
+            }
         } finally {
             Sys.close(in);
         }
@@ -153,14 +152,16 @@ public class FileUtil {
     /**
      * Copies a files from one location to another.  Overwriting any existing file at the destination.
      */
-    public static File copyFile(String in, String out) throws IOException {
+    public static
+    File copyFile(String in, String out) throws IOException {
         return copyFile(new File(in), new File(out));
     }
 
     /**
      * Copies a files from one location to another. Overwriting any existing file at the destination.
      */
-    public static File copyFile(File in, File out) throws IOException {
+    public static
+    File copyFile(File in, File out) throws IOException {
         if (in == null) {
             throw new IllegalArgumentException("in cannot be null.");
         }
@@ -224,7 +225,8 @@ public class FileUtil {
      * Copies the contents of file two onto the END of file one.
      */
     @SuppressWarnings("resource")
-    public static File concatFiles(File one, File two) {
+    public static
+    File concatFiles(File one, File two) {
         if (one == null) {
             throw new IllegalArgumentException("one cannot be null.");
         }
@@ -277,7 +279,8 @@ public class FileUtil {
     /**
      * Moves a file, overwriting any existing file at the destination.
      */
-    public static File moveFile(String in, String out) throws IOException {
+    public static
+    File moveFile(String in, String out) throws IOException {
         if (in == null || in.isEmpty()) {
             throw new IllegalArgumentException("in cannot be null.");
         }
@@ -291,7 +294,8 @@ public class FileUtil {
     /**
      * Moves a file, overwriting any existing file at the destination.
      */
-    public static File moveFile(File in, File out) throws IOException {
+    public static
+    File moveFile(File in, File out) throws IOException {
         if (in == null) {
             throw new IllegalArgumentException("in cannot be null.");
         }
@@ -313,7 +317,8 @@ public class FileUtil {
     /**
      * Copies a directory from one location to another
      */
-    public static void copyDirectory(String src, String dest, String... dirNamesToIgnore) throws IOException {
+    public static
+    void copyDirectory(String src, String dest, String... dirNamesToIgnore) throws IOException {
         copyDirectory(new File(src), new File(dest), dirNamesToIgnore);
     }
 
@@ -321,13 +326,14 @@ public class FileUtil {
     /**
      * Copies a directory from one location to another
      */
-    public static void copyDirectory(File src_, File dest_, String... dirNamesToIgnore) throws IOException {
+    public static
+    void copyDirectory(File src_, File dest_, String... fileNamesToIgnore) throws IOException {
         File src = FileUtil.normalize(src_);
         File dest = FileUtil.normalize(dest_);
 
-        if (dirNamesToIgnore.length > 0) {
+        if (fileNamesToIgnore.length > 0) {
             String name = src.getName();
-            for (String ignore : dirNamesToIgnore) {
+            for (String ignore : fileNamesToIgnore) {
                 if (name.equals(ignore)) {
                     return;
                 }
@@ -354,9 +360,10 @@ public class FileUtil {
                 File destFile = new File(dest, file);
 
                 // recursive copy
-                copyDirectory(srcFile, destFile, dirNamesToIgnore);
+                copyDirectory(srcFile, destFile, fileNamesToIgnore);
             }
-        } else {
+        }
+        else {
             // if file, then copy it
             copyFile(src, dest);
         }
@@ -365,17 +372,19 @@ public class FileUtil {
     /**
      * Safely moves a directory from one location to another (by copying it first, then deleting the original).
      */
-    public static void moveDirectory(String src, String dest, String... dirNamesToIgnore) throws IOException {
-        moveDirectory(new File(src), new File(dest), dirNamesToIgnore);
+    public static
+    void moveDirectory(String src, String dest, String... fileNamesToIgnore) throws IOException {
+        moveDirectory(new File(src), new File(dest), fileNamesToIgnore);
     }
 
     /**
      * Safely moves a directory from one location to another (by copying it first, then deleting the original).
      */
-    public static void moveDirectory(File src, File dest, String... dirNamesToIgnore) throws IOException {
-        if (dirNamesToIgnore.length > 0) {
+    public static
+    void moveDirectory(File src, File dest, String... fileNamesToIgnore) throws IOException {
+        if (fileNamesToIgnore.length > 0) {
             String name = src.getName();
-            for (String ignore : dirNamesToIgnore) {
+            for (String ignore : fileNamesToIgnore) {
                 if (name.equals(ignore)) {
                     return;
                 }
@@ -402,9 +411,10 @@ public class FileUtil {
                 File destFile = new File(dest, file);
 
                 // recursive copy
-                moveDirectory(srcFile, destFile, dirNamesToIgnore);
+                moveDirectory(srcFile, destFile, fileNamesToIgnore);
             }
-        } else {
+        }
+        else {
             // if file, then copy it
             moveFile(src, dest);
         }
@@ -412,21 +422,25 @@ public class FileUtil {
 
     /**
      * Deletes a file or directory and all files and sub-directories under it.
-     * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
+     *
+     * @param fileNamesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
      */
-    public static boolean delete(String fileName, String... namesToIgnore) {
+    public static
+    boolean delete(String fileName, String... fileNamesToIgnore) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }
 
-        return delete(new File(fileName), namesToIgnore);
+        return delete(new File(fileName), fileNamesToIgnore);
     }
 
     /**
      * Deletes a file or directory and all files and sub-directories under it.
+     *
      * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
      */
-    public static boolean delete(File file, String... namesToIgnore) {
+    public static
+    boolean delete(File file, String... namesToIgnore) {
         if (!file.exists()) {
             return false;
         }
@@ -457,7 +471,8 @@ public class FileUtil {
                         }
                         delete(files[i], namesToIgnore);
                     }
-                } else {
+                }
+                else {
                     for (String name : namesToIgnore) {
                         if (!name.startsWith("/") && name.equals(name2)) {
                             if (logger2.isTraceEnabled()) {
@@ -498,7 +513,8 @@ public class FileUtil {
     /**
      * Creates the directories in the specified location.
      */
-    public static String mkdir(File location) {
+    public static
+    String mkdir(File location) {
         if (location == null) {
             throw new IllegalArgumentException("fileDir cannot be null.");
         }
@@ -517,7 +533,8 @@ public class FileUtil {
     /**
      * Creates the directories in the specified location.
      */
-    public static String mkdir(String location) {
+    public static
+    String mkdir(String location) {
         if (location == null) {
             throw new IllegalArgumentException("path cannot be null.");
         }
@@ -529,7 +546,8 @@ public class FileUtil {
     /**
      * Creates a temp file
      */
-    public static File tempFile(String fileName) throws IOException {
+    public static
+    File tempFile(String fileName) throws IOException {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }
@@ -540,7 +558,8 @@ public class FileUtil {
     /**
      * Creates a temp directory
      */
-    public static String tempDirectory(String directoryName) throws IOException {
+    public static
+    String tempDirectory(String directoryName) throws IOException {
         if (directoryName == null) {
             throw new IllegalArgumentException("directoryName cannot be null");
         }
@@ -558,9 +577,10 @@ public class FileUtil {
     }
 
     /**
-     *  @return true if the inputStream is a zip/jar stream. DOES NOT CLOSE THE STREAM
+     * @return true if the inputStream is a zip/jar stream. DOES NOT CLOSE THE STREAM
      */
-    public static boolean isZipStream(InputStream in) {
+    public static
+    boolean isZipStream(InputStream in) {
         if (!in.markSupported()) {
             in = new BufferedInputStream(in);
         }
@@ -584,7 +604,8 @@ public class FileUtil {
     /**
      * @return true if the named file is a zip/jar file
      */
-    public static boolean isZipFile(String fileName) {
+    public static
+    boolean isZipFile(String fileName) {
         if (fileName == null) {
             throw new IllegalArgumentException("fileName cannot be null");
         }
@@ -595,7 +616,8 @@ public class FileUtil {
     /**
      * @return true if the file is a zip/jar file
      */
-    public static boolean isZipFile(File file) {
+    public static
+    boolean isZipFile(File file) {
         boolean isZip = true;
         byte[] buffer = new byte[ZIP_HEADER.length];
 
@@ -629,7 +651,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzip(String zipFile, String outputDir) throws IOException {
+    public static
+    void unzip(String zipFile, String outputDir) throws IOException {
         unzipJar(zipFile, outputDir, true);
     }
 
@@ -638,7 +661,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzip(File zipFile, File outputDir) throws IOException {
+    public static
+    void unzip(File zipFile, File outputDir) throws IOException {
         unzipJar(zipFile, outputDir, true);
     }
 
@@ -647,7 +671,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzip(ZipInputStream inputStream, String outputDir) throws IOException {
+    public static
+    void unzip(ZipInputStream inputStream, String outputDir) throws IOException {
         if (outputDir == null) {
             throw new IllegalArgumentException("outputDir cannot be null.");
         }
@@ -660,7 +685,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzip(ZipInputStream inputStream, File outputDir) throws IOException {
+    public static
+    void unzip(ZipInputStream inputStream, File outputDir) throws IOException {
         unzipJar(inputStream, outputDir, true);
     }
 
@@ -669,7 +695,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzipJar(String zipFile, String outputDir, boolean extractManifest) throws IOException {
+    public static
+    void unzipJar(String zipFile, String outputDir, boolean extractManifest) throws IOException {
         if (zipFile == null) {
             throw new IllegalArgumentException("zipFile cannot be null.");
         }
@@ -685,7 +712,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzipJar(File zipFile, File outputDir, boolean extractManifest) throws IOException {
+    public static
+    void unzipJar(File zipFile, File outputDir, boolean extractManifest) throws IOException {
         if (zipFile == null) {
             throw new IllegalArgumentException("zipFile cannot be null.");
         }
@@ -701,7 +729,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    public static void unzipJar(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws IOException {
+    public static
+    void unzipJar(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws IOException {
         if (inputStream == null) {
             throw new IllegalArgumentException("inputStream cannot be null.");
         }
@@ -715,7 +744,8 @@ public class FileUtil {
     /**
      * Unzips a ZIP or JAR file (and handles the manifest if requested)
      */
-    private static void unjarzip0(File zipFile, File outputDir, boolean extractManifest) throws IOException {
+    private static
+    void unjarzip0(File zipFile, File outputDir, boolean extractManifest) throws IOException {
         if (zipFile == null) {
             throw new IllegalArgumentException("zipFile cannot be null.");
         }
@@ -738,7 +768,8 @@ public class FileUtil {
      *
      * @return The path to the output directory.
      */
-    private static void unjarzip1(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws FileNotFoundException, IOException {
+    private static
+    void unjarzip1(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws FileNotFoundException, IOException {
         try {
             ZipEntry entry = null;
             while ((entry = inputStream.getNextEntry()) != null) {
@@ -771,11 +802,13 @@ public class FileUtil {
 
     /**
      * Parses the specified root directory for <b>ALL</b> files that are in it. All of the sub-directories are searched as well.
-     * <p>
+     * <p/>
      * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
+     *
      * @return the list of all files in the root+sub-dirs.
      */
-    public static List<File> parseDir(String rootDirectory) throws IOException {
+    public static
+    List<File> parseDir(String rootDirectory) throws IOException {
         if (rootDirectory == null) {
             throw new IllegalArgumentException("rootDirectory cannot be null");
         }
@@ -784,19 +817,23 @@ public class FileUtil {
 
     /**
      * Parses the specified root directory for <b>ALL</b> files that are in it. All of the sub-directories are searched as well.
-     * <p>
+     * <p/>
      * <i>This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.</i>
+     *
      * @return the list of all files in the root+sub-dirs.
      */
-    public static List<File> parseDir(File rootDirectory) throws IOException {
+    public static
+    List<File> parseDir(File rootDirectory) throws IOException {
         return parseDir(rootDirectory, (String) null);
     }
 
     /**
      * Parses the specified root directory for files that end in the extension to match. All of the sub-directories are searched as well.
+     *
      * @return the list of all files in the root+sub-dirs that match the given extension.
      */
-    public static List<File> parseDir(File rootDirectory, String... extensionsToMatch) throws IOException {
+    public static
+    List<File> parseDir(File rootDirectory, String... extensionsToMatch) throws IOException {
         List<File> jarList = new LinkedList<File>();
         LinkedList<File> directories = new LinkedList<File>();
 
@@ -812,10 +849,12 @@ public class FileUtil {
                     for (File file : listFiles) {
                         if (file.isDirectory()) {
                             directories.add(file);
-                        } else {
+                        }
+                        else {
                             if (extensionsToMatch == null || extensionsToMatch.length == 0 || extensionsToMatch[0] == null) {
                                 jarList.add(file);
-                            } else {
+                            }
+                            else {
                                 for (String e : extensionsToMatch) {
                                     if (file.getAbsolutePath().endsWith(e)) {
                                         jarList.add(file);
@@ -826,7 +865,8 @@ public class FileUtil {
                     }
                 }
             }
-        } else {
+        }
+        else {
             throw new IOException("Cannot search directory children if the dir is a file name: " + rootDirectory.getAbsolutePath());
         }
 
@@ -836,10 +876,11 @@ public class FileUtil {
 
     /**
      * Gets the relative path of a file to a specific directory in it's hierarchy.
-     *
+     * <p/>
      * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
      */
-    public static String getChildRelativeToDir(String fileName, String dirInHeirarchy) {
+    public static
+    String getChildRelativeToDir(String fileName, String dirInHeirarchy) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }
@@ -849,11 +890,13 @@ public class FileUtil {
 
     /**
      * Gets the relative path of a file to a specific directory in it's hierarchy.
-     *
+     * <p/>
      * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
+     *
      * @return null if it cannot be found
      */
-    public static String getChildRelativeToDir(File file, String dirInHeirarchy) {
+    public static
+    String getChildRelativeToDir(File file, String dirInHeirarchy) {
         if (file == null) {
             throw new IllegalArgumentException("file cannot be null.");
         }
@@ -863,7 +906,7 @@ public class FileUtil {
         }
 
         String[] split = dirInHeirarchy.split(File.separator);
-        int splitIndex = split.length-1;
+        int splitIndex = split.length - 1;
 
         String absolutePath = file.getAbsolutePath();
 
@@ -897,11 +940,13 @@ public class FileUtil {
                             parentName = parent.getAbsolutePath();
                             return absolutePath.substring(parentName.length() + 1);
                         }
-                    } else {
+                    }
+                    else {
                         // because it has to be "in-order", if it doesn't match, we immediately abort
                         return null;
                     }
-                } else {
+                }
+                else {
                     if (parentName.equals(split[splitIndex])) {
                         matched = true;
                         splitIndex--;
@@ -917,10 +962,11 @@ public class FileUtil {
 
     /**
      * Gets the PARENT relative path of a file to a specific directory in it's hierarchy.
-     *
+     * <p/>
      * For example: getParentRelativeToDir("/a/b/c/d/e.bah", "c") -> "/a/b"
      */
-    public static String getParentRelativeToDir(String fileName, String dirInHeirarchy) {
+    public static
+    String getParentRelativeToDir(String fileName, String dirInHeirarchy) {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("fileName cannot be null.");
         }
@@ -930,11 +976,13 @@ public class FileUtil {
 
     /**
      * Gets the relative path of a file to a specific directory in it's hierarchy.
-     *
+     * <p/>
      * For example: getParentRelativeToDir("/a/b/c/d/e.bah", "c") -> "/a/b"
+     *
      * @return null if it cannot be found
      */
-    public static String getParentRelativeToDir(File file, String dirInHeirarchy) {
+    public static
+    String getParentRelativeToDir(File file, String dirInHeirarchy) {
         if (file == null) {
             throw new IllegalArgumentException("file cannot be null.");
         }
@@ -944,7 +992,7 @@ public class FileUtil {
         }
 
         String[] split = dirInHeirarchy.split(File.separator);
-        int splitIndex = split.length-1;
+        int splitIndex = split.length - 1;
 
         File parent = file;
         String parentName;
@@ -976,11 +1024,13 @@ public class FileUtil {
                             parentName = parent.getAbsolutePath();
                             return parentName;
                         }
-                    } else {
+                    }
+                    else {
                         // because it has to be "in-order", if it doesn't match, we immediately abort
                         return null;
                     }
-                } else {
+                }
+                else {
                     if (parentName.equals(split[splitIndex])) {
                         matched = true;
                         splitIndex--;
@@ -997,10 +1047,11 @@ public class FileUtil {
     /**
      * Extracts a file from a zip into a TEMP file, if possible. The TEMP file is deleted upon JVM exit.
      *
-     * @throws IOException
      * @return the location of the extracted file, or NULL if the file cannot be extracted or doesn't exist.
+     * @throws IOException
      */
-    public static String extractFromZip(String zipFile, String fileToExtract) throws IOException {
+    public static
+    String extractFromZip(String zipFile, String fileToExtract) throws IOException {
         if (zipFile == null) {
             throw new IllegalArgumentException("file cannot be null.");
         }
@@ -1044,7 +1095,7 @@ public class FileUtil {
     }
 
 
-  //-----------------------------------------------------------------------
+    //-----------------------------------------------------------------------
     /*
      * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
      *   http://commons.apache.org/proper/commons-io/
@@ -1053,20 +1104,21 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format of the system.
-     * <p>
+     * <p/>
      * A trailing slash will be retained.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows except
      * for the separator character.
      * <pre>
@@ -1090,10 +1142,11 @@ public class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param filename  the filename to normalize, null returns null
+     * @param filename the filename to normalize, null returns null
      * @return the normalized filename, or null if invalid
      */
-    public static String normalize(String filename) {
+    public static
+    String normalize(String filename) {
         return doNormalize(filename, SYSTEM_SEPARATOR, true);
     }
 
@@ -1105,20 +1158,21 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format of the system.
-     * <p>
+     * <p/>
      * A trailing slash will be retained.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows except
      * for the separator character.
      * <pre>
@@ -1142,10 +1196,11 @@ public class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param filename  the filename to normalize, null returns null
+     * @param filename the filename to normalize, null returns null
      * @return the normalized filename, or null if invalid
      */
-    public static String normalizeAsFile(String filename) {
+    public static
+    String normalizeAsFile(String filename) {
         return doNormalize(new File(filename).getAbsolutePath(), SYSTEM_SEPARATOR, true);
     }
 
@@ -1157,20 +1212,21 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format of the system.
-     * <p>
+     * <p/>
      * A trailing slash will be retained.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows except
      * for the separator character.
      * <pre>
@@ -1194,10 +1250,11 @@ public class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param file  the file to normalize, null returns null
+     * @param file the file to normalize, null returns null
      * @return the normalized file, or null if invalid
      */
-    public static File normalize(File file) {
+    public static
+    File normalize(File file) {
         if (file == null) {
             return null;
         }
@@ -1218,20 +1275,21 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format specified.
-     * <p>
+     * <p/>
      * A trailing slash will be retained.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows except
      * for the separator character.
      * <pre>
@@ -1256,13 +1314,14 @@ public class FileUtil {
      * The output will be the same on both Unix and Windows including
      * the separator character.
      *
-     * @param filename  the filename to normalize, null returns null
+     * @param filename      the filename to normalize, null returns null
      * @param unixSeparator {@code true} if a unix separator should
-     * be used or {@code false} if a windows separator should be used.
+     *                      be used or {@code false} if a windows separator should be used.
      * @return the normalized filename, or null if invalid
      * @since 2.0
      */
-    public static String normalize(String filename, boolean unixSeparator) {
+    public static
+    String normalize(String filename, boolean unixSeparator) {
         char separator = unixSeparator ? UNIX_SEPARATOR : WINDOWS_SEPARATOR;
         return doNormalize(filename, separator, true);
     }
@@ -1276,21 +1335,22 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps,
      * and removing any final directory separator.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format of the system.
-     * <p>
+     * <p/>
      * A trailing slash will be removed.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows except
      * for the separator character.
      * <pre>
@@ -1314,10 +1374,11 @@ public class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param filename  the filename to normalize, null returns null
+     * @param filename the filename to normalize, null returns null
      * @return the normalized filename, or null if invalid
      */
-    public static String normalizeNoEndSeparator(String filename) {
+    public static
+    String normalizeNoEndSeparator(String filename) {
         return doNormalize(filename, SYSTEM_SEPARATOR, false);
     }
 
@@ -1329,21 +1390,22 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Normalizes a path, removing double and single dot path steps,
      * and removing any final directory separator.
-     * <p>
+     * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
      * The output will contain separators in the format specified.
-     * <p>
+     * <p/>
      * A trailing slash will be removed.
      * A double slash will be merged to a single slash (but UNC names are handled).
      * A single dot path segment will be removed.
      * A double dot will cause that path segment and the one before to be removed.
      * If the double dot has no parent path segment to work with, {@code null}
      * is returned.
-     * <p>
+     * <p/>
      * The output will be the same on both Unix and Windows including
      * the separator character.
      * <pre>
@@ -1366,14 +1428,15 @@ public class FileUtil {
      * ~/../bar             -->   null
      * </pre>
      *
-     * @param filename  the filename to normalize, null returns null
+     * @param filename      the filename to normalize, null returns null
      * @param unixSeparator {@code true} if a unix separator should
-     * be used or {@code false} if a windows separtor should be used.
+     *                      be used or {@code false} if a windows separtor should be used.
      * @return the normalized filename, or null if invalid
      * @since 2.0
      */
-    public static String normalizeNoEndSeparator(String filename, boolean unixSeparator) {
-         char separator = unixSeparator ? UNIX_SEPARATOR : WINDOWS_SEPARATOR;
+    public static
+    String normalizeNoEndSeparator(String filename, boolean unixSeparator) {
+        char separator = unixSeparator ? UNIX_SEPARATOR : WINDOWS_SEPARATOR;
         return doNormalize(filename, separator, false);
     }
 
@@ -1385,15 +1448,17 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Internal method to perform the normalization.
      *
-     * @param filename  the filename
-     * @param separator The separator character to use
-     * @param keepSeparator  true to keep the final separator
+     * @param filename      the filename
+     * @param separator     The separator character to use
+     * @param keepSeparator true to keep the final separator
      * @return the normalized filename
      */
-    private static String doNormalize(String filename, char separator, boolean keepSeparator) {
+    private static
+    String doNormalize(String filename, char separator, boolean keepSeparator) {
         if (filename == null) {
             return null;
         }
@@ -1437,12 +1502,12 @@ public class FileUtil {
         // dot slash
         for (int i = prefix + 1; i < size; i++) {
             if (array[i] == separator && array[i - 1] == '.' &&
-                    (i == prefix + 1 || array[i - 2] == separator)) {
+                (i == prefix + 1 || array[i - 2] == separator)) {
                 if (i == size - 1) {
                     lastIsDirectory = true;
                 }
                 System.arraycopy(array, i + 1, array, i - 1, size - i);
-                size -=2;
+                size -= 2;
                 i--;
             }
         }
@@ -1451,7 +1516,7 @@ public class FileUtil {
         outer:
         for (int i = prefix + 2; i < size; i++) {
             if (array[i] == separator && array[i - 1] == '.' && array[i - 2] == '.' &&
-                    (i == prefix + 2 || array[i - 3] == separator)) {
+                (i == prefix + 2 || array[i - 3] == separator)) {
                 if (i == prefix + 2) {
                     return null;
                 }
@@ -1459,7 +1524,7 @@ public class FileUtil {
                     lastIsDirectory = true;
                 }
                 int j;
-                for (j = i - 4 ; j >= prefix; j--) {
+                for (j = i - 4; j >= prefix; j--) {
                     if (array[j] == separator) {
                         // remove b/../ from a/b/../c
                         System.arraycopy(array, i + 1, array, j + 1, size - i);
@@ -1496,11 +1561,12 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Returns the length of the filename prefix, such as <code>C:/</code> or <code>~/</code>.
-     * <p>
+     * <p/>
      * This method will handle a file in either Unix or Windows format.
-     * <p>
+     * <p/>
      * The prefix length includes the first slash in the full filename
      * if applicable. Thus, it is possible that the length returned is greater
      * than the length of the input string.
@@ -1520,14 +1586,15 @@ public class FileUtil {
      * ~user/a/b/c.txt     --> "~user/"    --> named user
      * ~user               --> "~user/"    --> named user (slash added)
      * </pre>
-     * <p>
+     * <p/>
      * The output will be the same irrespective of the machine that the code is running on.
      * ie. both Unix and Windows prefixes are matched regardless.
      *
-     * @param filename  the filename to find the prefix in, null returns -1
+     * @param filename the filename to find the prefix in, null returns -1
      * @return the length of the prefix, -1 if invalid or null
      */
-    public static int getPrefixLength(String filename) {
+    public static
+    int getPrefixLength(String filename) {
         if (filename == null) {
             return -1;
         }
@@ -1544,7 +1611,8 @@ public class FileUtil {
                 return 2;  // return a length greater than the input
             }
             return isSeparator(ch0) ? 1 : 0;
-        } else {
+        }
+        else {
             if (ch0 == '~') {
                 int posUnix = filename.indexOf(UNIX_SEPARATOR, 1);
                 int posWin = filename.indexOf(WINDOWS_SEPARATOR, 1);
@@ -1566,7 +1634,8 @@ public class FileUtil {
                 }
                 return -1;
 
-            } else if (isSeparator(ch0) && isSeparator(ch1)) {
+            }
+            else if (isSeparator(ch0) && isSeparator(ch1)) {
                 int posUnix = filename.indexOf(UNIX_SEPARATOR, 2);
                 int posWin = filename.indexOf(WINDOWS_SEPARATOR, 2);
                 if (posUnix == -1 && posWin == -1 || posUnix == 2 || posWin == 2) {
@@ -1575,7 +1644,8 @@ public class FileUtil {
                 posUnix = posUnix == -1 ? posWin : posUnix;
                 posWin = posWin == -1 ? posUnix : posWin;
                 return Math.min(posUnix, posWin) + 1;
-            } else {
+            }
+            else {
                 return isSeparator(ch0) ? 1 : 0;
             }
         }
@@ -1590,13 +1660,15 @@ public class FileUtil {
      *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
      *            Jeremias Maerki, Stephen Colebourne
      */
+
     /**
      * Checks if the character is a separator.
      *
-     * @param ch  the character to check
+     * @param ch the character to check
      * @return true if it is a separator character
      */
-    private static boolean isSeparator(char ch) {
+    private static
+    boolean isSeparator(char ch) {
         return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR;
     }
 
@@ -1604,11 +1676,13 @@ public class FileUtil {
     /**
      * Gets the extension of a file
      */
-    public static String getExtension(String fileName) {
+    public static
+    String getExtension(String fileName) {
         int dot = fileName.lastIndexOf('.');
         if (dot > -1) {
             return fileName.substring(dot + 1);
-        } else {
+        }
+        else {
             return null;
         }
     }
