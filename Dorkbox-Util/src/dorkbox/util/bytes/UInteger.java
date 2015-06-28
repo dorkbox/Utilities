@@ -77,7 +77,7 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
      * A constant holding the maximum value an <code>unsigned int</code> can
      * have, 2<sup>32</sup>-1.
      */
-    public static final long             MAX_VALUE             = 0xffffffffL;
+    public static final long             MAX_VALUE             = 0xFFFFFFFFL;
 
     /**
      * The value modelling the content of this <code>unsigned int</code>
@@ -322,6 +322,7 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
         return Long.valueOf(this.value).toString();
     }
 
+    @Override
     public String toHexString() {
         return Long.toHexString(this.value);
     }
