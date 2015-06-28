@@ -10,7 +10,6 @@
 	<classpathentry kind="lib" path="/Dependencies/javassist/javassist.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151-src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcprov-debug-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcprov-jdk15on-151-src.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/asm/asm-5.0.3.jar" sourcepath="/Dependencies/asm/asm-5.0.3-src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JavaLauncher-Util"/>
 	<classpathentry kind="lib" path="/Dependencies/jodaTime/joda-time-2.4.jar" sourcepath="/Dependencies/jodaTime/joda-time-2.4-sources.zip"/>
@@ -25,12 +24,8 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1.jar" sourcepath="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1_src.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/dorkbox/multimbassador/MultiMBassador_v1.1.jar" sourcepath="/Dependencies/dorkbox/multimbassador/MultiMBassador_v1.1_src.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/concurrent-locks/concurrent-locks-1.0.0.jar" sourcepath="/Dependencies/concurrent-locks/concurrent-locks-1.0.0-sources.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/disruptor/disruptor-3.3.0.jar" sourcepath="/Dependencies/disruptor/disruptor-3.3.0-sources.zip">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:platform:/resource/Dependencies/disruptor/disruptor-3.3.0-javadoc.zip!/"/>
-		</attributes>
-	</classpathentry>
+	<classpathentry kind="lib" path="/Dependencies/asm/asm-5.0.4.jar"/>
+	<classpathentry kind="lib" path="/Dependencies/dorkbox/message_bus/MessageBus_v1.0.jar" sourcepath="/Dependencies/dorkbox/message_bus/MessageBus_v1.0_src.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/JCTools/JCTools-v1.1-alpha-MTAQ.jar" sourcepath="/Dependencies/JCTools/JCTools-1.1-alpha-MTAQ-src.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>
