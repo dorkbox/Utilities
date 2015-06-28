@@ -1,21 +1,21 @@
 package dorkbox.util.jna.linux;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 
+import java.util.Arrays;
+import java.util.List;
+
 public interface Gtk extends Library {
-    public static final Gtk INSTANCE = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+    Gtk INSTANCE = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
 
-    public static final int FALSE = 0;
-    public static final int TRUE = 1;
+    int FALSE = 0;
+    int TRUE = 1;
 
 
-    public static class GdkEventButton extends Structure {
+    class GdkEventButton extends Structure {
         public int type;
         public Pointer window;
         public int send_event;
@@ -46,39 +46,39 @@ public interface Gtk extends Library {
         }
     }
 
-    public void gtk_init(int argc, String[] argv);
+    void gtk_init(int argc, String[] argv);
 
     /**
      * Runs the main loop until gtk_main_quit() is called.
      * You can nest calls to gtk_main(). In that case gtk_main_quit() will make the innermost invocation of the main loop return.
      */
-    public void gtk_main();
+    void gtk_main();
     /**
      * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS
      * you know what you're doing!
      */
-    public void gtk_main_quit();
+    void gtk_main_quit();
 
-    public void gdk_threads_init();
-    public void gdk_threads_enter();
-    public void gdk_threads_leave();
+    void gdk_threads_init();
+    void gdk_threads_enter();
+    void gdk_threads_leave();
 
 
-    public Pointer gtk_menu_new();
-    public Pointer gtk_menu_item_new_with_label(String label);
+    Pointer gtk_menu_new();
+    Pointer gtk_menu_item_new_with_label(String label);
 
-    public Pointer gtk_status_icon_new();
-    public void gtk_status_icon_set_from_file(Pointer widget, String lablel);
+    Pointer gtk_status_icon_new();
+    void gtk_status_icon_set_from_file(Pointer widget, String lablel);
 
-    public void gtk_status_icon_set_visible(Pointer widget, boolean visible);
-    public void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
+    void gtk_status_icon_set_visible(Pointer widget, boolean visible);
+    void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
 
-    public void gtk_menu_item_set_label(Pointer menu_item, String label);
-    public void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
-    public void gtk_widget_set_sensitive(Pointer widget, int sesitive);
+    void gtk_menu_item_set_label(Pointer menu_item, String label);
+    void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
+    void gtk_widget_set_sensitive(Pointer widget, int sesitive);
 
-    public void gtk_widget_show(Pointer widget);
-    public void gtk_widget_show_all(Pointer widget);
-    public void gtk_widget_destroy(Pointer widget);
+    void gtk_widget_show(Pointer widget);
+    void gtk_widget_show_all(Pointer widget);
+    void gtk_widget_destroy(Pointer widget);
 }
 
