@@ -15,31 +15,15 @@
  */
 package dorkbox.util;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+
+import java.io.*;
 import java.lang.reflect.Field;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Map;
+import java.net.*;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.bouncycastle.crypto.digests.SHA256Digest;
 
 public class Sys {
     public static final int javaVersion = getJavaVersion();
@@ -798,11 +782,32 @@ public class Sys {
 
             // it didn't work with ethX, so try emX!
             while (nets.hasMoreElements()) {
+                nets = NetworkInterface.getNetworkInterfaces();
                 NetworkInterface nextElement = nets.nextElement();
                 String name = nextElement.getName();
 
-                // we only want to use wlanX addresses!
+                // we only want to use emX addresses!
                 if (name.startsWith("em")) {
+                    Enumeration<InetAddress> inetAddresses = nextElement.getInetAddresses();
+
+                    while (inetAddresses.hasMoreElements()) {
+                        InetAddress address = inetAddresses.nextElement();
+                        // we only support IPV4 addresses.
+                        if (!address.isLoopbackAddress() && address instanceof Inet4Address) {
+                            return address;
+                        }
+                    }
+                }
+            }
+
+            // it didn't work with emX, so try enX!
+            while (nets.hasMoreElements()) {
+                nets = NetworkInterface.getNetworkInterfaces();
+                NetworkInterface nextElement = nets.nextElement();
+                String name = nextElement.getName();
+
+                // we only want to use enX addresses!
+                if (name.startsWith("en")) {
                     Enumeration<InetAddress> inetAddresses = nextElement.getInetAddresses();
 
                     while (inetAddresses.hasMoreElements()) {
@@ -817,6 +822,7 @@ public class Sys {
 
             // it didn't work with ethX, so try wifi!
             while (nets.hasMoreElements()) {
+                nets = NetworkInterface.getNetworkInterfaces();
                 NetworkInterface nextElement = nets.nextElement();
                 String name = nextElement.getName();
 
