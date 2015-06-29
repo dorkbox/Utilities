@@ -28,16 +28,23 @@ import java.nio.ByteBuffer;
  * <p>
  * Network byte order IS big endian, as is Java.
  */
+@SuppressWarnings("ALL")
 public class LittleEndian {
     // the following are ALL in Little-Endian (byte[0] is least significant)
 
     /** CHAR to and from bytes */
-    public static class Char_ {
+    public static final
+    class Char_ {
+        private
+        Char_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static char from(byte[] bytes, int offset, int bytenum) {
+        public static
+        char from(byte[] bytes, int offset, int byteNum) {
             char number = 0;
 
-            switch (bytenum) {
+            switch (byteNum) {
                 case 2: number |= (bytes[offset+1] & 0xFF) <<  8;
                 case 1: number |= (bytes[offset+0] & 0xFF) <<  0;
             }
@@ -46,7 +53,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static char from(byte[] bytes) {
+        public static
+        char from(byte[] bytes) {
             char number = 0;
 
             switch (bytes.length) {
@@ -57,22 +65,26 @@ public class LittleEndian {
             return number;
         }
 
-        public static char from(byte b0, byte b1) {
+        public static
+        char from(byte b0, byte b1) {
             return (char) ((b1 & 0xFF) << 8 |
                            (b0 & 0xFF) << 0);
         }
 
-        public static byte[] toBytes(char x) {
+        public static
+        byte[] toBytes(char x) {
             return new byte[] {(byte) (x >> 0),
                                (byte) (x >> 8)
                               };
         }
 
-        public static char from(ByteBuffer buff) {
+        public static
+        char from(ByteBuffer buff) {
             return from(buff.get(), buff.get());
         }
 
-        public static char from(InputStream inputStream) throws IOException {
+        public static
+        char from(InputStream inputStream) throws IOException {
             byte[] b = new byte[2];
             if (inputStream.read(b) != 2) {
                 throw new EOFException();
@@ -83,9 +95,15 @@ public class LittleEndian {
     }
 
     /** UNSIGNED CHAR to and from bytes */
-    public static class UChar_ {
+    public static final
+    class UChar_ {
+        private
+        UChar_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static UShort from(byte[] bytes, int offset, int bytenum) {
+        public static
+        UShort from(byte[] bytes, int offset, int bytenum) {
             char number = 0;
 
             switch (bytenum) {
@@ -97,7 +115,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static UShort from(byte[] bytes) {
+        public static
+        UShort from(byte[] bytes) {
             short number = 0;
 
             switch (bytes.length) {
@@ -108,14 +127,16 @@ public class LittleEndian {
             return UShort.valueOf(number);
         }
 
-        public static UShort from(byte b0, byte b1) {
+        public static
+        UShort from(byte b0, byte b1) {
             return UShort.valueOf((short)
                             ((b1 & 0xFF) << 8) |
                              (b0 & 0xFF) << 0) ;
         }
 
 
-        public static byte[] toBytes(UShort x) {
+        public static
+        byte[] toBytes(UShort x) {
             int num = x.intValue();
 
             return new byte[] {(byte)  (num & 0x00FF  >> 0),
@@ -123,11 +144,13 @@ public class LittleEndian {
             };
         }
 
-        public static UShort from(ByteBuffer buff) {
+        public static
+        UShort from(ByteBuffer buff) {
             return from(buff.get(), buff.get());
         }
 
-        public static UShort from(InputStream inputStream) throws IOException {
+        public static
+        UShort from(InputStream inputStream) throws IOException {
             byte[] b = new byte[2];
             if (inputStream.read(b) != 2) {
                 throw new EOFException();
@@ -138,9 +161,15 @@ public class LittleEndian {
     }
 
     /** SHORT to and from bytes */
-    public static class Short_ {
+    public static final
+    class Short_ {
+        private
+        Short_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static short from(byte[] bytes, int offset, int bytenum) {
+        public static
+        short from(byte[] bytes, int offset, int bytenum) {
             short number = 0;
 
             switch (bytenum) {
@@ -152,7 +181,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static short from(byte[] bytes) {
+        public static
+        short from(byte[] bytes) {
             short number = 0;
 
             switch (bytes.length) {
@@ -163,23 +193,27 @@ public class LittleEndian {
             return number;
         }
 
-        public static short from(byte b0, byte b1) {
+        public static
+        short from(byte b0, byte b1) {
             return (short) ((b1 & 0xFF) << 8 |
                             (b0 & 0xFF) << 0);
         }
 
 
-        public static byte[] toBytes(short x) {
+        public static
+        byte[] toBytes(short x) {
             return new byte[] {(byte) (x >> 0),
                                (byte) (x >> 8)
                               };
         }
 
-        public static short from(ByteBuffer buff) {
+        public static
+        short from(ByteBuffer buff) {
             return from(buff.get(), buff.get());
         }
 
-        public static short from(InputStream inputStream) throws IOException {
+        public static
+        short from(InputStream inputStream) throws IOException {
             byte[] b = new byte[2];
             if (inputStream.read(b) != 2) {
                 throw new EOFException();
@@ -190,9 +224,15 @@ public class LittleEndian {
     }
 
     /** UNSIGNED SHORT to and from bytes */
-    public static class UShort_ {
+    public static final
+    class UShort_ {
+        private
+        UShort_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static UShort from(byte[] bytes, int offset, int bytenum) {
+        public static
+        UShort from(byte[] bytes, int offset, int bytenum) {
             short number = 0;
 
             switch (bytenum) {
@@ -204,7 +244,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static UShort from(byte[] bytes) {
+        public static
+        UShort from(byte[] bytes) {
             short number = 0;
 
             switch (bytes.length) {
@@ -215,14 +256,16 @@ public class LittleEndian {
             return UShort.valueOf(number);
         }
 
-        public static UShort from(byte b0, byte b1) {
+        public static
+        UShort from(byte b0, byte b1) {
             return UShort.valueOf((short)
                                 ((b1 & 0xFF) << 8 |
                                  (b0 & 0xFF) << 0));
         }
 
 
-        public static byte[] toBytes(UShort x) {
+        public static
+        byte[] toBytes(UShort x) {
             int num = x.intValue();
 
             return new byte[] {(byte)  (num & 0x00FF  >> 0),
@@ -230,11 +273,13 @@ public class LittleEndian {
             };
         }
 
-        public static UShort from(ByteBuffer buff) {
+        public static
+        UShort from(ByteBuffer buff) {
             return from(buff.get(), buff.get());
         }
 
-        public static UShort from(InputStream inputStream) throws IOException {
+        public static
+        UShort from(InputStream inputStream) throws IOException {
             byte[] b = new byte[2];
             if (inputStream.read(b) != 2) {
                 throw new EOFException();
@@ -245,9 +290,15 @@ public class LittleEndian {
     }
 
     /** INT to and from bytes */
-    public static class Int_ {
+    public static final
+    class Int_ {
+        private
+        Int_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static int from(byte[] bytes, int offset, int bytenum) {
+        public static
+        int from(byte[] bytes, int offset, int bytenum) {
             int number = 0;
 
             switch (bytenum) {
@@ -261,7 +312,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static int from(byte[] bytes) {
+        public static
+        int from(byte[] bytes) {
             int number = 0;
 
             switch (bytes.length) {
@@ -274,14 +326,16 @@ public class LittleEndian {
             return number;
         }
 
-        public static int from(byte b0, byte b1, byte b2, byte b3) {
+        public static
+        int from(byte b0, byte b1, byte b2, byte b3) {
             return (b3 & 0xFF) << 24 |
                    (b2 & 0xFF) << 16 |
                    (b1 & 0xFF) <<  8 |
                    (b0 & 0xFF) <<  0;
         }
 
-        public static byte[] toBytes(int x) {
+        public static
+        byte[] toBytes(int x) {
             return new byte[] {(byte) (x >>  0),
                                (byte) (x >>  8),
                                (byte) (x >> 16),
@@ -289,11 +343,13 @@ public class LittleEndian {
                               } ;
         }
 
-        public static int from(ByteBuffer buff) {
+        public static
+        int from(ByteBuffer buff) {
             return from(buff.get(), buff.get(), buff.get(), buff.get());
         }
 
-        public static int from(InputStream inputStream) throws IOException {
+        public static
+        int from(InputStream inputStream) throws IOException {
             byte[] b = new byte[4];
             if (inputStream.read(b) != 4) {
                 throw new EOFException();
@@ -304,9 +360,15 @@ public class LittleEndian {
     }
 
     /** UNSIGNED INT to and from bytes */
-    public static class UInt_ {
+    public static final
+    class UInt_ {
+        private
+        UInt_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static UInteger from(byte[] bytes, int offset, int bytenum) {
+        public static
+        UInteger from(byte[] bytes, int offset, int bytenum) {
             int number = 0;
 
             switch (bytenum) {
@@ -320,7 +382,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static UInteger from(byte[] bytes) {
+        public static
+        UInteger from(byte[] bytes) {
             int number = 0;
 
             switch (bytes.length) {
@@ -342,7 +405,8 @@ public class LittleEndian {
             return UInteger.valueOf(number);
         }
 
-        public static byte[] toBytes(UInteger x) {
+        public static
+        byte[] toBytes(UInteger x) {
             long num = x.longValue();
 
             return new byte[] {(byte)  (num & 0x000000FFL  >> 0),
@@ -352,11 +416,13 @@ public class LittleEndian {
             };
         }
 
-        public static UInteger from(ByteBuffer buff) {
+        public static
+        UInteger from(ByteBuffer buff) {
             return from(buff.get(), buff.get(), buff.get(), buff.get());
         }
 
-        public static UInteger from(InputStream inputStream) throws IOException {
+        public static
+        UInteger from(InputStream inputStream) throws IOException {
             byte[] b = new byte[4];
             if (inputStream.read(b) != 4) {
                 throw new EOFException();
@@ -367,9 +433,15 @@ public class LittleEndian {
     }
 
     /** LONG to and from bytes */
-    public static class Long_ {
+    public static final
+    class Long_ {
+        private
+        Long_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static long from(byte[] bytes, int offset, int bytenum) {
+        public static
+        long from(byte[] bytes, int offset, int bytenum) {
             long number = 0;
 
             switch (bytenum) {
@@ -387,7 +459,8 @@ public class LittleEndian {
         }
 
         @SuppressWarnings("fallthrough")
-        public static long from(byte[] bytes) {
+        public static
+        long from(byte[] bytes) {
             long number = 0L;
 
             switch (bytes.length) {
@@ -404,7 +477,8 @@ public class LittleEndian {
             return number;
         }
 
-        public static long from(byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
+        public static
+        long from(byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
             return (long) (b7 & 0xFF) << 56 |
                    (long) (b6 & 0xFF) << 48 |
                    (long) (b5 & 0xFF) << 40 |
@@ -415,7 +489,8 @@ public class LittleEndian {
                    (long) (b0 & 0xFF) <<  0;
         }
 
-        public static byte[] toBytes (long x) {
+        public static
+        byte[] toBytes (long x) {
             return new byte[] {(byte) (x >>  0),
                                (byte) (x >>  8),
                                (byte) (x >> 16),
@@ -427,11 +502,13 @@ public class LittleEndian {
                               };
         }
 
-        public static long from(ByteBuffer buff) {
+        public static
+        long from(ByteBuffer buff) {
             return from(buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get());
         }
 
-        public static long from(InputStream inputStream) throws IOException {
+        public static
+        long from(InputStream inputStream) throws IOException {
             byte[] b = new byte[8];
             if (inputStream.read(b) != 8) {
                 throw new EOFException();
@@ -442,9 +519,15 @@ public class LittleEndian {
     }
 
     /** UNSIGNED LONG to and from bytes */
-    public static class ULong_ {
+    public static final
+    class ULong_ {
+        private
+        ULong_() {
+        }
+
         @SuppressWarnings("fallthrough")
-        public static ULong from(byte[] bytes, int offset, int bytenum) {
+        public static
+        ULong from(byte[] bytes, int offset, int bytenum) {
             long number = 0;
 
             switch (bytenum) {
@@ -461,18 +544,21 @@ public class LittleEndian {
             return ULong.valueOf(number);
         }
 
-        public static ULong from(byte[] bytes) {
+        public static
+        ULong from(byte[] bytes) {
             BigInteger ulong = new BigInteger(1, bytes);
             return ULong.valueOf(ulong);
         }
 
-        public static ULong from(byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
+        public static
+        ULong from(byte b0, byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7) {
             byte[] bytes = new byte[] {b7, b6, b5, b4, b3, b2, b1, b0};
             BigInteger ulong = new BigInteger(1, bytes);
             return ULong.valueOf(ulong);
         }
 
-        public static byte[] toBytes (ULong x) {
+        public static
+        byte[] toBytes (ULong x) {
             byte[] bytes = new byte[8];
             int offset = 0;
 
@@ -493,11 +579,13 @@ public class LittleEndian {
             return bytes;
         }
 
-        public static ULong from(ByteBuffer buff) {
+        public static
+        ULong from(ByteBuffer buff) {
             return from(buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get(), buff.get());
         }
 
-        public static ULong from(InputStream inputStream) throws IOException {
+        public static
+        ULong from(InputStream inputStream) throws IOException {
             byte[] b = new byte[8];
             if (inputStream.read(b) != 8) {
                 throw new EOFException();
