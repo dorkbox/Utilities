@@ -15,6 +15,11 @@
  */
 package dorkbox.util.storage;
 
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import dorkbox.util.SerializationManager;
+import dorkbox.util.bytes.ByteArrayWrapper;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -24,22 +29,18 @@ import java.nio.channels.FileLock;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-
-import dorkbox.util.bytes.ByteArrayWrapper;
-
-public class Metadata {
+@SuppressWarnings("unused")
+public
+class Metadata {
     // The length of a key in the index.
     // SHA256 is 32 bytes long.
-    private static final int  KEY_SIZE = 32;
+    private static final int KEY_SIZE = 32;
 
     // Number of bytes in the record header.
     private static final int POINTER_INFO_SIZE = 16;
 
     // The total length of one index entry - the key length plus the record header length.
-    static final int  INDEX_ENTRY_LENGTH = KEY_SIZE + POINTER_INFO_SIZE;
+    static final int INDEX_ENTRY_LENGTH = KEY_SIZE + POINTER_INFO_SIZE;
 
 
     /**
@@ -60,12 +61,12 @@ public class Metadata {
     /**
      * Actual number of bytes of data held in this record (4 bytes).
      */
-    volatile int  dataCount;
+    volatile int dataCount;
 
     /**
      * Number of bytes of data that this record can hold (4 bytes).
      */
-    volatile int  dataCapacity;
+    volatile int dataCapacity;
 
 
     /**
@@ -78,7 +79,8 @@ public class Metadata {
     /**
      * Returns a file pointer in the index pointing to the first byte in the KEY located at the given index position.
      */
-    static final long getMetaDataPointer(int position) {
+    static
+    long getMetaDataPointer(int position) {
         return StorageBase.FILE_HEADERS_REGION_LENGTH + INDEX_ENTRY_LENGTH * position;
     }
 
@@ -86,17 +88,20 @@ public class Metadata {
      * Returns a file pointer in the index pointing to the first byte in the RECORD pointer located at the given index
      * position.
      */
-    static final long getDataPointer(int position) {
-        long l = Metadata.getMetaDataPointer(position) + KEY_SIZE;
-        return l;
+    static
+    long getDataPointer(int position) {
+        return Metadata.getMetaDataPointer(position) + KEY_SIZE;
     }
 
 
-    private Metadata(ByteArrayWrapper key) {
+    private
+    Metadata(ByteArrayWrapper key) {
         this.key = key;
     }
 
-    /** we don't know how much data there is until AFTER we write the data */
+    /**
+     * we don't know how much data there is until AFTER we write the data
+     */
     Metadata(ByteArrayWrapper key, int recordIndex, long dataPointer) {
         this(key, recordIndex, dataPointer, 0);
     }
@@ -123,11 +128,13 @@ public class Metadata {
     /**
      * Reads the ith HEADER (key + metadata) from the index.
      */
-    static Metadata readHeader(RandomAccessFile file, int position) throws IOException {
+    static
+    Metadata readHeader(RandomAccessFile file, int position) throws IOException {
         byte[] buf = new byte[KEY_SIZE];
         long origHeaderKeyPointer = Metadata.getMetaDataPointer(position);
 
-        FileLock lock = file.getChannel().lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
+        FileLock lock = file.getChannel()
+                            .lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
         lock.release();
@@ -136,7 +143,8 @@ public class Metadata {
         r.indexPosition = position;
 
         long recordHeaderPointer = Metadata.getDataPointer(position);
-        lock = file.getChannel().lock(origHeaderKeyPointer, KEY_SIZE, true);
+        lock = file.getChannel()
+                   .lock(origHeaderKeyPointer, KEY_SIZE, true);
         file.seek(recordHeaderPointer);
         r.dataPointer = file.readLong();
         r.dataCapacity = file.readInt();
@@ -153,7 +161,8 @@ public class Metadata {
     void writeMetaDataInfo(RandomAccessFile file) throws IOException {
         long recordKeyPointer = Metadata.getMetaDataPointer(this.indexPosition);
 
-        FileLock lock = file.getChannel().lock(recordKeyPointer, KEY_SIZE, false);
+        FileLock lock = file.getChannel()
+                            .lock(recordKeyPointer, KEY_SIZE, false);
         file.seek(recordKeyPointer);
         file.write(this.key.getBytes());
         lock.release();
@@ -162,7 +171,8 @@ public class Metadata {
     void writeDataInfo(RandomAccessFile file) throws IOException {
         long recordHeaderPointer = getDataPointer(this.indexPosition);
 
-        FileLock lock = file.getChannel().lock(recordHeaderPointer, POINTER_INFO_SIZE, false);
+        FileLock lock = file.getChannel()
+                            .lock(recordHeaderPointer, POINTER_INFO_SIZE, false);
         file.seek(recordHeaderPointer);
         file.writeLong(this.dataPointer);
         file.writeInt(this.dataCapacity);
@@ -177,13 +187,17 @@ public class Metadata {
         byte[] buf = new byte[KEY_SIZE];
 
         long origHeaderKeyPointer = Metadata.getMetaDataPointer(this.indexPosition);
-        FileLock lock = file.getChannel().lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
+        FileLock lock = file.getChannel()
+                            .lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
+
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
         lock.release();
 
         long newHeaderKeyPointer = Metadata.getMetaDataPointer(newIndex);
-        lock = file.getChannel().lock(newHeaderKeyPointer, INDEX_ENTRY_LENGTH, false);
+        lock = file.getChannel()
+                   .lock(newHeaderKeyPointer, INDEX_ENTRY_LENGTH, false);
+
         file.seek(newHeaderKeyPointer);
         file.write(buf);
         lock.release();
@@ -205,7 +219,8 @@ public class Metadata {
         this.dataPointer = position;
         this.dataCapacity = this.dataCount;
 
-        FileLock lock = file.getChannel().lock(position, this.dataCount, false);
+        FileLock lock = file.getChannel()
+                            .lock(position, this.dataCount, false);
 
         // update the file size
         file.setLength(position + this.dataCount);
@@ -230,7 +245,8 @@ public class Metadata {
         byte[] buf = new byte[this.dataCount];
 //        System.err.print("Reading data: " + this.indexPosition + " @ " + this.dataPointer + "-" + (this.dataPointer+this.dataCount) + " -- ");
 
-        FileLock lock = file.getChannel().lock(this.dataPointer, this.dataCount, true);
+        FileLock lock = file.getChannel()
+                            .lock(this.dataPointer, this.dataCount, true);
         file.seek(this.dataPointer);
         file.readFully(buf);
         lock.release();
@@ -239,24 +255,29 @@ public class Metadata {
         return buf;
     }
 
-   /**
-    * Reads the record data for the given record header.
-    */
+    /**
+     * Reads the record data for the given record header.
+     */
 
-    <T> T readData(Kryo kryo, InflaterInputStream inputStream) {
+    static
+    <T> T readData(SerializationManager serializationManager, InflaterInputStream inputStream) {
         Input input = new Input(inputStream, 1024); // read 1024 at a time
         @SuppressWarnings("unchecked")
-        T readObject = (T) kryo.readClassAndObject(input);
+        T readObject = (T) serializationManager.readClassAndObject(input);
         return readObject;
     }
 
     /**
      * Writes data to the end of the file (which is where the datapointer is at)
      */
-    void writeDataFast(Kryo kryo, Object data, DeflaterOutputStream outputStream) throws IOException {
+    static
+    void writeDataFast(final SerializationManager serializationManager,
+                       final Object data,
+                       final RandomAccessFile file,
+                       final DeflaterOutputStream outputStream) throws IOException {
         // HAVE TO LOCK BEFORE THIS IS CALLED! (AND FREE AFTERWARDS!)
         Output output = new Output(outputStream, 1024); // write 1024 at a time
-        kryo.writeClassAndObject(output, data);
+        serializationManager.writeClassAndObject(output, data);
         output.flush();
 
         outputStream.flush(); // sync-flush is enabled, so the output stream will finish compressing data.
@@ -265,7 +286,8 @@ public class Metadata {
     void writeData(ByteArrayOutputStream byteArrayOutputStream, RandomAccessFile file) throws IOException {
         this.dataCount = byteArrayOutputStream.size();
 
-        FileLock lock = file.getChannel().lock(this.dataPointer, this.dataCount, false);
+        FileLock lock = file.getChannel()
+                            .lock(this.dataPointer, this.dataCount, false);
 
         FileOutputStream out = new FileOutputStream(file.getFD());
         file.seek(this.dataPointer);
@@ -275,8 +297,9 @@ public class Metadata {
     }
 
     @Override
-    public String toString() {
-        return "RecordHeader [dataPointer=" + this.dataPointer + ", dataCount=" + this.dataCount + ", dataCapacity="
-                + this.dataCapacity + ", indexPosition=" + this.indexPosition + "]";
+    public
+    String toString() {
+        return "RecordHeader [dataPointer=" + this.dataPointer + ", dataCount=" + this.dataCount + ", dataCapacity=" + this.dataCapacity +
+               ", indexPosition=" + this.indexPosition + "]";
     }
 }

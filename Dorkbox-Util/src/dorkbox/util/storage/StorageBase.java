@@ -15,16 +15,16 @@
  */
 package dorkbox.util.storage;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Output;
+import dorkbox.util.SerializationManager;
+import dorkbox.util.bytes.ByteArrayWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.lang.ref.WeakReference;
 import java.nio.channels.FileLock;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,45 +35,39 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Output;
-
-import dorkbox.util.bytes.ByteArrayWrapper;
 
 // a note on file locking between c and java
 // http://panks-dev.blogspot.de/2008/04/linux-file-locks-java-and-others.html
 // Also, file locks on linux are ADVISORY. if an app doesn't care about locks, then it can do stuff -- even if locked by another app
 
-public class StorageBase {
+
+@SuppressWarnings("unused")
+public
+class StorageBase {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
 
     // File pointer to the data start pointer header.
-    private static final long VERSION_HEADER_LOCATION  = 0;
+    private static final long VERSION_HEADER_LOCATION = 0;
 
     // File pointer to the num records header.
     private static final long NUM_RECORDS_HEADER_LOCATION = 4;
 
     // File pointer to the data start pointer header.
-    private static final long DATA_START_HEADER_LOCATION  = 8;
+    private static final long DATA_START_HEADER_LOCATION = 8;
 
     // Total length in bytes of the global database headers.
-    static final int  FILE_HEADERS_REGION_LENGTH  = 16;
+    static final int FILE_HEADERS_REGION_LENGTH = 16;
 
 
     // The in-memory index (for efficiency, all of the record info is cached in memory).
     private final Map<ByteArrayWrapper, Metadata> memoryIndex;
 
     // determines how much the index will grow by
-    private Float weight;
+    private final Float weight;
 
     // The keys are weak! When they go, the map entry is removed!
     private final ReentrantLock referenceLock = new ReentrantLock();
-    private volatile Map<ByteArrayWrapper, Object> referencePendingWrite = new HashMap<ByteArrayWrapper, Object>();
 
 
     private final File baseFile;
@@ -97,32 +91,29 @@ public class StorageBase {
 
 
     // save references to these, so they don't have to be created/destroyed any time there is I/O
-    private final Kryo kryo;
+    private final SerializationManager serializationManager;
 
-    private Deflater deflater;
-    private DeflaterOutputStream outputStream;
+    private final Deflater deflater;
+    private final DeflaterOutputStream outputStream;
 
-    private Inflater inflater;
-    private InflaterInputStream inputStream;
-
-    /**
-     * Creates or opens a new database file.
-     */
-    StorageBase(String filePath) throws IOException {
-        this(new File(filePath));
-    }
+    private final Inflater inflater;
+    private final InflaterInputStream inputStream;
 
     /**
      * Creates or opens a new database file.
      */
-    StorageBase(File filePath) throws IOException  {
+    StorageBase(File filePath, SerializationManager serializationManager) throws IOException {
+        this.serializationManager = serializationManager;
+
         this.logger.info("Opening storage file: '{}'", filePath.getAbsolutePath());
 
         this.baseFile = filePath;
 
         File parentFile = this.baseFile.getParentFile();
-        if (parentFile != null) {
-            parentFile.mkdirs();
+        if (parentFile != null && !parentFile.exists()) {
+            if (!parentFile.mkdirs()) {
+                throw new IOException("Unable to create dirs for: " + filePath);
+            }
         }
 
         this.file = new RandomAccessFile(this.baseFile, "rw");
@@ -132,7 +123,8 @@ public class StorageBase {
             this.databaseVersion = this.file.readInt();
             this.numberOfRecords = this.file.readInt();
             this.dataPosition = this.file.readLong();
-        } else {
+        }
+        else {
             setVersionNumber(this.file, 0);
 
             // always start off with 4 records
@@ -149,11 +141,8 @@ public class StorageBase {
             throw new IllegalArgumentException("Unable to parse header information from storage. Maybe it's corrupted?");
         }
 
+        //noinspection AutoBoxing
         this.logger.info("Storage version: {}", this.databaseVersion);
-
-
-        this.kryo = new Kryo();
-        this.kryo.setRegistrationRequired(false);
 
         this.deflater = new Deflater(7, true);
         this.outputStream = new DeflaterOutputStream(new FileOutputStream(this.file.getFD()), this.deflater, 65536, true);
@@ -161,6 +150,7 @@ public class StorageBase {
         this.inflater = new Inflater(true);
         this.inputStream = new InflaterInputStream(new FileInputStream(this.file.getFD()), this.inflater, 65536);
 
+        //noinspection AutoBoxing
         this.weight = .5F;
         this.memoryIndex = new ConcurrentHashMap<ByteArrayWrapper, Metadata>(this.numberOfRecords);
 
@@ -183,7 +173,8 @@ public class StorageBase {
     /**
      * Returns the current number of records in the database.
      */
-    final int size() {
+    final
+    int size() {
         // wrapper flushes first (protected by lock)
         // not protected by lock
         return this.memoryIndex.size();
@@ -192,21 +183,19 @@ public class StorageBase {
     /**
      * Checks if there is a record belonging to the given key.
      */
-    final boolean contains(ByteArrayWrapper key) {
+    final
+    boolean contains(ByteArrayWrapper key) {
         // protected by lock
 
         // check to see if it's in the pending ops
-        if (this.referencePendingWrite.containsKey(key)) {
-            return true;
-        }
-
         return this.memoryIndex.containsKey(key);
     }
 
     /**
      * @return an object for a specified key ONLY FROM THE REFERENCE CACHE
      */
-    final <T> T getCached(ByteArrayWrapper key) {
+    final
+    <T> T getCached(ByteArrayWrapper key) {
         // protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -223,7 +212,7 @@ public class StorageBase {
 
             if (ref != null) {
                 @SuppressWarnings("unchecked")
-                T referenceObject =  (T) ref.get();
+                T referenceObject = (T) ref.get();
                 return referenceObject;
             }
         } finally {
@@ -236,7 +225,8 @@ public class StorageBase {
     /**
      * @return an object for a specified key form referenceCache FIRST, then from DISK
      */
-    final <T> T get(ByteArrayWrapper key) {
+    final
+    <T> T get(ByteArrayWrapper key) {
         // NOT protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -253,7 +243,7 @@ public class StorageBase {
 
             if (ref != null) {
                 @SuppressWarnings("unchecked")
-                T referenceObject =  (T) ref.get();
+                T referenceObject = (T) ref.get();
                 return referenceObject;
             }
         } finally {
@@ -266,7 +256,7 @@ public class StorageBase {
             this.inflater.reset();
             this.file.seek(meta.dataPointer);
 
-            T readRecordData = meta.readData(this.kryo, this.inputStream);
+            T readRecordData = Metadata.readData(this.serializationManager, this.inputStream);
 
             if (readRecordData != null) {
                 // now stuff it into our reference cache for future lookups!
@@ -281,10 +271,10 @@ public class StorageBase {
 
             return readRecordData;
         } catch (KryoException e) {
-            this.logger.error("Error while geting data from disk. Ignoring previous value.");
+            this.logger.error("Error while getting data from disk. Ignoring previous value.");
             return null;
         } catch (Exception e) {
-            this.logger.error("Error while geting data from disk", e);
+            this.logger.error("Error while getting data from disk", e);
             return null;
         }
     }
@@ -294,7 +284,8 @@ public class StorageBase {
      *
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
-    final boolean delete(ByteArrayWrapper key) {
+    final
+    boolean delete(ByteArrayWrapper key) {
         // pending ops flushed (protected by lock)
         // not protected by lock
         Metadata delRec = this.memoryIndex.get(key);
@@ -312,11 +303,13 @@ public class StorageBase {
     /**
      * Closes the database and file.
      */
-    final void close() {
+    final
+    void close() {
         // pending ops flushed (protected by lock)
         // not protected by lock
         try {
-            this.file.getFD().sync();
+            this.file.getFD()
+                     .sync();
             this.file.close();
             this.memoryIndex.clear();
 
@@ -344,22 +337,22 @@ public class StorageBase {
     /**
      * @return the file that backs this storage
      */
-    final File getFile() {
+    final
+    File getFile() {
         return this.baseFile;
     }
 
 
     /**
      * Saves the given data to storage.
-     * <p>
+     * <p/>
      * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
      * deleting the old data and adding the new.
-     * <p>
+     * <p/>
      * Will also save the object in a cache.
-     *
-     * @return the metadata for the saved object
      */
-    private final void save0(ByteArrayWrapper key, Object object, DeflaterOutputStream fileOutputStream, Deflater deflater) {
+    private
+    void save0(ByteArrayWrapper key, Object object, DeflaterOutputStream fileOutputStream, Deflater deflater) {
         deflater.reset();
 
         Metadata metaData = this.memoryIndex.get(key);
@@ -370,19 +363,23 @@ public class StorageBase {
             try {
                 if (currentRecordCount == 1) {
                     // if we are the ONLY one, then we can do things differently.
-                    // just dump the data agian to disk.
-                    FileLock lock = this.file.getChannel().lock(this.dataPosition, Long.MAX_VALUE-this.dataPosition, false); // don't know how big it is, so max value it
+                    // just dump the data again to disk.
+                    FileLock lock = this.file.getChannel()
+                                             .lock(this.dataPosition,
+                                                   Long.MAX_VALUE - this.dataPosition,
+                                                   false); // don't know how big it is, so max value it
                     this.file.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
-                    metaData.writeDataFast(this.kryo, object, fileOutputStream);
+                    Metadata.writeDataFast(this.serializationManager, object, file, fileOutputStream);
                     // have to re-specify the capacity and size
                     int sizeOfWrittenData = (int) (this.file.length() - this.dataPosition);
 
                     metaData.dataCapacity = sizeOfWrittenData;
                     metaData.dataCount = sizeOfWrittenData;
                     lock.release();
-                } else {
+                }
+                else {
                     // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
-                    ByteArrayOutputStream dataStream = getDataAsByteArray(this.kryo, object, deflater);
+                    ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, object, deflater);
 
                     int size = dataStream.size();
                     if (size > metaData.dataCapacity) {
@@ -404,10 +401,11 @@ public class StorageBase {
             } catch (IOException e) {
                 this.logger.error("Error while saving data to disk", e);
             }
-        } else {
+        }
+        else {
             try {
                 // try to move the read head in order
-                setRecordCount(this.file, currentRecordCount+1);
+                setRecordCount(this.file, currentRecordCount + 1);
 
                 // This will make sure that there is room to write a new record. This is zero indexed.
                 // this will skip around if moves occur
@@ -425,9 +423,10 @@ public class StorageBase {
                 // save out the data. Because we KNOW that we are writing this to the end of the file,
                 // there are some tricks we can use.
 
-                FileLock lock = this.file.getChannel().lock(length, Long.MAX_VALUE-length, false); // don't know how big it is, so max value it
+                FileLock lock = this.file.getChannel()
+                                         .lock(length, Long.MAX_VALUE - length, false); // don't know how big it is, so max value it
                 this.file.seek(length); // this is the end of the file, we know this ahead-of-time
-                metaData.writeDataFast(this.kryo, object, fileOutputStream);
+                Metadata.writeDataFast(this.serializationManager, object, file, fileOutputStream);
                 lock.release();
 
                 metaData.dataCount = deflater.getTotalOut();
@@ -445,7 +444,8 @@ public class StorageBase {
     }
 
 
-    private ByteArrayOutputStream getDataAsByteArray(Kryo kryo, Object data, Deflater deflater) throws IOException {
+    private static
+    ByteArrayOutputStream getDataAsByteArray(SerializationManager kryo, Object data, Deflater deflater) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStream outputStream = new DeflaterOutputStream(byteArrayOutputStream, deflater);
         Output output = new Output(outputStream, 1024); // write 1024 at a time
@@ -484,23 +484,27 @@ public class StorageBase {
 
     /**
      * "intelligent" move strategy.
-     *
+     * <p/>
      * we should increase by some weight (ie: .5) would increase the number of allocated
      * record headers by 50%, instead of just incrementing them by one at a time.
      */
-    private final int getWeightedNewRecordCount(int numberOfRecords) {
-        int newNumberOfRecords = numberOfRecords + 1 + (int) (numberOfRecords * this.weight); // int used for rounding
-        return newNumberOfRecords;
+    private
+    int getWeightedNewRecordCount(int numberOfRecords) {
+        //noinspection AutoUnboxing
+        return numberOfRecords + 1 + (int) (numberOfRecords * this.weight);
     }
 
 
-    private void deleteRecordData(Metadata deletedRecord, int sizeOfDataToAdd) throws IOException {
+    private
+    void deleteRecordData(Metadata deletedRecord, int sizeOfDataToAdd) throws IOException {
         if (this.file.length() == deletedRecord.dataPointer + deletedRecord.dataCapacity) {
             // shrink file since this is the last record in the file
-            FileLock lock = this.file.getChannel().lock(deletedRecord.dataPointer, Long.MAX_VALUE-deletedRecord.dataPointer, false);
+            FileLock lock = this.file.getChannel()
+                                     .lock(deletedRecord.dataPointer, Long.MAX_VALUE - deletedRecord.dataPointer, false);
             this.file.setLength(deletedRecord.dataPointer);
             lock.release();
-        } else {
+        }
+        else {
             // we MIGHT be the FIRST record
             Metadata first = index_getMetaDataFromData(this.dataPosition);
             if (first == deletedRecord) {
@@ -515,22 +519,25 @@ public class StorageBase {
                 long endIndexPointer = Metadata.getMetaDataPointer(newNumberOfRecords);
 
                 long endOfDataPointer = deletedRecord.dataPointer + deletedRecord.dataCapacity;
-                long newEndOfDataPointer = endOfDataPointer-sizeOfDataToAdd;
+                long newEndOfDataPointer = endOfDataPointer - sizeOfDataToAdd;
 
                 if (endIndexPointer < this.dataPosition && endIndexPointer <= newEndOfDataPointer) {
                     // one option is to shrink the RECORD section to fit the new data
                     setDataPosition(this.file, newEndOfDataPointer);
-                } else {
+                }
+                else {
                     // option two is to grow the RECORD section, and put the data at the end of the file
                     setDataPosition(this.file, endOfDataPointer);
                 }
-            } else {
+            }
+            else {
                 Metadata previous = index_getMetaDataFromData(deletedRecord.dataPointer - 1);
                 if (previous != null) {
                     // append space of deleted record onto previous record
                     previous.dataCapacity += deletedRecord.dataCapacity;
                     previous.writeDataInfo(this.file);
-                } else {
+                }
+                else {
                     // because there is no "previous", that means we MIGHT be the FIRST record
                     // well, we're not the first record. which one is RIGHT before us?
                     // it should be "previous", so something fucked up
@@ -540,11 +547,14 @@ public class StorageBase {
         }
     }
 
-    private void deleteRecordIndex(ByteArrayWrapper key, Metadata deleteRecord) throws IOException {
+    private
+    void deleteRecordIndex(ByteArrayWrapper key, Metadata deleteRecord) throws IOException {
         int currentNumRecords = this.memoryIndex.size();
 
         if (deleteRecord.indexPosition != currentNumRecords - 1) {
             Metadata last = Metadata.readHeader(this.file, currentNumRecords - 1);
+            assert last != null;
+
             last.move(this.file, deleteRecord.indexPosition);
         }
 
@@ -557,10 +567,12 @@ public class StorageBase {
     /**
      * Writes the number of records header to the file.
      */
-    private final void setVersionNumber(RandomAccessFile file, int versionNumber) throws IOException {
+    private
+    void setVersionNumber(RandomAccessFile file, int versionNumber) throws IOException {
         this.databaseVersion = versionNumber;
 
-        FileLock lock = this.file.getChannel().lock(VERSION_HEADER_LOCATION, 4, false);
+        FileLock lock = this.file.getChannel()
+                                 .lock(VERSION_HEADER_LOCATION, 4, false);
         file.seek(VERSION_HEADER_LOCATION);
         file.writeInt(versionNumber);
         lock.release();
@@ -569,10 +581,12 @@ public class StorageBase {
     /**
      * Writes the number of records header to the file.
      */
-    private final void setRecordCount(RandomAccessFile file, int numberOfRecords) throws IOException {
+    private
+    void setRecordCount(RandomAccessFile file, int numberOfRecords) throws IOException {
         this.numberOfRecords = numberOfRecords;
 
-        FileLock lock = this.file.getChannel().lock(NUM_RECORDS_HEADER_LOCATION, 4, false);
+        FileLock lock = this.file.getChannel()
+                                 .lock(NUM_RECORDS_HEADER_LOCATION, 4, false);
         file.seek(NUM_RECORDS_HEADER_LOCATION);
         file.writeInt(numberOfRecords);
         lock.release();
@@ -581,10 +595,12 @@ public class StorageBase {
     /**
      * Writes the data start position to the file.
      */
-    private final void setDataPosition(RandomAccessFile file, long dataPositionPointer) throws IOException {
+    private
+    void setDataPosition(RandomAccessFile file, long dataPositionPointer) throws IOException {
         this.dataPosition = dataPositionPointer;
 
-        FileLock lock = this.file.getChannel().lock(DATA_START_HEADER_LOCATION, 8, false);
+        FileLock lock = this.file.getChannel()
+                                 .lock(DATA_START_HEADER_LOCATION, 8, false);
         file.seek(DATA_START_HEADER_LOCATION);
         file.writeLong(dataPositionPointer);
         lock.release();
@@ -608,9 +624,12 @@ public class StorageBase {
      * of the record data of the RecordHeader which is returned. Returns null if the location is not part of a record.
      * (O(n) mem accesses)
      */
-    private final Metadata index_getMetaDataFromData(long targetFp) {
-        Iterator<Metadata> iterator = this.memoryIndex.values().iterator();
+    private
+    Metadata index_getMetaDataFromData(long targetFp) {
+        Iterator<Metadata> iterator = this.memoryIndex.values()
+                                                      .iterator();
 
+        //noinspection WhileLoopReplaceableByForEach
         while (iterator.hasNext()) {
             Metadata next = iterator.next();
             if (targetFp >= next.dataPointer && targetFp < next.dataPointer + next.dataCapacity) {
@@ -623,11 +642,13 @@ public class StorageBase {
 
 
     /**
-     *  Ensure index capacity. This operation makes sure the INDEX REGION is large enough to accommodate additional entries.
+     * Ensure index capacity. This operation makes sure the INDEX REGION is large enough to accommodate additional entries.
      */
-    private final void ensureIndexCapacity(RandomAccessFile file) throws IOException {
+    private
+    void ensureIndexCapacity(RandomAccessFile file) throws IOException {
         int numberOfRecords = this.numberOfRecords; // because we are zero indexed, this is ALSO the index where the record will START
-        long endIndexPointer = Metadata.getMetaDataPointer(numberOfRecords + 1); // +1 because this is where that index will END (the start of the NEXT one)
+        long endIndexPointer = Metadata.getMetaDataPointer(
+                        numberOfRecords + 1); // +1 because this is where that index will END (the start of the NEXT one)
 
         // just set the data position to the end of the file, since we don't have any data yet.
         if (endIndexPointer > file.length() && numberOfRecords == 0) {
