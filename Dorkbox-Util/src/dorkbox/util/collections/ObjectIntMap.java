@@ -16,7 +16,6 @@
 package dorkbox.util.collections;
 
 import com.esotericsoftware.kryo.util.ObjectMap;
-
 import dorkbox.util.MathUtils;
 
 /** An unordered map where the values are ints. This implementation is a cuckoo hash map using 3 hashes, random walking, and a
@@ -442,7 +441,7 @@ public class ObjectIntMap<K> {
     public boolean containsValue (int value) {
         int[] valueTable = this.valueTable;
         for (int i = this.capacity + this.stashSize; i-- > 0;) {
-            if (valueTable[i] == value) {
+            if (keyTable[i] != null && valueTable[i] == value) {
                 return true;
             }
         }
@@ -479,7 +478,7 @@ public class ObjectIntMap<K> {
     public K findKey (int value) {
         int[] valueTable = this.valueTable;
         for (int i = this.capacity + this.stashSize; i-- > 0;) {
-            if (valueTable[i] == value) {
+            if (keyTable[i] != null && valueTable[i] == value) {
                 return this.keyTable[i];
             }
         }
