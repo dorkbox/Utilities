@@ -24,15 +24,19 @@ import org.bouncycastle.jcajce.provider.util.DigestFactory;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcContentSignerBuilder;
 
-public class BcECDSAContentSignerBuilder extends BcContentSignerBuilder {
+public
+class BcECDSAContentSignerBuilder extends BcContentSignerBuilder {
 
-    public BcECDSAContentSignerBuilder(AlgorithmIdentifier sigAlgId, AlgorithmIdentifier digAlgId) {
+    public
+    BcECDSAContentSignerBuilder(AlgorithmIdentifier sigAlgId, AlgorithmIdentifier digAlgId) {
         super(sigAlgId, digAlgId);
     }
 
     @Override
-    protected Signer createSigner(AlgorithmIdentifier sigAlgId, AlgorithmIdentifier digAlgId) throws OperatorCreationException {
-        Digest digest = DigestFactory.getDigest(digAlgId.getAlgorithm().getId()); // SHA1, SHA512, etc
+    protected
+    Signer createSigner(AlgorithmIdentifier sigAlgId, AlgorithmIdentifier digAlgId) throws OperatorCreationException {
+        Digest digest = DigestFactory.getDigest(digAlgId.getAlgorithm()
+                                                        .getId()); // SHA1, SHA512, etc
 
         return new DSADigestSigner(new ECDSASigner(), digest);
     }

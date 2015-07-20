@@ -1,8 +1,24 @@
-package dorkbox.util.crypto.serialization;
+/*
+ * Copyright 2010 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package dorkbox.util.serialization;
 
-
-import java.math.BigInteger;
-
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.ec.CustomNamedCurves;
@@ -12,22 +28,16 @@ import org.bouncycastle.math.ec.ECAccessor;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import java.math.BigInteger;
 
 /**
- *  Only public keys are ever sent across the wire.
+ * Only public keys are ever sent across the wire.
  */
-public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
+public
+class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
 
-    @Override
-    public void write(Kryo kryo, Output output, ECPrivateKeyParameters key) {
-        write(output, key);
-    }
-
-    public static void write(Output output, ECPrivateKeyParameters key) {
+    public static
+    void write(Output output, ECPrivateKeyParameters key) {
         byte[] bytes;
         int length;
 
@@ -51,19 +61,15 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         serializeECPoint(g, output);
 
         /////////////
-        bytes = key.getD().toByteArray();
+        bytes = key.getD()
+                   .toByteArray();
         length = bytes.length;
         output.writeInt(length, true);
         output.writeBytes(bytes, 0, length);
     }
 
-    @SuppressWarnings("rawtypes")
-    @Override
-    public ECPrivateKeyParameters read(Kryo kryo, Input input, Class type) {
-        return read(input);
-     }
-
-    public static ECPrivateKeyParameters read(Input input) {
+    public static
+    ECPrivateKeyParameters read(Input input) {
         byte[] bytes;
         int length;
 
@@ -98,11 +104,13 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         return new ECPrivateKeyParameters(D, ecDomainParameters);
     }
 
-    static void serializeCurve(Output output, ECCurve curve) {
+    static
+    void serializeCurve(Output output, ECCurve curve) {
         byte[] bytes;
         int length;
         // save out if it's a NAMED curve, or a UN-NAMED curve. If it is named, we can do less work.
-        String curveName = curve.getClass().getSimpleName();
+        String curveName = curve.getClass()
+                                .getSimpleName();
         if (curveName.endsWith("Curve")) {
             String cleanedName = curveName.substring(0, curveName.indexOf("Curve"));
 
@@ -121,11 +129,14 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         // we have to serialize the ENTIRE curve.
         if (curveName == null) {
             // save out the curve info
-            BigInteger a = curve.getA().toBigInteger();
-            BigInteger b = curve.getB().toBigInteger();
+            BigInteger a = curve.getA()
+                                .toBigInteger();
+            BigInteger b = curve.getB()
+                                .toBigInteger();
             BigInteger order = curve.getOrder();
             BigInteger cofactor = curve.getCofactor();
-            BigInteger q = curve.getField().getCharacteristic();
+            BigInteger q = curve.getField()
+                                .getCharacteristic();
 
             /////////////
             bytes = a.toByteArray();
@@ -166,7 +177,8 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         }
     }
 
-    static ECCurve deserializeCurve(Input input) {
+    static
+    ECCurve deserializeCurve(Input input) {
         byte[] bytes;
         int length;
 
@@ -221,15 +233,18 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         return curve;
     }
 
-    static void serializeECPoint(ECPoint point, Output output) {
+    static
+    void serializeECPoint(ECPoint point, Output output) {
         if (point.isInfinity()) {
             return;
         }
 
         ECPoint normed = point.normalize();
 
-        byte[] X = normed.getXCoord().getEncoded();
-        byte[] Y = normed.getYCoord().getEncoded();
+        byte[] X = normed.getXCoord()
+                         .getEncoded();
+        byte[] Y = normed.getYCoord()
+                         .getEncoded();
 
         int length = 1 + X.length + Y.length;
         output.writeInt(length, true);
@@ -237,5 +252,18 @@ public class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> 
         output.write(0x04);
         output.write(X);
         output.write(Y);
+    }
+
+    @Override
+    public
+    void write(Kryo kryo, Output output, ECPrivateKeyParameters key) {
+        write(output, key);
+    }
+
+    @SuppressWarnings("rawtypes")
+    @Override
+    public
+    ECPrivateKeyParameters read(Kryo kryo, Input input, Class type) {
+        return read(input);
     }
 }

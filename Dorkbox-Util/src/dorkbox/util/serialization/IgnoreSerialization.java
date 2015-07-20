@@ -13,34 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.process;
+package dorkbox.util.serialization;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
+/**
+ * Used to identify fields that kryo should ignore when configured with the FieldAnnotationAwareSerializer
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD})
 public
-class NullOutputStream extends OutputStream {
-    @Override
-    public
-    void write(int i) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void write(byte[] b) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void write(byte[] b, int off, int len) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void flush() throws IOException {
-        //do nothing
-    }
-}
+@interface IgnoreSerialization {}

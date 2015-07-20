@@ -13,34 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.process;
+package dorkbox.util.entropy;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.security.SecureRandom;
 
 public
-class NullOutputStream extends OutputStream {
-    @Override
-    public
-    void write(int i) throws IOException {
-        //do nothing
+class SimpleEntropy implements EntropyProvider {
+
+    public static
+    Object create() {
+        return new SimpleEntropy();
     }
 
     @Override
     public
-    void write(byte[] b) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void write(byte[] b, int off, int len) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void flush() throws IOException {
-        //do nothing
+    byte[] get(String ignored) throws Exception {
+        System.err.println("Using simple entropy (SecureRandom) without input mixing.");
+        SecureRandom secureRandom = new SecureRandom();
+        byte[] rand = new byte[256];
+        secureRandom.nextBytes(rand);
+        return rand;
     }
 }

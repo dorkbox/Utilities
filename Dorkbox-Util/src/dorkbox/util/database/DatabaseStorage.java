@@ -28,6 +28,4 @@ class DatabaseStorage {
     public static final ByteArrayWrapper ADMIN_HASH = ByteArrayWrapper.wrap("adminHash");
     public static final ByteArrayWrapper FILES = ByteArrayWrapper.wrap("files");
     public static final ByteArrayWrapper GENERIC = ByteArrayWrapper.wrap("generic");
-
-
 }

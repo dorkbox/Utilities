@@ -23,20 +23,23 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GwtSymbolMapParser {
+public
+class GwtSymbolMapParser {
 
     private final Map<String, String> symbolMap;
 
-    public GwtSymbolMapParser() {
+    public
+    GwtSymbolMapParser() {
         this.symbolMap = new HashMap<String, String>();
     }
 
     /**
      * Efficiently parses the inputstream for symbolmap information.
-     * <p>
+     * <p/>
      * Automatically closes the input stream when finished.
      */
-    public void parse(InputStream inputStream) {
+    public
+    void parse(InputStream inputStream) {
         if (inputStream == null) {
             return;
         }
@@ -54,7 +57,8 @@ public class GwtSymbolMapParser {
 
                 if (CHAR != '\r' && CHAR != '\n') {
                     builder.append(CHAR);
-                } else {
+                }
+                else {
                     processLine(builder.toString());
                     // new line!
                     builder.delete(0, builder.capacity());
@@ -70,11 +74,13 @@ public class GwtSymbolMapParser {
         }
     }
 
-    public Map<String, String> getSymbolMap() {
+    public
+    Map<String, String> getSymbolMap() {
         return this.symbolMap;
     }
 
-    public void processLine(String line) {
+    public
+    void processLine(String line) {
         if (line.charAt(0) == '#') {
             return;
         }
@@ -124,7 +130,8 @@ public class GwtSymbolMapParser {
 //            System.err.println(jsName + "  :  " + memberName + "  :  " + className);
                 this.symbolMap.put(jsName, className);
             }
-        } else {
+        }
+        else {
             // version 2
             // The list has already been pruned, so always put everything into the symbol map
             this.symbolMap.put(symbolInfo[0], symbolInfo[1]);

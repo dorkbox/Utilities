@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package dorkbox.util.serializers;
+package dorkbox.util.serialization;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;

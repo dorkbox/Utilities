@@ -15,6 +15,8 @@
  */
 package dorkbox.util.process;
 
+import dorkbox.util.OS;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -22,27 +24,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import dorkbox.util.OS;
-
 /**
  * If you want to save off the output from the process, set a PrintStream to the following:
- *  ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
- *  PrintStream outputStream = new PrintStream(byteArrayOutputStream);
- *  ...
- *  String output = byteArrayOutputStream.toString();
+ * ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+ * PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+ * ...
+ * String output = byteArrayOutputStream.toString();
  */
-public class ShellProcessBuilder {
-
-    private String workingDirectory = null;
-    private String executableName = null;
-    private String executableDirectory = null;
-
-    protected List<String> arguments = new ArrayList<String>();
+public
+class ShellProcessBuilder {
 
     private final PrintStream outputStream;
     private final PrintStream errorStream;
     private final InputStream inputStream;
-
+    protected List<String> arguments = new ArrayList<String>();
+    private String workingDirectory = null;
+    private String executableName = null;
+    private String executableDirectory = null;
     private Process process = null;
 
     // true if we want to save off (usually for debugging) the initial output from this
@@ -51,19 +49,23 @@ public class ShellProcessBuilder {
     /**
      * This will cause the spawned process to pipe it's output to null.
      */
-    public ShellProcessBuilder() {
+    public
+    ShellProcessBuilder() {
         this(null, null, null);
     }
 
-    public ShellProcessBuilder(PrintStream out) {
+    public
+    ShellProcessBuilder(PrintStream out) {
         this(null, out, out);
     }
 
-    public ShellProcessBuilder(InputStream in, PrintStream out) {
+    public
+    ShellProcessBuilder(InputStream in, PrintStream out) {
         this(in, out, out);
     }
 
-    public ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+    public
+    ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
         this.outputStream = out;
         this.errorStream = err;
         this.inputStream = in;
@@ -72,47 +74,55 @@ public class ShellProcessBuilder {
     /**
      * When launched from eclipse, the working directory is USUALLY the root of the project folder
      */
-    public final ShellProcessBuilder setWorkingDirectory(String workingDirectory) {
+    public final
+    ShellProcessBuilder setWorkingDirectory(String workingDirectory) {
         // MUST be absolute path!!
         this.workingDirectory = new File(workingDirectory).getAbsolutePath();
         return this;
     }
 
-    public final ShellProcessBuilder addArgument(String argument) {
+    public final
+    ShellProcessBuilder addArgument(String argument) {
         this.arguments.add(argument);
         return this;
     }
 
-    public final ShellProcessBuilder addArguments(String... paths) {
+    public final
+    ShellProcessBuilder addArguments(String... paths) {
         for (String path : paths) {
             this.arguments.add(path);
         }
         return this;
     }
 
-    public final ShellProcessBuilder addArguments(List<String> paths) {
+    public final
+    ShellProcessBuilder addArguments(List<String> paths) {
         this.arguments.addAll(paths);
         return this;
     }
 
-    public final ShellProcessBuilder setExecutable(String executableName) {
+    public final
+    ShellProcessBuilder setExecutable(String executableName) {
         this.executableName = executableName;
         return this;
     }
 
-    public ShellProcessBuilder setExecutableDirectory(String executableDirectory) {
+    public
+    ShellProcessBuilder setExecutableDirectory(String executableDirectory) {
         // MUST be absolute path!!
         this.executableDirectory = new File(executableDirectory).getAbsolutePath();
         return this;
     }
 
-    public ShellProcessBuilder addDebugInfo() {
+    public
+    ShellProcessBuilder addDebugInfo() {
         this.debugInfo = true;
         return this;
     }
 
 
-    public void start() {
+    public
+    void start() {
         // if no executable, then use the command shell
         if (this.executableName == null) {
             if (OS.isWindows()) {
@@ -120,7 +130,8 @@ public class ShellProcessBuilder {
                 this.executableName = "cmd";
                 this.arguments.add(0, "/c");
 
-            } else {
+            }
+            else {
                 // *nix
                 this.executableName = "/bin/bash";
                 File file = new File(this.executableName);
@@ -129,7 +140,8 @@ public class ShellProcessBuilder {
                 }
                 this.arguments.add(0, "-c");
             }
-        } else if (this.workingDirectory != null) {
+        }
+        else if (this.workingDirectory != null) {
             if (!this.workingDirectory.endsWith("/") && !this.workingDirectory.endsWith("\\")) {
                 this.workingDirectory += File.separator;
             }
@@ -154,7 +166,8 @@ public class ShellProcessBuilder {
                 for (String s : split) {
                     argumentsList.add(s);
                 }
-            } else {
+            }
+            else {
                 argumentsList.add(arg);
             }
         }
@@ -167,7 +180,8 @@ public class ShellProcessBuilder {
             if (OS.isWindows()) {
                 // >NUL on windows
                 argumentsList.add(">NUL");
-            } else {
+            }
+            else {
                 // we will "pipe" it to /dev/null on *nix
                 argumentsList.add(">/dev/null 2>&1");
             }
@@ -226,7 +240,9 @@ public class ShellProcessBuilder {
 
                 // readers (read process -> write console)
                 // have to keep the output buffers from filling in the target process.
-                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName, this.process.getInputStream(), nullOutputStream);
+                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName,
+                                                          this.process.getInputStream(),
+                                                          nullOutputStream);
                 readFromProcess_error = null;
             }
             // we want to pipe our input/output from process to ourselves
@@ -236,10 +252,15 @@ public class ShellProcessBuilder {
                  * to the user's window. This is important or the spawned process could block.
                  */
                 // readers (read process -> write console)
-                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName, this.process.getInputStream(), this.outputStream);
+                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName,
+                                                          this.process.getInputStream(),
+                                                          this.outputStream);
                 if (this.errorStream != this.outputStream) {
-                    readFromProcess_error = new ProcessProxy("Process Reader: " + this.executableName, this.process.getErrorStream(), this.errorStream);
-                } else {
+                    readFromProcess_error = new ProcessProxy("Process Reader: " + this.executableName,
+                                                             this.process.getErrorStream(),
+                                                             this.errorStream);
+                }
+                else {
                     processBuilder.redirectErrorStream(true);
                     readFromProcess_error = null;
                 }
@@ -250,8 +271,11 @@ public class ShellProcessBuilder {
                  * Proxy System.in from the user's window to the spawned process
                  */
                 // writer (read console -> write process)
-                writeToProcess_input = new ProcessProxy("Process Writer: " + this.executableName, this.inputStream, this.process.getOutputStream());
-            } else {
+                writeToProcess_input = new ProcessProxy("Process Writer: " + this.executableName,
+                                                        this.inputStream,
+                                                        this.process.getOutputStream());
+            }
+            else {
                 writeToProcess_input = null;
             }
 
@@ -260,17 +284,18 @@ public class ShellProcessBuilder {
             // If not in eclipse, by this shutdown hook. (clicking the red square to terminate a process will not run it's shutdown hooks)
             // Typing "exit" will always terminate the process
             Thread hook = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (ShellProcessBuilder.this.debugInfo) {
-                            ShellProcessBuilder.this.errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
-                        }
-                        ShellProcessBuilder.this.process.destroy();
+                @Override
+                public
+                void run() {
+                    if (ShellProcessBuilder.this.debugInfo) {
+                        ShellProcessBuilder.this.errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
                     }
+                    ShellProcessBuilder.this.process.destroy();
                 }
-             );
+            });
             // add a shutdown hook to make sure that we properly terminate our spawned processes.
-            Runtime.getRuntime().addShutdownHook(hook);
+            Runtime.getRuntime()
+                   .addShutdownHook(hook);
 
             if (writeToProcess_input != null) {
                 writeToProcess_input.start();
@@ -304,11 +329,13 @@ public class ShellProcessBuilder {
                 // this is for cleanup ONLY, not to actually do anything.
                 this.process.destroy();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                Thread.currentThread()
+                      .interrupt();
             }
 
             // remove the shutdown hook now that we've shutdown.
-            Runtime.getRuntime().removeShutdownHook(hook);
+            Runtime.getRuntime()
+                   .removeShutdownHook(hook);
         }
     }
 }

@@ -26,8 +26,8 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.util.crypto.serialization.RsaPrivateKeySerializer;
-import dorkbox.util.crypto.serialization.RsaPublicKeySerializer;
+import dorkbox.util.serialization.RsaPrivateKeySerializer;
+import dorkbox.util.serialization.RsaPublicKeySerializer;
 
 
 public class RsaTest {

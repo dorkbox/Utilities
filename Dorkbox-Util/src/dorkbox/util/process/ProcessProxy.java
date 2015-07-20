@@ -19,13 +19,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class ProcessProxy extends Thread {
+public
+class ProcessProxy extends Thread {
 
     private final InputStream is;
     private final OutputStream os;
 
     // when reading from the stdin and outputting to the process
-    public ProcessProxy(String processName, InputStream inputStreamFromConsole, OutputStream outputStreamToProcess) {
+    public
+    ProcessProxy(String processName, InputStream inputStreamFromConsole, OutputStream outputStreamToProcess) {
         this.is = inputStreamFromConsole;
         this.os = outputStreamToProcess;
 
@@ -33,7 +35,8 @@ public class ProcessProxy extends Thread {
         setDaemon(true);
     }
 
-    public void close() {
+    public
+    void close() {
         try {
             this.is.close();
         } catch (IOException e) {
@@ -41,7 +44,8 @@ public class ProcessProxy extends Thread {
     }
 
     @Override
-    public void run() {
+    public
+    void run() {
         try {
             // this thread will read until there is no more data to read. (this is generally what you want)
             // the stream will be closed when the process closes it (usually on exit)
@@ -51,7 +55,8 @@ public class ProcessProxy extends Thread {
                 // just read so it won't block.
                 while ((readInt = this.is.read()) != -1) {
                 }
-            } else {
+            }
+            else {
                 while ((readInt = this.is.read()) != -1) {
                     this.os.write(readInt);
                     // always flush

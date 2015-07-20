@@ -38,10 +38,10 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.util.crypto.serialization.EccPrivateKeySerializer;
-import dorkbox.util.crypto.serialization.EccPublicKeySerializer;
-import dorkbox.util.crypto.serialization.IesParametersSerializer;
-import dorkbox.util.crypto.serialization.IesWithCipherParametersSerializer;
+import dorkbox.util.serialization.EccPrivateKeySerializer;
+import dorkbox.util.serialization.EccPublicKeySerializer;
+import dorkbox.util.serialization.IesParametersSerializer;
+import dorkbox.util.serialization.IesWithCipherParametersSerializer;
 
 
 public class EccTest {

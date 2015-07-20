@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  */
-package dorkbox.util.serializers;
+package dorkbox.util.serialization;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;

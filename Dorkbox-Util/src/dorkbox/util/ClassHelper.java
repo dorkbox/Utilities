@@ -15,22 +15,20 @@
  */
 package dorkbox.util;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 
-public class ClassHelper {
+public
+class ClassHelper {
 
     /**
      * Retrieves the generic type parameter for the PARENT (super) class of the specified class. This ONLY works
      * on parent classes because of how type erasure works in java!
      *
-     * @param clazz class to get the parameter from
+     * @param clazz                 class to get the parameter from
      * @param genericParameterToGet 0-based index of parameter as class to get
      */
-    public final static Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, int genericParameterToGet) {
+    public static
+    Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, int genericParameterToGet) {
         Class<?> classToCheck = clazz;
 
         // case of multiple inheritance, we are trying to get the first available generic info
@@ -44,7 +42,8 @@ public class ClassHelper {
                 if (actualTypeArguments.length > genericParameterToGet) {
                     Class<?> rawTypeAsClass = ClassHelper.getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
                     return rawTypeAsClass;
-                } else {
+                }
+                else {
                     // record the parameters.
 
                 }
@@ -68,7 +67,8 @@ public class ClassHelper {
                     if (actualTypeArguments.length > genericParameterToGet) {
                         Class<?> rawTypeAsClass = ClassHelper.getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
                         return rawTypeAsClass;
-                    } else {
+                    }
+                    else {
                         // record the parameters.
 
                     }
@@ -88,34 +88,39 @@ public class ClassHelper {
     /**
      * Return the class that is this type.
      */
-    public final static Class<?> getRawTypeAsClass(Type type) {
+    public static
+    Class<?> getRawTypeAsClass(Type type) {
         if (type instanceof Class) {
-            Class<?> class1 = (Class<?>)type;
+            Class<?> class1 = (Class<?>) type;
 
 //            if (class1.isArray()) {
 //                System.err.println("CLASS IS ARRAY TYPE: SHOULD WE DO ANYTHING WITH IT? " + class1.getSimpleName());
 //                return class1.getComponentType();
 //            } else {
-                return class1;
+            return class1;
 //            }
-        } else if (type instanceof GenericArrayType) {
+        }
+        else if (type instanceof GenericArrayType) {
             // note: cannot have primitive types here, only objects that are arrays (byte[], Integer[], etc)
             Type type2 = ((GenericArrayType) type).getGenericComponentType();
             Class<?> rawType = getRawTypeAsClass(type2);
 
-            return Array.newInstance(rawType, 0).getClass();
-        } else if (type instanceof ParameterizedType) {
+            return Array.newInstance(rawType, 0)
+                        .getClass();
+        }
+        else if (type instanceof ParameterizedType) {
             // we cannot use parameterized types, because java can't go between classes and ptypes - and this
             // going "in-between" is the magic -- and value -- of this entire infrastructure.
             // return the type.
 
-            return  (Class<?>) ((ParameterizedType) type).getRawType();
+            return (Class<?>) ((ParameterizedType) type).getRawType();
 
 //            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
 //            return (Class<?>) actualTypeArguments[0];
-        } else if (type instanceof TypeVariable) {
+        }
+        else if (type instanceof TypeVariable) {
             // we have a COMPLEX type parameter
-            Type[] bounds = ((TypeVariable<?>)type).getBounds();
+            Type[] bounds = ((TypeVariable<?>) type).getBounds();
             if (bounds.length > 0) {
                 return getRawTypeAsClass(bounds[0]);
             }
@@ -126,10 +131,11 @@ public class ClassHelper {
 
     /**
      * Check to see if clazz or interface directly has one of the interfaces defined by clazzItMustHave
-     * <p>
+     * <p/>
      * If the class DOES NOT directly have the interface it will fail. the PARENT class is not checked.
      */
-    public final static boolean hasInterface(Class<?> clazzItMustHave, Class<?> clazz) {
+    public static
+    boolean hasInterface(Class<?> clazzItMustHave, Class<?> clazz) {
         if (clazzItMustHave == clazz) {
             return true;
         }
@@ -151,10 +157,12 @@ public class ClassHelper {
 
     /**
      * Checks to see if the clazz is a subclass of a parent class.
+     *
      * @param baseClass
      * @param genericClass
      */
-    public static boolean hasParentClass(Class<?> parentClazz, Class<?> clazz) {
+    public static
+    boolean hasParentClass(Class<?> parentClazz, Class<?> clazz) {
         Class<?> superClass = clazz.getSuperclass();
         if (parentClazz == superClass) {
             return true;

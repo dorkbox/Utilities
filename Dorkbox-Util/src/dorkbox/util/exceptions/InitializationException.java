@@ -13,34 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.process;
-
-import java.io.IOException;
-import java.io.OutputStream;
+package dorkbox.util.exceptions;
 
 public
-class NullOutputStream extends OutputStream {
-    @Override
+class InitializationException extends Exception {
+
+    private static final long serialVersionUID = 3331031046821855954L;
+
     public
-    void write(int i) throws IOException {
-        //do nothing
+    InitializationException() {
+        super();
     }
 
-    @Override
     public
-    void write(byte[] b) throws IOException {
-        //do nothing
+    InitializationException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    @Override
     public
-    void write(byte[] b, int off, int len) throws IOException {
-        //do nothing
+    InitializationException(String message) {
+        super(message);
     }
 
-    @Override
     public
-    void flush() throws IOException {
-        //do nothing
+    InitializationException(Throwable cause) {
+        super(cause);
     }
 }

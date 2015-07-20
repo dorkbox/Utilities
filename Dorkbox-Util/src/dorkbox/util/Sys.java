@@ -25,7 +25,8 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public
+@SuppressWarnings("unused")
+public final
 class Sys {
     public static final int javaVersion = getJavaVersion();
     public static final boolean isAndroid = getIsAndroid();
@@ -35,9 +36,9 @@ class Sys {
     public static final int GIGABYTE = 1024 * MEGABYTE;
     public static final long TERABYTE = 1024L * GIGABYTE;
 
-    public static char[] HEX_CHARS = new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    public static final char[] HEX_CHARS = new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-    public static final
+    public static
     char[] convertStringToChars(String string) {
         char[] charArray = string.toCharArray();
 
@@ -89,7 +90,7 @@ class Sys {
 
 
 
-    public static final
+    public static
     void eraseString(String string) {
 //      You can change the value of the inner char[] using reflection.
 //
@@ -271,7 +272,7 @@ class Sys {
     public static
     <T extends OutputStream> T copyStream(InputStream inputStream, T outputStream) throws IOException {
         byte[] buffer = new byte[4096];
-        int read = 0;
+        int read;
         while ((read = inputStream.read(buffer)) > 0) {
             outputStream.write(buffer, 0, read);
         }
@@ -287,7 +288,7 @@ class Sys {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
 
         byte[] buffer = new byte[4096];
-        int read = 0;
+        int read;
         while ((read = inputStream.read(buffer)) > 0) {
             baos.write(buffer, 0, read);
         }
@@ -297,12 +298,12 @@ class Sys {
         return baos.toByteArray();
     }
 
-    public static final
+    public static
     byte[] copyBytes(byte[] src) {
         return copyBytes(src, 0);
     }
 
-    public static final
+    public static
     byte[] copyBytes(byte[] src, int position) {
         int length = src.length - position;
 
@@ -311,7 +312,7 @@ class Sys {
         return b;
     }
 
-    public static final
+    public static
     byte[] concatBytes(byte[]... arrayBytes) {
         int length = 0;
         for (byte[] bytes : arrayBytes) {
@@ -332,7 +333,7 @@ class Sys {
     /**
      * gets the SHA256 hash + SALT of the specified username, as UTF-16
      */
-    public static final
+    public static
     byte[] getSha256WithSalt(String username, byte[] saltBytes) {
         if (username == null) {
             return null;
@@ -353,7 +354,7 @@ class Sys {
     /**
      * gets the SHA256 hash of the specified string, as UTF-16
      */
-    public static final
+    public static
     byte[] getSha256(String string) {
         byte[] charToBytes = Sys.charToBytes(string.toCharArray());
 
@@ -368,7 +369,7 @@ class Sys {
     /**
      * gets the SHA256 hash of the specified byte array
      */
-    public static final
+    public static
     byte[] getSha256(byte[] bytes) {
 
         SHA256Digest sha256 = new SHA256Digest();
@@ -382,7 +383,7 @@ class Sys {
     /**
      * this saves the char array in UTF-16 format of bytes
      */
-    public static final
+    public static
     byte[] charToBytes(char[] text) {
         // NOTE: this saves the char array in UTF-16 format of bytes.
         byte[] bytes = new byte[text.length * 2];
@@ -395,7 +396,7 @@ class Sys {
     }
 
 
-    public static final
+    public static
     byte[] intsToBytes(int[] ints) {
         int length = ints.length;
         byte[] bytes = new byte[length];
@@ -413,7 +414,7 @@ class Sys {
         return bytes;
     }
 
-    public static final
+    public static
     int[] bytesToInts(byte[] bytes) {
         int length = bytes.length;
         int[] ints = new int[length];
@@ -425,12 +426,12 @@ class Sys {
         return ints;
     }
 
-    public static final
+    public static
     String bytesToHex(byte[] bytes) {
         return bytesToHex(bytes, false);
     }
 
-    public static final
+    public static
     String bytesToHex(byte[] bytes, boolean padding) {
         if (padding) {
             char[] hexString = new char[3 * bytes.length];
@@ -461,7 +462,7 @@ class Sys {
      * Converts an ASCII character representing a hexadecimal
      * value into its integer equivalent.
      */
-    public static final
+    public static
     int hexByteToInt(byte b) {
         switch (b) {
             case '0':
@@ -510,7 +511,7 @@ class Sys {
     /**
      * A 4-digit hex result.
      */
-    public static final
+    public static
     void hex4(char c, StringBuilder sb) {
         sb.append(HEX_CHARS[(c & 0xF000) >> 12]);
         sb.append(HEX_CHARS[(c & 0x0F00) >> 8]);
@@ -526,7 +527,7 @@ class Sys {
      * @return a string representation of the byte array as a series of
      * hexadecimal characters
      */
-    public static final
+    public static
     String toHexString(byte[] bytes) {
         char[] hexString = new char[2 * bytes.length];
         int j = 0;
@@ -558,14 +559,12 @@ class Sys {
 
 
 
-    public static final
+    public static
     byte[] encodeStringArray(List<String> array) {
         int length = 0;
         for (String s : array) {
             byte[] bytes = s.getBytes();
-            if (bytes != null) {
-                length += bytes.length;
-            }
+            length += bytes.length;
         }
 
         if (length == 0) {
@@ -585,7 +584,7 @@ class Sys {
         return bytes;
     }
 
-    public static final
+    public static
     ArrayList<String> decodeStringArray(byte[] bytes) {
         int length = bytes.length;
         int position = 0;
@@ -609,24 +608,23 @@ class Sys {
     }
 
     public static
-    String printArrayRaw(byte[] bytes) {
+    String printArrayRaw(final byte[] bytes) {
         return printArrayRaw(bytes, 0);
     }
 
     public static
-    String printArrayRaw(byte[] bytes, int lineLength) {
+    String printArrayRaw(final byte[] bytes, final int lineLength) {
         if (lineLength > 0) {
-            int mod = lineLength;
             int length = bytes.length;
             int comma = length - 1;
 
-            StringBuilder builder = new StringBuilder(length + length / mod);
+            StringBuilder builder = new StringBuilder(length + length / lineLength);
             for (int i = 0; i < length; i++) {
                 builder.append(bytes[i]);
                 if (i < comma) {
                     builder.append(",");
                 }
-                if (i > 0 && i % mod == 0) {
+                if (i > 0 && i % lineLength == 0) {
                     builder.append(OS.LINE_SEPARATOR);
                 }
             }
@@ -777,9 +775,17 @@ class Sys {
         // dig +short myip.opendns.com @resolver1.opendns.com
 
         // method 2: use public http servers
-        final String websites[] = {"http://ip.dorkbox.com/", "http://ip.javalauncher.com/", "http://checkip.dyndns.com/",
-                                   "http://checkip.dyn.com/", "http://curlmyip.com/", "http://tnx.nl/ip", "http://ipecho.net/plain",
-                                   "http://icanhazip.com/", "http://ip.appspot.com/",};
+        // @formatter:off
+        final String websites[] = {"http://ip.dorkbox.com/",
+                                   "http://ip.javalauncher.com/",
+                                   "http://checkip.dyndns.com/",
+                                   "http://checkip.dyn.com/",
+                                   "http://curlmyip.com/",
+                                   "http://tnx.nl/ip",
+                                   "http://ipecho.net/plain",
+                                   "http://icanhazip.com/",
+                                   "http://ip.appspot.com/",};
+        // @formatter:on
 
         // loop, since they won't always work.
         for (int i = 0; i < websites.length; i++) {
@@ -793,11 +799,10 @@ class Sys {
                 Pattern pattern = Pattern.compile("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b");
                 Matcher matcher = pattern.matcher(response);
                 if (matcher.find()) {
-                    String IP = matcher.group()
+                    return matcher.group()
                                        .trim();
-                    return IP;
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -890,9 +895,13 @@ class Sys {
                     }
                 }
             }
-        } catch (SocketException e) {
+        } catch (SocketException ignored) {
         }
 
         return null;
+    }
+
+    private
+    Sys() {
     }
 }

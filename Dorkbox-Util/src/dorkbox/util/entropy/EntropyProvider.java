@@ -13,34 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.process;
-
-import java.io.IOException;
-import java.io.OutputStream;
+package dorkbox.util.entropy;
 
 public
-class NullOutputStream extends OutputStream {
-    @Override
-    public
-    void write(int i) throws IOException {
-        //do nothing
-    }
+interface EntropyProvider {
 
-    @Override
-    public
-    void write(byte[] b) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void write(byte[] b, int off, int len) throws IOException {
-        //do nothing
-    }
-
-    @Override
-    public
-    void flush() throws IOException {
-        //do nothing
-    }
+    byte[] get(String messageForUser) throws Exception;
 }

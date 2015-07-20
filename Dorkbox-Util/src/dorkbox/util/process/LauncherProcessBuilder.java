@@ -15,15 +15,16 @@
  */
 package dorkbox.util.process;
 
+import dorkbox.util.OS;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import dorkbox.util.OS;
-
-public class LauncherProcessBuilder extends ShellProcessBuilder {
+public
+class LauncherProcessBuilder extends ShellProcessBuilder {
 
     private String mainClass;
 
@@ -32,31 +33,38 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
 
     private String jarFile;
 
-    public LauncherProcessBuilder() {
+    public
+    LauncherProcessBuilder() {
         super(null, null, null);
     }
 
-    public LauncherProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+    public
+    LauncherProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
         super(in, out, err);
     }
 
-    public final void setMainClass(String mainClass) {
+    public final
+    void setMainClass(String mainClass) {
         this.mainClass = mainClass;
     }
 
-    public final void addJvmClasspath(String classpathEntry) {
+    public final
+    void addJvmClasspath(String classpathEntry) {
         this.classpathEntries.add(classpathEntry);
     }
 
-    public final void addJvmClasspaths(List<String> paths) {
+    public final
+    void addJvmClasspaths(List<String> paths) {
         this.classpathEntries.addAll(paths);
     }
 
-    public final void setJarFile(String jarFile) {
+    public final
+    void setJarFile(String jarFile) {
         this.jarFile = jarFile;
     }
 
-    private String getClasspath() {
+    private
+    String getClasspath() {
         StringBuilder builder = new StringBuilder();
         int count = 0;
         final int totalSize = this.classpathEntries.size();
@@ -75,10 +83,12 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
     }
 
     @Override
-    public void start() {
+    public
+    void start() {
         if (OS.isWindows()) {
             setExecutable("dorkboxc.exe");
-        } else {
+        }
+        else {
             setExecutable("dorkbox");
         }
 
@@ -120,7 +130,8 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
                 this.arguments.add("-classpath");
                 this.arguments.add(classpath);
             }
-        } else {
+        }
+        else {
             System.err.println("WHOOPS. You must specify a jar or main class when running java!");
             System.exit(1);
         }
@@ -134,7 +145,8 @@ public class LauncherProcessBuilder extends ShellProcessBuilder {
                 for (String s : split) {
                     this.arguments.add(s);
                 }
-            } else {
+            }
+            else {
                 this.arguments.add(arg);
             }
         }

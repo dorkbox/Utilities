@@ -15,7 +15,7 @@
  */
 package dorkbox.util.entropy;
 
-import dorkbox.network.util.exceptions.InitializationException;
+import dorkbox.util.exceptions.InitializationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

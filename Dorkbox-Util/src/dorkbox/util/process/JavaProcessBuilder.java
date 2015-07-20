@@ -15,76 +15,153 @@
  */
 package dorkbox.util.process;
 
+import dorkbox.util.FileUtil;
+import dorkbox.util.OS;
+
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import dorkbox.util.FileUtil;
-import dorkbox.util.OS;
-
 /**
  * This will FORK the java process initially used to start the currently running JVM. Changing the java executable will change this behaviors
  */
-public class JavaProcessBuilder extends ShellProcessBuilder {
+public
+class JavaProcessBuilder extends ShellProcessBuilder {
 
+    /**
+     * The directory into which a local VM installation should be unpacked.
+     */
+    public static final String LOCAL_JAVA_DIR = "java_vm";
+
+    /**
+     * Reconstructs the path to the JVM used to launch this process.
+     *
+     * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
+     */
+    public static
+    String getJVMPath(File appdir, boolean windebug) {
+        // first look in our application directory for an installed VM
+        String vmpath = checkJvmPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
+
+        // then fall back to the VM in which we're already running
+        if (vmpath == null) {
+            vmpath = checkJvmPath(System.getProperty("java.home"), windebug);
+        }
+
+        // then throw up our hands and hope for the best
+        if (vmpath == null) {
+            System.err.println("Unable to find java [appdir=" + appdir + ", java.home=" + System.getProperty("java.home") + "]!");
+            vmpath = "java";
+        }
+
+        // Oddly, the Mac OS X specific java flag -Xdock:name will only work if java is launched
+        // from /usr/bin/java, and not if launched by directly referring to <java.home>/bin/java,
+        // even though the former is a symlink to the latter! To work around this, see if the
+        // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
+        if (OS.isMacOsX()) {
+            String localVM = FileUtil.normalize(new File("/usr/bin/java").getAbsolutePath());
+            String vmCheck = FileUtil.normalize(new File(vmpath).getAbsolutePath());
+            if (localVM.equals(vmCheck)) {
+                vmpath = "/usr/bin/java";
+            }
+        }
+
+        return vmpath;
+    }
+
+    /**
+     * Checks whether a Java Virtual Machine can be located in the supplied path.
+     */
+    private static
+    String checkJvmPath(String vmhome, boolean windebug) {
+        // linux does this...
+        String vmbase = vmhome + File.separator + "bin" + File.separator;
+        String vmpath = vmbase + "java";
+        if (new File(vmpath).exists()) {
+            return vmpath;
+        }
+
+        // windows does this
+        if (!windebug) {
+            vmpath = vmbase + "javaw.exe";
+        }
+        else {
+            vmpath = vmbase + "java.exe"; // open a console on windows
+        }
+
+        if (new File(vmpath).exists()) {
+            return vmpath;
+        }
+
+        return null;
+    }
     // this is NOT related to JAVA_HOME, but is instead the location of the JRE that was used to launch java initially.
     private String javaLocation = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
     private String mainClass;
     private int startingHeapSizeInMegabytes = 40;
     private int maximumHeapSizeInMegabytes = 128;
-
     private List<String> jvmOptions = new ArrayList<String>();
     private List<String> classpathEntries = new ArrayList<String>();
-    private List<String> mainClassArguments = new ArrayList<String>();
-
-    private String jarFile;
-
-    public JavaProcessBuilder() {
-        super(null, null, null);
-    }
 
     // what version of java??
     // so, this starts a NEW java, from an ALREADY existing java.
+    private List<String> mainClassArguments = new ArrayList<String>();
+    private String jarFile;
 
-    public JavaProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+    public
+    JavaProcessBuilder() {
+        super(null, null, null);
+    }
+
+    public
+    JavaProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
         super(in, out, err);
     }
 
-    public final void setMainClass(String mainClass) {
+    public final
+    void setMainClass(String mainClass) {
         this.mainClass = mainClass;
     }
 
-    public final void setStartingHeapSizeInMegabytes(int startingHeapSizeInMegabytes) {
+    public final
+    void setStartingHeapSizeInMegabytes(int startingHeapSizeInMegabytes) {
         this.startingHeapSizeInMegabytes = startingHeapSizeInMegabytes;
     }
 
-    public final void setMaximumHeapSizeInMegabytes(int maximumHeapSizeInMegabytes) {
+    public final
+    void setMaximumHeapSizeInMegabytes(int maximumHeapSizeInMegabytes) {
         this.maximumHeapSizeInMegabytes = maximumHeapSizeInMegabytes;
     }
 
-    public final void addJvmClasspath(String classpathEntry) {
+    public final
+    void addJvmClasspath(String classpathEntry) {
         this.classpathEntries.add(classpathEntry);
     }
 
-    public final void addJvmClasspaths(List<String> paths) {
+    public final
+    void addJvmClasspaths(List<String> paths) {
         this.classpathEntries.addAll(paths);
     }
 
-    public final void addJvmOption(String argument) {
+    public final
+    void addJvmOption(String argument) {
         this.jvmOptions.add(argument);
     }
 
-    public final void addJvmOptions(List<String> paths) {
+    public final
+    void addJvmOptions(List<String> paths) {
         this.jvmOptions.addAll(paths);
     }
 
-    public final void setJarFile(String jarFile) {
+    public final
+    void setJarFile(String jarFile) {
         this.jarFile = jarFile;
     }
 
-    private String getClasspath() {
+    private
+    String getClasspath() {
         StringBuilder builder = new StringBuilder();
         int count = 0;
         final int totalSize = this.classpathEntries.size();
@@ -116,12 +193,14 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
      * Specify the JAVA exectuable to launch this process. By default, this will use the same java exectuable
      * as was used to start the current JVM.
      */
-    public void setJava(String javaLocation) {
+    public
+    void setJava(String javaLocation) {
         this.javaLocation = javaLocation;
     }
 
     @Override
-    public void start() {
+    public
+    void start() {
         setExecutable(this.javaLocation);
 
         // save off the original arguments
@@ -165,7 +244,8 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
 
             // main class must happen AFTER the classpath!
             this.arguments.add(this.mainClass);
-        } else {
+        }
+        else {
             System.err.println("WHOOPS. You must specify a jar or main class when running java!");
             System.exit(1);
         }
@@ -179,7 +259,8 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
                 for (String s : split) {
                     this.arguments.add(s);
                 }
-            } else {
+            }
+            else {
                 this.arguments.add(arg);
             }
         }
@@ -187,70 +268,5 @@ public class JavaProcessBuilder extends ShellProcessBuilder {
         this.arguments.addAll(origArguments);
 
         super.start();
-    }
-
-
-    /** The directory into which a local VM installation should be unpacked. */
-    public static final String LOCAL_JAVA_DIR = "java_vm";
-
-    /**
-     * Reconstructs the path to the JVM used to launch this process.
-     *
-     * @param windebug if true we will use java.exe instead of javaw.exe on Windows.
-     */
-    public static String getJVMPath (File appdir, boolean windebug)
-    {
-        // first look in our application directory for an installed VM
-        String vmpath = checkJvmPath(new File(appdir, LOCAL_JAVA_DIR).getPath(), windebug);
-
-        // then fall back to the VM in which we're already running
-        if (vmpath == null) {
-            vmpath = checkJvmPath(System.getProperty("java.home"), windebug);
-        }
-
-        // then throw up our hands and hope for the best
-        if (vmpath == null) {
-            System.err.println("Unable to find java [appdir=" + appdir + ", java.home=" + System.getProperty("java.home") + "]!");
-            vmpath = "java";
-        }
-
-        // Oddly, the Mac OS X specific java flag -Xdock:name will only work if java is launched
-        // from /usr/bin/java, and not if launched by directly referring to <java.home>/bin/java,
-        // even though the former is a symlink to the latter! To work around this, see if the
-        // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
-        if (OS.isMacOsX()) {
-            String localVM = FileUtil.normalize(new File("/usr/bin/java").getAbsolutePath());
-            String vmCheck = FileUtil.normalize(new File(vmpath).getAbsolutePath());
-            if (localVM.equals(vmCheck)) {
-                vmpath = "/usr/bin/java";
-            }
-        }
-
-        return vmpath;
-    }
-
-    /**
-     * Checks whether a Java Virtual Machine can be located in the supplied path.
-     */
-    private static String checkJvmPath(String vmhome, boolean windebug) {
-        // linux does this...
-        String vmbase = vmhome + File.separator + "bin" + File.separator;
-        String vmpath = vmbase + "java";
-        if (new File(vmpath).exists()) {
-            return vmpath;
-        }
-
-        // windows does this
-        if (!windebug) {
-            vmpath = vmbase + "javaw.exe";
-        } else {
-            vmpath = vmbase + "java.exe"; // open a console on windows
-        }
-
-        if (new File(vmpath).exists()) {
-            return vmpath;
-        }
-
-        return null;
     }
 }

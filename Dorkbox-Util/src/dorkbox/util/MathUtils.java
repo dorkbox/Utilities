@@ -1,11 +1,11 @@
-/*******************************************************************************
- * Copyright 2011 See AUTHORS file.
+/*
+ * Copyright 2010 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,64 +14,73 @@
  * limitations under the License.
  */
 
-// pruned/limited version from libGDX, modified by dorkbox, llc
-
 package dorkbox.util;
 
 
-public class MathUtils {
+@SuppressWarnings("unused")
+public
+class MathUtils {
 
- // ---
+    // ---
 
-    private static ThreadLocal<MersenneTwisterFast> random = new ThreadLocal<MersenneTwisterFast>();
+    private static final ThreadLocal<MersenneTwisterFast> random = new ThreadLocal<MersenneTwisterFast>();
 
     /**
      * Creates the thread local MersenneTwister (as it's not thread safe), if necessary
      */
-    public static MersenneTwisterFast random() {
+    public static
+    MersenneTwisterFast random() {
         MersenneTwisterFast mersenneTwisterFast = random.get();
 
         if (mersenneTwisterFast == null) {
             mersenneTwisterFast = new MersenneTwisterFast();
             random.set(mersenneTwisterFast);
             return mersenneTwisterFast;
-        } else {
+        }
+        else {
             return mersenneTwisterFast;
         }
     }
 
     /** Returns a random integer */
-    static public final int randomInt () {
+    public static
+    int randomInt() {
         return random().nextInt();
     }
 
     /** Returns a random number between 0 (inclusive) and the specified value (inclusive). */
-    static public final int randomInt (int range) {
+    public static
+    int randomInt(int range) {
         return random().nextInt(range + 1);
     }
 
     /** Returns a random number between start (inclusive) and end (inclusive). */
-    static public final int randomInt (int start, int end) {
+    public static
+    int randomInt(int start, int end) {
         return start + random().nextInt(end - start + 1);
     }
 
     /** Returns a random boolean value. */
-    static public final boolean randomBoolean () {
+    public static
+    boolean randomBoolean() {
         return random().nextBoolean();
     }
 
     /** Returns random number between 0.0 (inclusive) and 1.0 (exclusive). */
-    static public final float randomFloat () {
+    public static
+    float randomFloat() {
         return random().nextFloat();
     }
 
     /** Returns a random number between 0 (inclusive) and the specified value (exclusive). */
-    static public final float randomFloat (float range) {
+    public static
+    float randomFloat(float range) {
         return random().nextFloat() * range;
     }
 
     /** Returns a random number between start (inclusive) and end (exclusive). */
-    static public final float randomFloat (float start, float end) {
+    public static
+    float randomFloat(float start, float end) {
         return start + random().nextFloat() * (end - start);
     }
 
@@ -79,26 +88,15 @@ public class MathUtils {
 
 
     /**
-     * Returns the next power of two. Returns the specified value if the value
-     * is already a power of two.
+     * Returns the next power of two. Returns the specified value if the value is already a power of two.
      */
-    public static int nextPowerOfTwo(int value) {
-        if (value == 0) {
-            return 1;
-        }
-
-        value--;
-
-        value |= value >> 1;
-        value |= value >> 2;
-        value |= value >> 4;
-        value |= value >> 8;
-        value |= value >> 16;
-
-        return value + 1;
+    public static
+    int nextPowerOfTwo(int value) {
+        return 1 << (32 - Integer.numberOfLeadingZeros(value - 1));
     }
 
-    public static boolean isPowerOfTwo(int value) {
+    public static
+    boolean isPowerOfTwo(int value) {
         return value != 0 && (value & value - 1) == 0;
     }
 }

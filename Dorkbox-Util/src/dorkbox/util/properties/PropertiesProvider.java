@@ -15,23 +15,19 @@
  */
 package dorkbox.util.properties;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Properties;
-
 import dorkbox.util.FileUtil;
+
+import java.awt.*;
+import java.io.*;
+import java.util.Properties;
 
 @SuppressWarnings("unused")
 public
 class PropertiesProvider {
 
-    private String comments = "Settings and configuration file. Strings must be escape formatted!";
     private final Properties properties = new SortedProperties();
     private final File propertiesFile;
+    private String comments = "Settings and configuration file. Strings must be escape formatted!";
 
     public
     PropertiesProvider(String propertiesFile) {

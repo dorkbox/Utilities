@@ -15,46 +15,48 @@
  */
 package dorkbox.util;
 
-import java.awt.Container;
-import java.awt.EventQueue;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.Rectangle;
+import javax.swing.*;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
-import javax.swing.SwingUtilities;
-
-public class SwingUtil {
-    public static void showOnSameScreenAsMouseCenter(Container frame) {
-        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+public
+class SwingUtil {
+    public static
+    void showOnSameScreenAsMouseCenter(Container frame) {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
 
         GraphicsDevice deviceAtMouse = getGraphicsDeviceAt(mouseLocation);
-        Rectangle bounds = deviceAtMouse.getDefaultConfiguration().getBounds();
+        Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
+                                        .getBounds();
         frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.height / 2 - frame.getHeight() / 2);
     }
 
-    public static void showOnSameScreenAsMouse(Container frame) {
-        Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+    public static
+    void showOnSameScreenAsMouse(Container frame) {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
 
         GraphicsDevice deviceAtMouse = getGraphicsDeviceAt(mouseLocation);
-        frame.setLocation(deviceAtMouse.getDefaultConfiguration().getBounds().x, frame.getY());
+        frame.setLocation(deviceAtMouse.getDefaultConfiguration()
+                                       .getBounds().x, frame.getY());
     }
 
-    public static Rectangle getScreenBoundsAt(Point pos) {
+    public static
+    Rectangle getScreenBoundsAt(Point pos) {
         GraphicsDevice gd = SwingUtil.getGraphicsDeviceAt(pos);
         Rectangle bounds = null;
         if (gd != null) {
-            bounds = gd.getDefaultConfiguration().getBounds();
+            bounds = gd.getDefaultConfiguration()
+                       .getBounds();
         }
 
         return bounds;
     }
 
-    public static GraphicsDevice getGraphicsDeviceAt(Point pos) {
+    public static
+    GraphicsDevice getGraphicsDeviceAt(Point pos) {
         GraphicsDevice device;
 
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -74,7 +76,8 @@ public class SwingUtil {
 
         if (lstDevices.size() > 0) {
             device = lstDevices.get(0);
-        } else {
+        }
+        else {
             device = ge.getDefaultScreenDevice();
         }
 
@@ -104,18 +107,22 @@ public class SwingUtil {
 //      return insets;
 //  }
 
-    public static void invokeLater(Runnable runnable) {
+    public static
+    void invokeLater(Runnable runnable) {
         if (EventQueue.isDispatchThread()) {
             runnable.run();
-        } else {
+        }
+        else {
             SwingUtilities.invokeLater(runnable);
         }
     }
 
-    public static void invokeAndWait(Runnable runnable) {
+    public static
+    void invokeAndWait(Runnable runnable) {
         if (EventQueue.isDispatchThread()) {
             runnable.run();
-        } else {
+        }
+        else {
             try {
                 EventQueue.invokeAndWait(runnable);
             } catch (InvocationTargetException e) {

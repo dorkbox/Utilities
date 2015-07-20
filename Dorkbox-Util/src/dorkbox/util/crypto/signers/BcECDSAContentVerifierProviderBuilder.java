@@ -15,8 +15,6 @@
  */
 package dorkbox.util.crypto.signers;
 
-import java.io.IOException;
-
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.crypto.Digest;
@@ -31,22 +29,29 @@ import org.bouncycastle.operator.DigestAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcContentVerifierProviderBuilder;
 
-public class BcECDSAContentVerifierProviderBuilder extends BcContentVerifierProviderBuilder {
+import java.io.IOException;
+
+public
+class BcECDSAContentVerifierProviderBuilder extends BcContentVerifierProviderBuilder {
 
     @SuppressWarnings("unused")
-    public BcECDSAContentVerifierProviderBuilder(DigestAlgorithmIdentifierFinder digestAlgorithmFinder) {
+    public
+    BcECDSAContentVerifierProviderBuilder(DigestAlgorithmIdentifierFinder digestAlgorithmFinder) {
     }
 
     @Override
-    protected Signer createSigner(AlgorithmIdentifier sigAlgId) throws OperatorCreationException {
+    protected
+    AsymmetricKeyParameter extractKeyParameters(SubjectPublicKeyInfo publicKeyInfo) throws IOException {
+        return PublicKeyFactory.createKey(publicKeyInfo);
+    }
+
+    @Override
+    protected
+    Signer createSigner(AlgorithmIdentifier sigAlgId) throws OperatorCreationException {
         AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
 
-        Digest digest = DigestFactory.getDigest(digAlgId.getAlgorithm().getId()); // 1.2.23.4.5.6, etc
+        Digest digest = DigestFactory.getDigest(digAlgId.getAlgorithm()
+                                                        .getId()); // 1.2.23.4.5.6, etc
         return new DSADigestSigner(new ECDSASigner(), digest);
-    }
-
-    @Override
-    protected AsymmetricKeyParameter extractKeyParameters(SubjectPublicKeyInfo publicKeyInfo) throws IOException {
-        return PublicKeyFactory.createKey(publicKeyInfo);
     }
 }
