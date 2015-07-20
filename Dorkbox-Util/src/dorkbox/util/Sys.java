@@ -25,18 +25,20 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Sys {
+public
+class Sys {
     public static final int javaVersion = getJavaVersion();
     public static final boolean isAndroid = getIsAndroid();
 
-    public static final int     KILOBYTE = 1024;
-    public static final int     MEGABYTE = 1024 * KILOBYTE;
-    public static final int     GIGABYTE = 1024 * MEGABYTE;
-    public static final long    TERABYTE = 1024L * GIGABYTE;
+    public static final int KILOBYTE = 1024;
+    public static final int MEGABYTE = 1024 * KILOBYTE;
+    public static final int GIGABYTE = 1024 * MEGABYTE;
+    public static final long TERABYTE = 1024L * GIGABYTE;
 
-    public static char[] HEX_CHARS = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    public static char[] HEX_CHARS = new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-    public static final char[] convertStringToChars(String string) {
+    public static final
+    char[] convertStringToChars(String string) {
         char[] charArray = string.toCharArray();
 
         eraseString(string);
@@ -44,7 +46,8 @@ public class Sys {
         return charArray;
     }
 
-    private static boolean getIsAndroid() {
+    private static
+    boolean getIsAndroid() {
         try {
             Class.forName("android.os.Process");
             return true;
@@ -53,31 +56,41 @@ public class Sys {
         }
     }
 
-    private static int getJavaVersion() {
+    private static
+    int getJavaVersion() {
         String fullJavaVersion = System.getProperty("java.version");
 
         // Converts a java version string, such as "1.7u45", and converts it into 7
         char versionChar;
         if (fullJavaVersion.startsWith("1.")) {
             versionChar = fullJavaVersion.charAt(2);
-        } else {
+        }
+        else {
             versionChar = fullJavaVersion.charAt(0);
         }
 
         switch (versionChar) {
-            case '4': return 4;
-            case '5': return 5;
-            case '6': return 6;
-            case '7': return 7;
-            case '8': return 8;
-            case '9': return 9;
-            default: return -1;
+            case '4':
+                return 4;
+            case '5':
+                return 5;
+            case '6':
+                return 6;
+            case '7':
+                return 7;
+            case '8':
+                return 8;
+            case '9':
+                return 9;
+            default:
+                return -1;
         }
     }
 
 
 
-    public static final void eraseString(String string) {
+    public static final
+    void eraseString(String string) {
 //      You can change the value of the inner char[] using reflection.
 //
 //      You must be careful to either change it with an array of the same length,
@@ -87,26 +100,26 @@ public class Sys {
 //      you will need to recalculate the hash code and set the value of the hashCode field.
 
         try {
-          Field valueField = String.class.getDeclaredField("value");
-          valueField.setAccessible(true);
-          char[] chars  = (char[]) valueField.get(string);
-          Arrays.fill(chars, '*');  // asterisk it out in case of GC not picking up the old char array.
+            Field valueField = String.class.getDeclaredField("value");
+            valueField.setAccessible(true);
+            char[] chars = (char[]) valueField.get(string);
+            Arrays.fill(chars, '*');  // asterisk it out in case of GC not picking up the old char array.
 
-          valueField.set(string, new char[0]); // replace it.
+            valueField.set(string, new char[0]); // replace it.
 
-          // set count to 0
-          try {
-              // newer versions of java don't have this field
-              Field countField = String.class.getDeclaredField("count");
-              countField.setAccessible(true);
-              countField.set(string, 0);
-          } catch (Exception ignored) {
-          }
+            // set count to 0
+            try {
+                // newer versions of java don't have this field
+                Field countField = String.class.getDeclaredField("count");
+                countField.setAccessible(true);
+                countField.set(string, 0);
+            } catch (Exception ignored) {
+            }
 
-          // set hash to 0
-          Field hashField = String.class.getDeclaredField("hash");
-          hashField.setAccessible(true);
-          hashField.set(string, 0);
+            // set hash to 0
+            Field hashField = String.class.getDeclaredField("hash");
+            hashField.setAccessible(true);
+            hashField.set(string, 0);
         } catch (SecurityException e) {
             e.printStackTrace();
         } catch (NoSuchFieldException e) {
@@ -120,10 +133,10 @@ public class Sys {
 
     /**
      * FROM: https://www.cqse.eu/en/blog/string-replace-performance/
-     *
+     * <p/>
      * Replaces all occurrences of keys of the given map in the given string
      * with the associated value in that map.
-     *
+     * <p/>
      * This method is semantically the same as calling
      * {@link String#replace(CharSequence, CharSequence)} for each of the
      * entries in the map, but may be significantly faster for many replacements
@@ -131,11 +144,12 @@ public class Sys {
      * {@link String#replace(CharSequence, CharSequence)} uses regular
      * expressions internally and results in many String object allocations when
      * applied iteratively.
-     *
+     * <p/>
      * The order in which replacements are applied depends on the order of the
      * map's entry set.
      */
-    public static String replaceStringFast(String string, Map<String, String> replacements) {
+    public static
+    String replaceStringFast(String string, Map<String, String> replacements) {
         StringBuilder sb = new StringBuilder(string);
         for (Entry<String, String> entry : replacements.entrySet()) {
             String key = entry.getKey();
@@ -158,9 +172,10 @@ public class Sys {
      *
      * @return index if it's there, -1 if not there
      */
-    public static int searchStringFast(String string, char c) {
+    public static
+    int searchStringFast(String string, char c) {
         int length = string.length();
-        for (int i=0;i<length;i++) {
+        for (int i = 0; i < length; i++) {
             if (string.charAt(i) == c) {
                 return i;
             }
@@ -170,7 +185,8 @@ public class Sys {
     }
 
 
-    public static String getSizePretty(final long size) {
+    public static
+    String getSizePretty(final long size) {
         if (size > TERABYTE) {
             return String.format("%2.2fTB", (float) size / TERABYTE);
         }
@@ -185,12 +201,13 @@ public class Sys {
         }
 
         return String.valueOf(size) + "B";
-      }
+    }
 
     /**
      * Convenient close for a stream.
      */
-    public static void close(InputStream inputStream) {
+    public static
+    void close(InputStream inputStream) {
         if (inputStream != null) {
             try {
                 inputStream.close();
@@ -204,7 +221,8 @@ public class Sys {
     /**
      * Convenient close for a stream.
      */
-    public static void close(OutputStream outputStream) {
+    public static
+    void close(OutputStream outputStream) {
         if (outputStream != null) {
             try {
                 outputStream.close();
@@ -218,7 +236,8 @@ public class Sys {
     /**
      * Convenient close for a Reader.
      */
-    public static void close(Reader inputReader) {
+    public static
+    void close(Reader inputReader) {
         if (inputReader != null) {
             try {
                 inputReader.close();
@@ -232,7 +251,8 @@ public class Sys {
     /**
      * Convenient close for a Writer.
      */
-    public static void close(Writer outputWriter) {
+    public static
+    void close(Writer outputWriter) {
         if (outputWriter != null) {
             try {
                 outputWriter.close();
@@ -245,10 +265,11 @@ public class Sys {
 
     /**
      * Copy the contents of the input stream to the output stream.
-     * <p>
+     * <p/>
      * DOES NOT CLOSE THE STEAMS!
      */
-    public static <T extends OutputStream> T copyStream(InputStream inputStream, T outputStream) throws IOException {
+    public static
+    <T extends OutputStream> T copyStream(InputStream inputStream, T outputStream) throws IOException {
         byte[] buffer = new byte[4096];
         int read = 0;
         while ((read = inputStream.read(buffer)) > 0) {
@@ -261,7 +282,8 @@ public class Sys {
     /**
      * Convert the contents of the input stream to a byte array.
      */
-    public static byte[] getBytesFromStream(InputStream inputStream) throws IOException {
+    public static
+    byte[] getBytesFromStream(InputStream inputStream) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(8192);
 
         byte[] buffer = new byte[4096];
@@ -275,11 +297,13 @@ public class Sys {
         return baos.toByteArray();
     }
 
-    public static final byte[] copyBytes(byte[] src) {
+    public static final
+    byte[] copyBytes(byte[] src) {
         return copyBytes(src, 0);
     }
 
-    public static final byte[] copyBytes(byte[] src, int position) {
+    public static final
+    byte[] copyBytes(byte[] src, int position) {
         int length = src.length - position;
 
         byte[] b = new byte[length];
@@ -287,7 +311,8 @@ public class Sys {
         return b;
     }
 
-    public static final byte[] concatBytes(byte[]... arrayBytes) {
+    public static final
+    byte[] concatBytes(byte[]... arrayBytes) {
         int length = 0;
         for (byte[] bytes : arrayBytes) {
             length += bytes.length;
@@ -304,8 +329,11 @@ public class Sys {
         return concatBytes;
     }
 
-    /** gets the SHA256 hash + SALT of the specified username, as UTF-16 */
-    public static final byte[] getSha256WithSalt(String username,  byte[] saltBytes) {
+    /**
+     * gets the SHA256 hash + SALT of the specified username, as UTF-16
+     */
+    public static final
+    byte[] getSha256WithSalt(String username, byte[] saltBytes) {
         if (username == null) {
             return null;
         }
@@ -322,8 +350,11 @@ public class Sys {
         return usernameHashBytes;
     }
 
-    /** gets the SHA256 hash of the specified string, as UTF-16 */
-    public static final byte[] getSha256(String string) {
+    /**
+     * gets the SHA256 hash of the specified string, as UTF-16
+     */
+    public static final
+    byte[] getSha256(String string) {
         byte[] charToBytes = Sys.charToBytes(string.toCharArray());
 
         SHA256Digest sha256 = new SHA256Digest();
@@ -334,8 +365,11 @@ public class Sys {
         return usernameHashBytes;
     }
 
-    /** gets the SHA256 hash of the specified byte array */
-    public static final byte[] getSha256(byte[] bytes) {
+    /**
+     * gets the SHA256 hash of the specified byte array
+     */
+    public static final
+    byte[] getSha256(byte[] bytes) {
 
         SHA256Digest sha256 = new SHA256Digest();
         byte[] hashBytes = new byte[sha256.getDigestSize()];
@@ -345,20 +379,24 @@ public class Sys {
         return hashBytes;
     }
 
-    /** this saves the char array in UTF-16 format of bytes */
-    public static final byte[] charToBytes(char[] text) {
+    /**
+     * this saves the char array in UTF-16 format of bytes
+     */
+    public static final
+    byte[] charToBytes(char[] text) {
         // NOTE: this saves the char array in UTF-16 format of bytes.
-        byte[] bytes = new byte[text.length*2];
-        for(int i=0; i<text.length; i++) {
-            bytes[2*i] = (byte) (text[i] >> 8);
-            bytes[2*i+1] = (byte) text[i];
+        byte[] bytes = new byte[text.length * 2];
+        for (int i = 0; i < text.length; i++) {
+            bytes[2 * i] = (byte) (text[i] >> 8);
+            bytes[2 * i + 1] = (byte) text[i];
         }
 
         return bytes;
     }
 
 
-    public static final byte[] intsToBytes(int[] ints) {
+    public static final
+    byte[] intsToBytes(int[] ints) {
         int length = ints.length;
         byte[] bytes = new byte[length];
 
@@ -369,13 +407,14 @@ public class Sys {
                 return new byte[length];
             }
 
-            bytes[i] = (byte)intValue;
+            bytes[i] = (byte) intValue;
         }
 
         return bytes;
     }
 
-    public static final int[] bytesToInts(byte[] bytes) {
+    public static final
+    int[] bytesToInts(byte[] bytes) {
         int length = bytes.length;
         int[] ints = new int[length];
 
@@ -386,11 +425,13 @@ public class Sys {
         return ints;
     }
 
-    public static final String bytesToHex(byte[] bytes) {
+    public static final
+    String bytesToHex(byte[] bytes) {
         return bytesToHex(bytes, false);
     }
 
-    public static final String bytesToHex(byte[] bytes, boolean padding) {
+    public static final
+    String bytesToHex(byte[] bytes, boolean padding) {
         if (padding) {
             char[] hexString = new char[3 * bytes.length];
             int j = 0;
@@ -402,7 +443,8 @@ public class Sys {
             }
 
             return new String(hexString);
-        } else {
+        }
+        else {
             char[] hexString = new char[2 * bytes.length];
             int j = 0;
 
@@ -419,47 +461,48 @@ public class Sys {
      * Converts an ASCII character representing a hexadecimal
      * value into its integer equivalent.
      */
-    public static final int hexByteToInt(byte b) {
+    public static final
+    int hexByteToInt(byte b) {
         switch (b) {
-            case '0' :
+            case '0':
                 return 0;
-            case '1' :
+            case '1':
                 return 1;
-            case '2' :
+            case '2':
                 return 2;
-            case '3' :
+            case '3':
                 return 3;
-            case '4' :
+            case '4':
                 return 4;
-            case '5' :
+            case '5':
                 return 5;
-            case '6' :
+            case '6':
                 return 6;
-            case '7' :
+            case '7':
                 return 7;
-            case '8' :
+            case '8':
                 return 8;
-            case '9' :
+            case '9':
                 return 9;
-            case 'A' :
-            case 'a' :
+            case 'A':
+            case 'a':
                 return 10;
-            case 'B' :
-            case 'b' :
+            case 'B':
+            case 'b':
                 return 11;
-            case 'C' :
-            case 'c' :
+            case 'C':
+            case 'c':
                 return 12;
-            case 'D' :
-            case 'd' :
+            case 'D':
+            case 'd':
                 return 13;
-            case 'E' :
-            case 'e' :
+            case 'E':
+            case 'e':
                 return 14;
-            case 'F' :
-            case 'f' :
+            case 'F':
+            case 'f':
                 return 15;
-            default :
+            default:
                 throw new IllegalArgumentException("Error decoding byte");
         }
     }
@@ -467,7 +510,8 @@ public class Sys {
     /**
      * A 4-digit hex result.
      */
-    public static final void hex4(char c, StringBuilder sb) {
+    public static final
+    void hex4(char c, StringBuilder sb) {
         sb.append(HEX_CHARS[(c & 0xF000) >> 12]);
         sb.append(HEX_CHARS[(c & 0x0F00) >> 8]);
         sb.append(HEX_CHARS[(c & 0x00F0) >> 4]);
@@ -478,12 +522,12 @@ public class Sys {
      * Returns a string representation of the byte array as a series of
      * hexadecimal characters.
      *
-     * @param bytes
-     *            byte array to convert
+     * @param bytes byte array to convert
      * @return a string representation of the byte array as a series of
-     *         hexadecimal characters
+     * hexadecimal characters
      */
-    public static final String toHexString(byte[] bytes) {
+    public static final
+    String toHexString(byte[] bytes) {
         char[] hexString = new char[2 * bytes.length];
         int j = 0;
 
@@ -499,13 +543,14 @@ public class Sys {
      * XOR two byte arrays together, and save result in originalArray
      *
      * @param originalArray this is the base of the XOR operation.
-     * @param keyArray this is XOR'd into the original array, repeats if necessary.
+     * @param keyArray      this is XOR'd into the original array, repeats if necessary.
      */
-    public static void xorArrays(byte[] originalArray, byte[] keyArray) {
+    public static
+    void xorArrays(byte[] originalArray, byte[] keyArray) {
         int keyIndex = 0;
         int keyLength = keyArray.length;
 
-        for (int i=0;i<originalArray.length;i++) {
+        for (int i = 0; i < originalArray.length; i++) {
             //XOR the data and start over if necessary
             originalArray[i] = (byte) (originalArray[i] ^ keyArray[keyIndex++ % keyLength]);
         }
@@ -513,7 +558,8 @@ public class Sys {
 
 
 
-    public static final byte[] encodeStringArray(List<String> array) {
+    public static final
+    byte[] encodeStringArray(List<String> array) {
         int length = 0;
         for (String s : array) {
             byte[] bytes = s.getBytes();
@@ -526,7 +572,7 @@ public class Sys {
             return new byte[0];
         }
 
-        byte[] bytes = new byte[length+array.size()];
+        byte[] bytes = new byte[length + array.size()];
 
         length = 0;
         for (String s : array) {
@@ -539,18 +585,19 @@ public class Sys {
         return bytes;
     }
 
-    public static final ArrayList<String> decodeStringArray(byte[] bytes) {
+    public static final
+    ArrayList<String> decodeStringArray(byte[] bytes) {
         int length = bytes.length;
         int position = 0;
         byte token = (byte) 0x01;
         ArrayList<String> list = new ArrayList<String>(0);
 
         int last = 0;
-        while (last+position < length) {
-            byte b = bytes[last+position++];
-            if (b == token ) {
-                byte[] xx = new byte[position-1];
-                System.arraycopy(bytes, last, xx, 0, position-1);
+        while (last + position < length) {
+            byte b = bytes[last + position++];
+            if (b == token) {
+                byte[] xx = new byte[position - 1];
+                System.arraycopy(bytes, last, xx, 0, position - 1);
                 list.add(new String(xx));
                 last += position;
                 position = 0;
@@ -561,32 +608,35 @@ public class Sys {
         return list;
     }
 
-    public static String printArrayRaw(byte[] bytes) {
+    public static
+    String printArrayRaw(byte[] bytes) {
         return printArrayRaw(bytes, 0);
     }
 
-    public static String printArrayRaw(byte[] bytes, int lineLength) {
+    public static
+    String printArrayRaw(byte[] bytes, int lineLength) {
         if (lineLength > 0) {
             int mod = lineLength;
             int length = bytes.length;
-            int comma = length-1;
+            int comma = length - 1;
 
-            StringBuilder builder = new StringBuilder(length + length/mod);
+            StringBuilder builder = new StringBuilder(length + length / mod);
             for (int i = 0; i < length; i++) {
                 builder.append(bytes[i]);
                 if (i < comma) {
                     builder.append(",");
                 }
-                if (i > 0 && i%mod == 0) {
+                if (i > 0 && i % mod == 0) {
                     builder.append(OS.LINE_SEPARATOR);
                 }
             }
 
             return builder.toString();
 
-        } else {
+        }
+        else {
             int length = bytes.length;
-            int comma = length-1;
+            int comma = length - 1;
 
             StringBuilder builder = new StringBuilder(length + length);
             for (int i = 0; i < length; i++) {
@@ -600,25 +650,29 @@ public class Sys {
         }
     }
 
-    public static void printArray(byte[] bytes) {
+    public static
+    void printArray(byte[] bytes) {
         printArray(bytes, bytes.length, true);
     }
 
-    public static void printArray(byte[] bytes, int length, boolean includeByteCount) {
+    public static
+    void printArray(byte[] bytes, int length, boolean includeByteCount) {
         printArray(bytes, length, includeByteCount, 40);
     }
 
-    public static void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength) {
+    public static
+    void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength) {
         if (includeByteCount) {
             System.err.println("Bytes: " + length);
         }
 
-        int comma = length-1;
+        int comma = length - 1;
 
         StringBuilder builder;
         if (lineLength > 0) {
-            builder = new StringBuilder(length + comma + length/lineLength + 2);
-        } else {
+            builder = new StringBuilder(length + comma + length / lineLength + 2);
+        }
+        else {
             builder = new StringBuilder(length + comma + 2);
         }
         builder.append("{");
@@ -628,7 +682,7 @@ public class Sys {
             if (i < comma) {
                 builder.append(",");
             }
-            if (i > 0 && lineLength > 0 && i%lineLength == 0) {
+            if (i > 0 && lineLength > 0 && i % lineLength == 0) {
                 builder.append(OS.LINE_SEPARATOR);
             }
         }
@@ -658,17 +712,18 @@ public class Sys {
      * <p/>
      *
      * @throws UnknownHostException If the LAN address of the machine cannot be found.
-     *
-     * From: https://issues.apache.org/jira/browse/JCS-40
+     *                              <p/>
+     *                              From: https://issues.apache.org/jira/browse/JCS-40
      */
-    public static InetAddress getLocalHostLanAddress() throws UnknownHostException {
+    public static
+    InetAddress getLocalHostLanAddress() throws UnknownHostException {
         try {
             InetAddress candidateAddress = null;
             // Iterate all NICs (network interface cards)...
-            for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements();) {
+            for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces.hasMoreElements(); ) {
                 NetworkInterface iface = ifaces.nextElement();
                 // Iterate all IP addresses assigned to each card...
-                for (Enumeration<InetAddress> inetAddrs = iface.getInetAddresses(); inetAddrs.hasMoreElements();) {
+                for (Enumeration<InetAddress> inetAddrs = iface.getInetAddresses(); inetAddrs.hasMoreElements(); ) {
                     InetAddress inetAddr = inetAddrs.nextElement();
                     if (!inetAddr.isLoopbackAddress()) {
 
@@ -700,8 +755,7 @@ public class Sys {
                 throw new UnknownHostException("The JDK InetAddress.getLocalHost() method unexpectedly returned null.");
             }
             return jdkSuppliedAddress;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             UnknownHostException unknownHostException = new UnknownHostException("Failed to determine LAN address: " + e);
             unknownHostException.initCause(e);
             throw unknownHostException;
@@ -711,44 +765,39 @@ public class Sys {
 
     /**
      * This will retrieve your IP address via an HTTP server.
-     * <p>
+     * <p/>
      * <b>NOTE: Use DnsClient.getPublicIp() instead. It's much faster and more reliable as it uses DNS.</b>
      *
      * @return the public IP address if found, or null if it didn't find it
      */
     @Deprecated
-    public static String getPublicIpViaHttp() {
+    public static
+    String getPublicIpViaHttp() {
         // method 1: use DNS servers
         // dig +short myip.opendns.com @resolver1.opendns.com
 
         // method 2: use public http servers
-        final String websites[] = {
-                "http://ip.dorkbox.com/",
-                "http://ip.javalauncher.com/",
-                "http://checkip.dyndns.com/",
-                "http://checkip.dyn.com/",
-                "http://curlmyip.com/",
-                "http://tnx.nl/ip",
-                "http://ipecho.net/plain",
-                "http://icanhazip.com/",
-                "http://ip.appspot.com/",
-            };
+        final String websites[] = {"http://ip.dorkbox.com/", "http://ip.javalauncher.com/", "http://checkip.dyndns.com/",
+                                   "http://checkip.dyn.com/", "http://curlmyip.com/", "http://tnx.nl/ip", "http://ipecho.net/plain",
+                                   "http://icanhazip.com/", "http://ip.appspot.com/",};
 
         // loop, since they won't always work.
-        for (int i=0;i<websites.length;i++) {
+        for (int i = 0; i < websites.length; i++) {
             try {
                 URL autoIP = new URL(websites[i]);
                 BufferedReader in = new BufferedReader(new InputStreamReader(autoIP.openStream()));
-                String response = in.readLine().trim();
+                String response = in.readLine()
+                                    .trim();
                 in.close();
 
                 Pattern pattern = Pattern.compile("\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b");
                 Matcher matcher = pattern.matcher(response);
                 if (matcher.find()) {
-                    String IP = matcher.group().trim();
+                    String IP = matcher.group()
+                                       .trim();
                     return IP;
                 }
-            } catch (Exception e){
+            } catch (Exception e) {
             }
         }
 
@@ -757,9 +806,11 @@ public class Sys {
 
     /**
      * Tries to retrieve the IP address from the NIC. Order is ETHx -> EMx -> WLANx
+     *
      * @return null if not found
      */
-    public static InetAddress getIpAddressesFromNic() {
+    public static
+    InetAddress getIpAddressesFromNic() {
         try {
             Enumeration<NetworkInterface> nets = NetworkInterface.getNetworkInterfaces();
             while (nets.hasMoreElements()) {

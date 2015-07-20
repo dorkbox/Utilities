@@ -9,7 +9,7 @@ import java.io.IOException;
  *
  */
 public
-interface DiskStorageIfface {
+interface Storage {
     /**
      * Returns the number of objects in the database.
      */

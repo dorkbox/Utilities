@@ -35,7 +35,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 @SuppressWarnings("unused")
 public
-class DiskStorage implements DiskStorageIfface {
+class DiskStorage implements Storage {
     private final DelayTimer timer;
     private final ByteArrayWrapper defaultKey;
     private final StorageBase storage;
@@ -51,30 +51,35 @@ class DiskStorage implements DiskStorageIfface {
      * Creates or opens a new database file.
      */
     protected
-    DiskStorage(File storageFile, SerializationManager serializationManager) throws IOException {
+    DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly) throws IOException {
         this.storage = new StorageBase(storageFile, serializationManager);
         this.defaultKey = ByteArrayWrapper.wrap("");
 
-        this.timer = new DelayTimer("Storage Writer", false, new DelayTimer.Callback() {
-            @Override
-            public
-            void execute() {
-                Map<ByteArrayWrapper, Object> actions = DiskStorage.this.actionMap;
+        if (readOnly) {
+            this.timer = null;
+        }
+        else {
+            this.timer = new DelayTimer("Storage Writer", false, new DelayTimer.Callback() {
+                @Override
+                public
+                void execute() {
+                    Map<ByteArrayWrapper, Object> actions = DiskStorage.this.actionMap;
 
-                ReentrantLock actionLock2 = DiskStorage.this.actionLock;
+                    ReentrantLock actionLock2 = DiskStorage.this.actionLock;
 
-                try {
-                    actionLock2.lock();
+                    try {
+                        actionLock2.lock();
 
-                    // do a fast swap on the actionMap.
-                    DiskStorage.this.actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
-                } finally {
-                    actionLock2.unlock();
+                        // do a fast swap on the actionMap.
+                        DiskStorage.this.actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
+                    } finally {
+                        actionLock2.unlock();
+                    }
+
+                    DiskStorage.this.storage.doActionThings(actions);
                 }
-
-                DiskStorage.this.storage.doActionThings(actions);
-            }
-        });
+            });
+        }
 
         this.isOpen.set(true);
     }
@@ -95,7 +100,9 @@ class DiskStorage implements DiskStorageIfface {
 
         // flush actions
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+        if (timer != null) {
+            this.timer.delay(0L);
+        }
 
         return this.storage.size();
     }
@@ -281,10 +288,12 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        action(key, object);
+        if (timer != null) {
+            action(key, object);
 
-        // timer action runs on TIMER thread, not this thread
-        this.timer.delay(this.milliSeconds);
+            // timer action runs on TIMER thread, not this thread
+            this.timer.delay(this.milliSeconds);
+        }
     }
 
     /**
@@ -300,10 +309,12 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        action(this.defaultKey, object);
+        if (timer != null) {
+            action(this.defaultKey, object);
 
-        // timer action runs on TIMER thread, not this thread
-        this.timer.delay(this.milliSeconds);
+            // timer action runs on TIMER thread, not this thread
+            this.timer.delay(this.milliSeconds);
+        }
     }
 
     /**
@@ -321,9 +332,13 @@ class DiskStorage implements DiskStorageIfface {
         ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
 
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
-
-        return this.storage.delete(wrap);
+        if (timer != null) {
+            this.timer.delay(0L);
+            return this.storage.delete(wrap);
+        }
+        else {
+            return false;
+        }
     }
 
     /**
@@ -331,12 +346,16 @@ class DiskStorage implements DiskStorageIfface {
      */
     void close() {
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+        if (timer != null) {
+            this.timer.delay(0L);
+        }
 
         // have to "close" it after we run the timer!
         this.isOpen.set(false);
 
-        this.storage.close();
+        if (timer != null) {
+            this.storage.close();
+        }
     }
 
     /**
@@ -357,7 +376,9 @@ class DiskStorage implements DiskStorageIfface {
     public final
     long getFileSize() {
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+        if (timer != null) {
+            this.timer.delay(0L);
+        }
 
         return this.storage.getFileSize();
     }
@@ -372,7 +393,12 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        return this.timer.isWaiting();
+        if (timer != null) {
+            return this.timer.isWaiting();
+        }
+        else {
+            return false;
+        }
     }
 
     /**
@@ -457,7 +483,9 @@ class DiskStorage implements DiskStorageIfface {
         }
 
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+        if (timer != null) {
+            this.timer.delay(0L);
+        }
     }
 
     /**
@@ -472,10 +500,11 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        action(ByteArrayWrapper.wrap(key), object);
-
         // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+        if (timer != null) {
+            action(ByteArrayWrapper.wrap(key), object);
+            this.timer.delay(0L);
+        }
     }
 
     /**
@@ -490,10 +519,13 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        action(ByteArrayWrapper.wrap(key), object);
+        if (timer != null) {
+            action(ByteArrayWrapper.wrap(key), object);
 
-        // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+            // timer action runs on THIS thread, not timer thread
+            this.timer.delay(0L);
+        }
+
     }
 
     /**
@@ -508,9 +540,11 @@ class DiskStorage implements DiskStorageIfface {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        action(key, object);
+        if (timer != null) {
+            action(key, object);
 
-        // timer action runs on THIS thread, not timer thread
-        this.timer.delay(0L);
+            // timer action runs on THIS thread, not timer thread
+            this.timer.delay(0L);
+        }
     }
 }

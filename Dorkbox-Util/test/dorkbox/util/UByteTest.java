@@ -35,20 +35,13 @@
  */
 package dorkbox.util;
 
-import static dorkbox.util.bytes.Unsigned.ubyte;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertTrue;
-import static junit.framework.Assert.fail;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import dorkbox.util.bytes.UByte;
 import org.junit.Test;
 
-import dorkbox.util.bytes.UByte;
+import java.io.*;
+
+import static dorkbox.util.bytes.Unsigned.ubyte;
+import static org.junit.Assert.*;
 
 public class UByteTest {
 

@@ -1,12 +1,11 @@
 package dorkbox.util;
 
 import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import dorkbox.util.storage.DiskStorageIfface;
-import dorkbox.util.storage.MakeStorage;
+import dorkbox.util.storage.Storage;
+import dorkbox.util.storage.Store;
 import io.netty.buffer.ByteBuf;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -25,19 +24,6 @@ class StorageTest {
 
         @Override
         public
-        boolean setReferences(final boolean references) {
-            kryo.setReferences(references);
-            return false;
-        }
-
-        @Override
-        public
-        void setRegistrationRequired(final boolean registrationRequired) {
-            kryo.setRegistrationRequired(registrationRequired);
-        }
-
-        @Override
-        public
         void register(final Class<?> clazz) {
             kryo.register(clazz);
         }
@@ -50,16 +36,15 @@ class StorageTest {
 
         @Override
         public
-        Registration register(final Class<?> type, final Serializer<?> serializer, final int id) {
+        void register(final Class<?> type, final Serializer<?> serializer, final int id) {
             kryo.register(type, serializer, id);
-            return null;
         }
 
         @Override
         public
         void write(final ByteBuf buffer, final Object message) {
             final Output output = new Output();
-            writeClassAndObject(output, message);
+            writeFullClassAndObject(output, message);
             buffer.writeBytes(output.getBuffer());
         }
 
@@ -69,7 +54,7 @@ class StorageTest {
             final Input input = new Input();
             buffer.readBytes(input.getBuffer());
 
-            final Object o = readClassAndObject(input);
+            final Object o = readFullClassAndObject(input);
             buffer.skipBytes(input.position());
 
             return o;
@@ -77,14 +62,25 @@ class StorageTest {
 
         @Override
         public
-        void writeClassAndObject(final Output output, final Object value) {
+        void writeFullClassAndObject(final Output output, final Object value) {
             kryo.writeClassAndObject(output, value);
         }
 
         @Override
         public
-        Object readClassAndObject(final Input input) {
+        Object readFullClassAndObject(final Input input) {
             return kryo.readClassAndObject(input);
+        }
+
+        @Override
+        public
+        Kryo take() throws InterruptedException {
+            return kryo;
+        }
+
+        @Override
+        public
+        void release(final Kryo kryo) {
         }
     };
 
@@ -96,23 +92,23 @@ class StorageTest {
     @Before
     public
     void deleteDB() {
-        MakeStorage.delete(TEST_DB);
+        Store.delete(TEST_DB);
     }
 
     @After
     public
     void delete2DB() {
-        MakeStorage.delete(TEST_DB);
+        Store.delete(TEST_DB);
     }
 
 
     @Test
     public
     void testCreateDB() throws IOException {
-        DiskStorageIfface storage = MakeStorage.Disk()
-                                         .file(TEST_DB)
-                                         .serializer(manager)
-                                         .make();
+        Storage storage = Store.Disk()
+                               .file(TEST_DB)
+                               .serializer(manager)
+                               .make();
 
         int numberOfRecords1 = storage.size();
         long size1 = storage.getFileSize();
@@ -120,19 +116,19 @@ class StorageTest {
         Assert.assertEquals("count is not correct", numberOfRecords1, 0);
         Assert.assertEquals("size is not correct", size1, 208L);  // NOTE this will change based on the data size added!
 
-        MakeStorage.close(storage);
+        Store.close(storage);
 
-        storage = MakeStorage.Disk()
-                             .file(TEST_DB)
-                             .serializer(manager)
-                             .make();
+        storage = Store.Disk()
+                       .file(TEST_DB)
+                       .serializer(manager)
+                       .make();
         int numberOfRecords2 = storage.size();
         long size2 = storage.getFileSize();
 
         Assert.assertEquals("Record count is not the same", numberOfRecords1, numberOfRecords2);
         Assert.assertEquals("size is not the same", size1, size2);
 
-        MakeStorage.close(storage);
+        Store.close(storage);
     }
 
 
@@ -142,19 +138,19 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
 
-            MakeStorage.close(storage);
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            Store.close(storage);
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String record1Data = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -162,7 +158,7 @@ class StorageTest {
                 Assert.assertEquals("Object is not the same", record1Data, readRecord);
             }
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -175,10 +171,10 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 log("adding record " + i + "...");
                 String addRecord = createData(i);
@@ -189,12 +185,12 @@ class StorageTest {
 
                 Assert.assertEquals("Object is not the same", addRecord, readData);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             String dataCheck = createData(total - 1);
             log("reading record " + (total - 1) + "...");
@@ -208,7 +204,7 @@ class StorageTest {
             Assert.assertEquals("count is not correct", numberOfRecords1, 1);
             Assert.assertEquals("size is not correct", size1, 235L); // NOTE this will change based on the data size added!
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -221,10 +217,10 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
@@ -241,12 +237,12 @@ class StorageTest {
                 Assert.assertEquals("Object is not the same", record1Data, readRecord);
             }
 
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -254,7 +250,7 @@ class StorageTest {
                 Assert.assertEquals("Object is not the same", dataCheck, readRecord);
             }
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -267,10 +263,10 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
@@ -282,12 +278,12 @@ class StorageTest {
                 Assert.assertEquals("Object is not the same", record1Data, readRecord);
             }
 
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -295,7 +291,7 @@ class StorageTest {
                 Assert.assertEquals("Object is not the same", dataCheck, readRecord);
             }
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -308,22 +304,22 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
 
                 Assert.assertEquals("Object is not the same", addRecord, readRecord);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -342,17 +338,17 @@ class StorageTest {
             storage.load(createKey, data2);
             Assert.assertEquals("Object is not the same", data, data2);
 
-            MakeStorage.close(storage);
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            Store.close(storage);
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             data2 = new Data();
             storage.load(createKey, data2);
             Assert.assertEquals("Object is not the same", data, data2);
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -366,22 +362,22 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
 
                 Assert.assertEquals("Object is not the same", addRecord, readRecord);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -408,12 +404,12 @@ class StorageTest {
 
             Assert.assertEquals("Object is not the same", dataCheck, addRecord);
 
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             // check 9 again
             readRecord = readRecord(storage, 9);
@@ -437,58 +433,58 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
 
                 Assert.assertEquals("Object is not the same", addRecord, readRecord);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             String updateRecord = updateRecord(storage, 3, createData(3) + "new");
             String readRecord = readRecord(storage, 3);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
 
-            MakeStorage.close(storage);
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            Store.close(storage);
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             readRecord = readRecord(storage, 3);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
 
             updateRecord = updateRecord(storage, 3, createData(3));
 
-            MakeStorage.close(storage);
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            Store.close(storage);
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             readRecord = readRecord(storage, 3);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
 
-            MakeStorage.close(storage);
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            Store.close(storage);
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
 
             updateRecord = updateRecord(storage, 0, createData(0) + "new");
             readRecord = readRecord(storage, 0);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
 
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -502,10 +498,10 @@ class StorageTest {
         int total = 100;
 
         try {
-            DiskStorageIfface storage = MakeStorage.Disk()
-                                             .file(TEST_DB)
-                                             .serializer(manager)
-                                             .make();
+            Storage storage = Store.Disk()
+                                   .file(TEST_DB)
+                                   .serializer(manager)
+                                   .make();
             for (int i = 0; i < total; i++) {
                 Data data = new Data();
                 makeData(data);
@@ -513,15 +509,15 @@ class StorageTest {
 
                 storage.put(createKey, data);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
 
             Data data = new Data();
             makeData(data);
 
-            storage = MakeStorage.Disk()
-                                 .file(TEST_DB)
-                                 .serializer(manager)
-                                 .make();
+            storage = Store.Disk()
+                           .file(TEST_DB)
+                           .serializer(manager)
+                           .make();
             for (int i = 0; i < total; i++) {
                 String createKey = createKey(i);
 
@@ -529,7 +525,7 @@ class StorageTest {
                 storage.load(createKey, data2);
                 Assert.assertEquals("Object is not the same", data, data2);
             }
-            MakeStorage.close(storage);
+            Store.close(storage);
         } catch (Exception e) {
             e.printStackTrace();
             Assert.fail("Error!");
@@ -544,7 +540,7 @@ class StorageTest {
     }
 
     public static
-    String add(DiskStorageIfface storage, int number) throws IOException {
+    String add(Storage storage, int number) throws IOException {
         String record1Data = createData(number);
         String record1Key = createKey(number);
 
@@ -554,7 +550,7 @@ class StorageTest {
     }
 
     public static
-    String readRecord(DiskStorageIfface storage, int number) throws ClassNotFoundException, IOException {
+    String readRecord(Storage storage, int number) throws ClassNotFoundException, IOException {
         String record1Key = createKey(number);
 
         log("reading record " + number + "...");
@@ -565,7 +561,7 @@ class StorageTest {
     }
 
     public static
-    void deleteRecord(DiskStorageIfface storage, int nNumber) throws ClassNotFoundException, IOException {
+    void deleteRecord(Storage storage, int nNumber) throws ClassNotFoundException, IOException {
         String record1Key = createKey(nNumber);
 
         log("deleting record " + nNumber + "...");
@@ -573,7 +569,7 @@ class StorageTest {
     }
 
     private static
-    String updateRecord(DiskStorageIfface storage, int number, String newData) throws IOException {
+    String updateRecord(Storage storage, int number, String newData) throws IOException {
         String record1Key = createKey(number);
 
         log("updating record " + number + "...");

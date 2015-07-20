@@ -6,7 +6,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="/Dependencies/logging/logback-classic-1.0.13.jar" sourcepath="/Dependencies/logging/logback-classic-1.0.13-sources.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/logging/logback-core-1.0.13.jar" sourcepath="/Dependencies/logging/logback-core-1.0.13-sources.zip"/>
-	<classpathentry kind="lib" path="/Dependencies/kryo/reflectasm.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/javassist/javassist.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcpkix-jdk15on-151-src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/BouncyCastleCrypto/bcprov-debug-jdk15on-151.jar" sourcepath="/Dependencies/BouncyCastleCrypto/bcprov-jdk15on-151-src.zip"/>
@@ -23,9 +22,10 @@
 			<attribute name="javadoc_location" value="jar:platform:/resource/Dependencies/netty/netty-all-4.1.0-javadoc.zip!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1.jar" sourcepath="/Dependencies/dorkbox/object_pool/ObjectPool_v1.1_src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/asm/asm-5.0.4.jar"/>
 	<classpathentry kind="lib" path="/Dependencies/dorkbox/message_bus/MessageBus_v1.0.jar" sourcepath="/Dependencies/dorkbox/message_bus/MessageBus_v1.0_src.zip"/>
 	<classpathentry kind="lib" path="/Dependencies/JCTools/JCTools-v1.1-alpha-MTAQ.jar" sourcepath="/Dependencies/JCTools/JCTools-1.1-alpha-MTAQ-src.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/kryo/reflectasm-1.11.0.jar" sourcepath="/Dependencies/kryo/reflectasm-1.11.0-sources.zip"/>
+	<classpathentry kind="lib" path="/Dependencies/dorkbox/object_pool/ObjectPool_v1.2.jar" sourcepath="/Dependencies/dorkbox/object_pool/ObjectPool_v1.2_src.zip"/>
 	<classpathentry kind="output" path="classes"/>
 </classpath>

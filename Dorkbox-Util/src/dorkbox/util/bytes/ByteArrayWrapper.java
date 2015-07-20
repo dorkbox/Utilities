@@ -15,38 +15,34 @@
  */
 package dorkbox.util.bytes;
 
+import org.bouncycastle.crypto.digests.SHA256Digest;
+
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
  * Necessary to provide equals and hashcode methods on a byte arrays, if they are to be used as keys in a map/set/etc
  */
-public final class ByteArrayWrapper {
-    private final byte[] data;
+public final
+class ByteArrayWrapper {
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
+
+    private byte[] data;
     private Integer hashCode;
 
-    /**
-     * Makes a safe copy of the byte array, so that changes to the original do not affect the wrapper.
-     * Side affect is additional memory is used.
-     */
-    public static ByteArrayWrapper copy(byte[] data) {
-        return new ByteArrayWrapper(data, true);
-    }
-
-
-    /**
-     * Does not make a copy of the data, so changes to the original will also affect the wrapper.
-     * Side affect is no extra memory is needed.
-     */
-    public static ByteArrayWrapper wrap(byte[] data) {
-        return new ByteArrayWrapper(data, false);
+    private
+    ByteArrayWrapper() {
+        // this is necessary for kryo
     }
 
     /**
      * Permits the re-use of a byte array.
+     *
      * @param copyBytes if TRUE, then the byteArray is copies. if FALSE, the byte array is uses as-is.
-     *                    Using FALSE IS DANGEROUS!!!! If the underlying byte array is modified, this changes as well.
+     *                  Using FALSE IS DANGEROUS!!!! If the underlying byte array is modified, this changes as well.
      */
-    private ByteArrayWrapper(byte[] data, boolean copyBytes) {
+    private
+    ByteArrayWrapper(byte[] data, boolean copyBytes) {
         if (data == null) {
             throw new NullPointerException();
         }
@@ -56,27 +52,61 @@ public final class ByteArrayWrapper {
             this.data = new byte[length];
             // copy so it's immutable as a key.
             System.arraycopy(data, 0, this.data, 0, length);
-        } else {
+        }
+        else {
             this.data = data;
         }
     }
 
-    public byte[] getBytes() {
+    /**
+     * Makes a safe copy of the byte array, so that changes to the original do not affect the wrapper.
+     * Side affect is additional memory is used.
+     */
+    public static
+    ByteArrayWrapper copy(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+
+        return new ByteArrayWrapper(data, true);
+    }
+
+    /**
+     * Does not make a copy of the data, so changes to the original will also affect the wrapper.
+     * Side affect is no extra memory is needed.
+     */
+    public static
+    ByteArrayWrapper wrap(byte[] data) {
+        if (data == null) {
+            return null;
+        }
+        return new ByteArrayWrapper(data, false);
+    }
+
+    public static
+    ByteArrayWrapper wrap(String data) {
+        if (data == null) {
+            return null;
+        }
+
+        byte[] bytes = data.getBytes(UTF_8);
+
+        SHA256Digest digest = new SHA256Digest();
+        digest.update(bytes, 0, bytes.length);
+        byte[] hashBytes = new byte[digest.getDigestSize()];
+        digest.doFinal(hashBytes, 0);
+
+        return ByteArrayWrapper.wrap(hashBytes);
+    }
+
+    public
+    byte[] getBytes() {
         return this.data;
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof ByteArrayWrapper)) {
-            return false;
-        }
-
-        // CANNOT be null, so we don't have to null check!
-        return Arrays.equals(this.data, ((ByteArrayWrapper) other).data);
-    }
-
-    @Override
-    public int hashCode() {
+    public
+    int hashCode() {
         // might be null for a thread because it's stale. who cares, get the value again
         Integer hashCode = this.hashCode;
         if (hashCode == null) {
@@ -87,7 +117,19 @@ public final class ByteArrayWrapper {
     }
 
     @Override
-    public String toString() {
+    public
+    boolean equals(Object other) {
+        if (!(other instanceof ByteArrayWrapper)) {
+            return false;
+        }
+
+        // CANNOT be null, so we don't have to null check!
+        return Arrays.equals(this.data, ((ByteArrayWrapper) other).data);
+    }
+
+    @Override
+    public
+    String toString() {
         return "ByteArrayWrapper " + java.util.Arrays.toString(this.data);
     }
 }

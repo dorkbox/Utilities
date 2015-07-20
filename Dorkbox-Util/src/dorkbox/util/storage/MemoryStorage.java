@@ -10,13 +10,14 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 public
-class MemoryStorage implements DiskStorageIfface {
+class MemoryStorage implements Storage {
     private final ConcurrentHashMap<ByteArrayWrapper, Object> storage;
     private final ByteArrayWrapper defaultKey;
     private int version;
 
-    private
-    MemoryStorage() throws IOException {
+
+    public
+    MemoryStorage() {
         this.storage = new ConcurrentHashMap<ByteArrayWrapper, Object>();
         this.defaultKey = ByteArrayWrapper.wrap("");
     }
@@ -122,6 +123,7 @@ class MemoryStorage implements DiskStorageIfface {
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);
+            return data;
         }
         return (T) o;
     }

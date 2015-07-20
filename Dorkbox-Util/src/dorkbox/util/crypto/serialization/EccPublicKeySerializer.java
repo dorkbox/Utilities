@@ -1,29 +1,31 @@
 package dorkbox.util.crypto.serialization;
 
 
-import java.math.BigInteger;
-
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import java.math.BigInteger;
 
 /**
- *  Only public keys are ever sent across the wire.
+ * Only public keys are ever sent across the wire.
  */
-public class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
+public
+class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
 
     @Override
-    public void write(Kryo kryo, Output output, ECPublicKeyParameters key) {
+    public
+    void write(Kryo kryo, Output output, ECPublicKeyParameters key) {
         write(output, key);
     }
 
-    public static void write(Output output, ECPublicKeyParameters key) {
+    public static
+    void write(Output output, ECPublicKeyParameters key) {
         byte[] bytes;
         int length;
 
@@ -50,12 +52,13 @@ public class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public ECPublicKeyParameters read(Kryo kryo, Input input, Class type) {
-        ECPublicKeyParameters ecPublicKeyParameters = read(input);
-        return ecPublicKeyParameters;
+    public
+    ECPublicKeyParameters read(Kryo kryo, Input input, Class type) {
+        return read(input);
     }
 
-    public static ECPublicKeyParameters read(Input input) {
+    public static
+    ECPublicKeyParameters read(Input input) {
         byte[] bytes;
         int length;
 
@@ -88,7 +91,6 @@ public class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
         input.readBytes(bytes, 0, length);
         ECPoint Q = curve.decodePoint(bytes);
 
-        ECPublicKeyParameters ecPublicKeyParameters = new ECPublicKeyParameters(Q, ecDomainParameters);
-        return ecPublicKeyParameters;
+        return new ECPublicKeyParameters(Q, ecDomainParameters);
     }
 }

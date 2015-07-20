@@ -449,7 +449,7 @@ class StorageBase {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStream outputStream = new DeflaterOutputStream(byteArrayOutputStream, deflater);
         Output output = new Output(outputStream, 1024); // write 1024 at a time
-        kryo.writeClassAndObject(output, data);
+        kryo.writeFullClassAndObject(output, data);
         output.flush();
 
         outputStream.flush();

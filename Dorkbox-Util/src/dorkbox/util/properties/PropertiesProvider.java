@@ -25,17 +25,21 @@ import java.util.Properties;
 
 import dorkbox.util.FileUtil;
 
-public class PropertiesProvider {
+@SuppressWarnings("unused")
+public
+class PropertiesProvider {
 
     private String comments = "Settings and configuration file. Strings must be escape formatted!";
     private final Properties properties = new SortedProperties();
     private final File propertiesFile;
 
-    public PropertiesProvider(String propertiesFile) {
+    public
+    PropertiesProvider(String propertiesFile) {
         this(new File(propertiesFile));
     }
 
-    public PropertiesProvider(File propertiesFile) {
+    public
+    PropertiesProvider(File propertiesFile) {
         if (propertiesFile == null) {
             throw new NullPointerException("propertiesFile");
         }
@@ -43,8 +47,10 @@ public class PropertiesProvider {
         propertiesFile = FileUtil.normalize(propertiesFile);
         // make sure the parent dir exists...
         File parentFile = propertiesFile.getParentFile();
-        if (parentFile != null) {
-            parentFile.mkdirs();
+        if (parentFile != null && !parentFile.exists()) {
+            if (!parentFile.mkdirs()) {
+                throw new RuntimeException("Unable to create directories for: " + propertiesFile);
+            }
         }
 
         this.propertiesFile = propertiesFile;
@@ -52,11 +58,13 @@ public class PropertiesProvider {
         _load();
     }
 
-    public void setComments(String comments) {
+    public
+    void setComments(String comments) {
         this.comments = comments;
     }
 
-    private final void _load() {
+    private
+    void _load() {
         if (!this.propertiesFile.canRead() || !this.propertiesFile.exists()) {
             // in this case, our properties file doesn't exist yet... create one!
             _save();
@@ -77,7 +85,8 @@ public class PropertiesProvider {
     }
 
 
-    private final void _save() {
+    private
+    void _save() {
         try {
             FileOutputStream fos = new FileOutputStream(this.propertiesFile);
             this.properties.store(fos, this.comments);
@@ -95,18 +104,21 @@ public class PropertiesProvider {
     }
 
 
-    public synchronized final void remove(final String key) {
+    public final synchronized
+    void remove(final String key) {
         this.properties.remove(key);
         _save();
     }
 
-    public synchronized final void save(final String key, Object value) {
+    @SuppressWarnings("AutoBoxing")
+    public final synchronized
+    void save(final String key, Object value) {
         if (key == null || value == null) {
             return;
         }
 
         if (value instanceof Color) {
-            value = ((Color)value).getRGB();
+            value = ((Color) value).getRGB();
         }
 
         this.properties.setProperty(key, value.toString());
@@ -114,8 +126,9 @@ public class PropertiesProvider {
         _save();
     }
 
-    @SuppressWarnings("unchecked")
-    public synchronized <T> T get(String key, Class<T> clazz) {
+    @SuppressWarnings({"unchecked", "AutoUnboxing"})
+    public synchronized
+    <T> T get(String key, Class<T> clazz) {
         if (key == null || clazz == null) {
             return null;
         }
@@ -146,7 +159,8 @@ public class PropertiesProvider {
     }
 
     @Override
-    public String toString() {
+    public
+    String toString() {
         return "PropertiesProvider [" + this.propertiesFile + "]";
     }
 }
