@@ -19,7 +19,7 @@
 package dorkbox.util.collections;
 
 
-import dorkbox.util.MathUtils;
+import dorkbox.util.MathUtil;
 
 import java.util.Arrays;
 
@@ -291,7 +291,7 @@ public class IntArray {
 
     public void shuffle () {
         for (int i = this.size - 1; i >= 0; i--) {
-            int ii = MathUtils.randomInt(i);
+            int ii = MathUtil.randomInt(i);
             int temp = this.items[i];
             this.items[i] = this.items[ii];
             this.items[ii] = temp;
@@ -311,7 +311,7 @@ public class IntArray {
         if (this.size == 0) {
             return 0;
         }
-        return this.items[MathUtils.randomInt(0, this.size - 1)];
+        return this.items[MathUtil.randomInt(0, this.size - 1)];
     }
 
     public int[] toArray () {

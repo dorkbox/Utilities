@@ -19,7 +19,7 @@
 package dorkbox.util.collections;
 
 
-import dorkbox.util.MathUtils;
+import dorkbox.util.MathUtil;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -78,7 +78,7 @@ public class IntMap<V> {
         if (this.capacity > 1 << 30) {
             throw new IllegalArgumentException("initialCapacity is too large: " + initialCapacity);
         }
-        this.capacity = MathUtils.nextPowerOfTwo(initialCapacity);
+        this.capacity = MathUtil.nextPowerOfTwo(initialCapacity);
 
         if (loadFactor <= 0) {
             throw new IllegalArgumentException("loadFactor must be > 0: " + loadFactor);
@@ -237,7 +237,7 @@ public class IntMap<V> {
         int i = 0, pushIterations = this.pushIterations;
         do {
             // Replace the key and value for one of the hashes.
-            switch (MathUtils.randomInt(2)) {
+            switch (MathUtil.randomInt(2)) {
             case 0:
                 evictedKey = key1;
                 evictedValue = valueTable[index1];
@@ -557,7 +557,7 @@ public class IntMap<V> {
     public void ensureCapacity (int additionalCapacity) {
         int sizeNeeded = this.size + additionalCapacity;
         if (sizeNeeded >= this.threshold) {
-            resize(MathUtils.nextPowerOfTwo((int)(sizeNeeded / this.loadFactor)));
+            resize(MathUtil.nextPowerOfTwo((int) (sizeNeeded / this.loadFactor)));
         }
     }
 

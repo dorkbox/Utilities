@@ -19,7 +19,7 @@ package dorkbox.util;
 
 @SuppressWarnings("unused")
 public
-class MathUtils {
+class MathUtil {
 
     // ---
 
