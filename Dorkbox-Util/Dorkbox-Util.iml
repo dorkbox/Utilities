@@ -40,7 +40,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module" module-name="JavaLauncher-Util" />
     <orderEntry type="library" name="dorkbox object_pool" level="application" />
-    <orderEntry type="library" name="dorkbx message_bus" level="application" />
+    <orderEntry type="library" name="dorkbox message_bus" level="application" />
     <orderEntry type="library" name="logging slf4j-api (1.7.5)" level="application" />
     <orderEntry type="library" name="lzma-java" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on (1.51)" level="application" />
