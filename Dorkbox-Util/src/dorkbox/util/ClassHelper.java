@@ -17,7 +17,7 @@ package dorkbox.util;
 
 import java.lang.reflect.*;
 
-public
+public final
 class ClassHelper {
 
     /**
@@ -27,6 +27,7 @@ class ClassHelper {
      * @param clazz                 class to get the parameter from
      * @param genericParameterToGet 0-based index of parameter as class to get
      */
+    @SuppressWarnings({"StatementWithEmptyBody", "UnnecessaryLocalVariable"})
     public static
     Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, int genericParameterToGet) {
         Class<?> classToCheck = clazz;
@@ -40,7 +41,7 @@ class ClassHelper {
                 Type[] actualTypeArguments = ((ParameterizedType) superClassGeneric).getActualTypeArguments();
                 // is it possible?
                 if (actualTypeArguments.length > genericParameterToGet) {
-                    Class<?> rawTypeAsClass = ClassHelper.getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
+                    Class<?> rawTypeAsClass = getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
                     return rawTypeAsClass;
                 }
                 else {
@@ -52,8 +53,6 @@ class ClassHelper {
             // NO MATCH, so walk up.
             classToCheck = classToCheck.getSuperclass();
         }
-
-        classToCheck = clazz;
 
         // NOTHING! now check interfaces!
         classToCheck = clazz;
@@ -70,7 +69,6 @@ class ClassHelper {
                     }
                     else {
                         // record the parameters.
-
                     }
                 }
             }
@@ -88,6 +86,7 @@ class ClassHelper {
     /**
      * Return the class that is this type.
      */
+    @SuppressWarnings("UnnecessaryLocalVariable")
     public static
     Class<?> getRawTypeAsClass(Type type) {
         if (type instanceof Class) {
@@ -132,7 +131,7 @@ class ClassHelper {
     /**
      * Check to see if clazz or interface directly has one of the interfaces defined by clazzItMustHave
      * <p/>
-     * If the class DOES NOT directly have the interface it will fail. the PARENT class is not checked.
+     * If the class DOES NOT directly have the interface it will fail.
      */
     public static
     boolean hasInterface(Class<?> clazzItMustHave, Class<?> clazz) {
@@ -148,7 +147,25 @@ class ClassHelper {
         }
         // now walk up to see if we can find it.
         for (Class<?> iface : interfaces) {
-            return hasInterface(clazzItMustHave, iface);
+            boolean b = hasInterface(clazzItMustHave, iface);
+            if (b) {
+                return b;
+            }
+        }
+
+        // nothing, so now we check the PARENT of this class
+        Class<?> superClass = clazz.getSuperclass();
+
+        // case of multiple inheritance, we are trying to get the first available generic info
+        // don't check for Object.class (this is where superclass is null)
+        while (superClass != null && superClass != Object.class) {
+            // check to see if we have what we are looking for on our CURRENT class
+            if (hasInterface(clazzItMustHave, superClass)) {
+                return true;
+            }
+
+            // NO MATCH, so walk up.
+            superClass = superClass.getSuperclass();
         }
 
         // if we don't find it.
@@ -157,10 +174,8 @@ class ClassHelper {
 
     /**
      * Checks to see if the clazz is a subclass of a parent class.
-     *
-     * @param baseClass
-     * @param genericClass
      */
+    @SuppressWarnings("SimplifiableIfStatement")
     public static
     boolean hasParentClass(Class<?> parentClazz, Class<?> clazz) {
         Class<?> superClass = clazz.getSuperclass();
@@ -173,5 +188,9 @@ class ClassHelper {
         }
 
         return false;
+    }
+
+    private
+    ClassHelper() {
     }
 }
