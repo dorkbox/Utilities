@@ -103,8 +103,8 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T load(T data) throws IOException {
-        return load(this.defaultKey, data);
+    <T> T getAndPut(T data) throws IOException {
+        return getAndPut(this.defaultKey, data);
     }
 
     /**
@@ -114,10 +114,10 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T load(String key, T data) throws IOException {
+    <T> T getAndPut(String key, T data) throws IOException {
         ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
 
-        return load(wrap, data);
+        return getAndPut(wrap, data);
     }
 
     /**
@@ -127,14 +127,14 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T load(byte[] key, T data) throws IOException {
-        return load(ByteArrayWrapper.wrap(key), data);
+    <T> T getAndPut(byte[] key, T data) throws IOException {
+        return getAndPut(ByteArrayWrapper.wrap(key), data);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public
-    <T> T load(final ByteArrayWrapper key, final T data) throws IOException {
+    <T> T getAndPut(final ByteArrayWrapper key, final T data) throws IOException {
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);
@@ -192,14 +192,25 @@ class MemoryStorage implements Storage {
     }
 
     /**
-     * Deletes an object from storage. To ALSO remove from the cache, use unRegister(key)
+     * Deletes an object from storage.
      *
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
     @Override
     public
     boolean delete(final String key) {
-        storage.remove(ByteArrayWrapper.wrap(key));
+        return delete(ByteArrayWrapper.wrap(key));
+    }
+
+    /**
+     * Deletes an object from storage.
+     *
+     * @return true if the delete was successful. False if there were problems deleting the data.
+     */
+    @Override
+    public
+    boolean delete(final ByteArrayWrapper key) {
+        storage.remove(key);
         return true;
     }
 
@@ -246,25 +257,25 @@ class MemoryStorage implements Storage {
 
     @Override
     public
-    void commit() {
+    void save() {
         // no-op
     }
 
     @Override
     public
-    void commit(final String key, final Object object) {
+    void putAndSave(final String key, final Object object) {
         // no-op
     }
 
     @Override
     public
-    void commit(final byte[] key, final Object object) {
+    void putAndSave(final byte[] key, final Object object) {
         // no-op
     }
 
     @Override
     public
-    void commit(final ByteArrayWrapper key, final Object object) {
+    void putAndSave(final ByteArrayWrapper key, final Object object) {
         // no-op
     }
 }

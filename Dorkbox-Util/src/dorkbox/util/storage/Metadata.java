@@ -260,10 +260,10 @@ class Metadata {
      */
 
     static
-    <T> T readData(SerializationManager serializationManager, InflaterInputStream inputStream) {
+    <T> T readData(SerializationManager serializationManager, InflaterInputStream inputStream) throws IOException {
         Input input = new Input(inputStream, 1024); // read 1024 at a time
         @SuppressWarnings("unchecked")
-        T readObject = (T) serializationManager.readFullClassAndObject(input);
+        T readObject = (T) serializationManager.readFullClassAndObject(null, input);
         return readObject;
     }
 
@@ -277,7 +277,7 @@ class Metadata {
                        final DeflaterOutputStream outputStream) throws IOException {
         // HAVE TO LOCK BEFORE THIS IS CALLED! (AND FREE AFTERWARDS!)
         Output output = new Output(outputStream, 1024); // write 1024 at a time
-        serializationManager.writeFullClassAndObject(output, data);
+        serializationManager.writeFullClassAndObject(null, output, data);
         output.flush();
 
         outputStream.flush(); // sync-flush is enabled, so the output stream will finish compressing data.

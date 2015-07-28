@@ -21,6 +21,9 @@ import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import io.netty.buffer.ByteBuf;
+import org.slf4j.Logger;
+
+import java.io.IOException;
 
 public
 interface SerializationManager {
@@ -72,7 +75,7 @@ interface SerializationManager {
      * <p/>
      * There is a small speed penalty if there were no kryo's available to use.
      */
-    void write(ByteBuf buffer, Object message);
+    void write(ByteBuf buffer, Object message) throws IOException;
 
     /**
      * Reads an object from the buffer.
@@ -81,17 +84,17 @@ interface SerializationManager {
      *
      * @param length should ALWAYS be the length of the expected object!
      */
-    Object read(ByteBuf buffer, int length);
+    Object read(ByteBuf buffer, int length) throws IOException;
 
     /**
      * Writes the class and object using an available kryo instance
      */
-    void writeFullClassAndObject(Output output, Object value);
+    void writeFullClassAndObject(final Logger logger, Output output, Object value) throws IOException;
 
     /**
      * Returns a class read from the input
      */
-    Object readFullClassAndObject(Input input);
+    Object readFullClassAndObject(final Logger logger, final Input input) throws IOException;
 
     /**
      * Borrows a kryo from the threadsafe pool. You must release it back to the pool when done.
@@ -102,4 +105,15 @@ interface SerializationManager {
      * Releases the kryo back to the threadsafe pool
      */
     void release(Kryo kryo);
+
+    /**
+     * Called when initialization is complete. This is to prevent (and recognize) out-of-order class/serializer registration.
+     */
+    void finishInit();
+
+    /**
+     * @return true if our initialization is complete. Some registrations (in the property store, for example) always register for client
+     *              and server, even if in the same JVM. This only attempts to register once.
+     */
+    boolean initialized();
 }

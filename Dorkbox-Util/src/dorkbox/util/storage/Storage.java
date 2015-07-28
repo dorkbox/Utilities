@@ -23,6 +23,7 @@ import java.io.IOException;
 /**
  *
  */
+@SuppressWarnings("unused")
 public
 interface Storage {
     /**
@@ -36,7 +37,7 @@ interface Storage {
     boolean contains(String key);
 
     /**
-     * Reads a object using the default (blank) key, and casts it to the expected class
+     * Reads a object using the DEFAULT key ("") key, and casts it to the expected class
      */
     <T> T get();
 
@@ -62,21 +63,21 @@ interface Storage {
      *
      * @param data The data that will hold the copy of the data from disk
      */
-    <T> T load(T data) throws IOException;
+    <T> T getAndPut(T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
-    <T> T load(String key, T data) throws IOException;
+    <T> T getAndPut(String key, T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
-    <T> T load(byte[] key, T data) throws IOException;
+    <T> T getAndPut(byte[] key, T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
@@ -84,7 +85,7 @@ interface Storage {
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @SuppressWarnings("unchecked")
-    <T> T load(ByteArrayWrapper key, T data) throws IOException;
+    <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException;
 
     /**
      * Saves the given data to storage with the associated key.
@@ -119,11 +120,18 @@ interface Storage {
     void put(Object data);
 
     /**
-     * Deletes an object from storage. To ALSO remove from the cache, use unRegister(key)
+     * Deletes an object from storage.
      *
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
     boolean delete(String key);
+
+    /**
+     * Deletes an object from storage.
+     *
+     * @return true if the delete was successful. False if there were problems deleting the data.
+     */
+    boolean delete(ByteArrayWrapper key);
 
     /**
      * @return the file that backs this storage
@@ -167,26 +175,26 @@ interface Storage {
      * <p/>
      * This will save the ALL of the pending save actions to the file
      */
-    void commit();
+    void save();
 
     /**
      * Save the storage to disk, immediately.
      * <p/>
      * This will save the ALL of the pending save actions to the file
      */
-    void commit(String key, Object object);
+    void putAndSave(String key, Object object);
 
     /**
      * Save the storage to disk, immediately.
      * <p/>
      * This will save the ALL of the pending save actions to the file
      */
-    void commit(byte[] key, Object object);
+    void putAndSave(byte[] key, Object object);
 
     /**
      * Save the storage to disk, immediately.
      * <p/>
      * This will save the ALL of the pending save actions to the file
      */
-    void commit(ByteArrayWrapper key, Object object);
+    void putAndSave(ByteArrayWrapper key, Object object);
 }

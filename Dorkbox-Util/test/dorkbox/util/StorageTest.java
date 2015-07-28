@@ -9,6 +9,7 @@ import dorkbox.util.storage.Store;
 import io.netty.buffer.ByteBuf;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,17 +45,17 @@ class StorageTest {
         public
         void write(final ByteBuf buffer, final Object message) {
             final Output output = new Output();
-            writeFullClassAndObject(output, message);
+            writeFullClassAndObject(null, output, message);
             buffer.writeBytes(output.getBuffer());
         }
 
         @Override
         public
-        Object read(final ByteBuf buffer, final int length) {
+        Object read(final ByteBuf buffer, final int length) throws IOException {
             final Input input = new Input();
             buffer.readBytes(input.getBuffer());
 
-            final Object o = readFullClassAndObject(input);
+            final Object o = readFullClassAndObject(null, input);
             buffer.skipBytes(input.position());
 
             return o;
@@ -62,13 +63,13 @@ class StorageTest {
 
         @Override
         public
-        void writeFullClassAndObject(final Output output, final Object value) {
+        void writeFullClassAndObject(final Logger logger, final Output output, final Object value) {
             kryo.writeClassAndObject(output, value);
         }
 
         @Override
         public
-        Object readFullClassAndObject(final Input input) {
+        Object readFullClassAndObject(final Logger logger, final Input input) throws IOException {
             return kryo.readClassAndObject(input);
         }
 
@@ -81,6 +82,17 @@ class StorageTest {
         @Override
         public
         void release(final Kryo kryo) {
+        }
+
+        @Override
+        public
+        void finishInit() {
+        }
+
+        @Override
+        public
+        boolean initialized() {
+            return false;
         }
     };
 
@@ -335,7 +347,7 @@ class StorageTest {
             storage.put(createKey, data);
 
             Data data2 = new Data();
-            storage.load(createKey, data2);
+            storage.getAndPut(createKey, data2);
             Assert.assertEquals("Object is not the same", data, data2);
 
             Store.close(storage);
@@ -345,7 +357,7 @@ class StorageTest {
                            .make();
 
             data2 = new Data();
-            storage.load(createKey, data2);
+            storage.getAndPut(createKey, data2);
             Assert.assertEquals("Object is not the same", data, data2);
 
             Store.close(storage);
@@ -522,7 +534,7 @@ class StorageTest {
                 String createKey = createKey(i);
 
                 Data data2 = new Data();
-                storage.load(createKey, data2);
+                storage.getAndPut(createKey, data2);
                 Assert.assertEquals("Object is not the same", data, data2);
             }
             Store.close(storage);

@@ -20,7 +20,6 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import dorkbox.util.exceptions.NetException;
 import dorkbox.util.SerializationManager;
 
 import java.lang.reflect.Field;
@@ -48,7 +47,7 @@ public class UnmodifiableCollectionsSerializer extends Serializer<Object> {
                 .getDeclaredField("m");
             SOURCE_MAP_FIELD.setAccessible( true );
         } catch ( final Exception e ) {
-            throw new NetException("Could not access source collection" +
+            throw new RuntimeException("Could not access source collection" +
                     " field in java.util.Collections$UnmodifiableCollection.", e );
         }
     }

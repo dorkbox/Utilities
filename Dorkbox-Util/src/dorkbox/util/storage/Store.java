@@ -151,7 +151,7 @@ class Store {
                         boolean waiting = storage.hasWriteWaiting();
                         // we want this storage to be in a fresh state
                         if (waiting) {
-                            storage.commit();
+                            storage.save();
                         }
                         ((DiskStorage) storage).increaseReference();
                     }

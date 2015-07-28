@@ -379,7 +379,7 @@ class StorageBase {
                 }
                 else {
                     // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
-                    ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, object, deflater);
+                    ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, this.logger, object, deflater);
 
                     int size = dataStream.size();
                     if (size > metaData.dataCapacity) {
@@ -445,11 +445,11 @@ class StorageBase {
 
 
     private static
-    ByteArrayOutputStream getDataAsByteArray(SerializationManager kryo, Object data, Deflater deflater) throws IOException {
+    ByteArrayOutputStream getDataAsByteArray(SerializationManager serializationManager, Logger logger, Object data, Deflater deflater) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStream outputStream = new DeflaterOutputStream(byteArrayOutputStream, deflater);
         Output output = new Output(outputStream, 1024); // write 1024 at a time
-        kryo.writeFullClassAndObject(output, data);
+        serializationManager.writeFullClassAndObject(logger, output, data);
         output.flush();
 
         outputStream.flush();

@@ -159,7 +159,7 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Uses the DEFAULT key ("") to return saved data.
+     * Uses the DEFAULT key ("") to return saved data. Also saves the data.
      * <p/>
      * This will check to see if there is an associated key for that data, if not - it will use data as the default
      *
@@ -167,48 +167,48 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    <T> T load(T data) throws IOException {
-        return load(this.defaultKey, data);
+    <T> T getAndPut(T data) throws IOException {
+        return getAndPut(this.defaultKey, data);
     }
 
     /**
-     * Returns the saved data for the specified key.
+     * Returns the saved data for the specified key. Also saves the data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @Override
     public
-    <T> T load(String key, T data) throws IOException {
+    <T> T getAndPut(String key, T data) throws IOException {
         ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
 
-        return load(wrap, data);
+        return getAndPut(wrap, data);
     }
 
     /**
-     * Returns the saved data for the specified key.
+     * Returns the saved data for the specified key. Also saves the data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @Override
     public
-    <T> T load(byte[] key, T data) throws IOException {
-        return load(ByteArrayWrapper.wrap(key), data);
+    <T> T getAndPut(byte[] key, T data) throws IOException {
+        return getAndPut(ByteArrayWrapper.wrap(key), data);
     }
 
     /**
-     * Returns the saved data for the specified key.
+     * Returns the saved data for the specified key. Also saves the data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @Override
     @SuppressWarnings("unchecked")
     public
-    <T> T load(ByteArrayWrapper key, T data) throws IOException {
+    <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException {
         Object source = get0(key);
 
         if (source == null) {
             // returned was null, so we should take value as the default
-            put(key, data);
+            putAndSave(key, data);
             return data;
         }
         else {
@@ -318,7 +318,7 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Deletes an object from storage. To ALSO remove from the cache, use unRegister(key)
+     * Deletes an object from storage.
      *
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
@@ -342,6 +342,28 @@ class DiskStorage implements Storage {
     }
 
     /**
+     * Deletes an object from storage.
+     *
+     * @return true if the delete was successful. False if there were problems deleting the data.
+     */
+    @Override
+    public final
+    boolean delete(ByteArrayWrapper key) {
+        if (!this.isOpen.get()) {
+            throw new RuntimeException("Unable to act on closed storage");
+        }
+
+        // timer action runs on THIS thread, not timer thread
+        if (timer != null) {
+            this.timer.delay(0L);
+            return this.storage.delete(key);
+        }
+        else {
+            return false;
+        }
+    }
+
+    /**
      * Closes the database and file.
      */
     void close() {
@@ -352,10 +374,7 @@ class DiskStorage implements Storage {
 
         // have to "close" it after we run the timer!
         this.isOpen.set(false);
-
-        if (timer != null) {
-            this.storage.close();
-        }
+        this.storage.close();
     }
 
     /**
@@ -446,8 +465,14 @@ class DiskStorage implements Storage {
         try {
             this.actionLock.lock();
 
-            // push action to map
-            this.actionMap.put(key, object);
+            if (object != null) {
+                // push action to map
+                this.actionMap.put(key, object);
+            } else {
+                this.actionMap.remove(key);
+            }
+
+
         } finally {
             this.actionLock.unlock();
         }
@@ -477,7 +502,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    void commit() {
+    void save() {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -495,7 +520,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    void commit(final String key, final Object object) {
+    void putAndSave(final String key, final Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -514,7 +539,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    void commit(final byte[] key, final Object object) {
+    void putAndSave(final byte[] key, final Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -535,7 +560,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    void commit(final ByteArrayWrapper key, final Object object) {
+    void putAndSave(final ByteArrayWrapper key, final Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
