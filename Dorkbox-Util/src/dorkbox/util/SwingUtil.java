@@ -30,7 +30,7 @@ class SwingUtil {
         GraphicsDevice deviceAtMouse = getGraphicsDeviceAt(mouseLocation);
         Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
                                         .getBounds();
-        frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.height / 2 - frame.getHeight() / 2);
+        frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.y + bounds.height / 2 - frame.getHeight() / 2);
     }
 
     public static
