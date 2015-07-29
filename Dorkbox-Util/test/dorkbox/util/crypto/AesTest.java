@@ -2,7 +2,11 @@
 package dorkbox.util.crypto;
 
 
-import static org.junit.Assert.fail;
+import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.modes.CBCBlockCipher;
+import org.bouncycastle.crypto.modes.GCMBlockCipher;
+import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
+import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,14 +14,11 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-import org.bouncycastle.crypto.engines.AESFastEngine;
-import org.bouncycastle.crypto.modes.CBCBlockCipher;
-import org.bouncycastle.crypto.modes.GCMBlockCipher;
-import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.junit.Test;
+import static org.junit.Assert.fail;
 
 public class AesTest {
 
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
     private static String entropySeed = "asdjhasdkljalksdfhlaks4356268909087s0dfgkjh255124515hasdg87";
 
     @Test
@@ -36,8 +37,8 @@ public class AesTest {
         rand.nextBytes(iv); // 128bit block size (16 bytes)
 
 
-        byte[] encryptAES = Crypto.AES.encrypt(aesEngine, key, iv, bytes);
-        byte[] decryptAES = Crypto.AES.decrypt(aesEngine, key, iv, encryptAES);
+        byte[] encryptAES = Crypto.AES.encrypt(aesEngine, key, iv, bytes, logger);
+        byte[] decryptAES = Crypto.AES.decrypt(aesEngine, key, iv, encryptAES, logger);
 
         if (Arrays.equals(bytes, encryptAES)) {
             fail("bytes should not be equal");
@@ -66,8 +67,8 @@ public class AesTest {
         rand.nextBytes(iv); // 16bit block size
 
 
-        byte[] encryptAES = Crypto.AES.encrypt(aesEngine, key, iv, bytes);
-        byte[] decryptAES = Crypto.AES.decrypt(aesEngine, key, iv, encryptAES);
+        byte[] encryptAES = Crypto.AES.encrypt(aesEngine, key, iv, bytes, logger);
+        byte[] decryptAES = Crypto.AES.decrypt(aesEngine, key, iv, encryptAES, logger);
 
         if (Arrays.equals(bytes, encryptAES)) {
             fail("bytes should not be equal");
@@ -96,7 +97,7 @@ public class AesTest {
         rand.nextBytes(iv); // 128bit block size
 
 
-        boolean success = Crypto.AES.encryptStream(aesEngine, key, iv, inputStream, outputStream);
+        boolean success = Crypto.AES.encryptStream(aesEngine, key, iv, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -107,7 +108,7 @@ public class AesTest {
         inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         outputStream = new ByteArrayOutputStream();
 
-        success = Crypto.AES.decryptStream(aesEngine, key, iv, inputStream, outputStream);
+        success = Crypto.AES.decryptStream(aesEngine, key, iv, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -144,7 +145,7 @@ public class AesTest {
         rand.nextBytes(iv); // 128bit block size
 
 
-        boolean success = Crypto.AES.encryptStream(aesEngine, key, iv, inputStream, outputStream);
+        boolean success = Crypto.AES.encryptStream(aesEngine, key, iv, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -155,7 +156,7 @@ public class AesTest {
         inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         outputStream = new ByteArrayOutputStream();
 
-        success = Crypto.AES.decryptStream(aesEngine, key, iv, inputStream, outputStream);
+        success = Crypto.AES.decryptStream(aesEngine, key, iv, inputStream, outputStream, logger);
 
 
         if (!success) {
@@ -189,8 +190,8 @@ public class AesTest {
         rand.nextBytes(iv);
 
 
-        byte[] encryptAES = Crypto.AES.encryptWithIV(aesEngine, key, iv, bytes);
-        byte[] decryptAES = Crypto.AES.decryptWithIV(aesEngine, key, encryptAES);
+        byte[] encryptAES = Crypto.AES.encryptWithIV(aesEngine, key, iv, bytes, logger);
+        byte[] decryptAES = Crypto.AES.decryptWithIV(aesEngine, key, encryptAES, logger);
 
         if (Arrays.equals(bytes, encryptAES)) {
             fail("bytes should not be equal");
@@ -219,8 +220,8 @@ public class AesTest {
         rand.nextBytes(iv);
 
 
-        byte[] encryptAES = Crypto.AES.encryptWithIV(aesEngine, key, iv, bytes);
-        byte[] decryptAES = Crypto.AES.decryptWithIV(aesEngine, key, encryptAES);
+        byte[] encryptAES = Crypto.AES.encryptWithIV(aesEngine, key, iv, bytes, logger);
+        byte[] decryptAES = Crypto.AES.decryptWithIV(aesEngine, key, encryptAES, logger);
 
         if (Arrays.equals(bytes, encryptAES)) {
             fail("bytes should not be equal");
@@ -249,7 +250,7 @@ public class AesTest {
         rand.nextBytes(iv); // 128bit block size
 
 
-        boolean success = Crypto.AES.encryptStreamWithIV(aesEngine, key, iv, inputStream, outputStream);
+        boolean success = Crypto.AES.encryptStreamWithIV(aesEngine, key, iv, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -260,7 +261,7 @@ public class AesTest {
         inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         outputStream = new ByteArrayOutputStream();
 
-        success = Crypto.AES.decryptStreamWithIV(aesEngine, key, inputStream, outputStream);
+        success = Crypto.AES.decryptStreamWithIV(aesEngine, key, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -297,7 +298,7 @@ public class AesTest {
         rand.nextBytes(iv); // 128bit block size
 
 
-        boolean success = Crypto.AES.encryptStreamWithIV(aesEngine, key, iv, inputStream, outputStream);
+        boolean success = Crypto.AES.encryptStreamWithIV(aesEngine, key, iv, inputStream, outputStream, logger);
 
         if (!success) {
             fail("crypto was not successful");
@@ -308,7 +309,7 @@ public class AesTest {
         inputStream = new ByteArrayInputStream(outputStream.toByteArray());
         outputStream = new ByteArrayOutputStream();
 
-        success = Crypto.AES.decryptStreamWithIV(aesEngine, key, inputStream, outputStream);
+        success = Crypto.AES.decryptStreamWithIV(aesEngine, key, inputStream, outputStream, logger);
 
 
         if (!success) {

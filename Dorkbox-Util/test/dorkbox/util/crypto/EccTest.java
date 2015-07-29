@@ -2,15 +2,13 @@
 package dorkbox.util.crypto;
 
 
-import static org.junit.Assert.fail;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.util.Arrays;
-
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+import dorkbox.util.serialization.EccPrivateKeySerializer;
+import dorkbox.util.serialization.EccPublicKeySerializer;
+import dorkbox.util.serialization.IesParametersSerializer;
+import dorkbox.util.serialization.IesWithCipherParametersSerializer;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.BasicAgreement;
 import org.bouncycastle.crypto.CipherParameters;
@@ -19,11 +17,7 @@ import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.engines.IESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
-import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
-import org.bouncycastle.crypto.params.ECPublicKeyParameters;
-import org.bouncycastle.crypto.params.IESParameters;
-import org.bouncycastle.crypto.params.IESWithCipherParameters;
-import org.bouncycastle.crypto.params.ParametersWithRandom;
+import org.bouncycastle.crypto.params.*;
 import org.bouncycastle.crypto.signers.ECDSASigner;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
 import org.bouncycastle.crypto.util.PublicKeyFactory;
@@ -34,18 +28,19 @@ import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.Test;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
-import dorkbox.util.serialization.EccPrivateKeySerializer;
-import dorkbox.util.serialization.EccPublicKeySerializer;
-import dorkbox.util.serialization.IesParametersSerializer;
-import dorkbox.util.serialization.IesWithCipherParametersSerializer;
+import static org.junit.Assert.fail;
 
 
 public class EccTest {
 
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
     private static String entropySeed = "asdjhaffasttjasdasdgfgaerym0698768.,./8909087s0dfgkjgb49bmngrSGDSG#";
 
     @Test
@@ -69,11 +64,13 @@ public class EccTest {
         CipherParameters private2 = key2.getPrivate();
         CipherParameters public2 = key2.getPublic();
 
-        byte[] message = Hex.decode("123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef");
+        byte[] message = Hex.decode(
+                        "123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef");
+
 
         // test stream mode
-        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message);
-        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted);
+        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
+        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
 
         if (Arrays.equals(encrypted, message)) {
             fail("stream cipher test failed");
@@ -114,8 +111,8 @@ public class EccTest {
         byte[] message = Hex.decode("123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef");
 
         // test stream mode
-        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message);
-        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted);
+        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
+        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
 
         if (Arrays.equals(encrypted, message)) {
             fail("stream cipher test failed");

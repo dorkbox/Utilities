@@ -39,6 +39,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -52,36 +53,24 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * http://en.wikipedia.org/wiki/NSA_Suite_B
- * http://www.nsa.gov/ia/programs/suiteb_cryptography/
+ * http://en.wikipedia.org/wiki/NSA_Suite_B http://www.nsa.gov/ia/programs/suiteb_cryptography/
  * <p/>
  * NSA Suite B
  * <p/>
- * TOP-SECRET LEVEL
- * AES256/GCM
- * ECC with 384-bit prime curve (FIPS PUB 186-3), and SHA-384
+ * TOP-SECRET LEVEL AES256/GCM ECC with 384-bit prime curve (FIPS PUB 186-3), and SHA-384
  * <p/>
- * SECRET LEVEL
- * AES 128
- * ECDH and ECDSA using the 256-bit prime (FIPS PUB 186-3), and SHA-256. RSA with 2048 can be used for DH key negotiation
+ * SECRET LEVEL AES 128 ECDH and ECDSA using the 256-bit prime (FIPS PUB 186-3), and SHA-256. RSA with 2048 can be used for DH key
+ * negotiation
  * <p/>
- * WARNING!
- * Note that this call is INCOMPATIBLE with GWT, so we have EXCLUDED IT from gwt, and created a CryptoGwt class in the web-client project
- * which only has the necessary crypto utility methods that are
- * 1) Necessary
- * 2) Compatible with GWT
+ * WARNING! Note that this call is INCOMPATIBLE with GWT, so we have EXCLUDED IT from gwt, and created a CryptoGwt class in the web-client
+ * project which only has the necessary crypto utility methods that are 1) Necessary 2) Compatible with GWT
  * <p/>
  * <p/>
- * To determine if we have hardware accelerated AES
- * java -XX:+PrintFlagsFinal -version | grep UseAES
+ * To determine if we have hardware accelerated AES java -XX:+PrintFlagsFinal -version | grep UseAES
  */
 public final
 class Crypto {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Crypto.class);
 
-    private
-    Crypto() {
-    }
 
     public static
     void addProvider() {
@@ -92,34 +81,47 @@ class Crypto {
         }
     }
 
+    private
+    Crypto() {
+    }
+
+
     public static final
     class Util {
 
-        private
-        Util() {
+        // CUSTOM_HEADER USE
+        private static final byte[] CUSTOM_HEADER = new byte[] {-2, -54, -54, -98};
+
+        /**
+         * Return the hash of the file or NULL if file is invalid
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         */
+        public static
+        byte[] hashFile(File file, Digest digest, Logger logger) {
+            return hashFile(file, digest, 0L, logger);
         }
 
         /**
          * Return the hash of the file or NULL if file is invalid
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          */
         public static
-        byte[] hashFile(File file, Digest digest) {
-            return hashFile(file, digest, 0L);
-        }
-
-        /**
-         * Return the hash of the file or NULL if file is invalid
-         */
-        public static
-        byte[] hashFile(File file, Digest digest, long lengthFromEnd) {
-            return hashFile(file, digest, lengthFromEnd, null);
+        byte[] hashFile(File file, Digest digest, long lengthFromEnd, Logger logger) {
+            return hashFile(file, digest, lengthFromEnd, null, logger);
         }
 
         /**
          * Return the hash of the file or NULL if the file is invalid. ALSO includes the hash of the 'extraData' if specified.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          */
         public static
-        byte[] hashFile(File file, Digest digest, long lengthFromEnd, byte[] extraData) {
+        byte[] hashFile(File file, Digest digest, long lengthFromEnd, byte[] extraData, Logger logger) {
             if (file.isFile() && file.canRead()) {
                 InputStream inputStream = null;
                 try {
@@ -133,7 +135,7 @@ class Crypto {
                     int bufferSize = 4096;
                     byte[] buffer = new byte[bufferSize];
 
-                    int readBytes = 0;
+                    int readBytes;
                     digest.reset();
 
                     while (size > 0) {
@@ -148,8 +150,10 @@ class Crypto {
 
                         digest.update(buffer, 0, readBytes);
                     }
-                } catch (IOException e) {
-                    logger.error("Error hashing file: {}", file.getAbsolutePath(), e);
+                } catch (Exception e) {
+                    if (logger != null) {
+                        logger.error("Error hashing file: {}", file.getAbsolutePath(), e);
+                    }
                 } finally {
                     if (inputStream != null) {
                         try {
@@ -175,9 +179,6 @@ class Crypto {
             }
         }
 
-        // CUSTOM_HEADER USE
-        private static final byte[] CUSTOM_HEADER = new byte[] {-2, -54, -54, -98};
-
         /**
          * Specifically, to return the hash of the ALL files/directories inside the jar, minus the action specified (LGPL) files.
          */
@@ -188,8 +189,8 @@ class Crypto {
             try {
                 Enumeration<JarEntry> jarElements = jarDestFile.entries();
 
-                boolean okToHash = false;
-                boolean hasAction = false;
+                boolean okToHash;
+                boolean hasAction;
                 byte[] buffer = new byte[2048];
                 int read = 0;
                 digest.reset();
@@ -300,9 +301,13 @@ class Crypto {
         /**
          * Secure way to generate an AES key based on a password. Will '*' out the passed-in password
          *
-         * @param password       will be filled with '*'
-         * @param salt           should be a RANDOM number, at least 256bits (32 bytes) in size.
-         * @param iterationCount should be a lot, like 10,000
+         * @param password
+         *                 will be filled with '*'
+         * @param salt
+         *                 should be a RANDOM number, at least 256bits (32 bytes) in size.
+         * @param iterationCount
+         *                 should be a lot, like 10,000
+         *
          * @return the secure key to use
          */
         public static
@@ -316,9 +321,13 @@ class Crypto {
         /**
          * Secure way to generate an AES key based on a password.
          *
-         * @param password       The password that you want to mix
-         * @param salt           should be a RANDOM number, at least 256bits (32 bytes) in size.
-         * @param iterationCount should be a lot, like 10,000
+         * @param password
+         *                 The password that you want to mix
+         * @param salt
+         *                 should be a RANDOM number, at least 256bits (32 bytes) in size.
+         * @param iterationCount
+         *                 should be a lot, like 10,000
+         *
          * @return the secure key to use
          */
         public static
@@ -334,7 +343,6 @@ class Crypto {
 
             return key.getKey();
         }
-
 
         /**
          * this saves the char array in UTF-16 format of bytes and BLANKS out the password char array.
@@ -353,6 +361,11 @@ class Crypto {
 
             return passwordBytes;
         }
+
+
+        private
+        Util() {
+        }
     }
 
 
@@ -360,18 +373,17 @@ class Crypto {
     class AES {
         private static final int ivSize = 16;
 
-        private
-        AES() {
-        }
-
         /**
          * AES encrypts data with a specified key.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[] if error
          */
         public static
-        byte[] encryptWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
-            byte[] encryptAES = encrypt(aesEngine, aesKey, aesIV, data);
+        byte[] encryptWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
+            byte[] encryptAES = encrypt(aesEngine, aesKey, aesIV, data, logger);
 
             int length = encryptAES.length;
 
@@ -385,17 +397,21 @@ class Crypto {
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES encrypts data with a specified key.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[] if error
          */
         @Deprecated
         public static
-        byte[] encryptWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
+        byte[] encryptWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
 
-            byte[] encryptAES = encrypt(aesEngine, aesKey, aesIV, data);
+            byte[] encryptAES = encrypt(aesEngine, aesKey, aesIV, data, logger);
 
             int length = encryptAES.length;
 
@@ -409,52 +425,75 @@ class Crypto {
         /**
          * AES encrypts data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return true if successful
          */
         public static
-        boolean encryptStreamWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean encryptStreamWithIV(GCMBlockCipher aesEngine,
+                                    byte[] aesKey,
+                                    byte[] aesIV,
+                                    InputStream in,
+                                    OutputStream out,
+                                    Logger logger) {
 
             try {
                 out.write(aesIV);
             } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
-            return encryptStream(aesEngine, aesKey, aesIV, in, out);
+            return encryptStream(aesEngine, aesKey, aesIV, in, out, logger);
         }
 
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES encrypts data with a specified key.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return true if successful
          */
         @Deprecated
         public static
-        boolean encryptStreamWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean encryptStreamWithIV(BufferedBlockCipher aesEngine,
+                                    byte[] aesKey,
+                                    byte[] aesIV,
+                                    InputStream in,
+                                    OutputStream out,
+                                    Logger logger) {
 
             try {
                 out.write(aesIV);
             } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
-            return encryptStream(aesEngine, aesKey, aesIV, in, out);
+            return encryptStream(aesEngine, aesKey, aesIV, in, out, logger);
         }
-
 
         /**
          * AES encrypts data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] encrypt(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
+        byte[] encrypt(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
             int length = data.length;
 
             CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
@@ -467,14 +506,10 @@ class Crypto {
 
             try {
                 actualLength += aesEngine.doFinal(outBuf, actualLength);
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return new byte[0];
             }
 
@@ -488,15 +523,21 @@ class Crypto {
             }
         }
 
-
         /**
          * AES encrypts data with a specified key.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return length of encrypted data, -1 if there was an error.
          */
         public static
-        int encrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine, CipherParameters aesIVAndKey,
-                    io.netty.buffer.ByteBuf inBuffer, io.netty.buffer.ByteBuf outBuffer, int length) {
+        int encrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine,
+                    CipherParameters aesIVAndKey,
+                    io.netty.buffer.ByteBuf inBuffer,
+                    io.netty.buffer.ByteBuf outBuffer,
+                    int length,
+                    Logger logger) {
 
             aesEngine.reset();
             aesEngine.init(true, aesIVAndKey);
@@ -505,14 +546,10 @@ class Crypto {
 
             try {
                 length += aesEngine.doFinal(outBuffer);
-            } catch (DataLengthException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return -1;
-            } catch (IllegalStateException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return -1;
-            } catch (InvalidCipherTextException e) {
-                logger.debug("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.debug("Unable to perform AES cipher.", e);
+                }
                 return -1;
             }
 
@@ -523,20 +560,22 @@ class Crypto {
             return length;
         }
 
-
-
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES encrypts data with a specified key.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[] if error
          */
         @Deprecated
         public static
-        byte[] encrypt(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
+        byte[] encrypt(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
             int length = data.length;
 
             CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
@@ -549,14 +588,10 @@ class Crypto {
 
             try {
                 actualLength += aesEngine.doFinal(outBuf, actualLength);
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return new byte[0];
             }
 
@@ -573,15 +608,19 @@ class Crypto {
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES encrypt from one stream to another.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return true if successful
          */
         @Deprecated
         public static
-        boolean encryptStream(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean encryptStream(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out, Logger logger) {
             byte[] buf = new byte[ivSize];
             byte[] outbuf = new byte[512];
 
@@ -601,17 +640,10 @@ class Crypto {
 
                 out.write(outbuf, 0, bytesProcessed);
                 out.flush();
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
@@ -621,10 +653,13 @@ class Crypto {
         /**
          * AES encrypt from one stream to another.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return true if successful
          */
         public static
-        boolean encryptStream(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean encryptStream(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out, Logger logger) {
 
             byte[] buf = new byte[ivSize];
             byte[] outbuf = new byte[512];
@@ -645,17 +680,10 @@ class Crypto {
 
                 out.write(outbuf, 0, bytesProcessed);
                 out.flush();
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
@@ -665,88 +693,109 @@ class Crypto {
         /**
          * AES decrypt (if the aes IV is included in the data)
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] decryptWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] data) {
+        byte[] decryptWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] data, Logger logger) {
             byte[] aesIV = new byte[ivSize];
             System.arraycopy(data, 0, aesIV, 0, ivSize);
 
             byte[] in = new byte[data.length - ivSize];
             System.arraycopy(data, ivSize, in, 0, in.length);
 
-            return decrypt(aesEngine, aesKey, aesIV, in);
+            return decrypt(aesEngine, aesKey, aesIV, in, logger);
         }
 
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES decrypt (if the aes IV is included in the data)
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[] if error
          */
         @Deprecated
         public static
-        byte[] decryptWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] data) {
+        byte[] decryptWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] data, Logger logger) {
             byte[] aesIV = new byte[ivSize];
             System.arraycopy(data, 0, aesIV, 0, ivSize);
 
             byte[] in = new byte[data.length - ivSize];
             System.arraycopy(data, ivSize, in, 0, in.length);
 
-            return decrypt(aesEngine, aesKey, aesIV, in);
+            return decrypt(aesEngine, aesKey, aesIV, in, logger);
         }
 
         /**
          * AES decrypt (if the aes IV is included in the data)
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return true if successful
          */
         public static
-        boolean decryptStreamWithIV(GCMBlockCipher aesEngine, byte[] aesKey, InputStream in, OutputStream out) {
+        boolean decryptStreamWithIV(GCMBlockCipher aesEngine, byte[] aesKey, InputStream in, OutputStream out, Logger logger) {
             byte[] aesIV = new byte[ivSize];
             try {
                 in.read(aesIV, 0, ivSize);
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
-            return decryptStream(aesEngine, aesKey, aesIV, in, out);
+            return decryptStream(aesEngine, aesKey, aesIV, in, out, logger);
         }
 
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES decrypt (if the aes IV is included in the data)
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return true if successful
          */
         @Deprecated
         public static
-        boolean decryptStreamWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, InputStream in, OutputStream out) {
+        boolean decryptStreamWithIV(BufferedBlockCipher aesEngine, byte[] aesKey, InputStream in, OutputStream out, Logger logger) {
             byte[] aesIV = new byte[ivSize];
             try {
                 in.read(aesIV, 0, ivSize);
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
-            return decryptStream(aesEngine, aesKey, aesIV, in, out);
+            return decryptStream(aesEngine, aesKey, aesIV, in, out, logger);
         }
 
         /**
          * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] decrypt(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
+        byte[] decrypt(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
             int length = data.length;
 
             CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
@@ -759,17 +808,12 @@ class Crypto {
 
             try {
                 actualLength += aesEngine.doFinal(outBuf, actualLength);
-            } catch (DataLengthException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (IllegalStateException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (InvalidCipherTextException e) {
-                logger.debug("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.debug("Unable to perform AES cipher.", e);
+                }
                 return new byte[0];
             }
-
             if (outBuf.length == actualLength) {
                 return outBuf;
             }
@@ -783,11 +827,18 @@ class Crypto {
         /**
          * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return length of decrypted data, -1 if there was an error.
          */
         public static
-        int decrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine, ParametersWithIV aesIVAndKey,
-                    io.netty.buffer.ByteBuf bufferWithData, io.netty.buffer.ByteBuf bufferTempData, int length) {
+        int decrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine,
+                    ParametersWithIV aesIVAndKey,
+                    io.netty.buffer.ByteBuf bufferWithData,
+                    io.netty.buffer.ByteBuf bufferTempData,
+                    int length,
+                    Logger logger) {
 
             aesEngine.reset();
             aesEngine.init(false, aesIVAndKey);
@@ -798,14 +849,10 @@ class Crypto {
 
             try {
                 length += aesEngine.doFinal(bufferTempData);
-            } catch (DataLengthException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return -1;
-            } catch (IllegalStateException e) {
-                logger.debug("Unable to perform AES cipher.", e);
-                return -1;
-            } catch (InvalidCipherTextException e) {
-                logger.debug("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.debug("Unable to perform AES cipher.", e);
+                }
                 return -1;
             }
 
@@ -818,15 +865,19 @@ class Crypto {
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[] if error
          */
         @Deprecated
         public static
-        byte[] decrypt(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data) {
+        byte[] decrypt(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, byte[] data, Logger logger) {
 
             int length = data.length;
 
@@ -840,14 +891,10 @@ class Crypto {
 
             try {
                 actualLength += aesEngine.doFinal(outBuf, actualLength);
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return new byte[0];
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return new byte[0];
             }
 
@@ -864,10 +911,13 @@ class Crypto {
         /**
          * AES decrypt from one stream to another.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return true if successful
          */
         public static
-        boolean decryptStream(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean decryptStream(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out, Logger logger) {
             byte[] buf = new byte[ivSize];
             byte[] outbuf = new byte[512];
 
@@ -887,17 +937,10 @@ class Crypto {
 
                 out.write(outbuf, 0, bytesProcessed);
                 out.flush();
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
@@ -907,15 +950,19 @@ class Crypto {
         /**
          * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
          * <p/>
-         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted data.
+         * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
+         * data.
          * <p/>
          * AES decrypt from one stream to another.
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return true if successful
          */
         @Deprecated
         public static
-        boolean decryptStream(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out) {
+        boolean decryptStream(BufferedBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out, Logger logger) {
             byte[] buf = new byte[ivSize];
             byte[] outbuf = new byte[512];
 
@@ -935,21 +982,18 @@ class Crypto {
 
                 out.write(outbuf, 0, bytesProcessed);
                 out.flush();
-            } catch (IOException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (DataLengthException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (IllegalStateException e) {
-                logger.error("Unable to perform AES cipher.", e);
-                return false;
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform AES cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform AES cipher.", e);
+                }
                 return false;
             }
 
             return true;
+        }
+
+        private
+        AES() {
         }
     }
 
@@ -959,10 +1003,6 @@ class Crypto {
     @Deprecated
     public static final
     class RSA {
-
-        private
-        RSA() {
-        }
 
         public static
         AsymmetricCipherKeyPair generateKeyPair(SecureRandom secureRandom, int keyLength) {
@@ -975,23 +1015,28 @@ class Crypto {
             return keyGen.generateKeyPair();
         }
 
-
         /**
          * RSA encrypt using public key A, and sign data with private key B.
          * <p/>
-         * byte[0][] = encrypted data
-         * byte[1][] = signature
+         * byte[0][] = encrypted data byte[1][] = signature
+         *
+         * @param logger
+         *                 may be null, if no log output is necessary
          *
          * @return empty byte[][] if error
          */
         public static
-        byte[][] encryptAndSign(AsymmetricBlockCipher rsaEngine, Digest digest, RSAKeyParameters rsaPublicKeyA,
-                                RSAPrivateCrtKeyParameters rsaPrivateKeyB, byte[] bytes) {
+        byte[][] encryptAndSign(AsymmetricBlockCipher rsaEngine,
+                                Digest digest,
+                                RSAKeyParameters rsaPublicKeyA,
+                                RSAPrivateCrtKeyParameters rsaPrivateKeyB,
+                                byte[] bytes,
+                                Logger logger) {
             if (bytes.length == 0) {
                 return new byte[0][0];
             }
 
-            byte[] encryptBytes = encrypt(rsaEngine, rsaPublicKeyA, bytes);
+            byte[] encryptBytes = encrypt(rsaEngine, rsaPublicKeyA, bytes, logger);
 
             if (encryptBytes.length == 0) {
                 return new byte[0][0];
@@ -1000,7 +1045,7 @@ class Crypto {
             // now sign it.
             PSSSigner signer = new PSSSigner(rsaEngine, digest, digest.getDigestSize());
 
-            byte[] signatureRSA = Crypto.RSA.sign(signer, rsaPrivateKeyB, encryptBytes);
+            byte[] signatureRSA = Crypto.RSA.sign(signer, rsaPrivateKeyB, encryptBytes, logger);
 
             if (signatureRSA.length == 0) {
                 return new byte[0][0];
@@ -1017,11 +1062,19 @@ class Crypto {
         /**
          * RSA verify data with public key B, and decrypt using private key A.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] decryptAndVerify(AsymmetricBlockCipher rsaEngine, Digest digest, RSAKeyParameters rsaPublicKeyA,
-                                RSAPrivateCrtKeyParameters rsaPrivateKeyB, byte[] encryptedData, byte[] signature) {
+        byte[] decryptAndVerify(AsymmetricBlockCipher rsaEngine,
+                                Digest digest,
+                                RSAKeyParameters rsaPublicKeyA,
+                                RSAPrivateCrtKeyParameters rsaPrivateKeyB,
+                                byte[] encryptedData,
+                                byte[] signature,
+                                Logger logger) {
             if (encryptedData.length == 0 || signature.length == 0) {
                 return new byte[0];
             }
@@ -1034,17 +1087,20 @@ class Crypto {
                 return new byte[0];
             }
 
-            return decrypt(rsaEngine, rsaPrivateKeyB, encryptedData);
+            return decrypt(rsaEngine, rsaPrivateKeyB, encryptedData, logger);
 
         }
 
         /**
          * RSA encrypts data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] encrypt(AsymmetricBlockCipher rsaEngine, RSAKeyParameters rsaPublicKey, byte[] bytes) {
+        byte[] encrypt(AsymmetricBlockCipher rsaEngine, RSAKeyParameters rsaPublicKey, byte[] bytes, Logger logger) {
             rsaEngine.init(true, rsaPublicKey);
 
             try {
@@ -1072,8 +1128,10 @@ class Crypto {
                 else {
                     return rsaEngine.processBlock(bytes, 0, bytes.length);
                 }
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform RSA cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform RSA cipher.", e);
+                }
                 return new byte[0];
             }
         }
@@ -1081,10 +1139,13 @@ class Crypto {
         /**
          * RSA decrypt data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] decrypt(AsymmetricBlockCipher rsaEngine, RSAPrivateCrtKeyParameters rsaPrivateKey, byte[] bytes) {
+        byte[] decrypt(AsymmetricBlockCipher rsaEngine, RSAPrivateCrtKeyParameters rsaPrivateKey, byte[] bytes, Logger logger) {
             rsaEngine.init(false, rsaPrivateKey);
 
             try {
@@ -1111,8 +1172,10 @@ class Crypto {
                 else {
                     return rsaEngine.processBlock(bytes, 0, bytes.length);
                 }
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform RSA cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform RSA cipher.", e);
+                }
                 return new byte[0];
             }
         }
@@ -1120,17 +1183,22 @@ class Crypto {
         /**
          * RSA sign data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] sign(PSSSigner signer, RSAPrivateCrtKeyParameters rsaPrivateKey, byte[] mesg) {
+        byte[] sign(PSSSigner signer, RSAPrivateCrtKeyParameters rsaPrivateKey, byte[] mesg, Logger logger) {
             signer.init(true, rsaPrivateKey);
             signer.update(mesg, 0, mesg.length);
 
             try {
                 return signer.generateSignature();
             } catch (Exception e) {
-                logger.error("Unable to perform RSA cipher.", e);
+                if (logger != null) {
+                    logger.error("Unable to perform RSA cipher.", e);
+                }
                 return new byte[0];
             }
         }
@@ -1146,46 +1214,62 @@ class Crypto {
             return signer.verifySignature(sig);
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         public static
         boolean compare(RSAKeyParameters publicA, RSAKeyParameters publicB) {
-            if (!publicA.getExponent().equals(publicB.getExponent())) {
+            if (!publicA.getExponent()
+                        .equals(publicB.getExponent())) {
                 return false;
             }
-            if (!publicA.getModulus().equals(publicB.getModulus())) {
+            if (!publicA.getModulus()
+                        .equals(publicB.getModulus())) {
                 return false;
             }
 
             return true;
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         public static
         boolean compare(RSAPrivateCrtKeyParameters private1, RSAPrivateCrtKeyParameters private2) {
-            if (!private1.getModulus().equals(private2.getModulus())) {
+            if (!private1.getModulus()
+                         .equals(private2.getModulus())) {
                 return false;
             }
-            if (!private1.getExponent().equals(private2.getExponent())) {
+            if (!private1.getExponent()
+                         .equals(private2.getExponent())) {
                 return false;
             }
-            if (!private1.getDP().equals(private2.getDP())) {
+            if (!private1.getDP()
+                         .equals(private2.getDP())) {
                 return false;
             }
-            if (!private1.getDQ().equals(private2.getDQ())) {
+            if (!private1.getDQ()
+                         .equals(private2.getDQ())) {
                 return false;
             }
-            if (!private1.getP().equals(private2.getP())) {
+            if (!private1.getP()
+                         .equals(private2.getP())) {
                 return false;
             }
-            if (!private1.getPublicExponent().equals(private2.getPublicExponent())) {
+            if (!private1.getPublicExponent()
+                         .equals(private2.getPublicExponent())) {
                 return false;
             }
-            if (!private1.getQ().equals(private2.getQ())) {
+            if (!private1.getQ()
+                         .equals(private2.getQ())) {
                 return false;
             }
-            if (!private1.getQInv().equals(private2.getQInv())) {
+            if (!private1.getQInv()
+                         .equals(private2.getQInv())) {
                 return false;
             }
 
             return true;
+        }
+
+        private
+        RSA() {
         }
     }
 
@@ -1195,10 +1279,6 @@ class Crypto {
     @Deprecated
     public static final
     class DSA {
-        private
-        DSA() {
-        }
-
         /**
          * Generates the DSA key (using RSA and SHA1)
          * <p/>
@@ -1249,7 +1329,9 @@ class Crypto {
          * <p/>
          * Note: this is here just for keeping track of how this is done. This should NOT be used, and instead use ECC crypto.
          *
-         * @param signature is the {r,s} signature array.
+         * @param signature
+         *                 is the {r,s} signature array.
+         *
          * @return true if the signature is valid
          */
         public static
@@ -1267,14 +1349,18 @@ class Crypto {
 
             return dsa.verifySignature(checksum, signature[0], signature[1]);
         }
+
+        private
+        DSA() {
+        }
     }
 
 
 
     public static final
     class ECC {
-        static final String ECC_NAME = "EC";
         public static final String p521_curve = "secp521r1";
+        public static final int macSize = 512;
 
         // more info about ECC from: http://www.johannes-bauer.com/compsci/ecc/?menuid=4
         // http://stackoverflow.com/questions/7419183/problems-implementing-ecdh-on-android-using-bouncycastle
@@ -1283,12 +1369,7 @@ class Crypto {
         // https://github.com/nelenkov/ecdh-kx/blob/master/src/org/nick/ecdhkx/Crypto.java
         // http://nelenkov.blogspot.com/2011/12/using-ecdh-on-android.html
         // http://www.secg.org/collateral/sec1_final.pdf
-
-        public static final int macSize = 512;
-
-        private
-        ECC() {
-        }
+        static final String ECC_NAME = "EC";
 
         /**
          * Uses SHA512
@@ -1303,7 +1384,9 @@ class Crypto {
          */
         public static
         IESEngine createEngine(PaddedBufferedBlockCipher aesEngine) {
-            return new IESEngine(new ECDHCBasicAgreement(), new KDF2BytesGenerator(new SHA384Digest()), new HMac(new SHA512Digest()),
+            return new IESEngine(new ECDHCBasicAgreement(),
+                                 new KDF2BytesGenerator(new SHA384Digest()),
+                                 new HMac(new SHA512Digest()),
                                  aesEngine);
         }
 
@@ -1341,7 +1424,6 @@ class Crypto {
             return new IESWithCipherParameters(derivation, encoding, macSize, 256);
         }
 
-
         public static
         AsymmetricCipherKeyPair generateKeyPair(String eccCurveName, SecureRandom secureRandom) {
             ECParameterSpec eccSpec = ECNamedCurveTable.getParameterSpec(eccCurveName);
@@ -1351,7 +1433,8 @@ class Crypto {
 
         public static
         AsymmetricCipherKeyPair generateKeyPair(ECParameterSpec eccSpec, SecureRandom secureRandom) {
-            ECKeyGenerationParameters ecParams = new ECKeyGenerationParameters(new ECDomainParameters(eccSpec.getCurve(), eccSpec.getG(),
+            ECKeyGenerationParameters ecParams = new ECKeyGenerationParameters(new ECDomainParameters(eccSpec.getCurve(),
+                                                                                                      eccSpec.getG(),
                                                                                                       eccSpec.getN()), secureRandom);
 
             ECKeyPairGenerator ecKeyGen = new ECKeyPairGenerator();
@@ -1363,18 +1446,27 @@ class Crypto {
         /**
          * ECC encrypts data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] encrypt(IESEngine eccEngine, CipherParameters private1, CipherParameters public2, IESParameters cipherParams,
-                       byte[] message) {
+        byte[] encrypt(IESEngine eccEngine,
+                       CipherParameters private1,
+                       CipherParameters public2,
+                       IESParameters cipherParams,
+                       byte[] message,
+                       Logger logger) {
 
             eccEngine.init(true, private1, public2, cipherParams);
 
             try {
                 return eccEngine.processBlock(message, 0, message.length);
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform ECC cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform ECC cipher.", e);
+                }
                 return new byte[0];
             }
         }
@@ -1382,18 +1474,27 @@ class Crypto {
         /**
          * ECC decrypt data with a specified key.
          *
+         * @param logger
+         *                 may be null, if no log output is necessary
+         *
          * @return empty byte[] if error
          */
         public static
-        byte[] decrypt(IESEngine eccEngine, CipherParameters private2, CipherParameters public1, IESParameters cipherParams,
-                       byte[] encrypted) {
+        byte[] decrypt(IESEngine eccEngine,
+                       CipherParameters private2,
+                       CipherParameters public1,
+                       IESParameters cipherParams,
+                       byte[] encrypted,
+                       Logger logger) {
 
             eccEngine.init(false, private2, public1, cipherParams);
 
             try {
                 return eccEngine.processBlock(encrypted, 0, encrypted.length);
-            } catch (InvalidCipherTextException e) {
-                logger.error("Unable to perform ECC cipher.", e);
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Unable to perform ECC cipher.", e);
+                }
                 return new byte[0];
             }
         }
@@ -1404,28 +1505,33 @@ class Crypto {
             ECDomainParameters parametersB = privateB.getParameters();
 
             // is it the same curve?
-            boolean equals = parametersA.getCurve().equals(parametersB.getCurve());
+            boolean equals = parametersA.getCurve()
+                                        .equals(parametersB.getCurve());
             if (!equals) {
                 return false;
             }
 
-            equals = parametersA.getG().equals(parametersB.getG());
+            equals = parametersA.getG()
+                                .equals(parametersB.getG());
             if (!equals) {
                 return false;
             }
 
 
-            equals = parametersA.getH().equals(parametersB.getH());
+            equals = parametersA.getH()
+                                .equals(parametersB.getH());
             if (!equals) {
                 return false;
             }
 
-            equals = parametersA.getN().equals(parametersB.getN());
+            equals = parametersA.getN()
+                                .equals(parametersB.getN());
             if (!equals) {
                 return false;
             }
 
-            equals = privateA.getD().equals(privateB.getD());
+            equals = privateA.getD()
+                             .equals(privateB.getD());
 
             return equals;
         }
@@ -1433,6 +1539,7 @@ class Crypto {
         /**
          * @return true if publicA and publicB are NOT NULL, and are both equal to eachother
          */
+        @SuppressWarnings({"RedundantIfStatement", "SpellCheckingInspection"})
         public static
         boolean compare(ECPublicKeyParameters publicA, ECPublicKeyParameters publicB) {
             if (publicA == null || publicB == null) {
@@ -1444,30 +1551,36 @@ class Crypto {
             ECDomainParameters parametersB = publicB.getParameters();
 
             // is it the same curve?
-            boolean equals = parametersA.getCurve().equals(parametersB.getCurve());
+            boolean equals = parametersA.getCurve()
+                                        .equals(parametersB.getCurve());
             if (!equals) {
                 return false;
             }
 
-            equals = parametersA.getG().equals(parametersB.getG());
-            if (!equals) {
-                return false;
-            }
-
-
-            equals = parametersA.getH().equals(parametersB.getH());
-            if (!equals) {
-                return false;
-            }
-
-            equals = parametersA.getN().equals(parametersB.getN());
+            equals = parametersA.getG()
+                                .equals(parametersB.getG());
             if (!equals) {
                 return false;
             }
 
 
-            ECPoint normalizeA = publicA.getQ().normalize();
-            ECPoint normalizeB = publicB.getQ().normalize();
+            equals = parametersA.getH()
+                                .equals(parametersB.getH());
+            if (!equals) {
+                return false;
+            }
+
+            equals = parametersA.getN()
+                                .equals(parametersB.getN());
+            if (!equals) {
+                return false;
+            }
+
+
+            ECPoint normalizeA = publicA.getQ()
+                                        .normalize();
+            ECPoint normalizeB = publicB.getQ()
+                                        .normalize();
 
 
             ECFieldElement xCoordA = normalizeA.getXCoord();
@@ -1489,6 +1602,7 @@ class Crypto {
             return true;
         }
 
+        @SuppressWarnings("RedundantIfStatement")
         public static
         boolean compare(IESParameters cipherAParams, IESParameters cipherBParams) {
             if (!Arrays.equals(cipherAParams.getDerivationV(), cipherBParams.getDerivationV())) {
@@ -1513,7 +1627,6 @@ class Crypto {
             // only need to cast one side.
             return compare((IESParameters) cipherAParams, cipherBParams);
         }
-
 
         /**
          * The message will have the (digestName) hash calculated and used for the signature.
@@ -1552,7 +1665,9 @@ class Crypto {
         /**
          * The message will have the (digestName) hash calculated and used for the signature.
          *
-         * @param signature is the {r,s} signature array.
+         * @param signature
+         *                 is the {r,s} signature array.
+         *
          * @return true if the signature is valid
          */
         public static
@@ -1572,7 +1687,9 @@ class Crypto {
         /**
          * The provided hash will be used in the signature verification.
          *
-         * @param signature is the {r,s} signature array.
+         * @param signature
+         *                 is the {r,s} signature array.
+         *
          * @return true if the signature is valid
          */
         public static
@@ -1584,27 +1701,27 @@ class Crypto {
 
             return ecdsa.verifySignature(hash, signature[0], signature[1]);
         }
+
+        private
+        ECC() {
+        }
     }
 
 
 
     /**
-     * An implementation of the <a href="http://www.tarsnap.com/scrypt/scrypt.pdf"/>scrypt</a>
-     * key derivation function.
+     * An implementation of the <a href="http://www.tarsnap.com/scrypt/scrypt.pdf"/>scrypt</a> key derivation function.
      */
     public static final
     class SCrypt {
-
-        private
-        SCrypt() {
-        }
 
         /**
          * Hash the supplied plaintext password and generate output using default parameters
          * <p/>
          * The password chars are no longer valid after this call
          *
-         * @param password Password.
+         * @param password
+         *                 Password.
          */
         public static
         String encrypt(char[] password) {
@@ -1616,8 +1733,10 @@ class Crypto {
          * <p/>
          * The password chars are no longer valid after this call
          *
-         * @param password Password.
-         * @param salt     Salt parameter
+         * @param password
+         *                 Password.
+         * @param salt
+         *                 Salt parameter
          */
         public static
         String encrypt(char[] password, byte[] salt) {
@@ -1629,10 +1748,15 @@ class Crypto {
          * <p/>
          * The password chars are no longer valid after this call
          *
-         * @param password Password.
-         * @param N        CPU cost parameter.
-         * @param r        Memory cost parameter.
-         * @param p        Parallelization parameter.
+         * @param password
+         *                 Password.
+         * @param N
+         *                 CPU cost parameter.
+         * @param r
+         *                 Memory cost parameter.
+         * @param p
+         *                 Parallelization parameter.
+         *
          * @return The hashed password.
          */
         public static
@@ -1649,12 +1773,19 @@ class Crypto {
          * <p/>
          * The password chars are no longer valid after this call
          *
-         * @param password Password.
-         * @param salt     Salt parameter
-         * @param N        CPU cost parameter.
-         * @param r        Memory cost parameter.
-         * @param p        Parallelization parameter.
-         * @param dkLen    Intended length of the derived key.
+         * @param password
+         *                 Password.
+         * @param salt
+         *                 Salt parameter
+         * @param N
+         *                 CPU cost parameter.
+         * @param r
+         *                 Memory cost parameter.
+         * @param p
+         *                 Parallelization parameter.
+         * @param dkLen
+         *                 Intended length of the derived key.
+         *
          * @return The hashed password.
          */
         public static
@@ -1667,9 +1798,13 @@ class Crypto {
 
             String params = Integer.toString(log2(N) << 16 | r << 8 | p, 16);
 
+            @SuppressWarnings("StringBufferReplaceableByString")
             StringBuilder sb = new StringBuilder((salt.length + derived.length) * 2);
-            sb.append("$s0$").append(params).append('$');
-            sb.append(dorkbox.util.Base64Fast.encodeToString(salt, false)).append('$');
+            sb.append("$s0$")
+              .append(params)
+              .append('$');
+            sb.append(dorkbox.util.Base64Fast.encodeToString(salt, false))
+              .append('$');
             sb.append(dorkbox.util.Base64Fast.encodeToString(derived, false));
 
             return sb.toString();
@@ -1678,8 +1813,11 @@ class Crypto {
         /**
          * Compare the supplied plaintext password to a hashed password.
          *
-         * @param password Plaintext password.
-         * @param hashed   scrypt hashed password.
+         * @param password
+         *                 Plaintext password.
+         * @param hashed
+         *                 scrypt hashed password.
+         *
          * @return true if password matches hashed value.
          */
         public static
@@ -1743,16 +1881,22 @@ class Crypto {
             return log + (n >>> 1);
         }
 
-
         /**
          * Pure Java implementation of the <a href="http://www.tarsnap.com/scrypt/scrypt.pdf"/>scrypt KDF</a>.
          *
-         * @param password Password.
-         * @param salt     Salt.
-         * @param N        CPU cost parameter.
-         * @param r        Memory cost parameter.
-         * @param p        Parallelization parameter.
-         * @param dkLen    Intended length of the derived key.
+         * @param password
+         *                 Password.
+         * @param salt
+         *                 Salt.
+         * @param N
+         *                 CPU cost parameter.
+         * @param r
+         *                 Memory cost parameter.
+         * @param p
+         *                 Parallelization parameter.
+         * @param dkLen
+         *                 Intended length of the derived key.
+         *
          * @return The derived key.
          */
         public static
@@ -1774,6 +1918,11 @@ class Crypto {
                 // now zero out the bytes in password.
                 Arrays.fill(password, (byte) 0);
             }
+        }
+
+
+        private
+        SCrypt() {
         }
     }
 }

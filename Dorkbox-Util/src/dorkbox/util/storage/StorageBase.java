@@ -44,7 +44,7 @@ import java.util.zip.InflaterInputStream;
 @SuppressWarnings("unused")
 public
 class StorageBase {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
 
 
     // File pointer to the data start pointer header.
