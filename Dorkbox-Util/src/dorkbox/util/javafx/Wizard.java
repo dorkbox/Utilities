@@ -33,6 +33,7 @@ import dorkbox.util.JavaFxUtil;
 import impl.org.controlsfx.ImplUtils;
 import javafx.application.Platform;
 import javafx.beans.property.*;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -55,11 +56,11 @@ import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.tools.ValueExtractor;
-import org.controlsfx.validation.ValidationMessage;
 import org.controlsfx.validation.ValidationSupport;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 /**
  * <p>The API for creating multi-page Wizards, based on JavaFX {@link Dialog} API.<br/>
@@ -128,6 +129,7 @@ public class Wizard {
     Optional<WizardPane> currentPage = Optional.empty();
 
     private final BooleanProperty invalidProperty = new SimpleBooleanProperty(false);
+    private final StringProperty invalidPropertyStrings = new SimpleStringProperty();
 
 
     // Read settings activated by default for backward compatibility
@@ -166,9 +168,11 @@ public class Wizard {
 
     private final StringProperty titleProperty = new SimpleStringProperty();
     private volatile boolean useSpecifiedSize = false;
+
     private final PopOver popOver;
-    private Text errorText;
-    private Font defaultHeaderFont;
+    private final Text popOverErrorText;
+    private final Font defaultHeaderFont;
+    private VBox graphicRegion;
 
 
 
@@ -242,16 +246,35 @@ public class Wizard {
         VBox content = new VBox();
         content.setPadding(new Insets(10));
 
-        errorText = new Text();
-        errorText.setFont(new Font(13));
+        popOverErrorText = new Text();
+        popOverErrorText.setFont(new Font(12));
 
         content.setPadding(new Insets(20, 10, 0, 10));
         content.getChildren()
-               .add(errorText);
+               .add(popOverErrorText);
 
         popOver.setContentNode(content);
 
-        invalidProperty.addListener((o, ov, nv) -> validateActionState());
+        invalidPropertyStrings.addListener((observable, oldValue, newValue) -> {
+            validatePopover(newValue);
+        });
+
+        Consumer<WizardPane> consumer = new Consumer<WizardPane>() {
+            @Override
+            public
+            void accept(final WizardPane currentPage) {
+                if (currentPage.autoFocusNext) {
+                    Platform.runLater(BUTTON_NEXT::requestFocus);
+                }
+            }
+        };
+        invalidProperty.addListener((ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) -> {
+            validateActionState();
+            // the value is "invalid", so we want "!invalid"
+            if (ov && !nv) {
+                currentPage.ifPresent(consumer);
+            }
+        });
 
         BorderPane borderPane = new BorderPane();
 
@@ -276,11 +299,16 @@ public class Wizard {
         defaultHeaderFont = new Font(25);
         headerText.setFont(defaultHeaderFont);
 
-        ToolBar region = new ToolBar(headerText);
+        graphicRegion = new VBox();
+
+        ToolBar region = new ToolBar(graphicRegion, headerText);
         region.setPadding(new Insets(15, 12, 15, 12));
         borderPane.setTop(region);
 
         center = new VBox();
+        center.setMinSize(0, 0);
+        center.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        // center.setStyle("-fx-background-color: #2046ff;");
         borderPane.setCenter(center);
 
         Scene scene2 = new Scene(borderPane);
@@ -300,6 +328,25 @@ public class Wizard {
         }
 
         stage.initOwner(window);
+    }
+
+    private
+    void validatePopover(final String newValue) {
+        if (newValue != null) {
+            currentPage.ifPresent(currentPage -> {
+                final PopOver popOver = this.popOver;
+
+                this.popOverErrorText.setText(newValue);
+
+                if (!popOver.isShowing()) {
+                    popOver.setX(0);
+                    popOver.setY(0);
+                    popOver.show(BUTTON_NEXT, -10);
+                }
+            });
+        } else {
+            popOver.hide();
+        }
     }
 
     /**************************************************************************
@@ -611,6 +658,9 @@ public class Wizard {
             // based on the settings it has received
             page.onExitingPage(this);
 
+            invalidProperty.unbind();
+            invalidPropertyStrings.unbind();
+
             invalidProperty.set(false);
             popOver.hide();
         });
@@ -631,6 +681,15 @@ public class Wizard {
 
             // then give user a chance to modify the default actions
             currentPage.onEnteringPage(this);
+
+            invalidProperty.bind(currentPage.invalidProperty);
+            invalidPropertyStrings.bind(currentPage.invalidPropertyStrings);
+
+            if (currentPage.invalidProperty.get()) {
+                validatePopover(currentPage.invalidPropertyStrings.get());
+            } else {
+                popOver.hide();
+            }
 
             final Node firstFocusElement = currentPage.firstFocusElement;
             if (firstFocusElement != null) {
@@ -659,20 +718,25 @@ public class Wizard {
             else {
                 headerText.setFont(defaultHeaderFont);
             }
-            headerText.setText(currentPage.getHeaderText());
+
+            if (currentPage.headerGraphic != null) {
+                graphicRegion.getChildren().setAll(currentPage.headerGraphic);
+            } else {
+                graphicRegion.getChildren().clear();
+            }
+
+            headerText.setText(currentPage.headerText);
             ObservableList<Node> children = center.getChildren();
             children.clear();
-            children.add(currentPage.getContent());
+            children.add(currentPage.anchorPane);
 
 
             if (!useSpecifiedSize) {
-                currentPage.getContent()
-                           .autosize();
+                currentPage.anchorPane.autosize();
                 stage.sizeToScene();
             }
 
             currentPage.validationSupport.redecorate();
-            notifyValidationChange(currentPage, currentPage.validationErrors);
         });
 
         validateActionState();
@@ -713,7 +777,8 @@ public class Wizard {
     private static
     void validateButton(Button button, BooleanSupplier condition) {
         if ( button != null ) {
-            button.setDisable(condition.getAsBoolean());
+            boolean asBoolean = condition.getAsBoolean();
+            button.setDisable(asBoolean);
         }
     }
 
@@ -722,13 +787,13 @@ public class Wizard {
     private
     void readSettings(WizardPane page) {
         // for now we cannot know the structure of the page, so we just drill down
-        // through the entire scenegraph (from page.content down) until we get
+        // through the entire scenegraph (from page.anchorPane down) until we get
         // to the leaf nodes. We stop only if we find a node that is a
         // ValueContainer (either by implementing the interface), or being
         // listed in the internal valueContainers map.
 
         settingCounter = 0;
-        checkNode(page.getContent());
+        checkNode(page.anchorPane);
     }
 
     private
@@ -792,37 +857,6 @@ public class Wizard {
     void requestPrevFocus() {
         BUTTON_PREVIOUS.requestFocus();
     }
-
-    void notifyValidationChange(final WizardPane wizardPane, Collection<ValidationMessage> errors) {
-        if (currentPage.orElse(null) == wizardPane) {
-            Platform.runLater(() -> {
-                boolean hasErrors = !errors.isEmpty();
-                invalidProperty.set(hasErrors);
-
-                final PopOver popOver = this.popOver;
-                if (hasErrors) {
-                    String errorText = errors.iterator()
-                                             .next()
-                                             .getText()
-                                             .trim();
-
-                    this.errorText.setText(errorText);
-
-                    if (!popOver.isShowing()) {
-                        popOver.setX(0);
-                        popOver.setY(0);
-                        popOver.show(BUTTON_NEXT, -10);
-                    }
-                }
-                else {
-                    popOver.hide();
-                }
-
-                validateActionState();
-            });
-        }
-    }
-
 
     /**************************************************************************
      *
