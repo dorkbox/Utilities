@@ -334,15 +334,17 @@ public class Wizard {
     void validatePopover(final String newValue) {
         if (newValue != null) {
             currentPage.ifPresent(currentPage -> {
-                final PopOver popOver = this.popOver;
+                Platform.runLater(() -> {
+                    final PopOver popOver = this.popOver;
 
-                this.popOverErrorText.setText(newValue);
+                    this.popOverErrorText.setText(newValue);
 
-                if (!popOver.isShowing()) {
-                    popOver.setX(0);
-                    popOver.setY(0);
-                    popOver.show(BUTTON_NEXT, -10);
-                }
+                    if (!popOver.isShowing()) {
+                        popOver.setX(0);
+                        popOver.setY(0);
+                        popOver.show(BUTTON_NEXT, -10);
+                    }
+                });
             });
         } else {
             popOver.hide();
@@ -685,12 +687,6 @@ public class Wizard {
             invalidProperty.bind(currentPage.invalidProperty);
             invalidPropertyStrings.bind(currentPage.invalidPropertyStrings);
 
-            if (currentPage.invalidProperty.get()) {
-                validatePopover(currentPage.invalidPropertyStrings.get());
-            } else {
-                popOver.hide();
-            }
-
             final Node firstFocusElement = currentPage.firstFocusElement;
             if (firstFocusElement != null) {
                 Platform.runLater(() -> {
@@ -736,7 +732,13 @@ public class Wizard {
                 stage.sizeToScene();
             }
 
-            currentPage.validationSupport.redecorate();
+            Platform.runLater(() -> {
+                if (isInvalid()) {
+                    validatePopover(currentPage.invalidPropertyStrings.get());
+                } else {
+                    popOver.hide();
+                }
+            });
         });
 
         validateActionState();
