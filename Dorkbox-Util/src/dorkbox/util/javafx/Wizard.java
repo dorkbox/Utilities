@@ -66,7 +66,7 @@ import java.util.function.Consumer;
  * <p>The API for creating multi-page Wizards, based on JavaFX {@link Dialog} API.<br/>
  * Wizard can be setup in following few steps:<p/>
  * <ul>
- *    <li>Design wizard pages by inheriting them from {@link WizardPane}</li>
+ *    <li>Design wizard pages by inheriting them from {@link WizardPage}</li>
  *    <li>Define wizard flow by implementing {@link org.controlsfx.dialog.Wizard.Flow}</li>
  *    <li>Create and instance of the Wizard and assign flow to it</li>
  *    <li>Execute the wizard using showAndWait method</li>
@@ -125,8 +125,8 @@ public class Wizard {
 
     private final ObservableMap<String, Object> settings = FXCollections.observableHashMap();
 
-    final Stack<WizardPane> pageHistory = new Stack<>();
-    Optional<WizardPane> currentPage = Optional.empty();
+    final Stack<WizardPage> pageHistory = new Stack<>();
+    Optional<WizardPage> currentPage = Optional.empty();
 
     private final BooleanProperty invalidProperty = new SimpleBooleanProperty(false);
     private final StringProperty invalidPropertyStrings = new SimpleStringProperty();
@@ -259,10 +259,10 @@ public class Wizard {
             validatePopover(newValue);
         });
 
-        Consumer<WizardPane> consumer = new Consumer<WizardPane>() {
+        Consumer<WizardPage> consumer = new Consumer<WizardPage>() {
             @Override
             public
-            void accept(final WizardPane currentPage) {
+            void accept(final WizardPage currentPage) {
                 if (currentPage.autoFocusNext) {
                     Platform.runLater(BUTTON_NEXT::requestFocus);
                 }
@@ -301,7 +301,10 @@ public class Wizard {
 
         graphicRegion = new VBox();
 
-        ToolBar region = new ToolBar(graphicRegion, headerText);
+        Region spacer2 = new Region();
+        spacer2.setMinWidth(10);
+
+        ToolBar region = new ToolBar(graphicRegion, spacer2, headerText);
         region.setPadding(new Insets(15, 12, 15, 12));
         borderPane.setTop(region);
 
@@ -646,7 +649,7 @@ public class Wizard {
             return;
         }
 
-        Optional<WizardPane> prevPage = Optional.ofNullable(pageHistory.isEmpty() ? null : pageHistory.peek());
+        Optional<WizardPage> prevPage = Optional.ofNullable(pageHistory.isEmpty() ? null : pageHistory.peek());
         prevPage.ifPresent(page -> {
             // if we are going forward in the wizard, we read in the settings
             // from the page and store them in the settings map.
@@ -787,7 +790,7 @@ public class Wizard {
     private int settingCounter;
 
     private
-    void readSettings(WizardPane page) {
+    void readSettings(WizardPage page) {
         // for now we cannot know the structure of the page, so we just drill down
         // through the entire scenegraph (from page.anchorPane down) until we get
         // to the leaf nodes. We stop only if we find a node that is a
@@ -882,7 +885,7 @@ public class Wizard {
          *
          * @return {@link Optional} value containing the next wizard page.
          */
-        Optional<WizardPane> advance(WizardPane currentPage);
+        Optional<WizardPage> advance(WizardPage currentPage);
 
         /**
          * Check if advancing to the next page is possible
@@ -892,38 +895,38 @@ public class Wizard {
          *
          * @return true if it is possible to advance to the next page, false otherwise.
          */
-        boolean canAdvance(WizardPane currentPage);
+        boolean canAdvance(WizardPage currentPage);
     }
 
 
     /**
      * LinearFlow is an implementation of the {@link org.controlsfx.dialog.Wizard.Flow} interface, designed to support the most common type
      * of wizard flow - namely, a linear wizard page flow (i.e. through all pages in the order that they are specified). Therefore, this
-     * {@link Flow} implementation simply traverses a collections of {@link WizardPane WizardPanes}.
+     * {@link Flow} implementation simply traverses a collections of {@link WizardPage WizardPanes}.
      * <p>
      * <p>For example of how to use this API, please refer to the {@link org.controlsfx.dialog.Wizard} documentation</p>
      *
      * @see org.controlsfx.dialog.Wizard
-     * @see WizardPane
+     * @see WizardPage
      */
     public static
     class LinearFlow implements Wizard.Flow {
 
-        private final List<WizardPane> pages;
+        private final List<WizardPage> pages;
 
         /**
-         * Creates a new LinearFlow instance that will allow for stepping through the given collection of {@link WizardPane} instances.
+         * Creates a new LinearFlow instance that will allow for stepping through the given collection of {@link WizardPage} instances.
          */
         public
-        LinearFlow(Collection<WizardPane> pages) {
+        LinearFlow(Collection<WizardPage> pages) {
             this.pages = new ArrayList<>(pages);
         }
 
         /**
-         * Creates a new LinearFlow instance that will allow for stepping through the given varargs array of {@link WizardPane} instances.
+         * Creates a new LinearFlow instance that will allow for stepping through the given varargs array of {@link WizardPage} instances.
          */
         public
-        LinearFlow(WizardPane... pages) {
+        LinearFlow(WizardPage... pages) {
             this(Arrays.asList(pages));
         }
 
@@ -932,7 +935,7 @@ public class Wizard {
          */
         @Override
         public
-        Optional<WizardPane> advance(WizardPane currentPage) {
+        Optional<WizardPage> advance(WizardPage currentPage) {
             int pageIndex = pages.indexOf(currentPage);
             return Optional.ofNullable(pages.get(++pageIndex));
         }
@@ -942,7 +945,7 @@ public class Wizard {
          */
         @Override
         public
-        boolean canAdvance(WizardPane currentPage) {
+        boolean canAdvance(WizardPage currentPage) {
             int pageIndex = pages.indexOf(currentPage);
             return pages.size() - 1 > pageIndex;
         }

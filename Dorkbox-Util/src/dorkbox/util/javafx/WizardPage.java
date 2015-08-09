@@ -1,6 +1,7 @@
 package dorkbox.util.javafx;
 
 import dorkbox.util.JavaFxUtil;
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -27,7 +28,7 @@ import java.util.Collection;
  */
 @SuppressWarnings("UnusedParameters")
 public
-class WizardPane {
+class WizardPage {
 
     String headerText;
     Font headerFont;
@@ -46,7 +47,7 @@ class WizardPane {
      * Creates an instance of wizard pane.
      */
     public
-    WizardPane() {
+    WizardPage() {
         validationSupport.validationResultProperty()
                          .addListener((ObservableValue<? extends ValidationResult> o, ValidationResult ov, ValidationResult nv) -> {
                              final Collection<ValidationMessage> errors = nv.getErrors();
@@ -138,6 +139,20 @@ class WizardPane {
 
     public
     void registerValidator(final Control control, final Validator<Object> validator) {
+        Platform.runLater(() -> {
+            validator.apply(control, null);
+//            Optional<ValidationDecoration> odecorator = Optional.ofNullable(validationSupport.getValidationDecorator());
+//            for (Control target : validationSupport.getRegisteredControls()) {
+//                odecorator.ifPresent(decorator -> {
+//                    decorator.removeDecorations(target);
+//                    decorator.applyRequiredDecoration(target);
+//                    validationResults.get(target);
+//                    Optional<ValidationMessage> highestMessage = validationSupport.getHighestMessage(target);
+//                    highestMessage.ifPresent(msg -> decorator.applyValidationDecoration(msg));
+//                });
+//            }
+        });
+
         this.validationSupport.registerValidator(control, validator);
     }
 
