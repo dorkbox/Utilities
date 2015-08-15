@@ -18,7 +18,6 @@ package dorkbox.util;
 import javax.swing.*;
 import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 
 public
 class SwingUtil {
@@ -27,7 +26,7 @@ class SwingUtil {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
-        GraphicsDevice deviceAtMouse = getGraphicsDeviceAt(mouseLocation);
+        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
         Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
                                         .getBounds();
         frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.y + bounds.height / 2 - frame.getHeight() / 2);
@@ -38,74 +37,10 @@ class SwingUtil {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
-        GraphicsDevice deviceAtMouse = getGraphicsDeviceAt(mouseLocation);
+        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
         frame.setLocation(deviceAtMouse.getDefaultConfiguration()
                                        .getBounds().x, frame.getY());
     }
-
-    public static
-    Rectangle getScreenBoundsAt(Point pos) {
-        GraphicsDevice gd = SwingUtil.getGraphicsDeviceAt(pos);
-        Rectangle bounds = null;
-        if (gd != null) {
-            bounds = gd.getDefaultConfiguration()
-                       .getBounds();
-        }
-
-        return bounds;
-    }
-
-    public static
-    GraphicsDevice getGraphicsDeviceAt(Point pos) {
-        GraphicsDevice device;
-
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice lstGDs[] = ge.getScreenDevices();
-
-        ArrayList<GraphicsDevice> lstDevices = new ArrayList<GraphicsDevice>(lstGDs.length);
-
-        for (GraphicsDevice gd : lstGDs) {
-
-            GraphicsConfiguration gc = gd.getDefaultConfiguration();
-            Rectangle screenBounds = gc.getBounds();
-
-            if (screenBounds.contains(pos)) {
-                lstDevices.add(gd);
-            }
-        }
-
-        if (lstDevices.size() > 0) {
-            device = lstDevices.get(0);
-        }
-        else {
-            device = ge.getDefaultScreenDevice();
-        }
-
-        return device;
-    }
-
-
-//  public static Rectangle getSafeScreenBounds(Point pos) {
-//      Rectangle bounds = getScreenBoundsAt(pos);
-//      Insets insets = getScreenInsetsAt(pos);
-//
-//      bounds.x += insets.left;
-//      bounds.y += insets.top;
-//      bounds.width -= insets.left + insets.right;
-//      bounds.height -= insets.top + insets.bottom;
-//
-//      return bounds;
-//  }
-
-//  public static Insets getScreenInsetsAt(Point pos) {
-//      GraphicsDevice gd = getGraphicsDeviceAt(pos);
-//      Insets insets = null;
-//      if (gd != null) {
-//          insets = Toolkit.getDefaultToolkit().getScreenInsets(gd.getDefaultConfiguration());
-//      }
-//
-//      return insets;
-//  }
 
     public static
     void invokeLater(Runnable runnable) {

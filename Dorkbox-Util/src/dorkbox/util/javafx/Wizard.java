@@ -30,10 +30,16 @@
 package dorkbox.util.javafx;
 
 import dorkbox.util.JavaFxUtil;
+import dorkbox.util.ScreenUtil;
 import impl.org.controlsfx.ImplUtils;
-import javafx.application.Platform;
+import javafx.animation.Interpolator;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.beans.value.WritableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -46,19 +52,25 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ToolBar;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.tools.ValueExtractor;
 import org.controlsfx.validation.ValidationSupport;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -118,8 +130,9 @@ import java.util.function.Consumer;
  *     }
  * };}</pre>
  */
+@SuppressWarnings("unused")
 public class Wizard {
-    final Stage stage = new Stage(StageStyle.UTILITY);
+    final Stage stage = new Stage(StageStyle.UNDECORATED);
     private final Text headerText;
     private final VBox center;
 
@@ -174,7 +187,17 @@ public class Wizard {
     private final Font defaultHeaderFont;
     private VBox graphicRegion;
 
+    WritableValue<Double> writableHeight = new WritableValue<Double>() {
+        @Override
+        public Double getValue() {
+            return stage.getHeight();
+        }
 
+        @Override
+        public void setValue(Double value) {
+            stage.setHeight(value);
+        }
+    };
 
     /**************************************************************************
      *
@@ -209,6 +232,11 @@ public class Wizard {
      */
     public
     Wizard(Object owner, String title) {
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.titleProperty()
+             .bind(this.titleProperty);
+        setTitle(title);
+
         BUTTON_PREVIOUS.setDisable(true);
         BUTTON_NEXT.setDisable(true);
 
@@ -229,9 +257,6 @@ public class Wizard {
         });
 
 
-        stage.titleProperty()
-             .bind(this.titleProperty);
-        setTitle(title);
 
         popOver = new PopOver();
         popOver.setDetachable(false);
@@ -264,7 +289,7 @@ public class Wizard {
             public
             void accept(final WizardPage currentPage) {
                 if (currentPage.autoFocusNext) {
-                    Platform.runLater(BUTTON_NEXT::requestFocus);
+                    JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
                 }
             }
         };
@@ -285,7 +310,6 @@ public class Wizard {
 
         Button cancel = new Button("Cancel");
         cancel.addEventFilter(ActionEvent.ACTION, event -> {
-            event.consume();
             success = false;
             stage.close();
         });
@@ -314,12 +338,24 @@ public class Wizard {
         // center.setStyle("-fx-background-color: #2046ff;");
         borderPane.setCenter(center);
 
-        Scene scene2 = new Scene(borderPane);
-        stage.setScene(scene2);
+
+        Scene scene = new Scene(borderPane);
+        stage.setScene(scene);
         stage.setMinWidth(300);
         stage.setMinHeight(140);
         stage.setWidth(300);
         stage.setHeight(140);
+
+
+        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            public void handle(KeyEvent ke) {
+                if (ke.getCode() == KeyCode.ESCAPE) {
+                    success = false;
+                    stage.close();
+                }
+            }
+        });
+
 
         Window window = null;
         if (owner instanceof Window) {
@@ -331,24 +367,115 @@ public class Wizard {
         }
 
         stage.initOwner(window);
+
+        stage.setResizable(false);  // hide the minimize/maximize decorations
+        stage.showingProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public
+            void changed(final ObservableValue<? extends Boolean> observable, final Boolean oldValue, final Boolean newValue) {
+                if (newValue) {
+                    JavaFxUtil.runLater(() -> {
+                        // If this runs now, it will bug out, and flash on the screen before we want it to.
+                        // REALLY dumb, but we have to wait for the system to draw the window and finish BEFORE we move it
+                        // otherwise, it'll 'flash' onscreen because it will still be in the middle of it's initial "on-show" fade-in.
+                        try {
+                            Thread.sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        Point mouseLocation = MouseInfo.getPointerInfo()
+                                                       .getLocation();
+
+                        final GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
+                        final Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
+                                                              .getBounds();
+
+                        final double stageX = bounds.x + bounds.width / 2 - stage.getWidth() / 2;
+                        final double stageY = bounds.y + bounds.height / 2 - stage.getHeight() / 2;
+
+                        stage.setX(stageX);
+                        stage.setY(stageY);
+
+
+                        Timeline timeline = new Timeline();
+                        timeline.setCycleCount(1);
+                        timeline.getKeyFrames()
+                                .addAll(new KeyFrame(Duration.millis(700),
+                                          new KeyValue(stage.opacityProperty(), 1, Interpolator.EASE_OUT)));
+
+
+                        timeline.setOnFinished(event -> {
+                            final double verifyStageX = bounds.x + bounds.width / 2 - stage.getWidth() / 2;
+                            final double verifyStageY = bounds.y + bounds.height / 2 - stage.getHeight() / 2;
+
+                            if (stageX != verifyStageX || stageY != verifyStageY) {
+                                // whoops. we should move the stage to the correct location.
+
+                                final DoubleProperty xProp = new SimpleDoubleProperty();
+                                xProp.addListener((observable1, oldValue1, newValue1) -> {
+                                    stage.setX((Double) newValue1);
+                                });
+
+                                final DoubleProperty yProp = new SimpleDoubleProperty();
+                                yProp.addListener((observable1, oldValue1, newValue1) -> {
+                                    stage.setY((Double) newValue1);
+                                });
+
+                                Timeline timelineMove = new Timeline();
+                                timelineMove.getKeyFrames()
+                                         .addAll(new KeyFrame(Duration.ZERO,
+                                                             new KeyValue(xProp, stageX),
+                                                             new KeyValue(yProp, stageY)),
+                                                new KeyFrame(Duration.millis(300),
+                                                             new KeyValue(xProp, verifyStageX, Interpolator.EASE_OUT),
+                                                             new KeyValue(yProp, verifyStageY, Interpolator.EASE_OUT)));
+
+                                timelineMove.play();
+                            }
+
+                            // when the mouse enters or leaves, we want to fade in/out the application
+                            Timeline timelineVis = new Timeline();
+                            scene.addEventHandler(MouseEvent.MOUSE_ENTERED, event1 -> {
+                                timelineVis.stop();
+                                timelineVis.getKeyFrames().clear();
+                                timelineVis.getKeyFrames()
+                                        .addAll(new KeyFrame(Duration.millis(700),
+                                                             new KeyValue(stage.opacityProperty(), 1, Interpolator.EASE_OUT)));
+                                timelineVis.play();
+                            });
+
+                            scene.addEventHandler(MouseEvent.MOUSE_EXITED, event1 -> {
+                                timelineVis.stop();
+                                timelineVis.getKeyFrames().clear();
+                                timelineVis.getKeyFrames()
+                                        .addAll(new KeyFrame(Duration.millis(700),
+                                                             new KeyValue(stage.opacityProperty(), .7, Interpolator.EASE_OUT)));
+                                timelineVis.play();
+                            });
+                        });
+
+                        timeline.play();
+                      });
+                }
+            }
+        });
     }
 
     private
     void validatePopover(final String newValue) {
         if (newValue != null) {
-            currentPage.ifPresent(currentPage -> {
-                Platform.runLater(() -> {
-                    final PopOver popOver = this.popOver;
+            currentPage.ifPresent(currentPage -> JavaFxUtil.runLater(() -> {
+                final PopOver popOver = this.popOver;
 
-                    this.popOverErrorText.setText(newValue);
+                this.popOverErrorText.setText(newValue);
 
-                    if (!popOver.isShowing()) {
-                        popOver.setX(0);
-                        popOver.setY(0);
-                        popOver.show(BUTTON_NEXT, -10);
-                    }
-                });
-            });
+                if (!popOver.isShowing()) {
+                    popOver.setX(0);
+                    popOver.setY(0);
+                    popOver.show(BUTTON_NEXT, -10);
+                }
+            }));
         } else {
             popOver.hide();
         }
@@ -377,8 +504,7 @@ public class Wizard {
      */
     public final
     void show() {
-        JavaFxUtil.showOnSameScreenAsMouseCenter(stage);
-        stage.show();
+//        stage.show();
     }
 
     /**
@@ -389,7 +515,9 @@ public class Wizard {
      */
     public final
     boolean showAndWait() {
-        JavaFxUtil.showOnSameScreenAsMouseCenter(stage);
+        stage.setOpacity(0.0);
+        stage.setX(10000);
+        stage.setY(10000);
         stage.showAndWait();
 
         return success;
@@ -692,21 +820,21 @@ public class Wizard {
 
             final Node firstFocusElement = currentPage.firstFocusElement;
             if (firstFocusElement != null) {
-                Platform.runLater(() -> {
+                JavaFxUtil.runLater(() -> {
                     if (isInvalid()) {
                         firstFocusElement.requestFocus();
                     }
                     else {
-                        Platform.runLater(BUTTON_NEXT::requestFocus);
+                        JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
                     }
                 });
             }
             else {
                 if (isInvalid()) {
-                    Platform.runLater(BUTTON_PREVIOUS::requestFocus);
+                    JavaFxUtil.runLater(BUTTON_PREVIOUS::requestFocus);
                 }
                 else {
-                    Platform.runLater(BUTTON_NEXT::requestFocus);
+                    JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
                 }
             }
 
@@ -735,7 +863,7 @@ public class Wizard {
                 stage.sizeToScene();
             }
 
-            Platform.runLater(() -> {
+            JavaFxUtil.runLater(() -> {
                 if (isInvalid()) {
                     validatePopover(currentPage.invalidPropertyStrings.get());
                 } else {
@@ -862,6 +990,17 @@ public class Wizard {
     void requestPrevFocus() {
         BUTTON_PREVIOUS.requestFocus();
     }
+
+
+
+//    You can add multiple images of different sizes and JavaFX will pick the one that fits best. Because you have different sizes in task bar and different in title bar.
+    public
+    void setApplicationIcon(final Image applicationIcon) {
+        final ObservableList<Image> icons = stage.getIcons();
+        icons.clear();
+        icons.add(applicationIcon);
+    }
+
 
     /**************************************************************************
      *
