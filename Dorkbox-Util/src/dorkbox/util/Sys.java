@@ -415,6 +415,19 @@ class Sys {
     }
 
     public static
+    byte[] charToBytesRaw(char[] chars) {
+        int length = chars.length;
+        byte[] bytes = new byte[length];
+
+        for (int i = 0; i < length; i++) {
+            char charValue = chars[i];
+            bytes[i] = (byte) charValue;
+        }
+
+        return bytes;
+    }
+
+    public static
     int[] bytesToInts(byte[] bytes) {
         int length = bytes.length;
         int[] ints = new int[length];
