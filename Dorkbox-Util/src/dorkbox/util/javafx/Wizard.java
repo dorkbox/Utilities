@@ -30,16 +30,9 @@
 package dorkbox.util.javafx;
 
 import dorkbox.util.JavaFxUtil;
-import dorkbox.util.ScreenUtil;
 import impl.org.controlsfx.ImplUtils;
-import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WritableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -52,25 +45,16 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.ToolBar;
-import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.stage.Window;
-import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.tools.ValueExtractor;
 import org.controlsfx.validation.ValidationSupport;
 
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
@@ -132,7 +116,8 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("unused")
 public class Wizard {
-    final Stage stage = new Stage(StageStyle.UNDECORATED);
+    final StageAsSwingWrapper stage = StageAsSwingWrapper.create();
+
     private final Text headerText;
     private final VBox center;
 
@@ -179,25 +164,12 @@ public class Wizard {
         }
     };
 
-    private final StringProperty titleProperty = new SimpleStringProperty();
     private volatile boolean useSpecifiedSize = false;
 
     private final PopOver popOver;
     private final Text popOverErrorText;
     private final Font defaultHeaderFont;
     private VBox graphicRegion;
-
-    WritableValue<Double> writableHeight = new WritableValue<Double>() {
-        @Override
-        public Double getValue() {
-            return stage.getHeight();
-        }
-
-        @Override
-        public void setValue(Double value) {
-            stage.setHeight(value);
-        }
-    };
 
     /**************************************************************************
      *
@@ -206,35 +178,21 @@ public class Wizard {
      **************************************************************************/
 
     /**
-     * Creates an instance of the wizard without an owner.
+     * Creates an instance of the wizard with no title.
      */
     public
     Wizard() {
-        this(null);
+        this("");
     }
 
     /**
-     * Creates an instance of the wizard with the given owner.
-     * @param owner The object from which the owner window is deduced (typically
-     *      this is a Node, but it may also be a Scene or a Stage).
-     */
-    public
-    Wizard(Object owner) {
-        this(owner, ""); //$NON-NLS-1$
-    }
-
-    /**
-     * Creates an instance of the wizard with the given owner and title.
+     * Creates an instance of the wizard with the given title.
      *
-     * @param owner The object from which the owner window is deduced (typically
-     *      this is a Node, but it may also be a Scene or a Stage).
      * @param title The wizard title.
      */
     public
-    Wizard(Object owner, String title) {
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.titleProperty()
-             .bind(this.titleProperty);
+    Wizard(String title) {
+        stage.initModality(java.awt.Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
         setTitle(title);
 
         BUTTON_PREVIOUS.setDisable(true);
@@ -293,6 +251,7 @@ public class Wizard {
                 }
             }
         };
+
         invalidProperty.addListener((ObservableValue<? extends Boolean> o, Boolean ov, Boolean nv) -> {
             validateActionState();
             // the value is "invalid", so we want "!invalid"
@@ -311,7 +270,7 @@ public class Wizard {
         Button cancel = new Button("Cancel");
         cancel.addEventFilter(ActionEvent.ACTION, event -> {
             success = false;
-            stage.close();
+            close();
         });
 
 
@@ -338,126 +297,17 @@ public class Wizard {
         // center.setStyle("-fx-background-color: #2046ff;");
         borderPane.setCenter(center);
 
-
         Scene scene = new Scene(borderPane);
+        stage.setMinSize(300, 140);
+        stage.setSize(300, 140);
         stage.setScene(scene);
-        stage.setMinWidth(300);
-        stage.setMinHeight(140);
-        stage.setWidth(300);
-        stage.setHeight(140);
-
-
-        scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            public void handle(KeyEvent ke) {
-                if (ke.getCode() == KeyCode.ESCAPE) {
-                    success = false;
-                    stage.close();
-                }
-            }
-        });
-
-
-        Window window = null;
-        if (owner instanceof Window) {
-            window = (Window) owner;
-        }
-        else if (owner instanceof Node) {
-            window = ((Node) owner).getScene()
-                                   .getWindow();
-        }
-
-        stage.initOwner(window);
-
         stage.setResizable(false);  // hide the minimize/maximize decorations
-        stage.showingProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public
-            void changed(final ObservableValue<? extends Boolean> observable, final Boolean oldValue, final Boolean newValue) {
-                if (newValue) {
-                    JavaFxUtil.runLater(() -> {
-                        // If this runs now, it will bug out, and flash on the screen before we want it to.
-                        // REALLY dumb, but we have to wait for the system to draw the window and finish BEFORE we move it
-                        // otherwise, it'll 'flash' onscreen because it will still be in the middle of it's initial "on-show" fade-in.
-                        try {
-                            Thread.sleep(2000);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        Point mouseLocation = MouseInfo.getPointerInfo()
-                                                       .getLocation();
-
-                        final GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
-                        final Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
-                                                              .getBounds();
-
-                        final double stageX = bounds.x + bounds.width / 2 - stage.getWidth() / 2;
-                        final double stageY = bounds.y + bounds.height / 2 - stage.getHeight() / 2;
-
-                        stage.setX(stageX);
-                        stage.setY(stageY);
 
 
-                        Timeline timeline = new Timeline();
-                        timeline.setCycleCount(1);
-                        timeline.getKeyFrames()
-                                .addAll(new KeyFrame(Duration.millis(700),
-                                          new KeyValue(stage.opacityProperty(), 1, Interpolator.EASE_OUT)));
-
-
-                        timeline.setOnFinished(event -> {
-                            final double verifyStageX = bounds.x + bounds.width / 2 - stage.getWidth() / 2;
-                            final double verifyStageY = bounds.y + bounds.height / 2 - stage.getHeight() / 2;
-
-                            if (stageX != verifyStageX || stageY != verifyStageY) {
-                                // whoops. we should move the stage to the correct location.
-
-                                final DoubleProperty xProp = new SimpleDoubleProperty();
-                                xProp.addListener((observable1, oldValue1, newValue1) -> {
-                                    stage.setX((Double) newValue1);
-                                });
-
-                                final DoubleProperty yProp = new SimpleDoubleProperty();
-                                yProp.addListener((observable1, oldValue1, newValue1) -> {
-                                    stage.setY((Double) newValue1);
-                                });
-
-                                Timeline timelineMove = new Timeline();
-                                timelineMove.getKeyFrames()
-                                         .addAll(new KeyFrame(Duration.ZERO,
-                                                             new KeyValue(xProp, stageX),
-                                                             new KeyValue(yProp, stageY)),
-                                                new KeyFrame(Duration.millis(300),
-                                                             new KeyValue(xProp, verifyStageX, Interpolator.EASE_OUT),
-                                                             new KeyValue(yProp, verifyStageY, Interpolator.EASE_OUT)));
-
-                                timelineMove.play();
-                            }
-
-                            // when the mouse enters or leaves, we want to fade in/out the application
-                            Timeline timelineVis = new Timeline();
-                            scene.addEventHandler(MouseEvent.MOUSE_ENTERED, event1 -> {
-                                timelineVis.stop();
-                                timelineVis.getKeyFrames().clear();
-                                timelineVis.getKeyFrames()
-                                        .addAll(new KeyFrame(Duration.millis(700),
-                                                             new KeyValue(stage.opacityProperty(), 1, Interpolator.EASE_OUT)));
-                                timelineVis.play();
-                            });
-
-                            scene.addEventHandler(MouseEvent.MOUSE_EXITED, event1 -> {
-                                timelineVis.stop();
-                                timelineVis.getKeyFrames().clear();
-                                timelineVis.getKeyFrames()
-                                        .addAll(new KeyFrame(Duration.millis(700),
-                                                             new KeyValue(stage.opacityProperty(), .7, Interpolator.EASE_OUT)));
-                                timelineVis.play();
-                            });
-                        });
-
-                        timeline.play();
-                      });
-                }
+        scene.setOnKeyPressed(ke -> {
+            if (ke.getCode() == KeyCode.ESCAPE) {
+                success = false;
+                close();
             }
         });
     }
@@ -493,8 +343,7 @@ public class Wizard {
      */
     public final
     void setSize(int width, int height) {
-        stage.setWidth(width);
-        stage.setHeight(height);
+        stage.setSize(width, height);
         useSpecifiedSize = true;
     }
 
@@ -504,7 +353,7 @@ public class Wizard {
      */
     public final
     void show() {
-//        stage.show();
+        stage.show();
     }
 
     /**
@@ -515,12 +364,14 @@ public class Wizard {
      */
     public final
     boolean showAndWait() {
-        stage.setOpacity(0.0);
-        stage.setX(10000);
-        stage.setY(10000);
         stage.showAndWait();
 
         return success;
+    }
+
+    public
+    void close() {
+        stage.close();
     }
 
     /**
@@ -537,21 +388,25 @@ public class Wizard {
      */
     public
     void goNext() {
-        currentPage.ifPresent(pageHistory::push);
-        currentPage = getFlow().advance(currentPage.orElse(null));
-        updatePage(stage, true);
+        JavaFxUtil.runLater(() -> {
+            currentPage.ifPresent(pageHistory::push);
+            currentPage = getFlow().advance(currentPage.orElse(null));
+            updatePage(stage, true);
+
+                            }
+        );
     }
 
     private
     void goPrev() {
         currentPage = Optional.ofNullable(pageHistory.isEmpty() ? null : pageHistory.pop());
-        updatePage(stage, false);
+        JavaFxUtil.runLater(() -> updatePage(stage, false));
     }
 
     private
     void goFinish() {
         success = true;
-        stage.close();
+        close();
     }
 
     /**************************************************************************
@@ -563,19 +418,11 @@ public class Wizard {
     // --- title
 
     /**
-     * Return the titleProperty of the wizard.
-     */
-    public final
-    StringProperty titleProperty() {
-        return titleProperty;
-    }
-
-    /**
      * Return the title of the wizard.
      */
     public final
     String getTitle() {
-        return titleProperty.get();
+        return stage.getTitle();
     }
 
     /**
@@ -583,7 +430,7 @@ public class Wizard {
      */
     public final
     void setTitle(String title) {
-        titleProperty.set(title);
+        stage.setTitle(title);
     }
 
     // --- flow
@@ -629,7 +476,7 @@ public class Wizard {
      */
     public final
     void setFlow(Flow flow) {
-        this.flow.set(flow);
+        JavaFxUtil.runAndWait(() -> this.flow.set(flow));
     }
 
 
@@ -771,7 +618,7 @@ public class Wizard {
     boolean BUTTON_PREV_INIT = false;
     boolean BUTTON_NEXT_INIT = false;
 
-    void updatePage(Stage stage, boolean advancing) {
+    void updatePage(StageAsSwingWrapper stage, boolean advancing) {
         Flow flow = getFlow();
         if (flow == null) {
             return;
@@ -993,12 +840,13 @@ public class Wizard {
 
 
 
-//    You can add multiple images of different sizes and JavaFX will pick the one that fits best. Because you have different sizes in task bar and different in title bar.
+    /**
+     * You can add multiple images of different sizes and JavaFX will pick the one that fits best. Because you have different sizes
+     * in task bar and different in title bar.
+     */
     public
-    void setApplicationIcon(final Image applicationIcon) {
-        final ObservableList<Image> icons = stage.getIcons();
-        icons.clear();
-        icons.add(applicationIcon);
+    void setApplicationIcon(final java.awt.Image applicationIcon) {
+        stage.setApplicationIcon(applicationIcon);
     }
 
 
