@@ -119,7 +119,7 @@ import java.util.function.Consumer;
  */
 @SuppressWarnings("unused")
 public class Wizard {
-    final StageAsSwingWrapper stage = StageAsSwingWrapper.create();
+    final StageViaSwing stage = StageViaSwing.create();
 
     private final Text headerText;
     private final VBox center;
@@ -621,7 +621,7 @@ public class Wizard {
     boolean BUTTON_PREV_INIT = false;
     boolean BUTTON_NEXT_INIT = false;
 
-    void updatePage(StageAsSwingWrapper stage, boolean advancing) {
+    void updatePage(StageViaSwing stage, boolean advancing) {
         Flow flow = getFlow();
         if (flow == null) {
             return;
@@ -686,7 +686,7 @@ public class Wizard {
     }
 
     private
-    void refreshCurrentPage(final StageAsSwingWrapper stage, final WizardPage currentPage) {
+    void refreshCurrentPage(final StageViaSwing stage, final WizardPage currentPage) {
         // put in default actions
         if (!BUTTON_PREV_INIT) {
             BUTTON_PREV_INIT = true;

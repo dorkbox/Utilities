@@ -1,11 +1,13 @@
 package dorkbox.util.javafx;
 
+import com.sun.javafx.application.PlatformImpl;
 import dorkbox.util.JavaFxUtil;
 import dorkbox.util.SwingUtil;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.value.WritableValue;
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.Scene;
@@ -20,25 +22,26 @@ import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * This class is necessary, because JavaFX stage is crap on linux.
+ * This class is necessary, because JavaFX stage is crap on linux. This offers sort-of the same functionality, but via swing instead.
  */
 public
-class StageAsSwingWrapper {
+class StageViaSwing {
     final JFrame frame;
     final JFXPanel panel;
 
+    private boolean inNestedEventLoop = false;
     final WritableValue<Float> opacityProperty;
 
 
     @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     static
-    StageAsSwingWrapper create() {
-        final StageAsSwingWrapper[] returnVal = new StageAsSwingWrapper[1];
+    StageViaSwing create() {
+        final StageViaSwing[] returnVal = new StageViaSwing[1];
 
         // this MUST happen on the EDT!
         SwingUtil.invokeAndWait(() -> {
             synchronized (returnVal) {
-                returnVal[0] = new StageAsSwingWrapper();
+                returnVal[0] = new StageViaSwing();
             }
         });
 
@@ -47,6 +50,9 @@ class StageAsSwingWrapper {
         }
     }
 
+    /**
+     * Necessary for us to be able to size our frame based on it's content
+     */
     private static Method method;
     static {
         try {
@@ -55,11 +61,17 @@ class StageAsSwingWrapper {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+
+        // make sure that javafx application thread is started
+        // Note that calling PlatformImpl.startup more than once is OK
+        PlatformImpl.startup(() -> {
+            // No need to do anything here
+        });
     }
 
 
     private
-    StageAsSwingWrapper() {
+    StageViaSwing() {
         frame = new JFrame() {
 
         };
@@ -110,55 +122,6 @@ class StageAsSwingWrapper {
                 thread.start();
             }
         });
-
-
-
-
-
-//        frame.addWindowListener(new WindowAdapter() {
-//            @Override
-//            public
-//            void windowOpened(final WindowEvent e) {
-//                System.err.println("opened");
-
-//        stage.showingProperty().addListener(new ChangeListener<Boolean>() {
-//            @Override
-//            public
-//            void changed(final ObservableValue<? extends Boolean> observable, final Boolean oldValue, final Boolean newValue) {
-//                if (newValue) {
-//                    JavaFxUtil.runLater(() -> {
-
-//
-
-//
-// when the mouse enters or leaves, we want to fade in/out the application
-//                            Timeline timelineVis = new Timeline();
-//                            scene.addEventHandler(MouseEvent.MOUSE_ENTERED, event1 -> {
-//                                timelineVis.stop();
-//                                timelineVis.getKeyFrames().clear();
-//                                timelineVis.getKeyFrames()
-//                                        .addAll(new KeyFrame(Duration.millis(700),
-//                                                             new KeyValue(stage.opacityProperty(), 1, Interpolator.EASE_OUT)));
-//                                timelineVis.play();
-//                            });
-//
-//                            scene.addEventHandler(MouseEvent.MOUSE_EXITED, event1 -> {
-//                                timelineVis.stop();
-//                                timelineVis.getKeyFrames().clear();
-//                                timelineVis.getKeyFrames()
-//                                        .addAll(new KeyFrame(Duration.millis(700),
-//                                                             new KeyValue(stage.opacityProperty(), .7, Interpolator.EASE_OUT)));
-//                                timelineVis.play();
-//                            });
-//                        });
-//
-//                        timeline.play();
-//                      });
-//                }
-//            }
-//        });
-//            }
-//        });
     }
 
     public
@@ -173,23 +136,27 @@ class StageAsSwingWrapper {
 
     public
     void close() {
-        frame.dispose();
-        latch.countDown();
+        SwingUtil.invokeAndWait(() -> frame.dispose());
+        if (inNestedEventLoop) {
+            com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(this, null);
+        } else {
+            latch.countDown();
+        }
     }
 
     public
     void setSize(final double width, final double height) {
-        frame.setSize((int)width, (int)height);
+        SwingUtil.invokeAndWait(() -> frame.setSize((int)width, (int)height));
     }
 
     public
     void setResizable(final boolean resizable) {
-        frame.setResizable(resizable);
+        SwingUtil.invokeAndWait(() -> frame.setResizable(resizable));
     }
 
     public
     void setApplicationIcon(final java.awt.Image icon) {
-        frame.setIconImage(icon);
+        SwingUtil.invokeAndWait(() -> frame.setIconImage(icon));
     }
 
     private final
@@ -206,20 +173,27 @@ class StageAsSwingWrapper {
 
             // Figure out the size of everything. Because JFXPanel DOES NOT do this.
             frame.pack();
-
-            sizeToScene();
-            frame.setVisible(true);
         });
+
+        // has javafx stuff on it, must not be called on the EDT
+        sizeToScene();
+
+        SwingUtil.invokeAndWait(() -> frame.setVisible(true));
     }
 
     public
     void showAndWait() {
         show();
 
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (Platform.isFxApplicationThread()) {
+            inNestedEventLoop = true;
+            com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(this);
+        } else {
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -231,7 +205,7 @@ class StageAsSwingWrapper {
 
     public
     void setMinSize(final double width, final double height) {
-        frame.setMinimumSize(new Dimension((int)width, (int)height));
+        SwingUtil.invokeAndWait(() -> frame.setMinimumSize(new Dimension((int)width, (int)height)));
     }
 
     public
@@ -248,9 +222,15 @@ class StageAsSwingWrapper {
             final Scene scene = panel.getScene();
 
             try {
-                // use reflection. This is lame, but necessary
+                // use reflection. This is lame, but necessary. must be on the jfx thread
                 method.invoke(scene);
-                frame.setSize((int)scene.getWidth(), (int)scene.getHeight());
+
+                // must be on the EDT
+                SwingUtil.invokeAndWait(() -> {
+                    frame.setSize((int)scene.getWidth(), (int)scene.getHeight());
+                });
+
+
             } catch (InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -259,7 +239,12 @@ class StageAsSwingWrapper {
 
     public
     void setScene(final Scene scene) {
-        panel.setScene(scene);
+        // must be on the JFX or EDT threads
+        if (!Platform.isFxApplicationThread() || !EventQueue.isDispatchThread()) {
+            JavaFxUtil.invokeAndWait(() -> panel.setScene(scene));
+        } else {
+            panel.setScene(scene);
+        }
     }
 
     public
