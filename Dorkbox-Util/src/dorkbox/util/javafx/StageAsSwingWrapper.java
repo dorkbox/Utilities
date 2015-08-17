@@ -47,23 +47,29 @@ class StageAsSwingWrapper {
         }
     }
 
-    private Method method;
-
-    private
-    StageAsSwingWrapper() {
-        frame = new JFrame();
-        panel = new JFXPanel();
-        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-
-        frame.setUndecorated(true);
-        frame.add(panel);
-
+    private static Method method;
+    static {
         try {
             method = Scene.class.getDeclaredMethod("preferredSize");
             method.setAccessible(true);
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
+    }
+
+
+    private
+    StageAsSwingWrapper() {
+        frame = new JFrame() {
+
+        };
+        panel = new JFXPanel();
+        frame.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+
+        frame.setUndecorated(true);
+        frame.add(panel);
+
+
 
         opacityProperty = new WritableValue<Float>() {
             @Override
@@ -168,6 +174,7 @@ class StageAsSwingWrapper {
     public
     void close() {
         frame.dispose();
+        latch.countDown();
     }
 
     public
@@ -197,12 +204,10 @@ class StageAsSwingWrapper {
             frame.setVisible(false);
             frame.setLocation(Short.MIN_VALUE, Short.MIN_VALUE);
 
-            frame.pack();
-            panel.validate();
-
             // Figure out the size of everything. Because JFXPanel DOES NOT do this.
-            sizeToScene();
+            frame.pack();
 
+            sizeToScene();
             frame.setVisible(true);
         });
     }
@@ -221,7 +226,7 @@ class StageAsSwingWrapper {
     public
     void initModality(final Dialog.ModalExclusionType modal) {
         // we take in the javaFX modality, and pass it on to the correct swing version
-        JavaFxUtil.runAndWait(() -> frame.setModalExclusionType(modal));
+        JavaFxUtil.invokeAndWait(() -> frame.setModalExclusionType(modal));
     }
 
     public
@@ -231,9 +236,15 @@ class StageAsSwingWrapper {
 
     public
     void sizeToScene() {
+        SwingUtil.invokeAndWait(() -> {
+                frame.invalidate();
+                frame.validate();
+            }
+        );
+
         // Figure out the size of everything. Because JFXPanel DOES NOT do this.
         // must be on the FX app thread
-        JavaFxUtil.runAndWait(() -> {
+        JavaFxUtil.invokeAndWait(() -> {
             final Scene scene = panel.getScene();
 
             try {
@@ -249,5 +260,10 @@ class StageAsSwingWrapper {
     public
     void setScene(final Scene scene) {
         panel.setScene(scene);
+    }
+
+    public
+    WritableValue<Float> getOpacityProperty() {
+        return opacityProperty;
     }
 }

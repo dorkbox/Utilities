@@ -39,7 +39,7 @@ class JavaFxUtil {
                                 .getBounds().x);
     }
 
-    public static void runAndWait(Runnable runnable) {
+    public static void invokeAndWait(Runnable runnable) {
         // run synchronously on JavaFX thread
         if (Platform.isFxApplicationThread()) {
             runnable.run();
@@ -57,7 +57,7 @@ class JavaFxUtil {
         }
     }
 
-    public static <T> T runAndWait(Callable callable) {
+    public static <T> T invokeAndWait(Callable callable) {
         // run synchronously on JavaFX thread
         if (Platform.isFxApplicationThread()) {
             try {
@@ -79,7 +79,11 @@ class JavaFxUtil {
         return null;
     }
 
-    public static void runLater(Runnable runnable) {
-        Platform.runLater(runnable);
+    public static void invokeLater(Runnable runnable) {
+        if (Platform.isFxApplicationThread()) {
+            runnable.run();
+        } else {
+            Platform.runLater(runnable);
+        }
     }
 }

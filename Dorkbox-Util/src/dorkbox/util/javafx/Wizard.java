@@ -30,7 +30,9 @@
 package dorkbox.util.javafx;
 
 import dorkbox.util.JavaFxUtil;
+import dorkbox.util.SwingUtil;
 import impl.org.controlsfx.ImplUtils;
+import javafx.animation.*;
 import javafx.beans.property.*;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -50,6 +52,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.tools.ValueExtractor;
 import org.controlsfx.validation.ValidationSupport;
@@ -247,7 +250,7 @@ public class Wizard {
             public
             void accept(final WizardPage currentPage) {
                 if (currentPage.autoFocusNext) {
-                    JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
+                    JavaFxUtil.invokeLater(BUTTON_NEXT::requestFocus);
                 }
             }
         };
@@ -292,7 +295,7 @@ public class Wizard {
         borderPane.setTop(region);
 
         center = new VBox();
-        center.setMinSize(0, 0);
+        center.setMinSize(10, 10);
         center.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         // center.setStyle("-fx-background-color: #2046ff;");
         borderPane.setCenter(center);
@@ -315,7 +318,7 @@ public class Wizard {
     private
     void validatePopover(final String newValue) {
         if (newValue != null) {
-            currentPage.ifPresent(currentPage -> JavaFxUtil.runLater(() -> {
+            currentPage.ifPresent(currentPage -> JavaFxUtil.invokeLater(() -> {
                 final PopOver popOver = this.popOver;
 
                 this.popOverErrorText.setText(newValue);
@@ -388,7 +391,7 @@ public class Wizard {
      */
     public
     void goNext() {
-        JavaFxUtil.runLater(() -> {
+        JavaFxUtil.invokeLater(() -> {
             currentPage.ifPresent(pageHistory::push);
             currentPage = getFlow().advance(currentPage.orElse(null));
             updatePage(stage, true);
@@ -400,7 +403,7 @@ public class Wizard {
     private
     void goPrev() {
         currentPage = Optional.ofNullable(pageHistory.isEmpty() ? null : pageHistory.pop());
-        JavaFxUtil.runLater(() -> updatePage(stage, false));
+        JavaFxUtil.invokeLater(() -> updatePage(stage, false));
     }
 
     private
@@ -476,7 +479,7 @@ public class Wizard {
      */
     public final
     void setFlow(Flow flow) {
-        JavaFxUtil.runAndWait(() -> this.flow.set(flow));
+        JavaFxUtil.invokeAndWait(() -> this.flow.set(flow));
     }
 
 
@@ -624,6 +627,9 @@ public class Wizard {
             return;
         }
 
+        SequentialTransition sequentialTransition = new SequentialTransition();
+        sequentialTransition.setCycleCount(1);
+
         Optional<WizardPage> prevPage = Optional.ofNullable(pageHistory.isEmpty() ? null : pageHistory.peek());
         prevPage.ifPresent(page -> {
             // if we are going forward in the wizard, we read in the settings
@@ -643,83 +649,114 @@ public class Wizard {
 
             invalidProperty.set(false);
             popOver.hide();
+
+            Timeline timeline = new Timeline();
+            timeline.setCycleCount(1);
+            timeline.getKeyFrames()
+                    .addAll(new KeyFrame(Duration.millis(200),
+                                         new KeyValue(stage.getOpacityProperty(), 0F, Interpolator.EASE_OUT)));
+
+            timeline.setOnFinished(event -> {
+                   currentPage.ifPresent(currentPage -> {
+                       refreshCurrentPage(stage, currentPage);
+
+                       SwingUtil.invokeAndWait(() -> SwingUtil.showOnSameScreenAsMouseCenter(stage.frame));
+
+                       Timeline timeline2 = new Timeline();
+                       timeline2.setCycleCount(1);
+                       timeline2.getKeyFrames()
+                                .addAll(new KeyFrame(Duration.millis(500),
+                                                     new KeyValue(stage.getOpacityProperty(), 1F, Interpolator.EASE_OUT)));
+                       timeline2.play();
+                   });
+               }
+            );
+            sequentialTransition.getChildren().add(timeline);
         });
 
-        currentPage.ifPresent(currentPage -> {
-            // put in default actions
-            if (!BUTTON_PREV_INIT) {
-                BUTTON_PREV_INIT = true;
-                BUTTON_PREVIOUS.setDisable(false);
-            }
-            if (!BUTTON_NEXT_INIT) {
-                BUTTON_NEXT_INIT = true;
-                BUTTON_NEXT.setDisable(false);
+        // only run this if we don't have a prev page, otherwise, we run this at the end of our animation
+        if (!prevPage.isPresent()) {
+            currentPage.ifPresent(currentPage -> {
+                refreshCurrentPage(stage, currentPage);
+            });
+        }
 
-                BUTTON_NEXT.addEventFilter(ActionEvent.ACTION, BUTTON_NEXT_EVENT_HANDLER);
-                BUTTON_NEXT.addEventFilter(KeyEvent.KEY_PRESSED, BUTTON_NEXT_EVENT_HANDLER);
-            }
+        sequentialTransition.play();
+        validateActionState();
+    }
 
-            // then give user a chance to modify the default actions
-            currentPage.onEnteringPage(this);
+    private
+    void refreshCurrentPage(final StageAsSwingWrapper stage, final WizardPage currentPage) {
+        // put in default actions
+        if (!BUTTON_PREV_INIT) {
+            BUTTON_PREV_INIT = true;
+            BUTTON_PREVIOUS.setDisable(false);
+        }
+        if (!BUTTON_NEXT_INIT) {
+            BUTTON_NEXT_INIT = true;
+            BUTTON_NEXT.setDisable(false);
 
-            invalidProperty.bind(currentPage.invalidProperty);
-            invalidPropertyStrings.bind(currentPage.invalidPropertyStrings);
+            BUTTON_NEXT.addEventFilter(ActionEvent.ACTION, BUTTON_NEXT_EVENT_HANDLER);
+            BUTTON_NEXT.addEventFilter(KeyEvent.KEY_PRESSED, BUTTON_NEXT_EVENT_HANDLER);
+        }
 
-            final Node firstFocusElement = currentPage.firstFocusElement;
-            if (firstFocusElement != null) {
-                JavaFxUtil.runLater(() -> {
-                    if (isInvalid()) {
-                        firstFocusElement.requestFocus();
-                    }
-                    else {
-                        JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
-                    }
-                });
-            }
-            else {
+        // then give user a chance to modify the default actions
+        currentPage.onEnteringPage(this);
+
+        invalidProperty.bind(currentPage.invalidProperty);
+        invalidPropertyStrings.bind(currentPage.invalidPropertyStrings);
+
+        final Node firstFocusElement = currentPage.firstFocusElement;
+        if (firstFocusElement != null) {
+            JavaFxUtil.invokeLater(() -> {
                 if (isInvalid()) {
-                    JavaFxUtil.runLater(BUTTON_PREVIOUS::requestFocus);
+                    firstFocusElement.requestFocus();
                 }
                 else {
-                    JavaFxUtil.runLater(BUTTON_NEXT::requestFocus);
-                }
-            }
-
-            // and then switch to the new pane
-            if (currentPage.headerFont != null) {
-                headerText.setFont(currentPage.headerFont);
-            }
-            else {
-                headerText.setFont(defaultHeaderFont);
-            }
-
-            if (currentPage.headerGraphic != null) {
-                graphicRegion.getChildren().setAll(currentPage.headerGraphic);
-            } else {
-                graphicRegion.getChildren().clear();
-            }
-
-            headerText.setText(currentPage.headerText);
-            ObservableList<Node> children = center.getChildren();
-            children.clear();
-            children.add(currentPage.anchorPane);
-
-
-            if (!useSpecifiedSize) {
-                currentPage.anchorPane.autosize();
-                stage.sizeToScene();
-            }
-
-            JavaFxUtil.runLater(() -> {
-                if (isInvalid()) {
-                    validatePopover(currentPage.invalidPropertyStrings.get());
-                } else {
-                    popOver.hide();
+                    JavaFxUtil.invokeLater(BUTTON_NEXT::requestFocus);
                 }
             });
-        });
+        }
+        else {
+            if (isInvalid()) {
+                JavaFxUtil.invokeLater(BUTTON_PREVIOUS::requestFocus);
+            }
+            else {
+                JavaFxUtil.invokeLater(BUTTON_NEXT::requestFocus);
+            }
+        }
 
-        validateActionState();
+        // and then switch to the new pane
+        if (currentPage.headerFont != null) {
+            headerText.setFont(currentPage.headerFont);
+        }
+        else {
+            headerText.setFont(defaultHeaderFont);
+        }
+
+        if (currentPage.headerGraphic != null) {
+            graphicRegion.getChildren().setAll(currentPage.headerGraphic);
+        } else {
+            graphicRegion.getChildren().clear();
+        }
+
+        headerText.setText(currentPage.headerText);
+        ObservableList<Node> children = center.getChildren();
+        children.clear();
+        children.add(currentPage.anchorPane);
+
+        if (!useSpecifiedSize) {
+            currentPage.anchorPane.autosize();
+            stage.sizeToScene();
+        }
+
+        JavaFxUtil.invokeAndWait(() -> {
+            if (isInvalid()) {
+                validatePopover(currentPage.invalidPropertyStrings.get());
+            } else {
+                popOver.hide();
+            }
+        });
     }
 
     private
