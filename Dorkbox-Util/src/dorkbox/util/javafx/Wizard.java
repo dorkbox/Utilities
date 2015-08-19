@@ -26,6 +26,19 @@
  *
  *
  * MODIFIED BY DORKBOX
+ * Copyright 2015 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package dorkbox.util.javafx;
 
@@ -195,6 +208,8 @@ public class Wizard {
      */
     public
     Wizard(String title) {
+        stage.center();
+
         stage.initModality(java.awt.Dialog.ModalExclusionType.APPLICATION_EXCLUDE);
         setTitle(title);
 
@@ -656,29 +671,25 @@ public class Wizard {
                     .addAll(new KeyFrame(Duration.millis(200),
                                          new KeyValue(stage.getOpacityProperty(), 0F, Interpolator.EASE_OUT)));
 
-            timeline.setOnFinished(event -> {
-                   currentPage.ifPresent(currentPage -> {
-                       refreshCurrentPage(stage, currentPage);
+            timeline.setOnFinished(event -> currentPage.ifPresent(currentPage -> {
+                refreshCurrentPage(stage, currentPage);
 
-                       SwingUtil.invokeAndWait(() -> SwingUtil.showOnSameScreenAsMouseCenter(stage.frame));
+                SwingUtil.invokeAndWait(() -> SwingUtil.showOnSameScreenAsMouseCenter(stage.frame));
 
-                       Timeline timeline2 = new Timeline();
-                       timeline2.setCycleCount(1);
-                       timeline2.getKeyFrames()
-                                .addAll(new KeyFrame(Duration.millis(500),
-                                                     new KeyValue(stage.getOpacityProperty(), 1F, Interpolator.EASE_OUT)));
-                       timeline2.play();
-                   });
-               }
+                Timeline timeline2 = new Timeline();
+                timeline2.setCycleCount(1);
+                timeline2.getKeyFrames()
+                         .addAll(new KeyFrame(Duration.millis(500),
+                                              new KeyValue(stage.getOpacityProperty(), 1F, Interpolator.EASE_OUT)));
+                timeline2.play();
+            })
             );
             sequentialTransition.getChildren().add(timeline);
         });
 
         // only run this if we don't have a prev page, otherwise, we run this at the end of our animation
         if (!prevPage.isPresent()) {
-            currentPage.ifPresent(currentPage -> {
-                refreshCurrentPage(stage, currentPage);
-            });
+            currentPage.ifPresent(currentPage -> refreshCurrentPage(stage, currentPage));
         }
 
         sequentialTransition.play();

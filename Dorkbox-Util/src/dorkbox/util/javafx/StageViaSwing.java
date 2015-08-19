@@ -1,3 +1,18 @@
+/*
+ * Copyright 2015 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package dorkbox.util.javafx;
 
 import com.sun.javafx.application.PlatformImpl;
@@ -23,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * This class is necessary, because JavaFX stage is crap on linux. This offers sort-of the same functionality, but via swing instead.
+ * Annoying caveat. All swing setters MUST happen on the EDT.
  */
 public
 class StageViaSwing {
@@ -30,6 +46,9 @@ class StageViaSwing {
     final JFXPanel panel;
 
     private boolean inNestedEventLoop = false;
+    private final CountDownLatch showlatch = new CountDownLatch(1);
+    private final CountDownLatch showAndWaitlatch = new CountDownLatch(1);
+
     final WritableValue<Float> opacityProperty;
 
 
@@ -69,6 +88,8 @@ class StageViaSwing {
         });
     }
 
+    private boolean center = false;
+
 
     private
     StageViaSwing() {
@@ -91,7 +112,7 @@ class StageViaSwing {
 
             @Override
             public void setValue(Float value) {
-                frame.setOpacity(value);
+                SwingUtil.invokeLater(() -> frame.setOpacity(value));
             }
         };
 
@@ -106,13 +127,24 @@ class StageViaSwing {
                         Thread.sleep(500);
 
                         sizeToScene();
-                        SwingUtil.showOnSameScreenAsMouseCenter(frame);
+
+                        if (center) {
+                            SwingUtil.invokeAndWait(() -> SwingUtil.showOnSameScreenAsMouseCenter(frame));
+                        }
 
                         Timeline timeline = new Timeline();
                         timeline.setCycleCount(1);
                         timeline.getKeyFrames()
                                 .addAll(new KeyFrame(Duration.millis(700),
                                                      new KeyValue(opacityProperty, 1F, Interpolator.EASE_OUT)));
+                        timeline.setOnFinished(event ->  {
+                                   if (inNestedEventLoop) {
+                                       inNestedEventLoop= false;
+                                       com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(StageViaSwing.this, null);
+                                   } else {
+                                       showlatch.countDown();
+                                   }
+                               });
                         timeline.play();
                     } catch(InterruptedException ignored) {
                     }
@@ -126,7 +158,7 @@ class StageViaSwing {
 
     public
     void setTitle(final String title) {
-        frame.setTitle(title);
+        SwingUtil.invokeAndWait(() -> frame.setTitle(title));
     }
 
     public
@@ -136,11 +168,12 @@ class StageViaSwing {
 
     public
     void close() {
-        SwingUtil.invokeAndWait(() -> frame.dispose());
+        SwingUtil.invokeAndWait(frame::dispose);
         if (inNestedEventLoop) {
+            inNestedEventLoop= false;
             com.sun.javafx.tk.Toolkit.getToolkit().exitNestedEventLoop(this, null);
         } else {
-            latch.countDown();
+            showAndWaitlatch.countDown();
         }
     }
 
@@ -159,9 +192,6 @@ class StageViaSwing {
         SwingUtil.invokeAndWait(() -> frame.setIconImage(icon));
     }
 
-    private final
-    CountDownLatch latch = new CountDownLatch(1);
-
     public
     void show() {
         SwingUtil.invokeAndWait(() -> {
@@ -179,18 +209,33 @@ class StageViaSwing {
         sizeToScene();
 
         SwingUtil.invokeAndWait(() -> frame.setVisible(true));
+
+        // false-positive
+        //noinspection Duplicates
+        if (Platform.isFxApplicationThread()) {
+            inNestedEventLoop = true;
+            com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(this);
+        } else {
+            try {
+                showlatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public
     void showAndWait() {
         show();
 
+        // false-positive
+        //noinspection Duplicates
         if (Platform.isFxApplicationThread()) {
             inNestedEventLoop = true;
             com.sun.javafx.tk.Toolkit.getToolkit().enterNestedEventLoop(this);
         } else {
             try {
-                latch.await();
+                showAndWaitlatch.await();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -226,11 +271,7 @@ class StageViaSwing {
                 method.invoke(scene);
 
                 // must be on the EDT
-                SwingUtil.invokeAndWait(() -> {
-                    frame.setSize((int)scene.getWidth(), (int)scene.getHeight());
-                });
-
-
+                SwingUtil.invokeAndWait(() -> frame.setSize((int)scene.getWidth(), (int)scene.getHeight()));
             } catch (InvocationTargetException | IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -250,5 +291,25 @@ class StageViaSwing {
     public
     WritableValue<Float> getOpacityProperty() {
         return opacityProperty;
+    }
+
+    public
+    void setLocation(final double anchorX, final double anchorY) {
+        SwingUtil.invokeAndWait(() -> frame.setLocation((int)anchorX, (int)anchorY));
+    }
+
+    public
+    Point getLocation() {
+        return frame.getLocation();
+    }
+
+    public
+    void center() {
+        this.center = true;
+    }
+
+    public
+    Dimension getSize() {
+        return frame.getSize();
     }
 }
