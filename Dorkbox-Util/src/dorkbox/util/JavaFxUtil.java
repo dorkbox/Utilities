@@ -15,6 +15,7 @@ class JavaFxUtil {
 
     public static final javafx.scene.text.Font DEFAULT_FONT = new javafx.scene.text.Font(13);
 
+
     public static
     void showOnSameScreenAsMouseCenter(javafx.stage.Window stage) {
         Point mouseLocation = MouseInfo.getPointerInfo()

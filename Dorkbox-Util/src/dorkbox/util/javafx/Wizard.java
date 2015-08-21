@@ -316,7 +316,6 @@ public class Wizard {
         borderPane.setCenter(center);
 
         Scene scene = new Scene(borderPane);
-        stage.setMinSize(300, 140);
         stage.setSize(300, 140);
         stage.setScene(scene);
         stage.setResizable(false);  // hide the minimize/maximize decorations
@@ -327,6 +326,17 @@ public class Wizard {
                 success = false;
                 close();
             }
+        });
+
+        //noinspection Duplicates
+        stage.setShowAnimation(() -> {
+            Timeline timeline = new Timeline();
+            timeline.setCycleCount(1);
+            timeline.getKeyFrames()
+                    .addAll(new KeyFrame(Duration.millis(500), new KeyValue(stage.getOpacityProperty(), 1F, Interpolator.EASE_OUT)));
+            // have to trigger that our animation is completed and the show() method may continue
+            timeline.setOnFinished(event -> stage.completeShowTransition());
+            timeline.play();
         });
     }
 
@@ -410,9 +420,7 @@ public class Wizard {
             currentPage.ifPresent(pageHistory::push);
             currentPage = getFlow().advance(currentPage.orElse(null));
             updatePage(stage, true);
-
-                            }
-        );
+        });
     }
 
     private
@@ -758,7 +766,10 @@ public class Wizard {
 
         if (!useSpecifiedSize) {
             currentPage.anchorPane.autosize();
-            stage.sizeToScene();
+
+            if (stage.frame.isShowing()) {
+                stage.sizeToScene();
+            }
         }
 
         JavaFxUtil.invokeAndWait(() -> {

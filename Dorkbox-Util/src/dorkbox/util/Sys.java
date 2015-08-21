@@ -28,7 +28,6 @@ import java.util.Map.Entry;
 @SuppressWarnings("unused")
 public final
 class Sys {
-    public static final int javaVersion = getJavaVersion();
     public static final boolean isAndroid = getIsAndroid();
 
     public static final int KILOBYTE = 1024;
@@ -56,38 +55,6 @@ class Sys {
             return false;
         }
     }
-
-    private static
-    int getJavaVersion() {
-        String fullJavaVersion = System.getProperty("java.version");
-
-        // Converts a java version string, such as "1.7u45", and converts it into 7
-        char versionChar;
-        if (fullJavaVersion.startsWith("1.")) {
-            versionChar = fullJavaVersion.charAt(2);
-        }
-        else {
-            versionChar = fullJavaVersion.charAt(0);
-        }
-
-        switch (versionChar) {
-            case '4':
-                return 4;
-            case '5':
-                return 5;
-            case '6':
-                return 6;
-            case '7':
-                return 7;
-            case '8':
-                return 8;
-            case '9':
-                return 9;
-            default:
-                return -1;
-        }
-    }
-
 
 
     public static

@@ -17,10 +17,15 @@ package dorkbox.util;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 
 public
 class SwingUtil {
+
+    /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
+    public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
+
     public static
     void showOnSameScreenAsMouseCenter(Container frame) {
         Point mouseLocation = MouseInfo.getPointerInfo()
