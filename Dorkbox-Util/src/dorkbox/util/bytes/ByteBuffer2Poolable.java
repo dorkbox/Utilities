@@ -18,8 +18,7 @@ package dorkbox.util.bytes;
 import dorkbox.util.objectPool.PoolableObject;
 
 public
-class ByteBuffer2Poolable implements PoolableObject<ByteBuffer2> {
-    @Override
+class ByteBuffer2Poolable extends PoolableObject<ByteBuffer2> {
     public
     ByteBuffer2 create() {
         return new ByteBuffer2(8, -1);
