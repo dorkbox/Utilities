@@ -42,43 +42,57 @@ class MathUtil {
         }
     }
 
-    /** Returns a random integer */
+    /**
+     * Returns a random integer
+     */
     public static
     int randomInt() {
         return random().nextInt();
     }
 
-    /** Returns a random number between 0 (inclusive) and the specified value (inclusive). */
+    /**
+     * Returns a random number between 0 (inclusive) and the specified value (inclusive).
+     */
     public static
     int randomInt(int range) {
         return random().nextInt(range + 1);
     }
 
-    /** Returns a random number between start (inclusive) and end (inclusive). */
+    /**
+     * Returns a random number between start (inclusive) and end (inclusive).
+     */
     public static
     int randomInt(int start, int end) {
         return start + random().nextInt(end - start + 1);
     }
 
-    /** Returns a random boolean value. */
+    /**
+     * Returns a random boolean value.
+     */
     public static
     boolean randomBoolean() {
         return random().nextBoolean();
     }
 
-    /** Returns random number between 0.0 (inclusive) and 1.0 (exclusive). */
+    /**
+     * Returns random number between 0.0 (inclusive) and 1.0 (exclusive).
+     */
     public static
     float randomFloat() {
         return random().nextFloat();
     }
 
-    /** Returns a random number between 0 (inclusive) and the specified value (exclusive). */
+    /**
+     * Returns a random number between 0 (inclusive) and the specified value (exclusive).
+     */
     public static
     float randomFloat(float range) {
         return random().nextFloat() * range;
     }
 
-    /** Returns a random number between start (inclusive) and end (exclusive). */
+    /**
+     * Returns a random number between start (inclusive) and end (exclusive).
+     */
     public static
     float randomFloat(float start, float end) {
         return start + random().nextFloat() * (end - start);
@@ -98,5 +112,16 @@ class MathUtil {
     public static
     boolean isPowerOfTwo(int value) {
         return value != 0 && (value & value - 1) == 0;
+    }
+
+
+    public static
+    boolean intersectRect(double x1, double y1, double w1, double h1, double x2, double y2, double w2, double h2) {
+        return intersectRange(x1, x1 + w1, x2, x2 + w2) && intersectRange(y1, y1 + h1, y2, y2 + h2);
+    }
+
+    public static
+    boolean intersectRange(double ax1, double ax2, double bx1, double bx2) {
+        return Math.max(ax1, bx1) <= Math.min(ax2, bx2);
     }
 }
