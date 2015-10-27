@@ -17,6 +17,7 @@ package dorkbox.util.process;
 
 import dorkbox.util.OS;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -26,10 +27,14 @@ import java.util.List;
 
 /**
  * If you want to save off the output from the process, set a PrintStream to the following:
+ * <pre> {@code
+ *
  * ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
  * PrintStream outputStream = new PrintStream(byteArrayOutputStream);
  * ...
- * String output = byteArrayOutputStream.toString();
+ *
+ * String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+ * }</pre>
  */
 public
 class ShellProcessBuilder {
@@ -37,6 +42,7 @@ class ShellProcessBuilder {
     private final PrintStream outputStream;
     private final PrintStream errorStream;
     private final InputStream inputStream;
+
     protected List<String> arguments = new ArrayList<String>();
     private String workingDirectory = null;
     private String executableName = null;
@@ -66,9 +72,9 @@ class ShellProcessBuilder {
 
     public
     ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+        this.inputStream = in;
         this.outputStream = out;
         this.errorStream = err;
-        this.inputStream = in;
     }
 
     /**
@@ -188,16 +194,33 @@ class ShellProcessBuilder {
         }
 
         if (this.debugInfo) {
-            this.errorStream.print("Executing: ");
+            if (errorStream != null) {
+                this.errorStream.print("Executing: ");
+            } else {
+                System.err.println("Executing: ");
+            }
             Iterator<String> iterator = argumentsList.iterator();
             while (iterator.hasNext()) {
                 String s = iterator.next();
-                this.errorStream.print(s);
+                if (errorStream != null) {
+                    this.errorStream.print(s);
+                } else {
+                    System.err.print(s);
+                }
                 if (iterator.hasNext()) {
-                    this.errorStream.print(" ");
+                    if (errorStream != null) {
+                        this.errorStream.print(" ");
+                    } else {
+                        System.err.print(" ");
+                    }
                 }
             }
-            this.errorStream.print(OS.LINE_SEPARATOR);
+
+            if (errorStream != null) {
+                this.errorStream.print(OS.LINE_SEPARATOR);
+            } else {
+                System.err.print(OS.LINE_SEPARATOR);
+            }
         }
 
         ProcessBuilder processBuilder = new ProcessBuilder(argumentsList);
@@ -213,7 +236,11 @@ class ShellProcessBuilder {
         try {
             this.process = processBuilder.start();
         } catch (Exception ex) {
-            this.errorStream.println("There was a problem executing the program.  Details:\n");
+            if (errorStream != null) {
+                this.errorStream.println("There was a problem executing the program.  Details:");
+            } else {
+                System.err.println("There was a problem executing the program.  Details:");
+            }
             ex.printStackTrace(this.errorStream);
 
             if (this.process != null) {
@@ -221,7 +248,11 @@ class ShellProcessBuilder {
                     this.process.destroy();
                     this.process = null;
                 } catch (Exception e) {
-                    this.errorStream.println("Error destroying process: \n");
+                    if (errorStream != null) {
+                        this.errorStream.println("Error destroying process:");
+                    } else {
+                        System.err.println("Error destroying process:");
+                    }
                     e.printStackTrace(this.errorStream);
                 }
             }
@@ -255,6 +286,7 @@ class ShellProcessBuilder {
                 readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName,
                                                           this.process.getInputStream(),
                                                           this.outputStream);
+
                 if (this.errorStream != this.outputStream) {
                     readFromProcess_error = new ProcessProxy("Process Reader: " + this.executableName,
                                                              this.process.getErrorStream(),
@@ -337,5 +369,24 @@ class ShellProcessBuilder {
             Runtime.getRuntime()
                    .removeShutdownHook(hook);
         }
+    }
+
+    /**
+     * Converts the baos to a string in a safe way. There might be a trailing newline character at the end of this output.
+     *
+     * @param byteArrayOutputStream the baos that is used in the {@link ShellProcessBuilder#ShellProcessBuilder(PrintStream)} (or similar
+     *                              calls)
+     *
+     * @return A string representing the output of the process
+     */
+    public static
+    String getOutput(final ByteArrayOutputStream byteArrayOutputStream) {
+        String s;
+        synchronized (byteArrayOutputStream) {
+            s = byteArrayOutputStream.toString();
+            byteArrayOutputStream.reset();
+        }
+
+        return s;
     }
 }

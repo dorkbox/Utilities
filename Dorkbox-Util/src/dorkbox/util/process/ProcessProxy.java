@@ -38,6 +38,9 @@ class ProcessProxy extends Thread {
     public
     void close() {
         try {
+            if (os != null) {
+                os.flush(); // this goes to the console, so we don't want to close it!
+            }
             this.is.close();
         } catch (IOException e) {
         }
@@ -46,33 +49,29 @@ class ProcessProxy extends Thread {
     @Override
     public
     void run() {
+        final OutputStream os = this.os;
+
         try {
             // this thread will read until there is no more data to read. (this is generally what you want)
             // the stream will be closed when the process closes it (usually on exit)
             int readInt;
 
-            if (this.os == null) {
+            if (os == null) {
                 // just read so it won't block.
                 while ((readInt = this.is.read()) != -1) {
                 }
             }
             else {
                 while ((readInt = this.is.read()) != -1) {
-                    this.os.write(readInt);
-                    // always flush
-                    this.os.flush();
+                    os.write(readInt);
+
+                    // flush the output on new line.
+                    if (readInt == '\n') {
+                        os.flush();
+                    }
                 }
             }
-        } catch (IOException ignore) {
-        } catch (IllegalArgumentException e) {
-        } finally {
-            try {
-                if (this.os != null) {
-                    this.os.flush(); // this goes to the console, so we don't want to close it!
-                }
-                this.is.close();
-            } catch (IOException ignore) {
-            }
+        } catch (Exception ignore) {
         }
     }
 }
