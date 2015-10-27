@@ -15,8 +15,14 @@
  */
 package dorkbox.util;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.SwingUtilities;
+import java.awt.Container;
+import java.awt.EventQueue;
+import java.awt.GraphicsDevice;
+import java.awt.Image;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 

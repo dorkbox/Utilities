@@ -1,6 +1,10 @@
 package dorkbox.util;
 
-import java.awt.*;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 
 /**
