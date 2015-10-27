@@ -157,8 +157,12 @@ interface Gobject extends Library {
     }
 
 
+
+
     void g_object_unref(Pointer object);
 
-    void g_signal_connect_data(Pointer instance, String detailed_signal, Callback c_handler, Pointer data, Pointer destroy_data,
+    NativeLong g_signal_connect_data(Pointer instance, String detailed_signal, Callback c_handler, Pointer data, Pointer destroy_data,
                                int connect_flags);
+
+    NativeLong g_signal_connect(Pointer instance, String detailed_signal, Callback c_handler, Pointer data);
 }

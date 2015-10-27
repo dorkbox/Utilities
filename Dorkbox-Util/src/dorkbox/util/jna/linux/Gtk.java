@@ -15,10 +15,12 @@
  */
 package dorkbox.util.jna.linux;
 
+import com.sun.jna.Function;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
+import dorkbox.util.Keep;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +31,7 @@ public interface Gtk extends Library {
     int FALSE = 0;
     int TRUE = 1;
 
-
+    @Keep
     class GdkEventButton extends Structure {
         public int type;
         public Pointer window;
@@ -61,6 +63,8 @@ public interface Gtk extends Library {
         }
     }
 
+    Function gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
+
     void gtk_init(int argc, String[] argv);
 
     /**
@@ -78,7 +82,6 @@ public interface Gtk extends Library {
     void gdk_threads_enter();
     void gdk_threads_leave();
 
-
     Pointer gtk_menu_new();
     Pointer gtk_menu_item_new_with_label(String label);
 
@@ -88,6 +91,9 @@ public interface Gtk extends Library {
     void gtk_status_icon_set_visible(Pointer widget, boolean visible);
     void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
 
+    void gtk_status_icon_set_title(Pointer widget, String titleText);
+
+    void gtk_menu_popup(Pointer menu, Pointer widget, Pointer bla, Function func, Pointer data, int button, int time);
     void gtk_menu_item_set_label(Pointer menu_item, String label);
     void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
     void gtk_widget_set_sensitive(Pointer widget, int sesitive);
