@@ -243,6 +243,7 @@ class Sys {
         while ((read = inputStream.read(buffer)) > 0) {
             outputStream.write(buffer, 0, read);
         }
+        outputStream.flush();
 
         return outputStream;
     }
