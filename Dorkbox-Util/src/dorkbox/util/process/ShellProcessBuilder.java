@@ -40,7 +40,7 @@ public
 class ShellProcessBuilder {
 
     private final PrintStream outputStream;
-    private final PrintStream errorStream;
+    private final PrintStream outputErrorStream;
     private final InputStream inputStream;
 
     protected List<String> arguments = new ArrayList<String>();
@@ -51,6 +51,10 @@ class ShellProcessBuilder {
 
     // true if we want to save off (usually for debugging) the initial output from this
     private boolean debugInfo = false;
+    private boolean createReadWriterThreads = false;
+
+    private boolean isShell;
+    private String pipeToNullString = "";
 
     /**
      * This will cause the spawned process to pipe it's output to null.
@@ -74,7 +78,23 @@ class ShellProcessBuilder {
     ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
         this.inputStream = in;
         this.outputStream = out;
-        this.errorStream = err;
+        this.outputErrorStream = err;
+    }
+
+    /**
+     * Creates extra reader/writer threads for the sub-process. This is useful depending on how the sub-process is designed to run.
+     * </p>
+     * For a process you want interactive IO with, this is required.
+     * </p>
+     * For a long-running sub-process, with no interactive IO, this is what you'd want.
+     * </p>
+     * For a run-and-get-the-results process, this isn't recommended.
+     *
+     */
+    public final
+    ShellProcessBuilder createReadWriterThreads() {
+        createReadWriterThreads = true;
+        return this;
     }
 
     /**
@@ -126,102 +146,138 @@ class ShellProcessBuilder {
         return this;
     }
 
+    public
+    ShellProcessBuilder pipeOutputToNull() {
+        if (OS.isWindows()) {
+            // >NUL on windows
+            pipeToNullString = ">NUL";
+        }
+        else {
+            // we will "pipe" it to /dev/null on *nix
+            pipeToNullString = ">/dev/null 2>&1";
+        }
+
+        return this;
+    }
+
 
     public
     void start() {
+        List<String> argumentsList = new ArrayList<String>();
+
         // if no executable, then use the command shell
         if (this.executableName == null) {
+            isShell = true;
+
             if (OS.isWindows()) {
                 // windows
                 this.executableName = "cmd";
-                this.arguments.add(0, "/c");
 
+                argumentsList.add(this.executableName);
+                argumentsList.add("/c");
             }
             else {
                 // *nix
                 this.executableName = "/bin/bash";
+
                 File file = new File(this.executableName);
                 if (!file.canExecute()) {
                     this.executableName = "/bin/sh";
                 }
-                this.arguments.add(0, "-c");
+
+                argumentsList.add(this.executableName);
+                argumentsList.add("-c");
             }
         }
-        else if (this.workingDirectory != null) {
-            if (!this.workingDirectory.endsWith("/") && !this.workingDirectory.endsWith("\\")) {
-                this.workingDirectory += File.separator;
-            }
-        }
+        else {
+            // shell and working/exe directory are mutually exclusive
 
-        if (this.executableDirectory != null) {
-            if (!this.executableDirectory.endsWith("/") && !this.executableDirectory.endsWith("\\")) {
-                this.executableDirectory += File.separator;
-            }
-
-            this.executableName = this.executableDirectory + this.executableName;
-        }
-
-        List<String> argumentsList = new ArrayList<String>();
-        argumentsList.add(this.executableName);
-
-        for (String arg : this.arguments) {
-            if (arg.contains(" ")) {
-                // individual arguments MUST be in their own element in order to
-                //  be processed properly (this is how it works on the command line!)
-                String[] split = arg.split(" ");
-                for (String s : split) {
-                    argumentsList.add(s);
+            if (this.workingDirectory != null) {
+                if (!this.workingDirectory.endsWith(File.separator)) {
+                    this.workingDirectory += File.separator;
                 }
             }
-            else {
+
+            if (this.executableDirectory != null) {
+                if (!this.executableDirectory.endsWith(File.separator)) {
+                    this.executableDirectory += File.separator;
+                }
+
+                argumentsList.add(0, this.executableDirectory + this.executableName);
+            } else {
+                argumentsList.add(this.executableName);
+            }
+        }
+
+
+        // if we don't want output...
+        boolean pipeToNull = !pipeToNullString.isEmpty();
+
+        if (isShell && !OS.isWindows()) {
+            // when a shell AND on *nix, we have to place ALL the args into a single "arg" that is passed in
+            final StringBuilder stringBuilder = new StringBuilder(1024);
+
+            for (String arg : this.arguments) {
+                stringBuilder.append(arg).append(" ");
+            }
+
+            if (!arguments.isEmpty()) {
+                if (pipeToNull) {
+                    stringBuilder.append(pipeToNullString);
+                }
+                else {
+                    // delete last " "
+                    stringBuilder.delete(stringBuilder.length() - 1, stringBuilder.length());
+                }
+            }
+
+            argumentsList.add(stringBuilder.toString());
+
+        } else {
+            for (String arg : this.arguments) {
                 argumentsList.add(arg);
             }
+
+            if (pipeToNull) {
+                argumentsList.add(pipeToNullString);
+            }
         }
 
 
-        // if we don't want output... TODO: i think we want to "exec" (this calls exec -c, which calls our program)
-        // this code as well, since calling it directly won't work
-        boolean pipeToNull = this.errorStream == null || this.outputStream == null;
-        if (pipeToNull) {
-            if (OS.isWindows()) {
-                // >NUL on windows
-                argumentsList.add(">NUL");
-            }
-            else {
-                // we will "pipe" it to /dev/null on *nix
-                argumentsList.add(">/dev/null 2>&1");
-            }
-        }
 
         if (this.debugInfo) {
-            if (errorStream != null) {
-                this.errorStream.print("Executing: ");
+            if (outputErrorStream != null) {
+                this.outputErrorStream.print("Executing: ");
             } else {
-                System.err.println("Executing: ");
+                System.err.print("Executing: ");
             }
+
             Iterator<String> iterator = argumentsList.iterator();
             while (iterator.hasNext()) {
                 String s = iterator.next();
-                if (errorStream != null) {
-                    this.errorStream.print(s);
+                if (outputErrorStream != null) {
+                    this.outputErrorStream.print(s);
                 } else {
                     System.err.print(s);
                 }
                 if (iterator.hasNext()) {
-                    if (errorStream != null) {
-                        this.errorStream.print(" ");
+                    if (outputErrorStream != null) {
+                        this.outputErrorStream.print(" ");
                     } else {
                         System.err.print(" ");
                     }
                 }
             }
 
-            if (errorStream != null) {
-                this.errorStream.print(OS.LINE_SEPARATOR);
+            if (outputErrorStream != null) {
+                this.outputErrorStream.print(OS.LINE_SEPARATOR);
             } else {
                 System.err.print(OS.LINE_SEPARATOR);
             }
         }
+
+
+
 
         ProcessBuilder processBuilder = new ProcessBuilder(argumentsList);
         if (this.workingDirectory != null) {
@@ -229,52 +285,50 @@ class ShellProcessBuilder {
         }
 
         // combine these so output is properly piped to null.
-        if (pipeToNull) {
+        if (pipeToNull || this.outputErrorStream == null) {
             processBuilder.redirectErrorStream(true);
         }
 
         try {
             this.process = processBuilder.start();
         } catch (Exception ex) {
-            if (errorStream != null) {
-                this.errorStream.println("There was a problem executing the program.  Details:");
+            if (outputErrorStream != null) {
+                this.outputErrorStream.println("There was a problem executing the program.  Details:");
             } else {
                 System.err.println("There was a problem executing the program.  Details:");
             }
-            ex.printStackTrace(this.errorStream);
+            ex.printStackTrace(this.outputErrorStream);
 
             if (this.process != null) {
                 try {
                     this.process.destroy();
                     this.process = null;
                 } catch (Exception e) {
-                    if (errorStream != null) {
-                        this.errorStream.println("Error destroying process:");
+                    if (outputErrorStream != null) {
+                        this.outputErrorStream.println("Error destroying process:");
                     } else {
                         System.err.println("Error destroying process:");
                     }
-                    e.printStackTrace(this.errorStream);
+                    e.printStackTrace(this.outputErrorStream);
                 }
             }
         }
 
         if (this.process != null) {
-            ProcessProxy writeToProcess_input;
-            ProcessProxy readFromProcess_output;
-            ProcessProxy readFromProcess_error;
+            ProcessProxy writeToProcess_input = null;
+            ProcessProxy readFromProcess_output = null;
+            ProcessProxy readFromProcess_error = null;
 
+            if (this.outputErrorStream == null && this.outputStream == null) {
+                if (!pipeToNull) {
+                    NullOutputStream nullOutputStream = new NullOutputStream();
 
-            if (pipeToNull) {
-                NullOutputStream nullOutputStream = new NullOutputStream();
-
-                processBuilder.redirectErrorStream(true);
-
-                // readers (read process -> write console)
-                // have to keep the output buffers from filling in the target process.
-                readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName,
-                                                          this.process.getInputStream(),
-                                                          nullOutputStream);
-                readFromProcess_error = null;
+                    // readers (read process -> write console)
+                    // have to keep the output buffers from filling in the target process.
+                    readFromProcess_output = new ProcessProxy("Process Reader: " + this.executableName,
+                                                              this.process.getInputStream(),
+                                                              nullOutputStream);
+                }
             }
             // we want to pipe our input/output from process to ourselves
             else {
@@ -287,14 +341,10 @@ class ShellProcessBuilder {
                                                           this.process.getInputStream(),
                                                           this.outputStream);
 
-                if (this.errorStream != this.outputStream) {
+                if (this.outputErrorStream != this.outputStream) {
                     readFromProcess_error = new ProcessProxy("Process Reader: " + this.executableName,
                                                              this.process.getErrorStream(),
-                                                             this.errorStream);
-                }
-                else {
-                    processBuilder.redirectErrorStream(true);
-                    readFromProcess_error = null;
+                                                             this.outputErrorStream);
                 }
             }
 
@@ -307,9 +357,6 @@ class ShellProcessBuilder {
                                                         this.inputStream,
                                                         this.process.getOutputStream());
             }
-            else {
-                writeToProcess_input = null;
-            }
 
 
             // the process can be killed in two ways
@@ -320,7 +367,10 @@ class ShellProcessBuilder {
                 public
                 void run() {
                     if (ShellProcessBuilder.this.debugInfo) {
-                        ShellProcessBuilder.this.errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
+                        final PrintStream errorStream = ShellProcessBuilder.this.outputErrorStream;
+                        if (errorStream != null) {
+                            errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
+                        }
                     }
                     ShellProcessBuilder.this.process.destroy();
                 }
@@ -330,11 +380,27 @@ class ShellProcessBuilder {
                    .addShutdownHook(hook);
 
             if (writeToProcess_input != null) {
-                writeToProcess_input.start();
+                if (createReadWriterThreads) {
+                    writeToProcess_input.start();
+                }
+                else {
+                    writeToProcess_input.run();
+                }
             }
-            readFromProcess_output.start();
+
+            if (createReadWriterThreads) {
+                readFromProcess_output.start();
+            }
+            else {
+                readFromProcess_output.run();
+            }
             if (readFromProcess_error != null) {
-                readFromProcess_error.start();
+                if (createReadWriterThreads) {
+                    readFromProcess_error.start();
+                }
+                else {
+                    readFromProcess_error.run();
+                }
             }
 
             try {

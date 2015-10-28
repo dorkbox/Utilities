@@ -18,12 +18,14 @@ package dorkbox.util.process;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
 
 public
 class ProcessProxy extends Thread {
 
     private final InputStream is;
     private final OutputStream os;
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     // when reading from the stdin and outputting to the process
     public
@@ -37,6 +39,7 @@ class ProcessProxy extends Thread {
 
     public
     void close() {
+        this.interrupt();
         try {
             if (os != null) {
                 os.flush(); // this goes to the console, so we don't want to close it!
@@ -47,9 +50,26 @@ class ProcessProxy extends Thread {
     }
 
     @Override
+    public synchronized
+    void start() {
+        super.start();
+
+        // now we have to for it to actually start up. The process can run & complete before this starts, resulting in no input/output
+        // captured
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public
     void run() {
         final OutputStream os = this.os;
+        final InputStream is = this.is;
+
+        countDownLatch.countDown();
 
         try {
             // this thread will read until there is no more data to read. (this is generally what you want)
@@ -58,17 +78,15 @@ class ProcessProxy extends Thread {
 
             if (os == null) {
                 // just read so it won't block.
-                while ((readInt = this.is.read()) != -1) {
+                while (is.read() != -1) {
                 }
             }
             else {
-                while ((readInt = this.is.read()) != -1) {
+                while ((readInt = is.read()) != -1) {
                     os.write(readInt);
 
-                    // flush the output on new line.
-                    if (readInt == '\n') {
-                        os.flush();
-                    }
+                    // always flush after a write
+                    os.flush();
                 }
             }
         } catch (Exception ignore) {

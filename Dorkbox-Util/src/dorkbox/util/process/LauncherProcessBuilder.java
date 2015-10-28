@@ -92,6 +92,7 @@ class LauncherProcessBuilder extends ShellProcessBuilder {
             setExecutable("dorkbox");
         }
 
+        createReadWriterThreads();
 
         // save off the original arguments
         List<String> origArguments = new ArrayList<String>(this.arguments.size());
