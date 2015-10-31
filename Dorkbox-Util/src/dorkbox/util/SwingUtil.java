@@ -15,16 +15,17 @@
  */
 package dorkbox.util;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import java.awt.Container;
-import java.awt.EventQueue;
-import java.awt.GraphicsDevice;
-import java.awt.Image;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public
 class SwingUtil {
@@ -32,8 +33,16 @@ class SwingUtil {
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
     public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
 
+    public static final Font FONT_BOLD_12 = new Font("Source Code Pro", Font.BOLD, 12);
+    public static final Font FONT_BOLD_14 = new Font("Source Code Pro", Font.BOLD, 14);
+    public static final Font FONT_BOLD_16 = new Font("Source Code Pro", Font.BOLD, 16);
+
+    public static final Font FONT_12 = new Font("Source Code Pro", Font.PLAIN, 12);
+    public static final Font FONT_14 = new Font("Source Code Pro", Font.PLAIN, 14);
+
+
     public static
-    void showOnSameScreenAsMouseCenter(Container frame) {
+    void showOnSameScreenAsMouse_Center(final Container frame) {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
@@ -44,7 +53,7 @@ class SwingUtil {
     }
 
     public static
-    void showOnSameScreenAsMouse(Container frame) {
+    void showOnSameScreenAsMouse(final Container frame) {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
@@ -53,8 +62,78 @@ class SwingUtil {
                                        .getBounds().x, frame.getY());
     }
 
+
+    /**
+     * Adds a listener to the window parent of the given component. Can be before the component is really added to its hierarchy.
+     *
+     * @param source The source component
+     * @param listener The listener to add to the window
+     */
     public static
-    void invokeLater(Runnable runnable) {
+    void addWindowListener(final Component source, final WindowListener listener) {
+        if (source instanceof Window) {
+            ((Window) source).addWindowListener(listener);
+        }
+        else {
+            source.addHierarchyListener(new HierarchyListener() {
+                @Override
+                public
+                void hierarchyChanged(HierarchyEvent e) {
+                    if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) == HierarchyEvent.SHOWING_CHANGED) {
+                        SwingUtilities.getWindowAncestor(source)
+                                      .addWindowListener(listener);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Centers a component according to the window location.
+     *
+     * @param window The parent window
+     * @param component A component, usually a dialog
+     */
+    public static
+    void centerInWindow(final Window window, final Component component) {
+        Dimension size = window.getSize();
+        Point loc = window.getLocationOnScreen();
+        Dimension cmpSize = component.getSize();
+        loc.x += (size.width - cmpSize.width) / 2;
+        loc.y += (size.height - cmpSize.height) / 2;
+        component.setBounds(loc.x, loc.y, cmpSize.width, cmpSize.height);
+    }
+
+    /**
+     * Opens the given website in the default browser, or show a message saying that no default browser could be accessed.
+     *
+     * @param parent The parent of the error message, if raised
+     * @param uri The website uri
+     */
+    public static
+    void browse(final Component parent, final String uri) {
+        boolean cannotBrowse = false;
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop()
+                                                   .isSupported(Desktop.Action.BROWSE)) {
+            try {
+                Desktop.getDesktop()
+                       .browse(new URI(uri));
+            } catch (URISyntaxException ex) {
+            } catch (IOException ex) {
+                cannotBrowse = true;
+            }
+        }
+        else {
+            cannotBrowse = true;
+        }
+
+        if (cannotBrowse) {
+            JOptionPane.showMessageDialog(parent, "It seems that I can't open a website using your" + "default browser, sorry.");
+        }
+    }
+
+    public static
+    void invokeLater(final Runnable runnable) {
         if (EventQueue.isDispatchThread()) {
             runnable.run();
         }
@@ -64,7 +143,7 @@ class SwingUtil {
     }
 
     public static
-    void invokeAndWait(Runnable runnable) {
+    void invokeAndWait(final Runnable runnable) {
         if (EventQueue.isDispatchThread()) {
             runnable.run();
         }

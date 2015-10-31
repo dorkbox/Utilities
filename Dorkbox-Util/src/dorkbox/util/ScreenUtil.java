@@ -5,7 +5,6 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.ArrayList;
 
 /**
  * Screen utilities
@@ -27,27 +26,22 @@ class ScreenUtil {
 
     public static
     GraphicsDevice getGraphicsDeviceAt(Point pos) {
-        GraphicsDevice device;
 
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice lstGDs[] = ge.getScreenDevices();
+        GraphicsDevice screenDevices[] = ge.getScreenDevices();
 
-        ArrayList<GraphicsDevice> lstDevices = new ArrayList<GraphicsDevice>(lstGDs.length);
-
-        for (GraphicsDevice gd : lstGDs) {
-
-            GraphicsConfiguration gc = gd.getDefaultConfiguration();
+        GraphicsDevice device = null;
+        for (GraphicsDevice device1 : screenDevices) {
+            GraphicsConfiguration gc = device1.getDefaultConfiguration();
             Rectangle screenBounds = gc.getBounds();
 
             if (screenBounds.contains(pos)) {
-                lstDevices.add(gd);
+                device = device1;
+                break;
             }
         }
 
-        if (lstDevices.size() > 0) {
-            device = lstDevices.get(0);
-        }
-        else {
+        if (device == null) {
             device = ge.getDefaultScreenDevice();
         }
 
