@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * Nothing spectacular about this storage -- it allows for persistent storage of objects to disk.
  * <p/>
- * Be wary of opening the database file in different instances. Even with file-locks, you can corrupt the data.
+ * Be wary of opening the database file in different JVM instances. Even with file-locks, you can corrupt the data.
  */
 @SuppressWarnings("unused")
 public
