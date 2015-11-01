@@ -21,8 +21,6 @@ package dorkbox.util;
 public
 class MathUtil {
 
-    // ---
-
     private static final ThreadLocal<MersenneTwisterFast> random = new ThreadLocal<MersenneTwisterFast>();
 
     /**
