@@ -37,6 +37,7 @@ import java.util.zip.ZipInputStream;
  * Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
  * Jeremias Maerki, Stephen Colebourne
  */
+@SuppressWarnings("unused")
 public
 class FileUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
@@ -72,7 +73,7 @@ class FileUtil {
 
     public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-    public static byte[] ZIP_HEADER = {'P', 'K', 0x3, 0x4};
+    public static byte[] ZIP_HEADER = {'P', 'K', (byte) 0x3, (byte) 0x4};
 
     /**
      * Renames a file. Windows has all sorts of problems which are worked around.
@@ -141,7 +142,7 @@ class FileUtil {
         List<String> lines = new ArrayList<String>();
         try {
             BufferedReader bin = new BufferedReader(in);
-            for (String line = null; (line = bin.readLine()) != null; lines.add(line)) {
+            for (String line; (line = bin.readLine()) != null; lines.add(line)) {
             }
         } finally {
             Sys.close(in);
@@ -326,6 +327,7 @@ class FileUtil {
     /**
      * Copies a directory from one location to another
      */
+    @SuppressWarnings("Duplicates")
     public static
     void copyDirectory(File src_, File dest_, String... fileNamesToIgnore) throws IOException {
         File src = FileUtil.normalize(src_);
@@ -380,6 +382,7 @@ class FileUtil {
     /**
      * Safely moves a directory from one location to another (by copying it first, then deleting the original).
      */
+    @SuppressWarnings("Duplicates")
     public static
     void moveDirectory(File src, File dest, String... fileNamesToIgnore) throws IOException {
         if (fileNamesToIgnore.length > 0) {
@@ -449,46 +452,49 @@ class FileUtil {
         Logger logger2 = logger;
         if (file.isDirectory()) {
             File[] files = file.listFiles();
-            for (int i = 0, n = files.length; i < n; i++) {
-                boolean delete = true;
-                String name2 = files[i].getName();
+            if (files != null) {
+                for (int i = 0, n = files.length; i < n; i++) {
 
-                if (files[i].isDirectory()) {
-                    for (String name : namesToIgnore) {
-                        if (name.startsWith("/") && name.equals(name2)) {
-                            if (logger2.isTraceEnabled()) {
-                                logger2.trace("Skipping delete dir: {}", files[i]);
+                    boolean delete = true;
+                    String name2 = files[i].getName();
+
+                    if (files[i].isDirectory()) {
+                        for (String name : namesToIgnore) {
+                            if (name.startsWith("/") && name.equals(name2)) {
+                                if (logger2.isTraceEnabled()) {
+                                    logger2.trace("Skipping delete dir: {}", files[i]);
+                                }
+                                ignored = true;
+                                delete = false;
+                                break;
                             }
-                            ignored = true;
-                            delete = false;
-                            break;
                         }
-                    }
 
-                    if (delete) {
-                        if (logger2.isTraceEnabled()) {
-                            logger2.trace("Deleting dir: {}", files[i]);
-                        }
-                        delete(files[i], namesToIgnore);
-                    }
-                }
-                else {
-                    for (String name : namesToIgnore) {
-                        if (!name.startsWith("/") && name.equals(name2)) {
+                        if (delete) {
                             if (logger2.isTraceEnabled()) {
-                                logger2.trace("Skipping delete file: {}", files[i]);
+                                logger2.trace("Deleting dir: {}", files[i]);
                             }
-                            ignored = true;
-                            delete = false;
-                            break;
+                            delete(files[i], namesToIgnore);
                         }
                     }
-
-                    if (delete) {
-                        if (logger2.isTraceEnabled()) {
-                            logger2.trace("Deleting file: {}", files[i]);
+                    else {
+                        for (String name : namesToIgnore) {
+                            if (!name.startsWith("/") && name.equals(name2)) {
+                                if (logger2.isTraceEnabled()) {
+                                    logger2.trace("Skipping delete file: {}", files[i]);
+                                }
+                                ignored = true;
+                                delete = false;
+                                break;
+                            }
                         }
-                        files[i].delete();
+
+                        if (delete) {
+                            if (logger2.isTraceEnabled()) {
+                                logger2.trace("Deleting file: {}", files[i]);
+                            }
+                            files[i].delete();
+                        }
                     }
                 }
             }
@@ -588,6 +594,7 @@ class FileUtil {
         try {
             in.mark(ZIP_HEADER.length);
             for (int i = 0; i < ZIP_HEADER.length; i++) {
+                //noinspection NumericCastThatLosesPrecision
                 if (ZIP_HEADER[i] != (byte) in.read()) {
                     isZip = false;
                     break;
@@ -616,6 +623,7 @@ class FileUtil {
     /**
      * @return true if the file is a zip/jar file
      */
+    @SuppressWarnings("Duplicates")
     public static
     boolean isZipFile(File file) {
         boolean isZip = true;
@@ -648,8 +656,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzip(String zipFile, String outputDir) throws IOException {
@@ -658,8 +664,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzip(File zipFile, File outputDir) throws IOException {
@@ -668,8 +672,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file. Will close the input stream.
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzip(ZipInputStream inputStream, String outputDir) throws IOException {
@@ -682,8 +684,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file. Will close the input stream.
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzip(ZipInputStream inputStream, File outputDir) throws IOException {
@@ -692,8 +692,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzipJar(String zipFile, String outputDir, boolean extractManifest) throws IOException {
@@ -709,8 +707,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzipJar(File zipFile, File outputDir, boolean extractManifest) throws IOException {
@@ -726,8 +722,6 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file. Will close the input stream.
-     *
-     * @return The path to the output directory.
      */
     public static
     void unzipJar(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws IOException {
@@ -765,13 +759,11 @@ class FileUtil {
 
     /**
      * Unzips a ZIP file
-     *
-     * @return The path to the output directory.
      */
     private static
-    void unjarzip1(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws FileNotFoundException, IOException {
+    void unjarzip1(ZipInputStream inputStream, File outputDir, boolean extractManifest) throws IOException {
         try {
-            ZipEntry entry = null;
+            ZipEntry entry;
             while ((entry = inputStream.getNextEntry()) != null) {
                 String name = entry.getName();
 
