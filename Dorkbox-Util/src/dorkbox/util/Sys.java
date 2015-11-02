@@ -28,8 +28,6 @@ import java.util.Map.Entry;
 @SuppressWarnings("unused")
 public final
 class Sys {
-    public static final boolean isAndroid = getIsAndroid();
-
     public static final int KILOBYTE = 1024;
     public static final int MEGABYTE = 1024 * KILOBYTE;
     public static final int GIGABYTE = 1024 * MEGABYTE;
@@ -45,17 +43,6 @@ class Sys {
 
         return charArray;
     }
-
-    private static
-    boolean getIsAndroid() {
-        try {
-            Class.forName("android.os.Process");
-            return true;
-        } catch (Exception ignored) {
-            return false;
-        }
-    }
-
 
     public static
     void eraseString(String string) {
