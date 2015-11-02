@@ -54,6 +54,7 @@ class Sys {
 //      If you want to be able to use it as an entry in a set or as a value in map,
 //      you will need to recalculate the hash code and set the value of the hashCode field.
 
+        //noinspection TryWithIdenticalCatches
         try {
             Field valueField = String.class.getDeclaredField("value");
             valueField.setAccessible(true);
@@ -161,6 +162,7 @@ class Sys {
     /**
      * Convenient close for a stream.
      */
+    @SuppressWarnings("Duplicates")
     public static
     void close(InputStream inputStream) {
         if (inputStream != null) {
@@ -176,6 +178,7 @@ class Sys {
     /**
      * Convenient close for a stream.
      */
+    @SuppressWarnings("Duplicates")
     public static
     void close(OutputStream outputStream) {
         if (outputStream != null) {
@@ -191,6 +194,7 @@ class Sys {
     /**
      * Convenient close for a Reader.
      */
+    @SuppressWarnings("Duplicates")
     public static
     void close(Reader inputReader) {
         if (inputReader != null) {
@@ -206,6 +210,7 @@ class Sys {
     /**
      * Convenient close for a Writer.
      */
+    @SuppressWarnings("Duplicates")
     public static
     void close(Writer outputWriter) {
         if (outputWriter != null) {
@@ -338,6 +343,7 @@ class Sys {
     /**
      * this saves the char array in UTF-16 format of bytes
      */
+    @SuppressWarnings("NumericCastThatLosesPrecision")
     public static
     byte[] charToBytes(char[] text) {
         // NOTE: this saves the char array in UTF-16 format of bytes.
@@ -369,6 +375,7 @@ class Sys {
         return bytes;
     }
 
+    @SuppressWarnings("NumericCastThatLosesPrecision")
     public static
     byte[] charToBytesRaw(char[] chars) {
         int length = chars.length;
@@ -514,6 +521,7 @@ class Sys {
      * @param originalArray this is the base of the XOR operation.
      * @param keyArray      this is XOR'd into the original array, repeats if necessary.
      */
+    @SuppressWarnings("NumericCastThatLosesPrecision")
     public static
     void xorArrays(byte[] originalArray, byte[] keyArray) {
         int keyIndex = 0;
