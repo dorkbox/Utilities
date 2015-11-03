@@ -47,17 +47,16 @@
     <orderEntry type="library" name="bouncyCastle bcprov-jdk15on (1.51)" level="application" />
     <orderEntry type="library" name="reflectasm" level="application" />
     <orderEntry type="library" name="asm (5.0.4)" level="application" />
-    <orderEntry type="library" name="jna (4.1.0)" level="application" />
+    <orderEntry type="library" name="jna (4.2.1)" level="application" />
     <orderEntry type="library" name="joda-time (2.4)" level="application" />
     <orderEntry type="library" name="javassist" level="application" />
     <orderEntry type="library" name="objenesis (2.1)" level="application" />
     <orderEntry type="library" name="kryo3" level="application" />
     <orderEntry type="library" name="jansi (1.11b)" level="application" />
     <orderEntry type="library" name="netty-all (4.1.0)" level="application" />
-    <orderEntry type="library" name="JCTools (1.1 alpha MTAQ)" level="application" />
+    <orderEntry type="library" name="JCTools (1.4 alpha MTAQ)" level="application" />
     <orderEntry type="library" name="controlsfx" level="application" />
     <orderEntry type="library" name="junit-4.12" level="application" />
-    <orderEntry type="library" name="timingframework-swing" level="application" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">
