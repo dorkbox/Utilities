@@ -17,28 +17,137 @@ package dorkbox.util;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import java.awt.*;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Enumeration;
 
 public
 class SwingUtil {
+    static {
+        // loads fonts into the system, and sets the default look and feel.
+
+        boolean fonts_disable = SystemProps.getBoolean(SystemProps.FontsDisable, false);
+        if (!fonts_disable) {
+            boolean isJava6 = OS.javaVersion == 6;
+            String fontsLocation = SystemProps.getString(SystemProps.FontsLocation, "resources/fonts");
+
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            Enumeration<URL> fonts = LocationResolver.getResources(fontsLocation);
+            if (fonts.hasMoreElements()) {
+                // skip the FIRST one, since we always know that the first one is the directory we asked for
+                fonts.nextElement();
+
+                while (fonts.hasMoreElements()) {
+                    URL url = fonts.nextElement();
+                    InputStream is = null;
+
+                    //noinspection TryWithIdenticalCatches
+                    try {
+                        String path = url.toURI()
+                                         .getPath();
+
+                        // only support TTF fonts (java6) and OTF fonts (7+).
+                        if (path.endsWith(".ttf") || (!isJava6 && path.endsWith(".otf"))) {
+                            is = url.openStream();
+
+                            Font newFont = Font.createFont(Font.TRUETYPE_FONT, is);
+                            // fonts that ALREADY exist are not re-registered
+                            ge.registerFont(newFont);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (URISyntaxException e) {
+                        e.printStackTrace();
+                    } catch (FontFormatException e) {
+                        e.printStackTrace();
+                    } finally {
+                        if (is != null) {
+                            try {
+                                is.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        boolean LF_disable = SystemProps.getBoolean(SystemProps.LookAndFeelDisable, false);
+        if (!LF_disable) {
+            // register a better looking L&F
+            String nimbus = "Nimbus";
+            String name = UIManager.getLookAndFeel().getName();
+
+            if (!nimbus.equals(name)) {
+                try {
+                    for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                        if ("Nimbus".equals(info.getName())) {
+                            UIManager.setLookAndFeel(info.getClassName());
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    // If Nimbus is not available, fall back to cross-platform
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets (or creates) a Font based on a specific system property. Remember: the FontManager caches system/loaded fonts, so we don't need
+     * to ALSO cache them as well. see: https://stackoverflow.com/questions/6102602/java-awt-is-font-a-lightweight-object
+     * <p>
+     * Also remember that if requesting a BOLD hint for a font, the system will look for a font that is BOLD. If none are found, it
+     * will then apply transforms to the specified font to create a font that is bold. Specifying a bold name AND a bold hint will not
+     * "double bold" the font
+     * <p></p>
+     * For example:
+     * <p>
+     *
+     * Font titleTextFont = SwingUtil.getFontFromProperty("dorkbox.growl.maintext", "Source Code Pro Bold", Font.BOLD, 16);
+     *
+     * @param propertyBaseName This is the base property to get the font info from, such as "dorkbox.growl.mainText"
+     *
+     * @param fontName this is the default font information, if the font information is not overridden.
+     * @param fontHint this is the default font information, if the font information is not overridden
+     * @param fontSize this is the default font information, if the font information is not overridden
+     *
+     * @return the specified font
+     */
+    public static
+    Font getFontFromProperty(final String propertyBaseName, final String fontName, final int fontHint, final int fontSize) {
+        String name = SystemProps.getString(propertyBaseName + ".name", fontName);
+        int style = SystemProps.getInt(propertyBaseName + ".style", fontHint);
+        int size = SystemProps.getInt(propertyBaseName + ".size", fontSize);
+
+        // this can be WRONG, in which case it will just error out
+        //noinspection MagicConstant
+        return new Font(name, style, size);
+    }
 
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
     public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
 
-    public static final Font FONT_BOLD_12 = new Font("Source Code Pro", Font.BOLD, 12);
-    public static final Font FONT_BOLD_14 = new Font("Source Code Pro", Font.BOLD, 14);
-    public static final Font FONT_BOLD_16 = new Font("Source Code Pro", Font.BOLD, 16);
+    public static final Font FONT_BOLD_16 = new Font("Source Code Pro Bold", Font.BOLD, 16); // used by ??
 
-    public static final Font FONT_12 = new Font("Source Code Pro", Font.PLAIN, 12);
-    public static final Font FONT_14 = new Font("Source Code Pro", Font.PLAIN, 14);
+    public static final Font FONT_12 = new Font("Source Code Pro", Font.PLAIN, 12);  // used by ??
+    public static final Font FONT_14 = new Font("Source Code Pro", Font.PLAIN, 14);  // used by ??
 
 
     public static
