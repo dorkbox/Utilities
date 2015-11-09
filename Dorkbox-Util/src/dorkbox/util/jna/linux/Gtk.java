@@ -26,10 +26,14 @@ import java.util.Arrays;
 import java.util.List;
 
 public interface Gtk extends Library {
+    // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep image
     Gtk INSTANCE = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
 
     int FALSE = 0;
     int TRUE = 1;
+
+    void gtk_box_pack_start(Pointer box, Pointer child, int expand, int fill, int padding);
+    void gtk_box_pack_end(Pointer box, Pointer child, int expand, int fill, int padding);
 
     @Keep
     class GdkEventButton extends Structure {
@@ -83,20 +87,40 @@ public interface Gtk extends Library {
     void gdk_threads_leave();
 
     Pointer gtk_menu_new();
+    Pointer gtk_menu_item_new();
     Pointer gtk_menu_item_new_with_label(String label);
+
+    // to create a menu entry WITH an icon.
+    Pointer gtk_image_new_from_file(String iconPath);
+
+
+    Pointer gtk_image_menu_item_new_with_label(String label);
+    void gtk_image_menu_item_set_image(Pointer image_menu_item, Pointer image);
+    void gtk_image_menu_item_set_always_show_image(Pointer menu_item, int forceShow);
+
+    Pointer gtk_bin_get_child(Pointer parent);
+    void gtk_label_set_text(Pointer label, String text);
+    void gtk_label_set_markup(Pointer label, Pointer markup);
+    void gtk_label_set_use_markup(Pointer label, int gboolean);
 
     Pointer gtk_status_icon_new();
     void gtk_status_icon_set_from_file(Pointer widget, String lablel);
 
     void gtk_status_icon_set_visible(Pointer widget, boolean visible);
-    void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
+
+    // app indicators don't support this, and we cater to the lowest common denominator
+//    void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
 
     void gtk_status_icon_set_title(Pointer widget, String titleText);
 
     void gtk_menu_popup(Pointer menu, Pointer widget, Pointer bla, Function func, Pointer data, int button, int time);
     void gtk_menu_item_set_label(Pointer menu_item, String label);
+
     void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
-    void gtk_widget_set_sensitive(Pointer widget, int sesitive);
+    void gtk_menu_shell_prepend(Pointer menu_shell, Pointer child);
+    void gtk_menu_shell_deactivate(Pointer menu_shell, Pointer child);
+
+    void gtk_widget_set_sensitive(Pointer widget, int sensitive);
 
     void gtk_widget_show(Pointer widget);
     void gtk_widget_show_all(Pointer widget);
