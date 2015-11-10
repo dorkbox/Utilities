@@ -26,7 +26,6 @@ public
 interface Gobject extends Library {
     Gobject INSTANCE = (Gobject) Native.loadLibrary("gobject-2.0", Gobject.class);
 
-
     @Keep
     class GTypeClassStruct extends Structure {
         public
@@ -163,6 +162,7 @@ interface Gobject extends Library {
 
     void g_free(Pointer object);
     void g_object_unref(Pointer object);
+    void g_object_ref_sink(Pointer object);
 
     NativeLong g_signal_connect_data(Pointer instance, String detailed_signal, Callback c_handler, Pointer data, Pointer destroy_data,
                                int connect_flags);
