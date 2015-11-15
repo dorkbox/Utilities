@@ -34,14 +34,14 @@ public class DsaTest {
     public void Dsa() {
         byte[] bytes = "hello, my name is inigo montoya".getBytes();
 
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.DSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
+        AsymmetricCipherKeyPair generateKeyPair = CryptoDSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
         DSAPrivateKeyParameters privateKey = (DSAPrivateKeyParameters) generateKeyPair.getPrivate();
         DSAPublicKeyParameters publicKey = (DSAPublicKeyParameters) generateKeyPair.getPublic();
 
 
-        BigInteger[] signature = Crypto.DSA.generateSignature(privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
+        BigInteger[] signature = CryptoDSA.generateSignature(privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
 
-        boolean verify1 = Crypto.DSA.verifySignature(publicKey, bytes, signature);
+        boolean verify1 = CryptoDSA.verifySignature(publicKey, bytes, signature);
 
         if (!verify1) {
             fail("failed signature verification");
@@ -56,7 +56,7 @@ public class DsaTest {
 
 
 
-        boolean verify2 = Crypto.DSA.verifySignature(publicKey, bytes2, signature);
+        boolean verify2 = CryptoDSA.verifySignature(publicKey, bytes2, signature);
 
         if (verify2) {
             fail("failed signature verification with bad message");
@@ -66,7 +66,7 @@ public class DsaTest {
     @Test
     public void DsaJceSerializaion() throws IOException {
 
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.DSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
+        AsymmetricCipherKeyPair generateKeyPair = CryptoDSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
         DSAPrivateKeyParameters privateKey = (DSAPrivateKeyParameters) generateKeyPair.getPrivate();
         DSAPublicKeyParameters publicKey = (DSAPublicKeyParameters) generateKeyPair.getPublic();
 
@@ -99,16 +99,16 @@ public class DsaTest {
         byte[] bytes = "hello, my name is inigo montoya".getBytes();
 
 
-        BigInteger[] signature = Crypto.DSA.generateSignature(privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
+        BigInteger[] signature = CryptoDSA.generateSignature(privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
 
-        boolean verify1 = Crypto.DSA.verifySignature(publicKey, bytes, signature);
+        boolean verify1 = CryptoDSA.verifySignature(publicKey, bytes, signature);
 
         if (!verify1) {
             fail("failed signature verification");
         }
 
 
-        boolean verify2 = Crypto.DSA.verifySignature(publicKey2, bytes, signature);
+        boolean verify2 = CryptoDSA.verifySignature(publicKey2, bytes, signature);
 
         if (!verify2) {
             fail("failed signature verification");
@@ -117,16 +117,16 @@ public class DsaTest {
 
 
         // now reverse who signs what.
-        BigInteger[] signatureB = Crypto.DSA.generateSignature(privateKey2, new SecureRandom(entropySeed.getBytes()), bytes);
+        BigInteger[] signatureB = CryptoDSA.generateSignature(privateKey2, new SecureRandom(entropySeed.getBytes()), bytes);
 
-        boolean verifyB1 = Crypto.DSA.verifySignature(publicKey, bytes, signatureB);
+        boolean verifyB1 = CryptoDSA.verifySignature(publicKey, bytes, signatureB);
 
         if (!verifyB1) {
             fail("failed signature verification");
         }
 
 
-        boolean verifyB2 = Crypto.DSA.verifySignature(publicKey2, bytes, signatureB);
+        boolean verifyB2 = CryptoDSA.verifySignature(publicKey2, bytes, signatureB);
 
         if (!verifyB2) {
             fail("failed signature verification");

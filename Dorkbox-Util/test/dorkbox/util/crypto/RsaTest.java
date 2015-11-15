@@ -37,7 +37,7 @@ public class RsaTest {
     public void Rsa() {
         byte[] bytes = "hello, my name is inigo montoya".getBytes();
 
-        AsymmetricCipherKeyPair key = Crypto.RSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
+        AsymmetricCipherKeyPair key = CryptoRSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
 
         RSAKeyParameters public1 = (RSAKeyParameters) key.getPublic();
         RSAPrivateCrtKeyParameters private1 = (RSAPrivateCrtKeyParameters) key.getPrivate();
@@ -48,8 +48,8 @@ public class RsaTest {
         OAEPEncoding rsaEngine = new OAEPEncoding(engine, digest);
 
         // test encrypt/decrypt
-        byte[] encryptRSA = Crypto.RSA.encrypt(rsaEngine, public1, bytes, logger);
-        byte[] decryptRSA = Crypto.RSA.decrypt(rsaEngine, private1, encryptRSA, logger);
+        byte[] encryptRSA = CryptoRSA.encrypt(rsaEngine, public1, bytes, logger);
+        byte[] decryptRSA = CryptoRSA.decrypt(rsaEngine, private1, encryptRSA, logger);
 
         if (Arrays.equals(bytes, encryptRSA)) {
             fail("bytes should not be equal");
@@ -62,8 +62,8 @@ public class RsaTest {
         // test signing/verification
         PSSSigner signer = new PSSSigner(engine, digest, digest.getDigestSize());
 
-        byte[] signatureRSA = Crypto.RSA.sign(signer, private1, bytes, logger);
-        boolean verify = Crypto.RSA.verify(signer, public1, signatureRSA, bytes);
+        byte[] signatureRSA = CryptoRSA.sign(signer, private1, bytes, logger);
+        boolean verify = CryptoRSA.verify(signer, public1, signatureRSA, bytes);
 
         if (!verify) {
             fail("failed signature verification");
@@ -103,7 +103,7 @@ public class RsaTest {
         RSAKeyParameters public2 = (RSAKeyParameters) kryo.readClassAndObject(input);
 
 
-        if (!Crypto.RSA.compare(public1, public2)) {
+        if (!CryptoRSA.compare(public1, public2)) {
             fail("public keys not equal");
         }
 
@@ -119,7 +119,7 @@ public class RsaTest {
         RSAPrivateCrtKeyParameters private2 = (RSAPrivateCrtKeyParameters) kryo.readClassAndObject(input);
 
 
-        if (!Crypto.RSA.compare(private1, private2)) {
+        if (!CryptoRSA.compare(private1, private2)) {
             fail("private keys not equal");
         }
     }

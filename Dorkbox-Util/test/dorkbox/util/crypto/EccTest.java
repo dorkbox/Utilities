@@ -47,13 +47,13 @@ public class EccTest {
     public void EccStreamMode() throws IOException {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
 
-        IESParameters cipherParams = Crypto.ECC.generateSharedParameters(secureRandom);
+        IESParameters cipherParams = CryptoECC.generateSharedParameters(secureRandom);
 
-        IESEngine encrypt = Crypto.ECC.createEngine();
-        IESEngine decrypt = Crypto.ECC.createEngine();
+        IESEngine encrypt = CryptoECC.createEngine();
+        IESEngine decrypt = CryptoECC.createEngine();
 
 
         // note: we want an ecc key that is AT LEAST 512 bits! (which is equal to AES 256)
@@ -69,8 +69,8 @@ public class EccTest {
 
 
         // test stream mode
-        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
-        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
+        byte[] encrypted = CryptoECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
+        byte[] plaintext = CryptoECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
 
         if (Arrays.equals(encrypted, message)) {
             fail("stream cipher test failed");
@@ -86,18 +86,18 @@ public class EccTest {
         // test AES encrypt mode
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
 
 
         PaddedBufferedBlockCipher aesEngine1 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
         PaddedBufferedBlockCipher aesEngine2 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
 
-        IESWithCipherParameters cipherParams = Crypto.ECC.generateSharedParametersWithCipher(secureRandom);
+        IESWithCipherParameters cipherParams = CryptoECC.generateSharedParametersWithCipher(secureRandom);
 
 
-        IESEngine encrypt = Crypto.ECC.createEngine(aesEngine1);
-        IESEngine decrypt = Crypto.ECC.createEngine(aesEngine2);
+        IESEngine encrypt = CryptoECC.createEngine(aesEngine1);
+        IESEngine decrypt = CryptoECC.createEngine(aesEngine2);
 
 
         // note: we want an ecc key that is AT LEAST 512 bits! (which is equal to AES 256)
@@ -111,8 +111,8 @@ public class EccTest {
         byte[] message = Hex.decode("123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef123456784358754934597967249867359283792374987692348750276509765091834790abcdef");
 
         // test stream mode
-        byte[] encrypted = Crypto.ECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
-        byte[] plaintext = Crypto.ECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
+        byte[] encrypted = CryptoECC.encrypt(encrypt, private1, public2, cipherParams, message, logger);
+        byte[] plaintext = CryptoECC.decrypt(decrypt, private2, public1, cipherParams, encrypted, logger);
 
         if (Arrays.equals(encrypted, message)) {
             fail("stream cipher test failed");
@@ -128,8 +128,8 @@ public class EccTest {
         // test DH key exchange
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
 
         BasicAgreement e1 = new ECDHCBasicAgreement();
         BasicAgreement e2 = new ECDHCBasicAgreement();
@@ -149,7 +149,7 @@ public class EccTest {
     public void EccDsa() throws IOException {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
 
         ParametersWithRandom param = new ParametersWithRandom(key1.getPrivate(), new SecureRandom());
 
@@ -172,10 +172,10 @@ public class EccTest {
     public void EccSerialization() {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
 
-        IESParameters cipherAParams = Crypto.ECC.generateSharedParameters(secureRandom);
-        IESWithCipherParameters cipherBParams = Crypto.ECC.generateSharedParametersWithCipher(secureRandom);
+        IESParameters cipherAParams = CryptoECC.generateSharedParameters(secureRandom);
+        IESWithCipherParameters cipherBParams = CryptoECC.generateSharedParametersWithCipher(secureRandom);
 
 
         // note: we want an ecc key that is AT LEAST 512 bits! (which is equal to AES 256)
@@ -203,7 +203,7 @@ public class EccTest {
         IESParameters cipherAParams2 = (IESParameters) kryo.readClassAndObject(input);
 
 
-        if (!Crypto.ECC.compare(cipherAParams, cipherAParams2)) {
+        if (!CryptoECC.compare(cipherAParams, cipherAParams2)) {
             fail("cipher parameters not equal");
         }
 
@@ -217,7 +217,7 @@ public class EccTest {
         input = new Input(new ByteArrayInputStream(outStream.toByteArray()), 4096);
         IESWithCipherParameters cipherBParams2 = (IESWithCipherParameters) kryo.readClassAndObject(input);
 
-        if (!Crypto.ECC.compare(cipherBParams, cipherBParams2)) {
+        if (!CryptoECC.compare(cipherBParams, cipherBParams2)) {
             fail("cipher parameters not equal");
         }
 
@@ -232,7 +232,7 @@ public class EccTest {
         input = new Input(new ByteArrayInputStream(outStream.toByteArray()), 4096);
         ECPrivateKeyParameters private2 = (ECPrivateKeyParameters) kryo.readClassAndObject(input);
 
-        if (!Crypto.ECC.compare(private1, private2)) {
+        if (!CryptoECC.compare(private1, private2)) {
             fail("private keys not equal");
         }
 
@@ -247,7 +247,7 @@ public class EccTest {
         input = new Input(new ByteArrayInputStream(outStream.toByteArray()), 4096);
         ECPublicKeyParameters public2 = (ECPublicKeyParameters) kryo.readClassAndObject(input);
 
-        if (!Crypto.ECC.compare(public1, public2)) {
+        if (!CryptoECC.compare(public1, public2)) {
             fail("public keys not equal");
         }
     }
@@ -255,7 +255,7 @@ public class EccTest {
 
     @Test
     public void EccJceSerialization() throws IOException {
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, new SecureRandom());
+        AsymmetricCipherKeyPair generateKeyPair = CryptoECC.generateKeyPair(CryptoECC.p521_curve, new SecureRandom());
         ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters) generateKeyPair.getPrivate();
         ECPublicKeyParameters publicKey = (ECPublicKeyParameters) generateKeyPair.getPublic();
 
@@ -280,15 +280,15 @@ public class EccTest {
         byte[] bytes = "hello, my name is inigo montoya".getBytes();
 
 
-        BigInteger[] signature = Crypto.ECC.generateSignature("SHA384", privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
+        BigInteger[] signature = CryptoECC.generateSignature("SHA384", privateKey, new SecureRandom(entropySeed.getBytes()), bytes);
 
-        boolean verify1 = Crypto.ECC.verifySignature("SHA384", publicKey, bytes, signature);
+        boolean verify1 = CryptoECC.verifySignature("SHA384", publicKey, bytes, signature);
 
         if (!verify1) {
             fail("failed signature verification");
         }
 
-        boolean verify2 = Crypto.ECC.verifySignature("SHA384", publicKey2, bytes, signature);
+        boolean verify2 = CryptoECC.verifySignature("SHA384", publicKey2, bytes, signature);
 
         if (!verify2) {
             fail("failed signature verification");
@@ -297,15 +297,15 @@ public class EccTest {
 
 
         // now reverse who signs what.
-        BigInteger[] signatureB = Crypto.ECC.generateSignature("SHA384", privateKey2, new SecureRandom(entropySeed.getBytes()), bytes);
+        BigInteger[] signatureB = CryptoECC.generateSignature("SHA384", privateKey2, new SecureRandom(entropySeed.getBytes()), bytes);
 
-        boolean verifyB1 = Crypto.ECC.verifySignature("SHA384", publicKey, bytes, signatureB);
+        boolean verifyB1 = CryptoECC.verifySignature("SHA384", publicKey, bytes, signatureB);
 
         if (!verifyB1) {
             fail("failed signature verification");
         }
 
-        boolean verifyB2 = Crypto.ECC.verifySignature("SHA384", publicKey2, bytes, signatureB);
+        boolean verifyB2 = CryptoECC.verifySignature("SHA384", publicKey2, bytes, signatureB);
 
         if (!verifyB2) {
             fail("failed signature verification");

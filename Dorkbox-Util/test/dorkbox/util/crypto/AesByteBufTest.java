@@ -67,12 +67,12 @@ public class AesByteBufTest {
         ByteBuf source = Unpooled.wrappedBuffer(SOURCE);
         int length = SOURCE.length;
         ByteBuf encryptAES = Unpooled.buffer(1024);
-        int encryptLength = Crypto.AES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
+        int encryptLength = CryptoAES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
 
         byte[] encrypt = new byte[encryptLength];
         System.arraycopy(encryptAES.array(), 0, encrypt, 0, encryptLength);
 
-        byte[] encrypt2 = Crypto.AES.encrypt(aesEngine2, key, iv, SOURCE, logger);
+        byte[] encrypt2 = CryptoAES.encrypt(aesEngine2, key, iv, SOURCE, logger);
 
 
         if (Arrays.equals(SOURCE, encrypt)) {
@@ -105,13 +105,13 @@ public class AesByteBufTest {
         ByteBuf source = Unpooled.wrappedBuffer(SOURCE);
         int length = SOURCE.length;
         ByteBuf encryptAES = Unpooled.buffer(1024);
-        int encryptLength = Crypto.AES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
+        int encryptLength = CryptoAES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
 
         byte[] encrypt = new byte[encryptLength];
         System.arraycopy(encryptAES.array(), 0, encrypt, 0, encryptLength);
 
 
-        byte[] encrypt2 = Crypto.AES.encrypt(aesEngine2, key, iv, SOURCE, logger);
+        byte[] encrypt2 = CryptoAES.encrypt(aesEngine2, key, iv, SOURCE, logger);
 
 
         if (Arrays.equals(SOURCE, encrypt)) {
@@ -142,13 +142,13 @@ public class AesByteBufTest {
         ByteBuf source = Unpooled.wrappedBuffer(bytes);
         int length = bytes.length;
         ByteBuf encryptAES = Unpooled.buffer(1024);
-        int encryptLength = Crypto.AES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
+        int encryptLength = CryptoAES.encrypt(aesEngine1, aesIVAndKey, source, encryptAES, length, logger);
 
         byte[] encrypt = new byte[encryptLength];
         System.arraycopy(encryptAES.array(), 0, encrypt, 0, encryptLength);
 
 
-        byte[] decrypt = Crypto.AES.decrypt(aesEngine2, key, iv, encrypt, logger);
+        byte[] decrypt = CryptoAES.decrypt(aesEngine2, key, iv, encrypt, logger);
 
 
         if (Arrays.equals(bytes, encrypt)) {
@@ -177,16 +177,16 @@ public class AesByteBufTest {
         rand.nextBytes(key);  // 256bit key (32 bytes)
         rand.nextBytes(iv); // 128bit block size (16 bytes)
 
-        final byte[] encrypt = Crypto.AES.encrypt(aesEngine1, key, iv, SOURCE, logger);
+        final byte[] encrypt = CryptoAES.encrypt(aesEngine1, key, iv, SOURCE, logger);
         final ByteBuf encryptAES = Unpooled.wrappedBuffer(encrypt);
         final int length = encrypt.length;
 
-        byte[] decrypt1 = Crypto.AES.decrypt(aesEngine1, key, iv, encrypt, logger);
+        byte[] decrypt1 = CryptoAES.decrypt(aesEngine1, key, iv, encrypt, logger);
 
 
         ParametersWithIV aesIVAndKey = new ParametersWithIV(new KeyParameter(key), iv);
         ByteBuf decryptAES = Unpooled.buffer(1024);
-        int decryptLength = Crypto.AES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
+        int decryptLength = CryptoAES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
         byte[] decrypt2 = new byte[decryptLength];
         System.arraycopy(decryptAES.array(), 0, decrypt2, 0, decryptLength);
 
@@ -221,17 +221,17 @@ public class AesByteBufTest {
         rand.nextBytes(key);  // 256bit key (32 bytes)
         rand.nextBytes(iv); // 128bit block size (16 bytes)
 
-        final byte[] encrypt = Crypto.AES.encrypt(aesEngine1, key, iv, SOURCE, logger);
+        final byte[] encrypt = CryptoAES.encrypt(aesEngine1, key, iv, SOURCE, logger);
         final ByteBuf encryptAES = Unpooled.wrappedBuffer(encrypt);
         final int length = encrypt.length;
 
 
-        byte[] decrypt1 = Crypto.AES.decrypt(aesEngine1, key, iv, encrypt, logger);
+        byte[] decrypt1 = CryptoAES.decrypt(aesEngine1, key, iv, encrypt, logger);
 
 
         ParametersWithIV aesIVAndKey = new ParametersWithIV(new KeyParameter(key), iv);
         ByteBuf decryptAES = Unpooled.buffer(1024);
-        int decryptLength = Crypto.AES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
+        int decryptLength = CryptoAES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
         byte[] decrypt2 = new byte[decryptLength];
         System.arraycopy(decryptAES.array(), 0, decrypt2, 0, decryptLength);
 
@@ -266,14 +266,14 @@ public class AesByteBufTest {
         rand.nextBytes(iv); // 128bit block size (16 bytes)
 
 
-        byte[] encrypt = Crypto.AES.encrypt(aesEngine1, key, iv, SOURCE, logger);
+        byte[] encrypt = CryptoAES.encrypt(aesEngine1, key, iv, SOURCE, logger);
         ByteBuf encryptAES = Unpooled.wrappedBuffer(encrypt);
         int length = encrypt.length;
 
 
         ParametersWithIV aesIVAndKey = new ParametersWithIV(new KeyParameter(key), iv);
         ByteBuf decryptAES = Unpooled.buffer(1024);
-        int decryptLength = Crypto.AES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
+        int decryptLength = CryptoAES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
         byte[] decrypt = new byte[decryptLength];
         System.arraycopy(decryptAES.array(), 0, decrypt, 0, decryptLength);
 
@@ -303,14 +303,14 @@ public class AesByteBufTest {
         rand.nextBytes(iv); // 128bit block size (16 bytes)
 
 
-        byte[] encrypt = Crypto.AES.encrypt(aesEngine1, key, iv, SOURCE, logger);
+        byte[] encrypt = CryptoAES.encrypt(aesEngine1, key, iv, SOURCE, logger);
         ByteBuf encryptAES = Unpooled.wrappedBuffer(encrypt);
         int length = encrypt.length;
 
 
         ParametersWithIV aesIVAndKey = new ParametersWithIV(new KeyParameter(key), iv);
         ByteBuf decryptAES = Unpooled.buffer(1024);
-        int decryptLength = Crypto.AES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
+        int decryptLength = CryptoAES.decrypt(aesEngine2, aesIVAndKey, encryptAES, decryptAES, length, logger);
         byte[] decrypt = new byte[decryptLength];
         System.arraycopy(decryptAES.array(), 0, decrypt, 0, decryptLength);
 

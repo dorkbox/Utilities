@@ -35,7 +35,7 @@ public class x509Test {
         BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());     // serial number for certificate
 
 
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.ECC.generateKeyPair(Crypto.ECC.p521_curve, new SecureRandom());  // key name from Crypto class
+        AsymmetricCipherKeyPair generateKeyPair = CryptoECC.generateKeyPair(CryptoECC.p521_curve, new SecureRandom());  // key name from Crypto class
         ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters) generateKeyPair.getPrivate();
         ECPublicKeyParameters publicKey = (ECPublicKeyParameters) generateKeyPair.getPublic();
 
@@ -79,7 +79,7 @@ public class x509Test {
 
 
         @SuppressWarnings("deprecation")
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.DSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
+        AsymmetricCipherKeyPair generateKeyPair = CryptoDSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
 
 
         DSAPrivateKeyParameters privateKey = (DSAPrivateKeyParameters) generateKeyPair.getPrivate();
@@ -123,7 +123,7 @@ public class x509Test {
         BigInteger serialNumber = BigInteger.valueOf(System.currentTimeMillis());     // serial number for certificate
 
         @SuppressWarnings("deprecation")
-        AsymmetricCipherKeyPair generateKeyPair = Crypto.RSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
+        AsymmetricCipherKeyPair generateKeyPair = CryptoRSA.generateKeyPair(new SecureRandom(entropySeed.getBytes()), 1024);
         RSAPrivateCrtKeyParameters privateKey = (RSAPrivateCrtKeyParameters) generateKeyPair.getPrivate();
         RSAKeyParameters publicKey = (RSAKeyParameters) generateKeyPair.getPublic();
 
