@@ -112,16 +112,17 @@ public interface Gtk extends Library {
 //    void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
 
     void gtk_status_icon_set_title(Pointer widget, String titleText);
+    void gtk_status_icon_set_name(Pointer widget, String name);
 
     void gtk_menu_popup(Pointer menu, Pointer widget, Pointer bla, Function func, Pointer data, int button, int time);
     void gtk_menu_item_set_label(Pointer menu_item, String label);
 
     void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
-    void gtk_menu_shell_prepend(Pointer menu_shell, Pointer child);
     void gtk_menu_shell_deactivate(Pointer menu_shell, Pointer child);
 
     void gtk_widget_set_sensitive(Pointer widget, int sensitive);
 
+    void gtk_container_remove(Pointer menu, Pointer subItem);
     void gtk_widget_show(Pointer widget);
     void gtk_widget_show_all(Pointer widget);
     void gtk_widget_destroy(Pointer widget);
