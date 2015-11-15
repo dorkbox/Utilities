@@ -180,6 +180,20 @@ class Sys {
      */
     @SuppressWarnings("Duplicates")
     public static
+    void closeQuietly(InputStream inputStream) {
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    /**
+     * Convenient close for a stream.
+     */
+    @SuppressWarnings("Duplicates")
+    public static
     void close(OutputStream outputStream) {
         if (outputStream != null) {
             try {
@@ -187,6 +201,20 @@ class Sys {
             } catch (IOException ioe) {
                 System.err.println("Error closing the output stream:" + outputStream);
                 ioe.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Convenient close for a stream.
+     */
+    @SuppressWarnings("Duplicates")
+    public static
+    void closeQuietly(OutputStream outputStream) {
+        if (outputStream != null) {
+            try {
+                outputStream.close();
+            } catch (IOException ignored) {
             }
         }
     }
@@ -208,6 +236,20 @@ class Sys {
     }
 
     /**
+     * Convenient close for a Reader.
+     */
+    @SuppressWarnings("Duplicates")
+    public static
+    void closeQuietly(Reader inputReader) {
+        if (inputReader != null) {
+            try {
+                inputReader.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+
+    /**
      * Convenient close for a Writer.
      */
     @SuppressWarnings("Duplicates")
@@ -219,6 +261,20 @@ class Sys {
             } catch (IOException ioe) {
                 System.err.println("Error closing output writer: " + outputWriter);
                 ioe.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Convenient close for a Writer.
+     */
+    @SuppressWarnings("Duplicates")
+    public static
+    void closeQuietly(Writer outputWriter) {
+        if (outputWriter != null) {
+            try {
+                outputWriter.close();
+            } catch (IOException ignored) {
             }
         }
     }
