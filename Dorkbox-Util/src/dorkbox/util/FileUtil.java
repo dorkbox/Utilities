@@ -641,6 +641,9 @@ class FileUtil {
             }
         } catch (Exception e) {
             isZip = false;
+            if (e instanceof FileNotFoundException) {
+                e.printStackTrace();
+            }
         } finally {
             if (raf != null) {
                 try {
