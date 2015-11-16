@@ -145,13 +145,14 @@ class StorageBase {
         this.logger.info("Storage version: {}", this.databaseVersion);
 
         this.deflater = new Deflater(7, true);
-        this.outputStream = new DeflaterOutputStream(new FileOutputStream(this.file.getFD()), this.deflater, 65536, true);
+        FileOutputStream fileOutputStream = new FileOutputStream(this.file.getFD());
+        this.outputStream = new DeflaterOutputStream(fileOutputStream, this.deflater, 65536);
 
         this.inflater = new Inflater(true);
         this.inputStream = new InflaterInputStream(new FileInputStream(this.file.getFD()), this.inflater, 65536);
 
         //noinspection AutoBoxing
-        this.weight = .5F;
+        this.weight = 0.5F;
         this.memoryIndex = new ConcurrentHashMap<ByteArrayWrapper, Metadata>(this.numberOfRecords);
 
         Metadata meta;
@@ -204,6 +205,7 @@ class StorageBase {
         }
 
         // now stuff it into our reference cache so subsequent lookups are fast!
+        //noinspection Duplicates
         try {
             this.referenceLock.lock();
 
@@ -235,6 +237,7 @@ class StorageBase {
         }
 
         // now get it from our reference cache so subsequent lookups are fast!
+        //noinspection Duplicates
         try {
             this.referenceLock.lock();
 
@@ -371,6 +374,7 @@ class StorageBase {
                     this.file.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
                     Metadata.writeDataFast(this.serializationManager, object, file, fileOutputStream);
                     // have to re-specify the capacity and size
+                    //noinspection NumericCastThatLosesPrecision
                     int sizeOfWrittenData = (int) (this.file.length() - this.dataPosition);
 
                     metaData.dataCapacity = sizeOfWrittenData;
@@ -490,7 +494,7 @@ class StorageBase {
      */
     private
     int getWeightedNewRecordCount(int numberOfRecords) {
-        //noinspection AutoUnboxing
+        //noinspection AutoUnboxing,NumericCastThatLosesPrecision
         return numberOfRecords + 1 + (int) (numberOfRecords * this.weight);
     }
 
