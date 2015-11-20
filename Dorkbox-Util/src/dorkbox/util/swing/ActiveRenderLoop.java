@@ -1,7 +1,7 @@
 package dorkbox.util.swing;
 
 import dorkbox.util.ActionHandlerLong;
-import dorkbox.util.SystemProps;
+import dorkbox.util.Property;
 
 import javax.swing.JFrame;
 import java.awt.Graphics;
@@ -12,6 +12,11 @@ import java.awt.image.BufferStrategy;
  * Loop that controls the active rendering process
  */
 class ActiveRenderLoop implements Runnable {
+
+    @Property
+    /** How many frames per second we want the Swing ActiveRender thread to run at */
+    public static int TARGET_FPS = 30;
+
     @SuppressWarnings("WhileLoopReplaceableByForEach")
     @Override
     public
@@ -19,7 +24,6 @@ class ActiveRenderLoop implements Runnable {
         long lastTime = System.nanoTime();
 
         // 30 FPS is usually just fine. This isn't a game where we need 60+ FPS. We permit this to be changed though, just in case it is.
-        final int TARGET_FPS = SystemProps.ActiveRenderTargetFPS;
         final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
         Graphics graphics = null;
 
