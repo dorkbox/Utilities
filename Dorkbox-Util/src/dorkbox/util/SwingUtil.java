@@ -34,12 +34,20 @@ import java.util.Enumeration;
 public
 class SwingUtil {
     static {
-        // loads fonts into the system, and sets the default look and feel.
+        /*
+         * hack workaround for starting the Toolkit thread before any Timer stuff
+         * javax.swing.Timer uses the Event Dispatch Thread, which is not
+         * created until the Toolkit thread starts up.  Using the Swing
+         * Timer before starting this stuff starts up may get unexpected
+         * results (such as taking a long time before the first timer
+         * event).
+         */
+        Toolkit.getDefaultToolkit();
 
-        boolean fonts_disable = SystemProps.getBoolean(SystemProps.FontsDisable, false);
-        if (!fonts_disable) {
+        // loads fonts into the system, and sets the default look and feel.
+        if (SystemProps.LoadAllFonts) {
             boolean isJava6 = OS.javaVersion == 6;
-            String fontsLocation = SystemProps.getString(SystemProps.FontsLocation, "resources/fonts");
+            String fontsLocation = SystemProps.FontsLocation;
 
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             Enumeration<URL> fonts = LocationResolver.getResources(fontsLocation);
@@ -84,16 +92,15 @@ class SwingUtil {
         }
 
 
-        boolean LF_disable = SystemProps.getBoolean(SystemProps.LookAndFeelDisable, false);
-        if (!LF_disable) {
-            // register a better looking L&F
-            String nimbus = "Nimbus";
+        String customLandF = SystemProps.customLookAndFeel;
+        if (customLandF != null && !customLandF.isEmpty()) {
+            // register a better looking L&F (default we use is Nimbus)
             String name = UIManager.getLookAndFeel().getName();
 
-            if (!nimbus.equals(name)) {
+            if (!customLandF.equals(name)) {
                 try {
                     for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                        if ("Nimbus".equals(info.getName())) {
+                        if (customLandF.equals(info.getName())) {
                             UIManager.setLookAndFeel(info.getClassName());
                             break;
                         }
@@ -120,34 +127,43 @@ class SwingUtil {
      * For example:
      * <p>
      *
-     * Font titleTextFont = SwingUtil.getFontFromProperty("dorkbox.growl.maintext", "Source Code Pro Bold", Font.BOLD, 16);
+     * Font titleTextFont = SwingUtil.parseFont("Source Code Pro Bold 16");
      *
-     * @param propertyBaseName This is the base property to get the font info from, such as "dorkbox.growl.mainText"
-     *
-     * @param fontName this is the default font information, if the font information is not overridden.
-     * @param fontHint this is the default font information, if the font information is not overridden
-     * @param fontSize this is the default font information, if the font information is not overridden
+     * @param fontInfo This is the font "name style size", as a string. For example "Source Code Pro Bold BOLD 16"
      *
      * @return the specified font
      */
     public static
-    Font getFontFromProperty(final String propertyBaseName, final String fontName, final int fontHint, final int fontSize) {
-        String name = SystemProps.getString(propertyBaseName + ".name", fontName);
-        int style = SystemProps.getInt(propertyBaseName + ".style", fontHint);
-        int size = SystemProps.getInt(propertyBaseName + ".size", fontSize);
+    Font parseFont(final String fontInfo) {
+        try {
+            final int sizeIndex = fontInfo.lastIndexOf(" ");
 
-        // this can be WRONG, in which case it will just error out
-        //noinspection MagicConstant
-        return new Font(name, style, size);
+            String size = fontInfo.substring(sizeIndex + 1);
+
+            // hint is at most 6 (ITALIC) before sizeIndex - we can use this to our benefit.
+            int styleIndex = fontInfo.indexOf(" ", sizeIndex - 7);
+            String styleString = fontInfo.substring(styleIndex + 1, sizeIndex);
+            int style = Font.PLAIN;
+
+            if (styleString.equalsIgnoreCase("bold")) {
+                style = Font.BOLD;
+            }
+            else if (styleString.equalsIgnoreCase("italic")) {
+                style = Font.ITALIC;
+            }
+
+            String fontName = fontInfo.substring(0, styleIndex);
+
+            // this can be WRONG, in which case it will just error out
+            //noinspection MagicConstant
+            return new Font(fontName, style, Integer.parseInt(size));
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to load font info from '" + fontInfo + "'", e);
+        }
     }
 
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
     public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
-
-    public static final Font FONT_BOLD_16 = new Font("Source Code Pro Bold", Font.BOLD, 16); // used by ??
-
-    public static final Font FONT_12 = new Font("Source Code Pro", Font.PLAIN, 12);  // used by ??
-    public static final Font FONT_14 = new Font("Source Code Pro", Font.PLAIN, 14);  // used by ??
 
 
     public static
