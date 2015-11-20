@@ -31,6 +31,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
+@SuppressWarnings("unused")
 public
 class SwingUtil {
     static {
@@ -243,7 +244,7 @@ class SwingUtil {
             try {
                 Desktop.getDesktop()
                        .browse(new URI(uri));
-            } catch (URISyntaxException ex) {
+            } catch (URISyntaxException ignored) {
             } catch (IOException ex) {
                 cannotBrowse = true;
             }
