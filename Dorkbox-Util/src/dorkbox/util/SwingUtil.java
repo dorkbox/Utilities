@@ -34,6 +34,18 @@ import java.util.Enumeration;
 @SuppressWarnings("unused")
 public
 class SwingUtil {
+    /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
+    @Property
+    public static boolean LOAD_ALL_FONTS = true;
+
+    /** Default location where all the fonts are stored */
+    @Property
+    public static String FONTS_LOCATION = "resources/fonts";
+
+    /** Sets the entire L&F to the Nimbus L&F. Set this to a different one (or null to disable) */
+    @Property
+    public static String CUSTOM_LOOK_AND_FEEL = "Nimbus";
+
     static {
         /*
          * hack workaround for starting the Toolkit thread before any Timer stuff
@@ -46,12 +58,11 @@ class SwingUtil {
         Toolkit.getDefaultToolkit();
 
         // loads fonts into the system, and sets the default look and feel.
-        if (SystemProps.LoadAllFonts) {
+        if (LOAD_ALL_FONTS) {
             boolean isJava6 = OS.javaVersion == 6;
-            String fontsLocation = SystemProps.FontsLocation;
 
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Enumeration<URL> fonts = LocationResolver.getResources(fontsLocation);
+            Enumeration<URL> fonts = LocationResolver.getResources(FONTS_LOCATION);
             if (fonts.hasMoreElements()) {
                 // skip the FIRST one, since we always know that the first one is the directory we asked for
                 fonts.nextElement();
@@ -93,15 +104,14 @@ class SwingUtil {
         }
 
 
-        String customLandF = SystemProps.customLookAndFeel;
-        if (customLandF != null && !customLandF.isEmpty()) {
+        if (CUSTOM_LOOK_AND_FEEL != null && !CUSTOM_LOOK_AND_FEEL.isEmpty()) {
             // register a better looking L&F (default we use is Nimbus)
             String name = UIManager.getLookAndFeel().getName();
 
-            if (!customLandF.equals(name)) {
+            if (!CUSTOM_LOOK_AND_FEEL.equals(name)) {
                 try {
                     for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                        if (customLandF.equals(info.getName())) {
+                        if (CUSTOM_LOOK_AND_FEEL.equals(info.getName())) {
                             UIManager.setLookAndFeel(info.getClassName());
                             break;
                         }
