@@ -16,6 +16,6 @@
 package dorkbox.util;
 
 public
-interface ActionHandler<T> {
-    void handle(T value);
+interface ActionHandlerLong {
+    void handle(long value);
 }
