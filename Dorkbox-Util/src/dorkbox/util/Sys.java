@@ -17,6 +17,7 @@ package dorkbox.util;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
+import java.awt.Color;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -720,6 +721,61 @@ class Sys {
         builder.append("}");
         System.err.println(builder.toString());
     }
+
+
+    // Easier access for system properties, if necessary
+
+    public static
+    String getSystemString(final String property, final String defaultValue) {
+        String property1 = System.getProperty(property);
+        if (property1 == null) {
+            return defaultValue;
+        }
+
+        return property1;
+    }
+
+    public static
+    int getSystemInt(final String property, final int defaultValue) {
+        String property1 = System.getProperty(property);
+        if (property1 == null) {
+            return defaultValue;
+        }
+
+        return Integer.parseInt(property1);
+    }
+
+    public static
+    long getSystemLong(final String property, final long defaultValue) {
+        String property1 = System.getProperty(property);
+        if (property1 == null) {
+            return defaultValue;
+        }
+
+        return Long.parseLong(property1);
+    }
+
+    public static
+    boolean getSystemBoolean(final String property, final boolean defaultValue) {
+        String property1 = System.getProperty(property);
+        if (property1 == null) {
+            return defaultValue;
+        }
+
+        return Boolean.parseBoolean(property1);
+    }
+
+    public static
+    Color getSystemColor(final String property, final Color defaultValue) {
+        String property1 = System.getProperty(property);
+        if (property1 == null) {
+            return defaultValue;
+        }
+
+        return Color.decode(property1);
+    }
+
+    // Parsing font from a string is inside SwingUtil
 
     private
     Sys() {
