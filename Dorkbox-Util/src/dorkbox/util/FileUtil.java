@@ -158,6 +158,36 @@ class FileUtil {
         return copyFile(new File(in), new File(out));
     }
 
+
+    /**
+     * Copies a files from one location to another.  Overwriting any existing file at the destination.
+     */
+    public static
+    File copyFileToDir(String in, String out) throws IOException {
+        return copyFileToDir(new File(in), new File(out));
+    }
+
+    /**
+     * Copies a files from one location to another. Overwriting any existing file at the destination.
+     * If the out file is a directory, then the in file will be copied to the directory
+     */
+    public static
+    File copyFileToDir(File in, File out) throws IOException {
+        if (in == null) {
+            throw new IllegalArgumentException("in cannot be null.");
+        }
+        if (out == null) {
+            throw new IllegalArgumentException("out cannot be null.");
+        }
+
+        // copy the file to the directory instead
+        if (!out.isDirectory()) {
+            throw new IOException("Out file is not a directory! '" + out.getAbsolutePath() + "'");
+        }
+
+        return copyFile(in, new File(out, in.getName()));
+    }
+
     /**
      * Copies a files from one location to another. Overwriting any existing file at the destination.
      */
@@ -1669,7 +1699,9 @@ class FileUtil {
 
 
     /**
-     * Gets the extension of a file
+     * Gets the extension of a file (text after the last '.')
+     *
+     * @return  null if there is no extension
      */
     public static
     String getExtension(String fileName) {
@@ -1679,6 +1711,22 @@ class FileUtil {
         }
         else {
             return null;
+        }
+    }
+
+    /**
+     * Gets the name of a file that is before the extension (text before the last '.')
+     *
+     * @return non-null
+     */
+    public static
+    String getNameWithoutExtension(final String fileName) {
+        int dot = fileName.lastIndexOf('.');
+        if (dot > -1) {
+            return fileName.substring(0, dot);
+        }
+        else {
+            return fileName;
         }
     }
 }
