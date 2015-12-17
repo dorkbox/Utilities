@@ -22,12 +22,12 @@ public
 class DelayTimer {
     private final String name;
     private final boolean isDaemon;
-    private final Callback listener;
+    private final Runnable listener;
     private Timer timer;
     private long delay;
 
     public
-    DelayTimer(Callback listener) {
+    DelayTimer(Runnable listener) {
         this(null, true, listener);
     }
 
@@ -39,7 +39,7 @@ class DelayTimer {
      * @param listener the callback listener to execute
      */
     public
-    DelayTimer(String name, boolean isDaemon, Callback listener) {
+    DelayTimer(String name, boolean isDaemon, Runnable listener) {
         this.name = name;
         this.listener = listener;
         this.isDaemon = isDaemon;
@@ -85,14 +85,14 @@ class DelayTimer {
                 @Override
                 public
                 void run() {
-                    DelayTimer.this.listener.execute();
+                    DelayTimer.this.listener.run();
                     DelayTimer.this.cancel();
                 }
             };
             this.timer.schedule(t, delay);
         }
         else {
-            this.listener.execute();
+            this.listener.run();
             this.timer = null;
         }
     }
@@ -100,11 +100,5 @@ class DelayTimer {
     public synchronized
     long getDelay() {
         return this.delay;
-    }
-
-    public
-    interface Callback {
-        public
-        void execute();
     }
 }
