@@ -457,6 +457,7 @@ class FileUtil {
      * Deletes a file or directory and all files and sub-directories under it.
      *
      * @param fileNamesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
+     * @return true iff the file/dir was deleted
      */
     public static
     boolean delete(String fileName, String... fileNamesToIgnore) {
@@ -471,11 +472,12 @@ class FileUtil {
      * Deletes a file or directory and all files and sub-directories under it.
      *
      * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
+     * @return true iff the file/dir was deleted (or didn't exist)
      */
     public static
     boolean delete(File file, String... namesToIgnore) {
         if (!file.exists()) {
-            return false;
+            return true;
         }
 
         boolean ignored = false;
@@ -486,13 +488,25 @@ class FileUtil {
                 for (int i = 0, n = files.length; i < n; i++) {
 
                     boolean delete = true;
-                    String name2 = files[i].getName();
+                    final File file2 = files[i];
+                    String name2 = file2.getName();
+                    String name2Full = normalize(file2.getAbsolutePath());
 
-                    if (files[i].isDirectory()) {
+                    if (file2.isDirectory()) {
                         for (String name : namesToIgnore) {
                             if (name.startsWith("/") && name.equals(name2)) {
+                                // only name match
                                 if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete dir: {}", files[i]);
+                                    logger2.trace("Skipping delete dir: {}", file2);
+                                }
+                                ignored = true;
+                                delete = false;
+                                break;
+                            }
+                            else if (name.equals(name2Full)) {
+                                // full path match
+                                if (logger2.isTraceEnabled()) {
+                                    logger2.trace("Skipping delete dir: {}", file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -502,16 +516,26 @@ class FileUtil {
 
                         if (delete) {
                             if (logger2.isTraceEnabled()) {
-                                logger2.trace("Deleting dir: {}", files[i]);
+                                logger2.trace("Deleting dir: {}", file2);
                             }
-                            delete(files[i], namesToIgnore);
+                            delete(file2, namesToIgnore);
                         }
                     }
                     else {
                         for (String name : namesToIgnore) {
                             if (!name.startsWith("/") && name.equals(name2)) {
+                                // only name match
                                 if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete file: {}", files[i]);
+                                    logger2.trace("Skipping delete file: {}", file2);
+                                }
+                                ignored = true;
+                                delete = false;
+                                break;
+                            }
+                            else if (name.equals(name2Full)) {
+                                // full path match
+                                if (logger2.isTraceEnabled()) {
+                                    logger2.trace("Skipping delete file: {}", file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -521,9 +545,9 @@ class FileUtil {
 
                         if (delete) {
                             if (logger2.isTraceEnabled()) {
-                                logger2.trace("Deleting file: {}", files[i]);
+                                logger2.trace("Deleting file: {}", file2);
                             }
-                            files[i].delete();
+                            file2.delete();
                         }
                     }
                 }
@@ -535,7 +559,7 @@ class FileUtil {
             if (logger2.isTraceEnabled()) {
                 logger2.trace("Skipping deleting file: {}", file);
             }
-            return true;
+            return false;
         }
 
         if (logger2.isTraceEnabled()) {
@@ -555,7 +579,7 @@ class FileUtil {
             throw new IllegalArgumentException("fileDir cannot be null.");
         }
 
-        String path = location.getAbsolutePath();
+        String path = normalize(location).getAbsolutePath();
         if (location.mkdirs()) {
             Logger logger2 = logger;
             if (logger2.isTraceEnabled()) {
@@ -588,7 +612,7 @@ class FileUtil {
             throw new IllegalArgumentException("fileName cannot be null");
         }
 
-        return File.createTempFile(fileName, null).getAbsoluteFile();
+        return normalize(File.createTempFile(fileName, null)).getAbsoluteFile();
     }
 
     /**
@@ -609,7 +633,7 @@ class FileUtil {
             throw new IOException("Unable to create temp directory: " + file);
         }
 
-        return file.getAbsolutePath();
+        return normalize(file).getAbsolutePath();
     }
 
     /**
