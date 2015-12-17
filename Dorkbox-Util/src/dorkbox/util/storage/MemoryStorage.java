@@ -22,9 +22,8 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- *
+ * Storage that is in memory only (and is not persisted to disk)
  */
-public
 class MemoryStorage implements Storage {
     private final ConcurrentHashMap<ByteArrayWrapper, Object> storage;
     private final ByteArrayWrapper defaultKey;

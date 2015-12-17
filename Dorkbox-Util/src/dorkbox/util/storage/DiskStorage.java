@@ -34,7 +34,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * Be wary of opening the database file in different JVM instances. Even with file-locks, you can corrupt the data.
  */
 @SuppressWarnings("unused")
-public
 class DiskStorage implements Storage {
     private final DelayTimer timer;
     private final ByteArrayWrapper defaultKey;
@@ -59,18 +58,17 @@ class DiskStorage implements Storage {
             this.timer = null;
         }
         else {
-            this.timer = new DelayTimer("Storage Writer", false, new DelayTimer.Callback() {
+            this.timer = new DelayTimer("Storage Writer", false, new Runnable() {
                 @Override
                 public
-                void execute() {
-                    Map<ByteArrayWrapper, Object> actions = DiskStorage.this.actionMap;
-
+                void run() {
                     ReentrantLock actionLock2 = DiskStorage.this.actionLock;
 
+                    Map<ByteArrayWrapper, Object> actions;
                     try {
                         actionLock2.lock();
-
                         // do a fast swap on the actionMap.
+                        actions = DiskStorage.this.actionMap;
                         DiskStorage.this.actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
                     } finally {
                         actionLock2.unlock();
@@ -207,7 +205,7 @@ class DiskStorage implements Storage {
         Object source = get0(key);
 
         if (source == null) {
-            // returned was null, so we should take value as the default
+            // returned was null, so we should save the default value
             putAndSave(key, data);
             return data;
         }
@@ -412,6 +410,7 @@ class DiskStorage implements Storage {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
+        //noinspection SimplifiableIfStatement
         if (timer != null) {
             return this.timer.isWaiting();
         }

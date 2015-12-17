@@ -32,6 +32,21 @@ class Store {
     @SuppressWarnings("SpellCheckingInspection")
     private static final Map<File, Storage> storages = new HashMap<File, Storage>(1);
 
+    // Make sure that the timer is run on shutdown. A HARD shutdown will just POW! kill it, a "nice" shutdown will run the hook
+    private static Thread shutdownHook = new Thread(new Runnable() {
+        @Override
+        public
+        void run() {
+            Store.shutdown();
+        }
+    });
+
+    static {
+        // add a shutdown hook to make sure that we properly flush/shutdown storage.
+        Runtime.getRuntime()
+               .addShutdownHook(shutdownHook);
+    }
+
     public static
     DiskMaker Disk() {
         return new DiskMaker();

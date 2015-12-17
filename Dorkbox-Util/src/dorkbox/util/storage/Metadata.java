@@ -23,11 +23,11 @@ import dorkbox.util.bytes.ByteArrayWrapper;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.channels.FileLock;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.InflaterInputStream;
 
 @SuppressWarnings("unused")
 public
@@ -81,7 +81,7 @@ class Metadata {
      */
     static
     long getMetaDataPointer(int position) {
-        return StorageBase.FILE_HEADERS_REGION_LENGTH + INDEX_ENTRY_LENGTH * position;
+        return StorageBase.FILE_HEADERS_REGION_LENGTH + ((long) INDEX_ENTRY_LENGTH) * position;
     }
 
     /**
@@ -135,8 +135,10 @@ class Metadata {
 
         FileLock lock = file.getChannel()
                             .lock(origHeaderKeyPointer, INDEX_ENTRY_LENGTH, true);
+
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
+
         lock.release();
 
         Metadata r = new Metadata(ByteArrayWrapper.wrap(buf));
@@ -145,10 +147,12 @@ class Metadata {
         long recordHeaderPointer = Metadata.getDataPointer(position);
         lock = file.getChannel()
                    .lock(origHeaderKeyPointer, KEY_SIZE, true);
+
         file.seek(recordHeaderPointer);
         r.dataPointer = file.readLong();
         r.dataCapacity = file.readInt();
         r.dataCount = file.readInt();
+
         lock.release();
 
         if (r.dataPointer == 0L || r.dataCapacity == 0L || r.dataCount == 0L) {
@@ -173,17 +177,19 @@ class Metadata {
 
         FileLock lock = file.getChannel()
                             .lock(recordHeaderPointer, POINTER_INFO_SIZE, false);
+
         file.seek(recordHeaderPointer);
         file.writeLong(this.dataPointer);
         file.writeInt(this.dataCapacity);
         file.writeInt(this.dataCount);
+
         lock.release();
     }
 
     /**
      * Move a record to the new INDEX
      */
-    void move(RandomAccessFile file, int newIndex) throws IOException {
+    void moveRecord(RandomAccessFile file, int newIndex) throws IOException {
         byte[] buf = new byte[KEY_SIZE];
 
         long origHeaderKeyPointer = Metadata.getMetaDataPointer(this.indexPosition);
@@ -192,6 +198,7 @@ class Metadata {
 
         file.seek(origHeaderKeyPointer);
         file.readFully(buf);
+
         lock.release();
 
         long newHeaderKeyPointer = Metadata.getMetaDataPointer(newIndex);
@@ -200,6 +207,7 @@ class Metadata {
 
         file.seek(newHeaderKeyPointer);
         file.write(buf);
+
         lock.release();
 
 //        System.err.println("updating ptr: " +  this.indexPosition + " -> " + newIndex + " @ " + newHeaderKeyPointer + "-" + (newHeaderKeyPointer+INDEX_ENTRY_LENGTH));
@@ -230,6 +238,7 @@ class Metadata {
         // save the data
         file.seek(position);
         file.write(data);
+
         lock.release();
 
         // update header pointer info
@@ -249,6 +258,7 @@ class Metadata {
                             .lock(this.dataPointer, this.dataCount, true);
         file.seek(this.dataPointer);
         file.readFully(buf);
+
         lock.release();
 //        Sys.printArray(buf, buf.length, false, 0);
 
@@ -260,30 +270,32 @@ class Metadata {
      */
 
     static
-    <T> T readData(SerializationManager serializationManager, InflaterInputStream inputStream) throws IOException {
-        Input input = new Input(inputStream, 1024); // read 1024 at a time
+    <T> T readData(final SerializationManager serializationManager, final Input input) throws IOException {
+        // this is to reset the internal buffer of 'input'
+        input.setInputStream(input.getInputStream());
+
         @SuppressWarnings("unchecked")
         T readObject = (T) serializationManager.readFullClassAndObject(null, input);
         return readObject;
     }
 
     /**
-     * Writes data to the end of the file (which is where the datapointer is at)
+     * Writes data to the end of the file (which is where the datapointer is at). This must be locked/released in calling methods!
      */
     static
-    void writeDataFast(final SerializationManager serializationManager,
-                       final Object data,
-                       final RandomAccessFile file,
-                       final DeflaterOutputStream outputStream) throws IOException {
-        // HAVE TO LOCK BEFORE THIS IS CALLED! (AND FREE AFTERWARDS!)
-        Output output = new Output(outputStream, 1024); // write 1024 at a time
+    int writeData(final SerializationManager serializationManager,
+                  final Object data,
+                  final Output output) throws IOException {
+
+        output.clear();
+
         serializationManager.writeFullClassAndObject(null, output, data);
         output.flush();
 
-        outputStream.flush(); // sync-flush is enabled, so the output stream will finish compressing data.
+        return (int) output.total();
     }
 
-    void writeData(ByteArrayOutputStream byteArrayOutputStream, RandomAccessFile file) throws IOException {
+    void writeDataRaw(ByteArrayOutputStream byteArrayOutputStream, RandomAccessFile file) throws IOException {
         this.dataCount = byteArrayOutputStream.size();
 
         FileLock lock = file.getChannel()
@@ -292,7 +304,8 @@ class Metadata {
         FileOutputStream out = new FileOutputStream(file.getFD());
         file.seek(this.dataPointer);
         byteArrayOutputStream.writeTo(out);
-        out.flush();
+
+
         lock.release();
     }
 

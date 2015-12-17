@@ -61,28 +61,31 @@ interface Storage {
      * <p/>
      * This will check to see if there is an associated key for that data, if not - it will use data as the default
      *
-     * @param data The data that will hold the copy of the data from disk
+     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
     <T> T getAndPut(T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
      *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
+     * @param key The key used to check if data already exists.
+     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
     <T> T getAndPut(String key, T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
      *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
+     * @param key The key used to check if data already exists.
+     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
     <T> T getAndPut(byte[] key, T data) throws IOException;
 
     /**
      * Returns the saved data for the specified key.
      *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
+     * @param key The key used to check if data already exists.
+     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
     @SuppressWarnings("unchecked")
     <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException;

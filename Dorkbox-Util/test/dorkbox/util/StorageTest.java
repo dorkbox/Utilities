@@ -18,6 +18,13 @@ import java.util.Arrays;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public
 class StorageTest {
+    static int total = 10;
+    // the initial size is specified during disk.storage construction, and is based on the number of padded records.
+    private static final long initialSize = 1024L;
+
+    // this is the size for each record (determined by looking at the output when writing the file)
+    private static final int sizePerRecord = 23;
+
 
     private static final File TEST_DB = new File("sampleFile.records");
     private static final SerializationManager manager = new SerializationManager() {
@@ -126,7 +133,7 @@ class StorageTest {
         long size1 = storage.getFileSize();
 
         Assert.assertEquals("count is not correct", numberOfRecords1, 0);
-        Assert.assertEquals("size is not correct", size1, 208L);  // NOTE this will change based on the data size added!
+        Assert.assertEquals("size is not correct", size1, initialSize);
 
         Store.close(storage);
 
@@ -134,6 +141,7 @@ class StorageTest {
                        .file(TEST_DB)
                        .serializer(manager)
                        .make();
+
         int numberOfRecords2 = storage.size();
         long size2 = storage.getFileSize();
 
@@ -147,13 +155,12 @@ class StorageTest {
     @Test
     public
     void testAddAsOne() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
@@ -163,6 +170,7 @@ class StorageTest {
                            .file(TEST_DB)
                            .serializer(manager)
                            .make();
+
             for (int i = 0; i < total; i++) {
                 String record1Data = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -177,16 +185,20 @@ class StorageTest {
         }
     }
 
+    /**
+     * Adds data to storage using the SAME key each time (so each entry is overwritten).
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     @Test
     public
     void testAddNoKeyRecords() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 log("adding record " + i + "...");
                 String addRecord = createData(i);
@@ -208,13 +220,15 @@ class StorageTest {
             log("reading record " + (total - 1) + "...");
             String readData = storage.get();
 
+            // the ONLY entry in storage should be the last one that we added
             Assert.assertEquals("Object is not the same", dataCheck, readData);
 
             int numberOfRecords1 = storage.size();
             long size1 = storage.getFileSize();
 
             Assert.assertEquals("count is not correct", numberOfRecords1, 1);
-            Assert.assertEquals("size is not correct", size1, 235L); // NOTE this will change based on the data size added!
+
+            Assert.assertEquals("size is not correct", size1, initialSize + sizePerRecord);
 
             Store.close(storage);
         } catch (Exception e) {
@@ -226,13 +240,12 @@ class StorageTest {
     @Test
     public
     void testAddRecords_DelaySaveA() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
@@ -272,13 +285,12 @@ class StorageTest {
     @Test
     public
     void testAddRecords_DelaySaveB() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 add(storage, i);
             }
@@ -296,6 +308,7 @@ class StorageTest {
                            .file(TEST_DB)
                            .serializer(manager)
                            .make();
+
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -313,13 +326,12 @@ class StorageTest {
     @Test
     public
     void testLoadRecords() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
@@ -332,6 +344,7 @@ class StorageTest {
                            .file(TEST_DB)
                            .serializer(manager)
                            .make();
+
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -346,8 +359,8 @@ class StorageTest {
 
             storage.put(createKey, data);
 
-            Data data2 = new Data();
-            storage.getAndPut(createKey, data2);
+            Data data2;
+            data2 = storage.getAndPut(createKey, new Data());
             Assert.assertEquals("Object is not the same", data, data2);
 
             Store.close(storage);
@@ -356,8 +369,7 @@ class StorageTest {
                            .serializer(manager)
                            .make();
 
-            data2 = new Data();
-            storage.getAndPut(createKey, data2);
+            data2 = storage.getAndPut(createKey, new Data());
             Assert.assertEquals("Object is not the same", data, data2);
 
             Store.close(storage);
@@ -371,13 +383,16 @@ class StorageTest {
     @Test
     public
     void testAddRecordsDelete1Record() throws IOException, ClassNotFoundException {
-        int total = 100;
+        if (total < 4) {
+            throw new IOException("Unable to run test with too few entries.");
+        }
 
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
@@ -390,6 +405,7 @@ class StorageTest {
                            .file(TEST_DB)
                            .serializer(manager)
                            .make();
+
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -442,13 +458,12 @@ class StorageTest {
     @Test
     public
     void testUpdateRecords() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
                 String readRecord = readRecord(storage, i);
@@ -507,13 +522,12 @@ class StorageTest {
     @Test
     public
     void testSaveAllRecords() throws IOException, ClassNotFoundException {
-        int total = 100;
-
         try {
             Storage storage = Store.Disk()
                                    .file(TEST_DB)
                                    .serializer(manager)
                                    .make();
+
             for (int i = 0; i < total; i++) {
                 Data data = new Data();
                 makeData(data);
@@ -533,8 +547,8 @@ class StorageTest {
             for (int i = 0; i < total; i++) {
                 String createKey = createKey(i);
 
-                Data data2 = new Data();
-                storage.getAndPut(createKey, data2);
+                Data data2;
+                data2 = storage.getAndPut(createKey, new Data());
                 Assert.assertEquals("Object is not the same", data, data2);
             }
             Store.close(storage);
@@ -607,19 +621,19 @@ class StorageTest {
 
         data.strings = new String[] {"ab012", "", null, "!@#$", "�����"};
         data.ints = new int[] {-1234567, 1234567, -1, 0, 1, Integer.MAX_VALUE, Integer.MIN_VALUE};
-        data.shorts = new short[] {-12345, 12345, -1, 0, 1, Short.MAX_VALUE, Short.MIN_VALUE};
+        data.shorts = new short[] {(short) -12345, (short) 12345, (short) -1, (short) 0, (short) 1, Short.MAX_VALUE, Short.MIN_VALUE};
         data.floats = new float[] {0, -0, 1, -1, 123456, -123456, 0.1f, 0.2f, -0.3f, (float) Math.PI, Float.MAX_VALUE, Float.MIN_VALUE};
         data.doubles = new double[] {0, -0, 1, -1, 123456, -123456, 0.1d, 0.2d, -0.3d, Math.PI, Double.MAX_VALUE, Double.MIN_VALUE};
-        data.longs = new long[] {0, -0, 1, -1, 123456, -123456, 99999999999l, -99999999999l, Long.MAX_VALUE, Long.MIN_VALUE};
-        data.bytes = new byte[] {-123, 123, -1, 0, 1, Byte.MAX_VALUE, Byte.MIN_VALUE};
+        data.longs = new long[] {0, -0, 1, -1, 123456, -123456, 99999999999L, -99999999999L, Long.MAX_VALUE, Long.MIN_VALUE};
+        data.bytes = new byte[] {(byte) -123, (byte) 123, (byte) -1, (byte) 0, (byte) 1, Byte.MAX_VALUE, Byte.MIN_VALUE};
         data.chars = new char[] {32345, 12345, 0, 1, 63, Character.MAX_VALUE, Character.MIN_VALUE};
         data.booleans = new boolean[] {true, false};
         data.Ints = new Integer[] {-1234567, 1234567, -1, 0, 1, Integer.MAX_VALUE, Integer.MIN_VALUE};
         data.Shorts = new Short[] {-12345, 12345, -1, 0, 1, Short.MAX_VALUE, Short.MIN_VALUE};
-        data.Floats = new Float[] {0f, -0f, 1f, -1f, 123456f, -123456f, 0.1f, 0.2f, -0.3f, (float) Math.PI, Float.MAX_VALUE,
+        data.Floats = new Float[] {0.0f, -0.0f, 1.0f, -1.0f, 123456.0f, -123456.0f, 0.1f, 0.2f, -0.3f, (float) Math.PI, Float.MAX_VALUE,
                                    Float.MIN_VALUE};
-        data.Doubles = new Double[] {0d, -0d, 1d, -1d, 123456d, -123456d, 0.1d, 0.2d, -0.3d, Math.PI, Double.MAX_VALUE, Double.MIN_VALUE};
-        data.Longs = new Long[] {0l, -0l, 1l, -1l, 123456l, -123456l, 99999999999l, -99999999999l, Long.MAX_VALUE, Long.MIN_VALUE};
+        data.Doubles = new Double[] {0.0d, -0.0d, 1.0d, -1.0d, 123456.0d, -123456.0d, 0.1d, 0.2d, -0.3d, Math.PI, Double.MAX_VALUE, Double.MIN_VALUE};
+        data.Longs = new Long[] {0L, -0L, 1L, -1L, 123456L, -123456L, 99999999999L, -99999999999L, Long.MAX_VALUE, Long.MIN_VALUE};
         data.Bytes = new Byte[] {-123, 123, -1, 0, 1, Byte.MAX_VALUE, Byte.MIN_VALUE};
         data.Chars = new Character[] {32345, 12345, 0, 1, 63, Character.MAX_VALUE, Character.MIN_VALUE};
         data.Booleans = new Boolean[] {true, false};
