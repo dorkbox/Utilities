@@ -58,6 +58,10 @@
     <orderEntry type="library" name="controlsfx" level="application" />
     <orderEntry type="library" name="junit-4.12" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpg-jdk15on (1.53)" level="application" />
+    <orderEntry type="library" name="fast-md5" level="application" />
+    <orderEntry type="library" name="lz4-1.3.0" level="application" />
+    <orderEntry type="library" scope="TEST" name="logging minlog-to-slf4j (1.2)" level="application" />
+    <orderEntry type="library" scope="TEST" name="logging logback (1.0.13)" level="application" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">
