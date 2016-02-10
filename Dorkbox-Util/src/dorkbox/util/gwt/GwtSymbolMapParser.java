@@ -15,16 +15,19 @@
  */
 package dorkbox.util.gwt;
 
-import io.netty.util.CharsetUtil;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
 public
 class GwtSymbolMapParser {
+    /**
+     * 8-bit UTF (UCS Transformation Format)
+     */
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private final Map<String, String> symbolMap;
 
@@ -44,7 +47,7 @@ class GwtSymbolMapParser {
             return;
         }
 
-        InputStreamReader in = new InputStreamReader(inputStream, CharsetUtil.UTF_8);
+        InputStreamReader in = new InputStreamReader(inputStream, UTF_8);
 
         // 1024 is the longest the line will get. We start there, but StringBuilder will let us grow.
         StringBuilder builder = new StringBuilder(1024);
