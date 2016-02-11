@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-@SuppressWarnings("unused")
 public final
 class Sys {
     public static final int KILOBYTE = 1024;

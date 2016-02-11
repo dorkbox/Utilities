@@ -31,7 +31,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
-@SuppressWarnings("unused")
 public
 class SwingUtil {
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
