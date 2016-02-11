@@ -21,7 +21,6 @@ import java.awt.*;
 import java.io.*;
 import java.util.Properties;
 
-@SuppressWarnings("unused")
 public
 class PropertiesProvider {
 

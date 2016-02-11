@@ -15,7 +15,7 @@
  */
 package dorkbox.util.bytes;
 
-import dorkbox.util.objectPool.PoolableObject;
+import dorkbox.objectPool.PoolableObject;
 
 public
 class ByteBuffer2Poolable extends PoolableObject<ByteBuffer2> {

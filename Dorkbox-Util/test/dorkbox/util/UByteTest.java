@@ -45,7 +45,6 @@ import static org.junit.Assert.*;
 
 public class UByteTest {
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfByte() {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
@@ -53,7 +52,6 @@ public class UByteTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfByteCaching() {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
@@ -63,7 +61,6 @@ public class UByteTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfShort() {
         for (int i = UByte.MIN_VALUE; i <= UByte.MAX_VALUE; i++) {
@@ -71,7 +68,6 @@ public class UByteTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfShortInvalid() {
         try {
@@ -86,7 +82,6 @@ public class UByteTest {
         catch (NumberFormatException e) {}
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfInt() {
         for (int i = UByte.MIN_VALUE; i <= UByte.MAX_VALUE; i++) {
@@ -94,7 +89,6 @@ public class UByteTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfIntInvalid() {
         try {
@@ -109,7 +103,6 @@ public class UByteTest {
         catch (NumberFormatException e) {}
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfLong() {
         for (int i = UByte.MIN_VALUE; i <= UByte.MAX_VALUE; i++) {
@@ -117,7 +110,6 @@ public class UByteTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testValueOfLongInvalid() {
         try {
@@ -132,7 +124,6 @@ public class UByteTest {
         catch (NumberFormatException e) {}
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testSerializeDeserialize() throws ClassNotFoundException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

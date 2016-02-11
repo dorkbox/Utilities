@@ -23,13 +23,10 @@ import dorkbox.util.bytes.ByteArrayWrapper;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.channels.FileLock;
 
-@SuppressWarnings("unused")
 public
 class Metadata {
     // The length of a key in the index.

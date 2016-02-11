@@ -33,7 +33,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p/>
  * Be wary of opening the database file in different JVM instances. Even with file-locks, you can corrupt the data.
  */
-@SuppressWarnings("unused")
 class DiskStorage implements Storage {
     private final DelayTimer timer;
     private final ByteArrayWrapper defaultKey;

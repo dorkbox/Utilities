@@ -29,7 +29,7 @@ import java.io.OutputStream;
 /**
  * AES crypto functions
  */
-@SuppressWarnings({"unused", "Duplicates"})
+@SuppressWarnings({"Duplicates"})
 public final
 class CryptoAES {
     private static final int ivSize = 16;
@@ -37,6 +37,8 @@ class CryptoAES {
     /**
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -57,12 +59,14 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -86,18 +90,15 @@ class CryptoAES {
     /**
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
      * @return true if successful
      */
     public static
-    boolean encryptStreamWithIV(GCMBlockCipher aesEngine,
-                                byte[] aesKey,
-                                byte[] aesIV,
-                                InputStream in,
-                                OutputStream out,
-                                Logger logger) {
+    boolean encryptStreamWithIV(GCMBlockCipher aesEngine, byte[] aesKey, byte[] aesIV, InputStream in, OutputStream out, Logger logger) {
 
         try {
             out.write(aesIV);
@@ -113,12 +114,14 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -148,6 +151,8 @@ class CryptoAES {
     /**
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -158,30 +163,7 @@ class CryptoAES {
         int length = data.length;
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
-        aesEngine.init(true, aesIVAndKey);
-
-        int minSize = aesEngine.getOutputSize(length);
-        byte[] outBuf = new byte[minSize];
-
-        int actualLength = aesEngine.processBytes(data, 0, length, outBuf, 0);
-
-        try {
-            actualLength += aesEngine.doFinal(outBuf, actualLength);
-        } catch (Exception e) {
-            if (logger != null) {
-                logger.error("Unable to perform AES cipher.", e);
-            }
-            return new byte[0];
-        }
-
-        if (outBuf.length == actualLength) {
-            return outBuf;
-        }
-        else {
-            byte[] result = new byte[actualLength];
-            System.arraycopy(outBuf, 0, result, 0, result.length);
-            return result;
-        }
+        return encrypt(aesEngine, aesIVAndKey, data, length, logger);
     }
 
     /**
@@ -193,42 +175,45 @@ class CryptoAES {
      * @return length of encrypted data, -1 if there was an error.
      */
     public static
-    int encrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine,
-                CipherParameters aesIVAndKey,
-                io.netty.buffer.ByteBuf inBuffer,
-                io.netty.buffer.ByteBuf outBuffer,
-                int length,
-                Logger logger) {
+    byte[] encrypt(GCMBlockCipher aesEngine, CipherParameters aesIVAndKey, byte[] data, int length, Logger logger) {
 
         aesEngine.reset();
         aesEngine.init(true, aesIVAndKey);
 
-        length = aesEngine.processBytes(inBuffer, outBuffer, length);
+        int minSize = aesEngine.getOutputSize(length);
+        byte[] outArray = new byte[minSize];
+
+        int actualLength = aesEngine.processBytes(data, 0, length, outArray, 0);
 
         try {
-            length += aesEngine.doFinal(outBuffer);
+            actualLength += aesEngine.doFinal(outArray, actualLength);
         } catch (Exception e) {
             if (logger != null) {
-                logger.debug("Unable to perform AES cipher.", e);
+                logger.error("Unable to perform AES cipher.", e);
             }
-            return -1;
+            return new byte[0];
         }
 
-        // specify where the encrypted data is at
-        outBuffer.readerIndex(0);
-        outBuffer.writerIndex(length);
-
-        return length;
+        if (outArray.length == actualLength) {
+            return outArray;
+        }
+        else {
+            byte[] result = new byte[actualLength];
+            System.arraycopy(outArray, 0, result, 0, result.length);
+            return result;
+        }
     }
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES encrypts data with a specified key.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -268,12 +253,14 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES encrypt from one stream to another.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -316,6 +303,8 @@ class CryptoAES {
      *
      * @param logger
      *                 may be null, if no log output is necessary
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      *
      * @return true if successful
      */
@@ -352,7 +341,7 @@ class CryptoAES {
     }
 
     /**
-     * AES decrypt (if the aes IV is included in the data)
+     * AES decrypt (if the aes IV is included in the data). IV must be a nonce (unique value) !!
      *
      * @param logger
      *                 may be null, if no log output is necessary
@@ -372,11 +361,11 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
-     * AES decrypt (if the aes IV is included in the data)
+     * <p>
+     * AES decrypt (if the aes IV is included in the data). IV must be a nonce (unique value)
      *
      * @param logger
      *                 may be null, if no log output is necessary
@@ -396,7 +385,7 @@ class CryptoAES {
     }
 
     /**
-     * AES decrypt (if the aes IV is included in the data)
+     * AES decrypt (if the aes IV is included in the data. IV must be a nonce (unique value)
      *
      * @param logger
      *                 may be null, if no log output is necessary
@@ -420,11 +409,11 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
-     * AES decrypt (if the aes IV is included in the data)
+     * <p>
+     * AES decrypt (if the aes IV is included in the data). IV must be a nonce (unique value)
      *
      * @param logger
      *                 may be null, if no log output is necessary
@@ -450,6 +439,8 @@ class CryptoAES {
     /**
      * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -486,51 +477,15 @@ class CryptoAES {
     }
 
     /**
-     * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
-     *
-     * @param logger
-     *                 may be null, if no log output is necessary
-     *
-     * @return length of decrypted data, -1 if there was an error.
-     */
-    public static
-    int decrypt(dorkbox.util.crypto.bouncycastle.GCMBlockCipher_ByteBuf aesEngine,
-                ParametersWithIV aesIVAndKey,
-                io.netty.buffer.ByteBuf bufferWithData,
-                io.netty.buffer.ByteBuf bufferTempData,
-                int length,
-                Logger logger) {
-
-        aesEngine.reset();
-        aesEngine.init(false, aesIVAndKey);
-
-        // ignore the start position
-        // we also do NOT want to have the same start position for the altBuffer, since it could then grow larger than the buffer capacity.
-        length = aesEngine.processBytes(bufferWithData, bufferTempData, length);
-
-        try {
-            length += aesEngine.doFinal(bufferTempData);
-        } catch (Exception e) {
-            if (logger != null) {
-                logger.debug("Unable to perform AES cipher.", e);
-            }
-            return -1;
-        }
-
-        bufferTempData.readerIndex(0);
-        bufferTempData.writerIndex(length);
-
-        return length;
-    }
-
-    /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES decrypt (if we already know the aes IV -- and it's NOT included in the data)
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -572,6 +527,8 @@ class CryptoAES {
     /**
      * AES decrypt from one stream to another.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *
@@ -610,12 +567,14 @@ class CryptoAES {
 
     /**
      * <b>CONVENIENCE METHOD ONLY - DO NOT USE UNLESS YOU HAVE TO</b>
-     * <p/>
+     * <p>
      * Use GCM instead, as it's an authenticated cipher (and "regular" AES is not). This prevents tampering with the blocks of encrypted
      * data.
-     * <p/>
+     * <p>
      * AES decrypt from one stream to another.
      *
+     * @param aesIV
+     *                 must be a nonce (unique value) !!
      * @param logger
      *                 may be null, if no log output is necessary
      *

@@ -33,7 +33,6 @@ import java.security.SecureRandom;
 /**
  * This is here just for keeping track of how this is done. This should NOT be used, and instead use ECC crypto.
  */
- @SuppressWarnings("unused")
  @Deprecated
 public final
 class CryptoRSA {

@@ -48,7 +48,6 @@ class UIntegerTest {
     private static final int CACHE_SIZE = 256;
     private static final int NEAR_MISS_OFFSET = 4;
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLong() {
@@ -57,7 +56,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLongCachingShift() {
@@ -68,7 +66,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLongCachingNear() {
@@ -79,7 +76,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLongNoCachingShift() {
@@ -90,7 +86,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLongNoCachingNear() {
@@ -101,7 +96,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testValueOfLongInvalid() {
@@ -117,7 +111,6 @@ class UIntegerTest {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public
     void testSerializeDeserialize() throws ClassNotFoundException, IOException {

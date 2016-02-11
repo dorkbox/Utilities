@@ -23,7 +23,6 @@ import java.io.IOException;
 /**
  *
  */
-@SuppressWarnings("unused")
 public
 interface Storage {
     /**
@@ -87,7 +86,6 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    @SuppressWarnings("unchecked")
     <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException;
 
     /**

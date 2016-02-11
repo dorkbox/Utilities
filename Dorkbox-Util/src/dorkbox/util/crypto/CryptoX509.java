@@ -15,48 +15,10 @@
  */
 package dorkbox.util.crypto;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.spec.DSAParameterSpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPrivateCrtKeySpec;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.Date;
-import java.util.Enumeration;
-
-import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1Encoding;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Integer;
-import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1Primitive;
-import org.bouncycastle.asn1.ASN1Sequence;
-import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.ASN1TaggedObject;
-import org.bouncycastle.asn1.BERSet;
-import org.bouncycastle.asn1.DERBMPString;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
-import org.bouncycastle.asn1.DERSet;
+import dorkbox.util.Base64Fast;
+import dorkbox.util.crypto.signers.BcECDSAContentSignerBuilder;
+import dorkbox.util.crypto.signers.BcECDSAContentVerifierProviderBuilder;
+import org.bouncycastle.asn1.*;
 import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.IssuerAndSerialNumber;
@@ -118,9 +80,33 @@ import org.bouncycastle.operator.bc.BcRSAContentVerifierProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dorkbox.util.Base64Fast;
-import dorkbox.util.crypto.signers.BcECDSAContentSignerBuilder;
-import dorkbox.util.crypto.signers.BcECDSAContentVerifierProviderBuilder;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.spec.DSAParameterSpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Date;
+import java.util.Enumeration;
 
 public class CryptoX509 {
 
@@ -139,7 +125,6 @@ public class CryptoX509 {
         /**
          * @return true if saving the x509 certificate to a PEM format file was successful
          */
-        @SuppressWarnings("unused")
         public static boolean convertToPemFile(X509Certificate x509cert, String fileName) {
             boolean failed = false;
             Writer output = null;
@@ -1269,7 +1254,6 @@ public class CryptoX509 {
      *
      * Code is present but commented out, as it was a PITA to figure it out, as documentation is lacking....
      */
-    @SuppressWarnings("unused")
     public static void loadKeystore(String keystoreLocation, String alias, char[] passwd, char[] keypasswd) {
 //            FileInputStream fileIn = new FileInputStream(keystoreLocation);
 //          KeyStore keyStore = KeyStore.getInstance("JKS");

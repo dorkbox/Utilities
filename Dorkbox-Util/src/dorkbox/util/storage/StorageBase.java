@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +45,6 @@ import java.util.concurrent.locks.ReentrantLock;
 // Also, file locks on linux are ADVISORY. if an app doesn't care about locks, then it can do stuff -- even if locked by another app
 
 
-@SuppressWarnings("unused")
 class StorageBase {
     private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
 

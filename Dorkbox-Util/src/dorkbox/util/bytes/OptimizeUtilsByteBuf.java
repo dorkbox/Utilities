@@ -36,25 +36,21 @@ package dorkbox.util.bytes;
 
 import io.netty.buffer.ByteBuf;
 
-public class OptimizeUtilsByteBuf {
-
-    private static final OptimizeUtilsByteBuf instance = new OptimizeUtilsByteBuf();
-
-    public static OptimizeUtilsByteBuf get() {
-        return instance;
-    }
+public
+class OptimizeUtilsByteBuf {
 
     // int
 
     /**
      * FROM KRYO
-     *
-     * Returns the number of bytes that would be written with {@link #writeInt(int, boolean)}.
+     * <p>
+     * Returns the number of bytes that would be written with {@link #writeInt(ByteBuf, int, boolean)}.
      *
      * @param optimizePositive
-     *            true if you want to optimize the number of bytes needed to write the length value
+     *                 true if you want to optimize the number of bytes needed to write the length value
      */
-    public final int intLength(int value, boolean optimizePositive) {
+    public static
+    int intLength(int value, boolean optimizePositive) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 31;
         }
@@ -75,12 +71,13 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * look at buffer, and see if we can read the length of the int off of it. (from the reader index)
      *
      * @return 0 if we could not read anything, >0 for the number of bytes for the int on the buffer
      */
-    public final int canReadInt(ByteBuf buffer) {
+    public static
+    int canReadInt(ByteBuf buffer) {
         int startIndex = buffer.readerIndex();
         try {
             int remaining = buffer.readableBytes();
@@ -98,10 +95,11 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * Reads an int from the buffer that was optimized.
      */
-    public final int readInt(ByteBuf buffer, boolean optimizePositive) {
+    public static
+    int readInt(ByteBuf buffer, boolean optimizePositive) {
         int b = buffer.readByte();
         int result = b & 0x7F;
         if ((b & 0x80) != 0) {
@@ -125,14 +123,16 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * Writes the specified int to the buffer using 1 to 5 bytes, depending on the size of the number.
      *
      * @param optimizePositive
-     *            true if you want to optimize the number of bytes needed to write the length value
+     *                 true if you want to optimize the number of bytes needed to write the length value
+     *
      * @return the number of bytes written.
      */
-    public final int writeInt(ByteBuf buffer, int value, boolean optimizePositive) {
+    public static
+    int writeInt(ByteBuf buffer, int value, boolean optimizePositive) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 31;
         }
@@ -172,9 +172,10 @@ public class OptimizeUtilsByteBuf {
      * Returns the number of bytes that would be written with {@link #writeLong(long, boolean)}.
      *
      * @param optimizePositive
-     *            true if you want to optimize the number of bytes needed to write the length value
+     *                 true if you want to optimize the number of bytes needed to write the length value
      */
-    public final int longLength(long value, boolean optimizePositive) {
+    public static
+    int longLength(long value, boolean optimizePositive) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 63;
         }
@@ -207,13 +208,14 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * Reads a 1-9 byte long.
      *
      * @param optimizePositive
-     *            true if you want to optimize the number of bytes needed to write the length value
+     *                 true if you want to optimize the number of bytes needed to write the length value
      */
-    public final long readLong(ByteBuf buffer, boolean optimizePositive) {
+    public static
+    long readLong(ByteBuf buffer, boolean optimizePositive) {
         int b = buffer.readByte();
         long result = b & 0x7F;
         if ((b & 0x80) != 0) {
@@ -256,15 +258,17 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * Writes a 1-9 byte long.
      *
      * @param optimizePositive
-     *            If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be
-     *            inefficient (9 bytes).
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes).
+     *
      * @return the number of bytes written.
      */
-    public final int writeLong(ByteBuf buffer, long value, boolean optimizePositive) {
+    public static
+    int writeLong(ByteBuf buffer, long value, boolean optimizePositive) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 63;
         }
@@ -342,12 +346,13 @@ public class OptimizeUtilsByteBuf {
 
     /**
      * FROM KRYO
-     *
+     * <p>
      * look at buffer, and see if we can read the length of the long off of it (from the reader index).
      *
      * @return 0 if we could not read anything, >0 for the number of bytes for the long on the buffer
      */
-    public final int canReadLong(ByteBuf buffer) {
+    public static
+    int canReadLong(ByteBuf buffer) {
         int position = buffer.readerIndex();
         try {
             int remaining = buffer.readableBytes();

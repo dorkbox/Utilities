@@ -54,7 +54,6 @@
     <orderEntry type="library" name="kryo3" level="application" />
     <orderEntry type="library" name="jansi (1.11b)" level="application" />
     <orderEntry type="library" name="netty-all (4.1.0)" level="application" />
-    <orderEntry type="library" name="JCTools (1.4 alpha MTAQ)" level="application" />
     <orderEntry type="library" name="controlsfx" level="application" />
     <orderEntry type="library" name="junit-4.12" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpg-jdk15on (1.53)" level="application" />

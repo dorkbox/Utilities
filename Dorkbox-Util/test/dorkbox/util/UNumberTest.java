@@ -169,7 +169,6 @@ public class UNumberTest {
         testCastable(ULong.MAX_VALUE, ulong(ULong.MAX_VALUE));
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testObjectMethods() {
         assertEquals(ubyte((byte) 0), ubyte((byte) 0));
@@ -226,7 +225,7 @@ public class UNumberTest {
 
     // Test utility methods
 
-    @SuppressWarnings({ "rawtypes", "unchecked", "deprecation" })
+    @SuppressWarnings({ "rawtypes", "unchecked"})
     private void testComparable(List<String> strings, UNumber... numbers) {
         List<UNumber> list = new ArrayList<UNumber>(asList(numbers));
         Collections.sort((List) list);

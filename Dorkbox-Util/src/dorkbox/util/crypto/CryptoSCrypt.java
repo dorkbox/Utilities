@@ -21,7 +21,6 @@ import java.util.Arrays;
 /**
  * An implementation of the <a href="http://www.tarsnap.com/scrypt/scrypt.pdf"/>scrypt</a> key derivation function.
  */
-@SuppressWarnings("unused")
 public final
 class CryptoSCrypt {
     /**

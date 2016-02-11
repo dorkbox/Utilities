@@ -56,7 +56,6 @@ import java.util.jar.JarFile;
  * <p/>
  * To determine if we have hardware accelerated AES java -XX:+PrintFlagsFinal -version | grep UseAES
  */
-@SuppressWarnings("unused")
 public final
 class Crypto {
 

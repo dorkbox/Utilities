@@ -34,7 +34,6 @@ import java.io.IOException;
 public
 class BcECDSAContentVerifierProviderBuilder extends BcContentVerifierProviderBuilder {
 
-    @SuppressWarnings("unused")
     public
     BcECDSAContentVerifierProviderBuilder(DigestAlgorithmIdentifierFinder digestAlgorithmFinder) {
     }
