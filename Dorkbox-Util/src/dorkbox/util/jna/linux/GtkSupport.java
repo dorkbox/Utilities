@@ -34,8 +34,8 @@ class GtkSupport {
     private static volatile Thread gtkDispatchThread;
 
     @Property
-    /** Disables the GTK event loop, if you are already creating one in SWT/etc. */
-    public static boolean DISABLE_EVENT_LOOP = false;
+    /** Enables/Disables the creation of a native GTK event loop. Useful if you are already creating one via SWT/etc. */
+    public static boolean CREATE_EVENT_LOOP = true;
 
     static {
         boolean hasSupport = false;
@@ -59,10 +59,15 @@ class GtkSupport {
                 @Override
                 public
                 void run() {
+                    final Gtk gtk = Gtk.INSTANCE;
                     while (started) {
                         try {
                             final Runnable take = dispatchEvents.take();
+
+                            gtk.gdk_threads_enter();
                             take.run();
+                            gtk.gdk_threads_leave();
+
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -73,7 +78,7 @@ class GtkSupport {
             gtkDispatchThread.start();
 
 
-            if (!DISABLE_EVENT_LOOP) {
+            if (CREATE_EVENT_LOOP) {
                 // startup the GTK GUI event loop. There can be multiple/nested loops.
                 final CountDownLatch blockUntilStarted = new CountDownLatch(1);
                 Thread gtkUpdateThread = new Thread() {
@@ -82,15 +87,15 @@ class GtkSupport {
                     void run() {
                         Gtk instance = Gtk.INSTANCE;
 
-                        // notify our main thread to continue
-                        blockUntilStarted.countDown();
-
-
                         // prep for the event loop.
                         instance.gdk_threads_init();
                         instance.gtk_init(0, null);
                         GThread.INSTANCE.g_thread_init(null);
 
+                        // notify our main thread to continue
+                        blockUntilStarted.countDown();
+
+                        // blocks unit quit
                         instance.gtk_main();
                     }
                 };
@@ -121,7 +126,7 @@ class GtkSupport {
 
     public static
     void shutdownGui() {
-        if (!DISABLE_EVENT_LOOP) {
+        if (CREATE_EVENT_LOOP) {
             Gtk.INSTANCE.gtk_main_quit();
         }
 
