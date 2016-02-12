@@ -83,8 +83,6 @@ public interface Gtk extends Library {
     void gtk_main_quit();
 
     void gdk_threads_init();
-    void gdk_threads_enter();
-    void gdk_threads_leave();
 
     Pointer gtk_menu_new();
     Pointer gtk_menu_item_new();

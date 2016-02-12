@@ -15,45 +15,38 @@
  */
 package dorkbox.util.jna.linux;
 
+import dorkbox.util.Property;
+
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
 
 public
 class GtkSupport {
     public static final boolean isSupported;
-    private static final boolean hasSwt;
+
+    // RE: SWT
+    // https://developer.gnome.org/glib/stable/glib-Deprecated-Thread-APIs.html#g-thread-init
+    // Since version >= 2.24, threads can only init once. Multiple calls do nothing, and we can nest gtk_main()
+    // in a nested loop.
 
     private static volatile boolean started = false;
+    private static final ArrayBlockingQueue<Runnable> dispatchEvents = new ArrayBlockingQueue<Runnable>(256);
+    private static volatile Thread gtkDispatchThread;
+
+    @Property
+    /** Disables the GTK event loop, if you are already creating one in SWT/etc. */
+    public static boolean DISABLE_EVENT_LOOP = false;
 
     static {
         boolean hasSupport = false;
-        boolean hasSWT_ = false;
         try {
             if (Gtk.INSTANCE != null && Gobject.INSTANCE != null && GThread.INSTANCE != null) {
                 hasSupport = true;
-
-                try {
-                    Class<?> swtClass = Class.forName("org.eclipse.swt.widgets.Display");
-                    if (swtClass != null) {
-                        hasSWT_ = true;
-                    }
-                } catch (Throwable ignore) {
-                }
-
-
-                // prep for the event loop.
-                // since SWT uses one already, it's not necessary to have two.
-                if (!hasSWT_) {
-                    Gtk instance = Gtk.INSTANCE;
-                    instance.gtk_init(0, null);
-                    GThread.INSTANCE.g_thread_init(null);
-                    instance.gdk_threads_init();
-                }
             }
         } catch (Throwable ignored) {
         }
 
         isSupported = hasSupport;
-        hasSwt = hasSWT_;
     }
 
     public static
@@ -62,9 +55,26 @@ class GtkSupport {
         if (!started) {
             started = true;
 
-            // startup the GTK GUI event loop. There can be multiple/nested loops.
-            // since SWT uses one already, it's not necessary to have two.
-            if (!hasSwt) {
+            gtkDispatchThread = new Thread() {
+                @Override
+                public
+                void run() {
+                    while (started) {
+                        try {
+                            final Runnable take = dispatchEvents.take();
+                            take.run();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            };
+            gtkDispatchThread.setName("GTK Event Loop");
+            gtkDispatchThread.start();
+
+
+            if (!DISABLE_EVENT_LOOP) {
+                // startup the GTK GUI event loop. There can be multiple/nested loops.
                 final CountDownLatch blockUntilStarted = new CountDownLatch(1);
                 Thread gtkUpdateThread = new Thread() {
                     @Override
@@ -74,17 +84,21 @@ class GtkSupport {
 
                         // notify our main thread to continue
                         blockUntilStarted.countDown();
-                        instance.gdk_threads_enter();
+
+
+                        // prep for the event loop.
+                        instance.gdk_threads_init();
+                        instance.gtk_init(0, null);
+                        GThread.INSTANCE.g_thread_init(null);
+
                         instance.gtk_main();
-                        // MUST leave as well!
-                        instance.gdk_threads_leave();
                     }
                 };
-                gtkUpdateThread.setName("GTK Event Loop");
+                gtkUpdateThread.setName("GTK Event Loop (Native)");
                 gtkUpdateThread.start();
 
                 try {
-                    // we CANNOT continue until the GTK thread has started! (ignored if SWT is used)
+                    // we CANNOT continue until the GTK thread has started!
                     blockUntilStarted.await();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -93,11 +107,25 @@ class GtkSupport {
         }
     }
 
+    /**
+     * Best practices for GTK, is to call EVERYTHING for it on a SINGLE THREAD. This accomplishes that.
+     */
+    public static
+    void dispatch(Runnable runnable) {
+        try {
+            dispatchEvents.put(runnable);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static
     void shutdownGui() {
-        if (isSupported && !hasSwt) {
+        if (!DISABLE_EVENT_LOOP) {
             Gtk.INSTANCE.gtk_main_quit();
-            started = false;
         }
+
+        started = false;
+        gtkDispatchThread.interrupt();
     }
 }
