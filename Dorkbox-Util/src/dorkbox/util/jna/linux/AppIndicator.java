@@ -29,8 +29,13 @@ public
 interface AppIndicator extends Library {
     // effing retarded. There are DIFFERENT versions, of which they all share the same basic compatibility (of the methods that
     // we use), however -- we cannot just LOAD via the 'base-name', we actually have to try each one. There are bash commands that
-    // will tell us the linked library name, however - I'd rather not run bash commands to determine this.
-    AppIndicator INSTANCE = (AppIndicator) AppIndicatorQuery.get();
+    // will tell us the linked library name, however - I'd rather not run bash commands to determine this. This is so hacky it makes me
+    // sick.
+
+    AppIndicator INSTANCE = AppIndicatorQuery.get();
+
+    /** Necessary to provide warnings, because libappindicator3 is a piece of shit. */
+    boolean IS_VERSION_3 = AppIndicatorQuery.isVersion3;
 
     int CATEGORY_APPLICATION_STATUS = 0;
     int CATEGORY_COMMUNICATIONS = 1;
