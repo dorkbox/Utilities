@@ -29,15 +29,28 @@ class AppIndicatorQuery {
      */
     static volatile boolean isVersion3 = false;
 
+    /**
+     * Is AppIndicator loaded yet?
+     */
+    static volatile boolean isLoaded = false;
+
 
     public static
     AppIndicator get() {
         Object library;
 
+        // NOTE: GtkSupport uses this info to figure out WHAT VERSION OF GTK to use: appindiactor1 -> GTk2, appindicator3 -> GTK3.
+
         // start with base version
         try {
-            library = Native.loadLibrary("appindicator", AppIndicator.class);
+            library = Native.loadLibrary("appindicator3", AppIndicator.class);
             if (library != null) {
+                String s = library.toString();
+                if (s.indexOf("appindicator3") > 0) {
+                    isVersion3 = true;
+                }
+
+                isLoaded = true;
                 return (AppIndicator) library;
             }
         } catch (Throwable ignored) {

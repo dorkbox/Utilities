@@ -15,6 +15,8 @@
  */
 package dorkbox.util.jna.linux;
 
+import com.sun.jna.Function;
+import com.sun.jna.Native;
 import dorkbox.util.Property;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -22,8 +24,6 @@ import java.util.concurrent.CountDownLatch;
 
 public
 class GtkSupport {
-    public static final boolean isSupported;
-
     // RE: SWT
     // https://developer.gnome.org/glib/stable/glib-Deprecated-Thread-APIs.html#g-thread-init
     // Since version >= 2.24, threads can only init once. Multiple calls do nothing, and we can nest gtk_main()
@@ -37,16 +37,71 @@ class GtkSupport {
     /** Enables/Disables the creation of a native GTK event loop. Useful if you are already creating one via SWT/etc. */
     public static boolean CREATE_EVENT_LOOP = true;
 
-    static {
-        boolean hasSupport = false;
+    /**
+     * must call get() before accessing this! Only "Gtk" interface should access this!
+     */
+    static volatile Function gtk_status_icon_position_menu = null;
+
+    public static volatile boolean isGtk2 = false;
+
+    /**
+     * Helper for GTK, because we could have v3 or v2
+     */
+    @SuppressWarnings("Duplicates")
+    public static
+    Gtk get() {
+        Object library;
+
+        if (AppIndicatorQuery.isLoaded) {
+            if (AppIndicatorQuery.isVersion3) {
+                // appindicator3 requires GTK3
+                try {
+                    gtk_status_icon_position_menu = Function.getFunction("libgtk-3.so.0", "gtk_status_icon_position_menu");
+                    library = Native.loadLibrary("libgtk-3.so.0", Gtk.class);
+                    if (library != null) {
+                        return (Gtk) library;
+                    }
+                } catch (Throwable ignored) {
+                }
+            } else {
+                // appindicator1 requires GTK2
+                try {
+                    gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
+                    library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+                    if (library != null) {
+                        isGtk2 = true;
+                        return (Gtk) library;
+                    }
+                } catch (Throwable ignored) {
+                }
+            }
+        }
+
+        // now for the defaults...
+
+        // start with version 3
         try {
-            if (Gtk.INSTANCE != null && Gobject.INSTANCE != null && GThread.INSTANCE != null) {
-                hasSupport = true;
+            gtk_status_icon_position_menu = Function.getFunction("libgtk-3.so.0", "gtk_status_icon_position_menu");
+            library = Native.loadLibrary("libgtk-3.so.0", Gtk.class);
+            if (library != null) {
+                return (Gtk) library;
             }
         } catch (Throwable ignored) {
         }
 
-        isSupported = hasSupport;
+        // now version 2
+        try {
+            gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
+            library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+            if (library != null) {
+                isGtk2 = true;
+                return (Gtk) library;
+            }
+        } catch (Throwable ignored) {
+        }
+
+        throw new RuntimeException("We apologize for this, but we are unable to determine the GTK library is in use, if " +
+                                   "or even if it is in use... Please create an issue for this and include your OS type and configuration.");
     }
 
     public static

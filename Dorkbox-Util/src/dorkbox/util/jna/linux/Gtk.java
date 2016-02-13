@@ -17,7 +17,6 @@ package dorkbox.util.jna.linux;
 
 import com.sun.jna.Function;
 import com.sun.jna.Library;
-import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import dorkbox.util.Keep;
@@ -25,15 +24,17 @@ import dorkbox.util.Keep;
 import java.util.Arrays;
 import java.util.List;
 
-public interface Gtk extends Library {
-    // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep image
-    Gtk INSTANCE = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+public
+interface Gtk extends Library {
+
+    // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
+    // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 | grep gtk
+    Gtk INSTANCE = GtkSupport.get();
+    Function gtk_status_icon_position_menu = GtkSupport.gtk_status_icon_position_menu;
 
     int FALSE = 0;
     int TRUE = 1;
 
-    void gtk_box_pack_start(Pointer box, Pointer child, int expand, int fill, int padding);
-    void gtk_box_pack_end(Pointer box, Pointer child, int expand, int fill, int padding);
 
     @Keep
     class GdkEventButton extends Structure {
@@ -51,43 +52,36 @@ public interface Gtk extends Library {
         public double y_root;
 
         @Override
-        protected List<String> getFieldOrder() {
-            return Arrays.asList("type",
-                                 "window",
-                                 "send_event",
-                                 "time",
-                                 "x",
-                                 "y",
-                                 "axes",
-                                 "state",
-                                 "button",
-                                 "device",
-                                 "x_root",
-                                 "y_root");
+        protected
+        List<String> getFieldOrder() {
+            return Arrays.asList("type", "window", "send_event", "time", "x", "y", "axes", "state", "button", "device", "x_root", "y_root");
         }
     }
-
-    Function gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
 
     void gtk_init(int argc, String[] argv);
 
     /**
-     * Runs the main loop until gtk_main_quit() is called.
-     * You can nest calls to gtk_main(). In that case gtk_main_quit() will make the innermost invocation of the main loop return.
+     * Runs the main loop until gtk_main_quit() is called. You can nest calls to gtk_main(). In that case gtk_main_quit() will make the
+     * innermost invocation of the main loop return.
      */
     void gtk_main();
+
     /**
-     * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS
-     * you know what you're doing!
+     * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS you know
+     * what you're doing!
      */
     void gtk_main_quit();
 
     void gdk_threads_init();
+
     void gdk_threads_enter();
+
     void gdk_threads_leave();
 
     Pointer gtk_menu_new();
+
     Pointer gtk_menu_item_new();
+
     Pointer gtk_menu_item_new_with_label(String label);
 
     // to create a menu entry WITH an icon.
@@ -95,15 +89,21 @@ public interface Gtk extends Library {
 
 
     Pointer gtk_image_menu_item_new_with_label(String label);
+
     void gtk_image_menu_item_set_image(Pointer image_menu_item, Pointer image);
+
     void gtk_image_menu_item_set_always_show_image(Pointer menu_item, int forceShow);
 
     Pointer gtk_bin_get_child(Pointer parent);
+
     void gtk_label_set_text(Pointer label, String text);
+
     void gtk_label_set_markup(Pointer label, Pointer markup);
+
     void gtk_label_set_use_markup(Pointer label, int gboolean);
 
     Pointer gtk_status_icon_new();
+
     void gtk_status_icon_set_from_file(Pointer widget, String lablel);
 
     void gtk_status_icon_set_visible(Pointer widget, boolean visible);
@@ -112,19 +112,25 @@ public interface Gtk extends Library {
 //    void gtk_status_icon_set_tooltip(Pointer widget, String tooltipText);
 
     void gtk_status_icon_set_title(Pointer widget, String titleText);
+
     void gtk_status_icon_set_name(Pointer widget, String name);
 
     void gtk_menu_popup(Pointer menu, Pointer widget, Pointer bla, Function func, Pointer data, int button, int time);
+
     void gtk_menu_item_set_label(Pointer menu_item, String label);
 
     void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
+
     void gtk_menu_shell_deactivate(Pointer menu_shell, Pointer child);
 
     void gtk_widget_set_sensitive(Pointer widget, int sensitive);
 
     void gtk_container_remove(Pointer menu, Pointer subItem);
+
     void gtk_widget_show(Pointer widget);
+
     void gtk_widget_show_all(Pointer widget);
+
     void gtk_widget_destroy(Pointer widget);
 }
 
