@@ -200,13 +200,20 @@ class GtkSupport {
 
         started = false;
 
-        new Thread(new Runnable() {
+        // put it in a NEW dispatch event (so that we cleanup AFTER this one is finished)
+        dispatch(new Runnable() {
             @Override
             public
             void run() {
-                // this should happen in a new thread
-                gtkDispatchThread.interrupt();
+                new Thread(new Runnable() {
+                    @Override
+                    public
+                    void run() {
+                        // this should happen in a new thread
+                        gtkDispatchThread.interrupt();
+                    }
+                }).run();
             }
-        }).run();
+        });
     }
 }
