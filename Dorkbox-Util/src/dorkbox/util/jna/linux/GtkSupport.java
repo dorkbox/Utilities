@@ -34,8 +34,8 @@ class GtkSupport {
     private static volatile Thread gtkDispatchThread;
 
     @Property
-    /** Enables/Disables the creation of a native GTK event loop. Useful if you are already creating one via SWT/etc. */
-    public static boolean CREATE_EVENT_LOOP = true;
+    /** Forces the system to always choose GTK2 (even when GTK3 might be available). SWT & JavaFX both use GTK2! */
+    public static boolean FORCE_GTK2 = false;
 
     /**
      * must call get() before accessing this! Only "Gtk" interface should access this!
@@ -45,12 +45,29 @@ class GtkSupport {
     public static volatile boolean isGtk2 = false;
 
     /**
-     * Helper for GTK, because we could have v3 or v2
+     * Helper for GTK, because we could have v3 or v2.
+     *
+     * Observations: SWT & JavaFX both use GTK2, and we can't load GTK3 if GTK2 symbols are loaded
      */
     @SuppressWarnings("Duplicates")
     public static
     Gtk get() {
         Object library;
+
+        boolean shouldUseGtk2 = GtkSupport.FORCE_GTK2;
+
+        // in some cases, we ALWAYS want to try GTK2 first
+        if (shouldUseGtk2) {
+            try {
+                gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
+                library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+                if (library != null) {
+                    isGtk2 = true;
+                    return (Gtk) library;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
 
         if (AppIndicatorQuery.isLoaded) {
             if (AppIndicatorQuery.isVersion3) {
@@ -133,36 +150,34 @@ class GtkSupport {
             gtkDispatchThread.start();
 
 
-            if (CREATE_EVENT_LOOP) {
-                // startup the GTK GUI event loop. There can be multiple/nested loops.
-                final CountDownLatch blockUntilStarted = new CountDownLatch(1);
-                Thread gtkUpdateThread = new Thread() {
-                    @Override
-                    public
-                    void run() {
-                        Gtk instance = Gtk.INSTANCE;
+            // startup the GTK GUI event loop. There can be multiple/nested loops.
+            final CountDownLatch blockUntilStarted = new CountDownLatch(1);
+            Thread gtkUpdateThread = new Thread() {
+                @Override
+                public
+                void run() {
+                    Gtk instance = Gtk.INSTANCE;
 
-                        // prep for the event loop.
-                        instance.gdk_threads_init();
-                        instance.gtk_init(0, null);
-                        GThread.INSTANCE.g_thread_init(null);
+                    // prep for the event loop.
+                    instance.gdk_threads_init();
+                    instance.gtk_init(0, null);
+                    GThread.INSTANCE.g_thread_init(null);
 
-                        // notify our main thread to continue
-                        blockUntilStarted.countDown();
+                    // notify our main thread to continue
+                    blockUntilStarted.countDown();
 
-                        // blocks unit quit
-                        instance.gtk_main();
-                    }
-                };
-                gtkUpdateThread.setName("GTK Event Loop (Native)");
-                gtkUpdateThread.start();
-
-                try {
-                    // we CANNOT continue until the GTK thread has started!
-                    blockUntilStarted.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // blocks unit quit
+                    instance.gtk_main();
                 }
+            };
+            gtkUpdateThread.setName("GTK Event Loop (Native)");
+            gtkUpdateThread.start();
+
+            try {
+                // we CANNOT continue until the GTK thread has started!
+                blockUntilStarted.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -181,9 +196,7 @@ class GtkSupport {
 
     public static
     void shutdownGui() {
-        if (CREATE_EVENT_LOOP) {
-            Gtk.INSTANCE.gtk_main_quit();
-        }
+        Gtk.INSTANCE.gtk_main_quit();
 
         started = false;
         gtkDispatchThread.interrupt();

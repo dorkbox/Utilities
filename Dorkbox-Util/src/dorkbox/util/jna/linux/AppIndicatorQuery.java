@@ -41,9 +41,21 @@ class AppIndicatorQuery {
 
         // NOTE: GtkSupport uses this info to figure out WHAT VERSION OF GTK to use: appindiactor1 -> GTk2, appindicator3 -> GTK3.
 
+        if (GtkSupport.FORCE_GTK2) {
+            // try loading appindicator1 first, maybe it's there?
+
+            try {
+                library = Native.loadLibrary("appindicator1", AppIndicator.class);
+                if (library != null) {
+                    return (AppIndicator) library;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
         // start with base version
         try {
-            library = Native.loadLibrary("appindicator3", AppIndicator.class);
+            library = Native.loadLibrary("appindicator", AppIndicator.class);
             if (library != null) {
                 String s = library.toString();
                 if (s.indexOf("appindicator3") > 0) {
@@ -58,7 +70,6 @@ class AppIndicatorQuery {
 
         // whoops. Symbolic links are bugged out. Look manually for it...
 
-        // version 1 is better than version 3, because of dumb shit redhat did.
         try {
             library = Native.loadLibrary("appindicator1", AppIndicator.class);
             if (library != null) {
