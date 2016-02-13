@@ -34,7 +34,7 @@ class GtkSupport {
     private static volatile Thread gtkDispatchThread;
 
     @Property
-    /** Forces the system to always choose GTK2 (even when GTK3 might be available). SWT & JavaFX both use GTK2! */
+    /** Forces the system to always choose GTK2 (even when GTK3 might be available). JavaFX uses GTK2! */
     public static boolean FORCE_GTK2 = false;
 
     /**
