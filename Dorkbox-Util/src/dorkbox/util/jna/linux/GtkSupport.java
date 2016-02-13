@@ -199,6 +199,14 @@ class GtkSupport {
         Gtk.INSTANCE.gtk_main_quit();
 
         started = false;
-        gtkDispatchThread.interrupt();
+
+        new Thread(new Runnable() {
+            @Override
+            public
+            void run() {
+                // this should happen in a new thread
+                gtkDispatchThread.interrupt();
+            }
+        }).run();
     }
 }
