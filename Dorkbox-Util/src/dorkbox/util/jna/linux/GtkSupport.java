@@ -66,6 +66,10 @@ class GtkSupport {
         boolean shouldUseGtk2 = GtkSupport.FORCE_GTK2 || JAVAFX_COMPATIBILITY_MODE;
         alreadyRunningGTK = JAVAFX_COMPATIBILITY_MODE;
 
+
+        // for more info on JavaFX: https://docs.oracle.com/javafx/2/system_requirements_2-2-3/jfxpub-system_requirements_2-2-3.htm
+        // from the page: JavaFX 2.2.3 for Linux requires gtk2 2.18+.
+
         // in some cases, we ALWAYS want to try GTK2 first
         if (shouldUseGtk2) {
             try {
