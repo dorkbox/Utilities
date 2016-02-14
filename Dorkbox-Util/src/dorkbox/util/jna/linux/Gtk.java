@@ -58,13 +58,17 @@ interface Gtk extends Library {
         }
     }
 
-    void gtk_init(int argc, String[] argv);
+    boolean gtk_init_check(int argc, String[] argv);
 
     /**
      * Runs the main loop until gtk_main_quit() is called. You can nest calls to gtk_main(). In that case gtk_main_quit() will make the
      * innermost invocation of the main loop return.
      */
     void gtk_main();
+
+
+    /** sks for the current nesting level of the main loop. Useful to determine (at startup) if GTK is already runnign */
+    int gtk_main_level();
 
     /**
      * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS you know
@@ -74,8 +78,8 @@ interface Gtk extends Library {
 
     void gdk_threads_init();
 
+    // tricky business. This should only be in the dispatch thread
     void gdk_threads_enter();
-
     void gdk_threads_leave();
 
     Pointer gtk_menu_new();

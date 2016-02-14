@@ -44,15 +44,17 @@ class GtkSupport {
 
     public static volatile boolean isGtk2 = false;
 
+    private static volatile boolean alreadyRunningGTK = false;
+
     /**
      * Helper for GTK, because we could have v3 or v2.
      *
-     * Observations: SWT & JavaFX both use GTK2, and we can't load GTK3 if GTK2 symbols are loaded
+     * Observations: JavaFX uses GTK2, and we can't load GTK3 if GTK2 symbols are loaded
      */
     @SuppressWarnings("Duplicates")
     public static
     Gtk get() {
-        Object library;
+        Gtk library;
 
         boolean shouldUseGtk2 = GtkSupport.FORCE_GTK2;
 
@@ -60,10 +62,14 @@ class GtkSupport {
         if (shouldUseGtk2) {
             try {
                 gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
-                library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+                library = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
                 if (library != null) {
                     isGtk2 = true;
-                    return (Gtk) library;
+
+                    // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                    // when it's '1', it means that someone else has stared GTK -- so we DO NOT NEED TO.
+                    alreadyRunningGTK = library.gtk_main_level() != 0;
+                    return library;
                 }
             } catch (Throwable ignored) {
             }
@@ -74,9 +80,12 @@ class GtkSupport {
                 // appindicator3 requires GTK3
                 try {
                     gtk_status_icon_position_menu = Function.getFunction("libgtk-3.so.0", "gtk_status_icon_position_menu");
-                    library = Native.loadLibrary("libgtk-3.so.0", Gtk.class);
+                    library = (Gtk) Native.loadLibrary("libgtk-3.so.0", Gtk.class);
                     if (library != null) {
-                        return (Gtk) library;
+                        // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                        // when it's '1', it means that someone else has stared GTK -- so we DO NOT NEED TO.
+                        alreadyRunningGTK = library.gtk_main_level() != 0;
+                        return library;
                     }
                 } catch (Throwable ignored) {
                 }
@@ -84,10 +93,14 @@ class GtkSupport {
                 // appindicator1 requires GTK2
                 try {
                     gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
-                    library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+                    library = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
                     if (library != null) {
                         isGtk2 = true;
-                        return (Gtk) library;
+
+                        // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                        // when it's '1', it means that someone else has stared GTK -- so we DO NOT NEED TO.
+                        alreadyRunningGTK = library.gtk_main_level() != 0;
+                        return library;
                     }
                 } catch (Throwable ignored) {
                 }
@@ -99,9 +112,12 @@ class GtkSupport {
         // start with version 3
         try {
             gtk_status_icon_position_menu = Function.getFunction("libgtk-3.so.0", "gtk_status_icon_position_menu");
-            library = Native.loadLibrary("libgtk-3.so.0", Gtk.class);
+            library = (Gtk) Native.loadLibrary("libgtk-3.so.0", Gtk.class);
             if (library != null) {
-                return (Gtk) library;
+                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                // when it's '1', it means that someone else has stared GTK -- so we DO NOT NEED TO.
+                alreadyRunningGTK = library.gtk_main_level() != 0;
+                return library;
             }
         } catch (Throwable ignored) {
         }
@@ -109,10 +125,14 @@ class GtkSupport {
         // now version 2
         try {
             gtk_status_icon_position_menu = Function.getFunction("gtk-x11-2.0", "gtk_status_icon_position_menu");
-            library = Native.loadLibrary("gtk-x11-2.0", Gtk.class);
+            library = (Gtk) Native.loadLibrary("gtk-x11-2.0", Gtk.class);
             if (library != null) {
                 isGtk2 = true;
-                return (Gtk) library;
+
+                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                // when it's '1', it means that someone else has stared GTK -- so we DO NOT NEED TO.
+                alreadyRunningGTK = library.gtk_main_level() != 0;
+                return library;
             }
         } catch (Throwable ignored) {
         }
@@ -127,6 +147,7 @@ class GtkSupport {
         if (!started) {
             started = true;
 
+            // GTK specifies that we ONLY run from a single thread. This guarantees that.
             gtkDispatchThread = new Thread() {
                 @Override
                 public
@@ -151,33 +172,41 @@ class GtkSupport {
 
 
             // startup the GTK GUI event loop. There can be multiple/nested loops.
-            final CountDownLatch blockUntilStarted = new CountDownLatch(1);
-            Thread gtkUpdateThread = new Thread() {
-                @Override
-                public
-                void run() {
-                    Gtk instance = Gtk.INSTANCE;
 
-                    // prep for the event loop.
-                    instance.gdk_threads_init();
-                    instance.gtk_init(0, null);
-                    GThread.INSTANCE.g_thread_init(null);
+            // If JavaFX/SWT is used, this is UNNECESSARY
+            if (!alreadyRunningGTK) {
+                // only necessary if we are the only GTK instance running...
+                final CountDownLatch blockUntilStarted = new CountDownLatch(1);
+                Thread gtkUpdateThread = new Thread() {
+                    @Override
+                    public
+                    void run() {
+                        Gtk gtk = Gtk.INSTANCE;
 
-                    // notify our main thread to continue
-                    blockUntilStarted.countDown();
+                        // prep for the event loop.
+                        gtk.gdk_threads_init();
+                        gtk.gdk_threads_enter();
 
-                    // blocks unit quit
-                    instance.gtk_main();
+                        gtk.gtk_init_check(0, null);
+
+                        // notify our main thread to continue
+                        blockUntilStarted.countDown();
+
+                        // blocks unit quit
+//                        gtk.gtk_main();
+
+                        gtk.gdk_threads_leave();
+                    }
+                };
+                gtkUpdateThread.setName("GTK Event Loop (Native)");
+                gtkUpdateThread.start();
+
+                try {
+                    // we CANNOT continue until the GTK thread has started!
+                    blockUntilStarted.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            };
-            gtkUpdateThread.setName("GTK Event Loop (Native)");
-            gtkUpdateThread.start();
-
-            try {
-                // we CANNOT continue until the GTK thread has started!
-                blockUntilStarted.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -196,7 +225,10 @@ class GtkSupport {
 
     public static
     void shutdownGui() {
-        Gtk.INSTANCE.gtk_main_quit();
+        // If JavaFX/SWT is used, this is UNNECESSARY (an will break SWT/JavaFX shutdown)
+        if (!alreadyRunningGTK) {
+            Gtk.INSTANCE.gtk_main_quit();
+        }
 
         started = false;
 
