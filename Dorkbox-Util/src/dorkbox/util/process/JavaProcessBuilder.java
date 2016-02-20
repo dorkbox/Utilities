@@ -200,7 +200,7 @@ class JavaProcessBuilder extends ShellProcessBuilder {
 
     @Override
     public
-    void start() {
+    int start() {
         setExecutable(this.javaLocation);
 
         // save off the original arguments
@@ -267,6 +267,6 @@ class JavaProcessBuilder extends ShellProcessBuilder {
 
         this.arguments.addAll(origArguments);
 
-        super.start();
+        return super.start();
     }
 }

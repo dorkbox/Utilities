@@ -162,7 +162,7 @@ class ShellProcessBuilder {
 
 
     public
-    void start() {
+    int start() {
         List<String> argumentsList = new ArrayList<String>();
 
         // if no executable, then use the command shell
@@ -403,11 +403,12 @@ class ShellProcessBuilder {
                 }
             }
 
+            int exitValue = 0;
+
             try {
                 this.process.waitFor();
 
-                @SuppressWarnings("unused")
-                int exitValue = this.process.exitValue();
+                exitValue = this.process.exitValue();
 
                 // wait for the READER threads to die (meaning their streams have closed/EOF'd)
                 if (writeToProcess_input != null) {
@@ -434,7 +435,12 @@ class ShellProcessBuilder {
             // remove the shutdown hook now that we've shutdown.
             Runtime.getRuntime()
                    .removeShutdownHook(hook);
+
+            return exitValue;
         }
+
+        // 1 means a problem
+        return 1;
     }
 
     /**
