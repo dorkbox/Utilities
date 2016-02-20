@@ -23,7 +23,7 @@ class DelayTimer {
     private final String name;
     private final boolean isDaemon;
     private final Runnable listener;
-    private Timer timer;
+    private volatile Timer timer;
     private long delay;
 
     public
@@ -85,8 +85,19 @@ class DelayTimer {
                 @Override
                 public
                 void run() {
+                    // timer can change if the callback calls delay() or cancel()
+                    Timer origTimer = DelayTimer.this.timer;
+
                     DelayTimer.this.listener.run();
-                    DelayTimer.this.cancel();
+
+                    if (origTimer != null) {
+                        origTimer.cancel();
+                        origTimer.purge();
+
+                        if (origTimer == DelayTimer.this.timer) {
+                            DelayTimer.this.timer = null;
+                        }
+                    }
                 }
             };
             this.timer.schedule(t, delay);
