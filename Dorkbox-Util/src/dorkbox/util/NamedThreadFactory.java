@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public
 class NamedThreadFactory implements ThreadFactory {
-    private static final AtomicInteger poolId = new AtomicInteger();
+    private final AtomicInteger poolId = new AtomicInteger();
 
     // permit this to be changed!
     /**
@@ -35,9 +35,8 @@ class NamedThreadFactory implements ThreadFactory {
      * <p/>
      * Stack size must be specified in bytes. Default is 8k
      */
+    @Property
     public static int stackSizeForThreads = 8192;
-
-    private final AtomicInteger nextId = new AtomicInteger();
 
     private final ThreadGroup group;
     private final String namePrefix;
@@ -100,7 +99,7 @@ class NamedThreadFactory implements ThreadFactory {
     public
     NamedThreadFactory(String poolNamePrefix, ThreadGroup group, int threadPriority, boolean isDaemon) {
         this.daemon = isDaemon;
-        this.namePrefix = poolNamePrefix + '-' + poolId.incrementAndGet();
+        this.namePrefix = poolNamePrefix;
         if (group == null) {
             this.group = Thread.currentThread()
                                .getThreadGroup();
@@ -122,7 +121,7 @@ class NamedThreadFactory implements ThreadFactory {
         // 8k is the size of the android stack. Depending on the version of android, this can either change, or will always be 8k
         // To be honest, 8k is pretty reasonable for an asynchronous/event based system (32bit) or 16k (64bit)
         // Setting the size MAY or MAY NOT have any effect!!!
-        Thread t = new Thread(this.group, r, this.namePrefix + '-' + this.nextId.incrementAndGet(), stackSizeForThreads);
+        Thread t = new Thread(this.group, r, this.namePrefix + '-' + this.poolId.incrementAndGet(), stackSizeForThreads);
         t.setDaemon(this.daemon);
         if (t.getPriority() != this.threadPriority) {
             t.setPriority(this.threadPriority);
