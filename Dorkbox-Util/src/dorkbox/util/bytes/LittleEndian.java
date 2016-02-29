@@ -30,8 +30,7 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("ALL")
 public
 class LittleEndian {
-    // the following are ALL in Little-Endian (byte[0] is least significant)
-
+    // the following are ALL in Little-Endian (byte[0] is LEAST significant)
 
     /**
      * CHAR to and from bytes
@@ -59,6 +58,7 @@ class LittleEndian {
             char number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[1] & 0xFF) << 8;
                 case 1:
@@ -133,6 +133,7 @@ class LittleEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[1] & 0xFF) << 8;
                 case 1:
@@ -212,6 +213,7 @@ class LittleEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[1] & 0xFF) << 8;
                 case 1:
@@ -285,6 +287,7 @@ class LittleEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[1] & 0xFF) << 8;
                 case 1:
@@ -367,6 +370,7 @@ class LittleEndian {
             int number = 0;
 
             switch (bytes.length) {
+                default:
                 case 4:
                     number |= (bytes[3] & 0xFF) << 24;
                 case 3:
@@ -455,6 +459,7 @@ class LittleEndian {
             int number = 0;
 
             switch (bytes.length) {
+                default:
                 case 4:
                     number |= (bytes[3] & 0xFF) << 24;
                 case 3:
@@ -561,6 +566,7 @@ class LittleEndian {
             long number = 0L;
 
             switch (bytes.length) {
+                default:
                 case 8:
                     number |= (long) (bytes[7] & 0xFF) << 56;
                 case 7:

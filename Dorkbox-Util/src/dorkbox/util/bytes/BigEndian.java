@@ -29,9 +29,7 @@ import java.nio.ByteBuffer;
 @SuppressWarnings("ALL")
 public
 class BigEndian {
-    // the following are ALL in Bit-Endian (byte[0] is most significant)
-    // TODO: switch these to big endian. these are a copy of little endian
-
+    // the following are ALL in Bit-Endian (byte[0] is MOST significant)
 
     /**
      * CHAR to and from bytes
@@ -59,6 +57,7 @@ class BigEndian {
             char number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[0] & 0xFF) << 8;
                 case 1:
@@ -79,7 +78,7 @@ class BigEndian {
         }
 
         public static
-        char fromStream(final InputStream inputStream) throws IOException {
+        char from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -132,6 +131,7 @@ class BigEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[0] & 0xFF) << 8;
                 case 1:
@@ -152,7 +152,7 @@ class BigEndian {
         }
 
         public static
-        UShort fromStream(final InputStream inputStream) throws IOException {
+        UShort from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -213,6 +213,7 @@ class BigEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[0] & 0xFF) << 8;
                 case 1:
@@ -233,7 +234,7 @@ class BigEndian {
         }
 
         public static
-        short fromStream(final InputStream inputStream) throws IOException {
+        short from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -286,6 +287,7 @@ class BigEndian {
             short number = 0;
 
             switch (bytes.length) {
+                default:
                 case 2:
                     number |= (bytes[0] & 0xFF) << 8;
                 case 1:
@@ -306,7 +308,7 @@ class BigEndian {
         }
 
         public static
-        UShort fromStream(final InputStream inputStream) throws IOException {
+        UShort from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -369,6 +371,7 @@ class BigEndian {
             int number = 0;
 
             switch (bytes.length) {
+                default:
                 case 4:
                     number |= (bytes[0] & 0xFF) << 24;
                 case 3:
@@ -396,7 +399,7 @@ class BigEndian {
         }
 
         public static
-        int fromStream(InputStream inputStream) throws IOException {
+        int from(InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read(), (byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -457,6 +460,7 @@ class BigEndian {
             int number = 0;
 
             switch (bytes.length) {
+                default:
                 case 4:
                     number |= (bytes[0] & 0xFF) << 24;
                 case 3:
@@ -486,7 +490,7 @@ class BigEndian {
         }
 
         public static
-        UInteger fromStream(final InputStream inputStream) throws IOException {
+        UInteger from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(), (byte) inputStream.read(), (byte) inputStream.read(), (byte) inputStream.read());
         }
 
@@ -562,6 +566,7 @@ class BigEndian {
             long number = 0L;
 
             switch (bytes.length) {
+                default:
                 case 8:
                     number |= (long) (bytes[0] & 0xFF) << 56;
                 case 7:
@@ -601,7 +606,7 @@ class BigEndian {
         }
 
         public static
-        long fromStream(final InputStream inputStream) throws IOException {
+        long from(final InputStream inputStream) throws IOException {
             return from((byte) inputStream.read(),
                         (byte) inputStream.read(),
                         (byte) inputStream.read(),
@@ -716,7 +721,6 @@ class BigEndian {
             // returns the shortest length byte array possible
             byte[] bytes = x.toBigInteger()
                             .toByteArray();
-
 
             if (bytes.length < 8) {
                 byte[] fixedBytes = new byte[8];
