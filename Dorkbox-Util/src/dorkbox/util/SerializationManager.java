@@ -96,16 +96,6 @@ interface SerializationManager {
     Object readFullClassAndObject(final Logger logger, final Input input) throws IOException;
 
     /**
-     * Borrows a kryo from the threadsafe pool. You must release it back to the pool when done.
-     */
-    Kryo take() throws InterruptedException;
-
-    /**
-     * Releases the kryo back to the threadsafe pool
-     */
-    void release(Kryo kryo);
-
-    /**
      * Called when initialization is complete. This is to prevent (and recognize) out-of-order class/serializer registration.
      */
     void finishInit();
