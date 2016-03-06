@@ -82,17 +82,6 @@ class StorageTest {
 
         @Override
         public
-        Kryo take() throws InterruptedException {
-            return kryo;
-        }
-
-        @Override
-        public
-        void release(final Kryo kryo) {
-        }
-
-        @Override
-        public
         void finishInit() {
         }
 
