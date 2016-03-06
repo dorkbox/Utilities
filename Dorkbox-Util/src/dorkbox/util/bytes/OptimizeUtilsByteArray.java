@@ -96,6 +96,10 @@ class OptimizeUtilsByteArray {
      * FROM KRYO
      * <p>
      * Reads an int from the buffer that was optimized.
+     *
+     * @param optimizePositive
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (5
+     *                 bytes).  This ultimately means that it will use fewer bytes for positive numbers.
      */
     @SuppressWarnings("UnusedAssignment")
     public static
@@ -128,7 +132,8 @@ class OptimizeUtilsByteArray {
      * Writes the specified int to the buffer using 1 to 5 bytes, depending on the size of the number.
      *
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (5
+     *                 bytes).  This ultimately means that it will use fewer bytes for positive numbers.
      *
      * @return the number of bytes written.
      */
