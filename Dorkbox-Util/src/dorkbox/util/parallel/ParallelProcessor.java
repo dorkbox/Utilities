@@ -51,7 +51,7 @@ class ParallelProcessor<T extends ParallelTask> {
         this.totalTaskCount = totalTaskCount - 1; // x-1 because our ID's start at 0, not 1
         this.collector = collector;
 
-        pool = new ObjectPool<T>(poolableObject, numberOfThreads);
+        pool = ObjectPool.Blocking(poolableObject, numberOfThreads);
         this.processedCount = new AtomicInteger();
         this.assignedCount = new AtomicInteger();
 
@@ -102,7 +102,7 @@ class ParallelProcessor<T extends ParallelTask> {
         collector.taskComplete(work);
 
         final int i = processedCount.getAndIncrement();
-        pool.release(work);  // last valid position for 'work', since this releases it back so the client can reuse it
+        pool.put(work);  // last valid position for 'work', since this releases it back so the client can reuse it
 
         if (i == totalTaskCount) {
             isShuttingDown = true;
