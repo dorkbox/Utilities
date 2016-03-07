@@ -47,7 +47,7 @@ class OptimizeUtilsByteArray {
      */
     public static
     int intLength(int value, boolean optimizePositive) {
-        return ByteBuffer2.intLength(value, optimizePositive);
+        return OptimizeUtilsByteBuf.intLength(value, optimizePositive);
     }
 
     // int
