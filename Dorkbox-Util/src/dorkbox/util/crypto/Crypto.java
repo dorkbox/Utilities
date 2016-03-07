@@ -16,11 +16,11 @@
 package dorkbox.util.crypto;
 
 
-import com.twmacinta.util.MD5;
 import dorkbox.util.OS;
 import dorkbox.util.bytes.LittleEndian;
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.PBEParametersGenerator;
+import org.bouncycastle.crypto.digests.MD5Digest;
 import org.bouncycastle.crypto.digests.SHA1Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.digests.SHA512Digest;
@@ -81,12 +81,8 @@ class Crypto {
 
     public static
     byte[] hashFileMD5(File file) {
-        try {
-            return MD5.getHash(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        MD5Digest digest = new MD5Digest();
+        return hashFile(file, digest, null);
     }
 
     public static
