@@ -36,6 +36,7 @@ package dorkbox.util.bytes;
 
 import io.netty.buffer.ByteBuf;
 
+@SuppressWarnings({"Duplicates", "NumericCastThatLosesPrecision", "UnusedAssignment", "IntegerMultiplicationImplicitCastToLong", "unused"})
 public
 class OptimizeUtilsByteBuf {
 
@@ -177,7 +178,7 @@ class OptimizeUtilsByteBuf {
     // long
 
     /**
-     * Returns the number of bytes that would be written with {@link #writeLong(long, boolean)}.
+     * Returns the number of bytes that would be written with {@link #writeLong(ByteBuf, long, boolean)}.
      *
      * @param optimizePositive
      *                 true if you want to optimize the number of bytes needed to write the length value

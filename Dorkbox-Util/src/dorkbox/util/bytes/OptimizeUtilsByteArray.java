@@ -34,12 +34,11 @@
  */
 package dorkbox.util.bytes;
 
+@SuppressWarnings({"Duplicates", "NumericCastThatLosesPrecision", "UnusedAssignment", "IntegerMultiplicationImplicitCastToLong", "unused"})
 public
 class OptimizeUtilsByteArray {
 
     /**
-     * FROM KRYO
-     * <p>
      * Returns the number of bytes that would be written with {@link #writeInt(byte[], int, boolean)}.
      *
      * @param optimizePositive
@@ -53,8 +52,6 @@ class OptimizeUtilsByteArray {
     // int
 
     /**
-     * FROM KRYO
-     * <p>
      * look at buffer, and see if we can read the length of the int off of it. (from the reader index)
      *
      * @return 0 if we could not read anything, >0 for the number of bytes for the int on the buffer
@@ -62,34 +59,61 @@ class OptimizeUtilsByteArray {
     @SuppressWarnings("SimplifiableIfStatement")
     public static
     boolean canReadInt(byte[] buffer) {
+        int position = 0;
+        return canReadInt(buffer, position);
+    }
+
+    /**
+     * FROM KRYO
+     * <p>
+     * look at buffer, and see if we can read the length of the int off of it. (from the reader index)
+     *
+     * @param position where in the buffer to start reading
+     * @return 0 if we could not read anything, >0 for the number of bytes for the int on the buffer
+     */
+    @SuppressWarnings("SimplifiableIfStatement")
+    public static
+    boolean canReadInt(final byte[] buffer, int position) {
         int length = buffer.length;
 
         if (length >= 5) {
             return true;
         }
-        int p = 0;
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == length) {
+        if (position == length) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == length) {
+        if (position == length) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == length) {
+        if (position == length) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        return p != length;
+        return position != length;
+    }
+
+    /**
+     * Reads an int from the buffer that was optimized at position 0
+     *
+     * @param optimizePositive
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (5
+     *                 bytes).  This ultimately means that it will use fewer bytes for positive numbers.
+     */
+    public static
+    int readInt(byte[] buffer, boolean optimizePositive) {
+        int position = 0;
+        return readInt(buffer, optimizePositive, position);
     }
 
     /**
@@ -97,14 +121,13 @@ class OptimizeUtilsByteArray {
      * <p>
      * Reads an int from the buffer that was optimized.
      *
+     * @param position where in the buffer to start reading
      * @param optimizePositive
      *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (5
      *                 bytes).  This ultimately means that it will use fewer bytes for positive numbers.
      */
-    @SuppressWarnings("UnusedAssignment")
     public static
-    int readInt(byte[] buffer, boolean optimizePositive) {
-        int position = 0;
+    int readInt(final byte[] buffer, final boolean optimizePositive, int position) {
         int b = buffer[position++];
         int result = b & 0x7F;
         if ((b & 0x80) != 0) {
@@ -127,8 +150,6 @@ class OptimizeUtilsByteArray {
     }
 
     /**
-     * FROM KRYO
-     * <p>
      * Writes the specified int to the buffer using 1 to 5 bytes, depending on the size of the number.
      *
      * @param optimizePositive
@@ -137,10 +158,26 @@ class OptimizeUtilsByteArray {
      *
      * @return the number of bytes written.
      */
-    @SuppressWarnings({"UnusedAssignment", "NumericCastThatLosesPrecision", "Duplicates"})
     public static
     int writeInt(byte[] buffer, int value, boolean optimizePositive) {
         int position = 0;
+        return writeInt(buffer, value, optimizePositive, position);
+    }
+
+    /**
+     * FROM KRYO
+     * <p>
+     * Writes the specified int to the buffer using 1 to 5 bytes, depending on the size of the number.
+     *
+     * @param position where in the buffer to start writing
+     * @param optimizePositive
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (5
+     *                 bytes).  This ultimately means that it will use fewer bytes for positive numbers.
+     *
+     * @return the number of bytes written.
+     */
+    public static
+    int writeInt(final byte[] buffer, int value, final boolean optimizePositive, int position) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 31;
         }
@@ -180,54 +217,37 @@ class OptimizeUtilsByteArray {
      * @param optimizePositive
      *                 true if you want to optimize the number of bytes needed to write the length value
      */
-    @SuppressWarnings("Duplicates")
     public static
     int longLength(long value, boolean optimizePositive) {
-        if (!optimizePositive) {
-            value = value << 1 ^ value >> 63;
-        }
-        if (value >>> 7 == 0) {
-            return 1;
-        }
-        if (value >>> 14 == 0) {
-            return 2;
-        }
-        if (value >>> 21 == 0) {
-            return 3;
-        }
-        if (value >>> 28 == 0) {
-            return 4;
-        }
-        if (value >>> 35 == 0) {
-            return 5;
-        }
-        if (value >>> 42 == 0) {
-            return 6;
-        }
-        if (value >>> 49 == 0) {
-            return 7;
-        }
-        if (value >>> 56 == 0) {
-            return 8;
-        }
-        return 9;
+        return OptimizeUtilsByteBuf.longLength(value, optimizePositive);
     }
 
 
     // long
 
     /**
-     * FROM KRYO
-     * <p>
      * Reads a 1-9 byte long.
      *
      * @param optimizePositive
      *                 true if you want to optimize the number of bytes needed to write the length value
      */
-    @SuppressWarnings({"IntegerMultiplicationImplicitCastToLong", "UnusedAssignment"})
     public static
     long readLong(byte[] buffer, boolean optimizePositive) {
         int position = 0;
+        return readLong(buffer, optimizePositive, position);
+    }
+
+    /**
+     * FROM KRYO
+     * <p>
+     * Reads a 1-9 byte long.
+     *
+     * @param position where in the buffer to start reading
+     * @param optimizePositive
+     *                 true if you want to optimize the number of bytes needed to write the length value
+     */
+    public static
+    long readLong(final byte[] buffer, final boolean optimizePositive, int position) {
         int b = buffer[position++];
         long result = b & 0x7F;
         if ((b & 0x80) != 0) {
@@ -269,8 +289,6 @@ class OptimizeUtilsByteArray {
     }
 
     /**
-     * FROM KRYO
-     * <p>
      * Writes a 1-9 byte long.
      *
      * @param optimizePositive
@@ -279,13 +297,29 @@ class OptimizeUtilsByteArray {
      *
      * @return the number of bytes written.
      */
-    @SuppressWarnings({"Duplicates", "UnusedAssignment", "NumericCastThatLosesPrecision"})
     public static
     int writeLong(byte[] buffer, long value, boolean optimizePositive) {
+        int position = 0;
+        return writeLong(buffer, value, optimizePositive, position);
+    }
+
+    /**
+     * FROM KRYO
+     * <p>
+     * Writes a 1-9 byte long.
+     *
+     * @param position where in the buffer to start writing
+     * @param optimizePositive
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes).
+     *
+     * @return the number of bytes written.
+     */
+    public static
+    int writeLong(final byte[] buffer, long value, final boolean optimizePositive, int position) {
         if (!optimizePositive) {
             value = value << 1 ^ value >> 63;
         }
-        int position = 0;
         if (value >>> 7 == 0) {
             buffer[position++] = (byte) value;
             return 1;
@@ -358,62 +392,80 @@ class OptimizeUtilsByteArray {
         return 9;
     }
 
+    /**
+     * look at buffer, and see if we can read the length of the long off of it (from the reader index).
+     *
+     * @return 0 if we could not read anything, >0 for the number of bytes for the long on the buffer
+     */
     public static
     boolean canReadLong(byte[] buffer) {
+        int position = 0;
+        return canReadLong(buffer, position);
+    }
+
+    /**
+     * FROM KRYO
+     * <p>
+     * look at buffer, and see if we can read the length of the long off of it (from the reader index).
+     *
+     * @param position where in the buffer to start reading
+     * @return 0 if we could not read anything, >0 for the number of bytes for the long on the buffer
+     */
+    private static
+    boolean canReadLong(final byte[] buffer, int position) {
         int limit = buffer.length;
 
         if (limit >= 9) {
             return true;
         }
-        int p = 0;
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
-        if (p == limit) {
+        if (position == limit) {
             return false;
         }
         //noinspection SimplifiableIfStatement
-        if ((buffer[p++] & 0x80) == 0) {
+        if ((buffer[position++] & 0x80) == 0) {
             return true;
         }
 
-        return p != limit;
+        return position != limit;
     }
 
 
