@@ -18,13 +18,19 @@ package dorkbox.util;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
 import java.awt.Color;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 public final
 class Sys {
@@ -144,20 +150,63 @@ class Sys {
     public static
     String getSizePretty(final long size) {
         if (size > TERABYTE) {
-            return String.format("%2.2fTB", (float) size / TERABYTE);
+            return String.format("%2.2dTB", (double) size / TERABYTE);
         }
         if (size > GIGABYTE) {
-            return String.format("%2.2fGB", (float) size / GIGABYTE);
+            return String.format("%2.2dGB", (double) size / GIGABYTE);
         }
         if (size > MEGABYTE) {
-            return String.format("%2.2fMB", (float) size / MEGABYTE);
+            return String.format("%2.2dMB", (double) size / MEGABYTE);
         }
         if (size > KILOBYTE) {
-            return String.format("%2.2fKB", (float) size / KILOBYTE);
+            return String.format("%2.2dKB", (double) size / KILOBYTE);
         }
 
         return String.valueOf(size) + "B";
     }
+
+
+    /**
+     * Returns a PRETTY string representation of the specified time.
+     */
+    public static String getTimePretty(long nanoSeconds) {
+        final TimeUnit unit;
+        final String text;
+
+        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.DAYS;
+            text = "d";
+        }
+        else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.HOURS;
+            text = "h";
+        }
+        else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MINUTES;
+            text = "min";
+        }
+        else  if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.SECONDS;
+            text = "s";
+        }
+        else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MILLISECONDS;
+            text = "ms";
+        }
+        else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MICROSECONDS;
+            text = "\u03bcs"; // μs
+        }
+        else {
+            unit = TimeUnit.NANOSECONDS;
+            text = "ns";
+        }
+
+        // convert the unit into the largest time unit possible (since that is often what makes sense)
+        double value = (double) nanoSeconds / TimeUnit.NANOSECONDS.convert(1, unit);
+        return String.format("%.4g " + text, value);
+    }
+
 
     /**
      * Convenient close for a stream.
