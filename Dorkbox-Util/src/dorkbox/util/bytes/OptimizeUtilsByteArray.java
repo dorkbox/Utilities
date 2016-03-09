@@ -212,10 +212,11 @@ class OptimizeUtilsByteArray {
     }
 
     /**
-     * Returns the number of bytes that would be written with {@link #writeLong(byte[], long, boolean)}.
+     * Returns 1-9 bytes that would be written with {@link #writeLong(byte[], long, boolean)}.
      *
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      */
     public static
     int longLength(long value, boolean optimizePositive) {
@@ -229,7 +230,8 @@ class OptimizeUtilsByteArray {
      * Reads a 1-9 byte long.
      *
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      */
     public static
     long readLong(byte[] buffer, boolean optimizePositive) {
@@ -244,7 +246,8 @@ class OptimizeUtilsByteArray {
      *
      * @param position where in the buffer to start reading
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      */
     public static
     long readLong(final byte[] buffer, final boolean optimizePositive, int position) {
@@ -467,8 +470,6 @@ class OptimizeUtilsByteArray {
 
         return position != limit;
     }
-
-
 
     private
     OptimizeUtilsByteArray() {

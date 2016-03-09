@@ -178,10 +178,11 @@ class OptimizeUtilsByteBuf {
     // long
 
     /**
-     * Returns the number of bytes that would be written with {@link #writeLong(ByteBuf, long, boolean)}.
+     * Returns the 1-9 bytes that would be written with {@link #writeLong(ByteBuf, long, boolean)}.
      *
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      */
     public static
     int longLength(long value, boolean optimizePositive) {
@@ -221,7 +222,8 @@ class OptimizeUtilsByteBuf {
      * Reads a 1-9 byte long.
      *
      * @param optimizePositive
-     *                 true if you want to optimize the number of bytes needed to write the length value
+     *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      */
     public static
     long readLong(ByteBuf buffer, boolean optimizePositive) {
@@ -272,7 +274,7 @@ class OptimizeUtilsByteBuf {
      *
      * @param optimizePositive
      *                 If true, small positive numbers will be more efficient (1 byte) and small negative numbers will be inefficient (9
-     *                 bytes).
+     *                 bytes). This ultimately means that it will use fewer bytes for positive numbers.
      *
      * @return the number of bytes written.
      */
