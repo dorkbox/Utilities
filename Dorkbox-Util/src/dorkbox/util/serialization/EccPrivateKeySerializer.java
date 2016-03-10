@@ -36,6 +36,9 @@ import java.math.BigInteger;
 public
 class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
 
+    private static final byte usesName = (byte) 1;
+    private static final byte usesOid = (byte) 2;
+
     public static
     void write(Output output, ECPrivateKeyParameters key) {
         byte[] bytes;
@@ -111,70 +114,76 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
         // save out if it's a NAMED curve, or a UN-NAMED curve. If it is named, we can do less work.
         String curveName = curve.getClass()
                                 .getSimpleName();
-        if (curveName.endsWith("Curve")) {
+
+        if (CustomNamedCurves.getByName(curveName) != null) {
+            // we use the name instead of serializing the full curve
+            output.writeInt(usesName, true);
+            output.writeString(curveName);
+            return;
+        }
+
+        else if (curveName.endsWith("Curve")) {
             String cleanedName = curveName.substring(0, curveName.indexOf("Curve"));
 
-            curveName = null;
             if (!cleanedName.isEmpty()) {
                 ASN1ObjectIdentifier oid = CustomNamedCurves.getOID(cleanedName);
                 if (oid != null) {
                     // we use the OID (instead of serializing the entire curve)
-                    output.writeBoolean(true);
+                    output.writeInt(usesOid, true);
                     curveName = oid.getId();
                     output.writeString(curveName);
+                    return;
                 }
             }
         }
 
         // we have to serialize the ENTIRE curve.
-        if (curveName == null) {
-            // save out the curve info
-            BigInteger a = curve.getA()
-                                .toBigInteger();
-            BigInteger b = curve.getB()
-                                .toBigInteger();
-            BigInteger order = curve.getOrder();
-            BigInteger cofactor = curve.getCofactor();
-            BigInteger q = curve.getField()
-                                .getCharacteristic();
+        // save out the curve info
+        BigInteger a = curve.getA()
+                            .toBigInteger();
+        BigInteger b = curve.getB()
+                            .toBigInteger();
+        BigInteger order = curve.getOrder();
+        BigInteger cofactor = curve.getCofactor();
+        BigInteger q = curve.getField()
+                            .getCharacteristic();
 
-            /////////////
-            bytes = a.toByteArray();
-            length = bytes.length;
-            output.writeInt(length, true);
-            output.writeBytes(bytes, 0, length);
+        /////////////
+        bytes = a.toByteArray();
+        length = bytes.length;
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
 
-            /////////////
-            bytes = b.toByteArray();
-            length = bytes.length;
-            output.writeInt(length, true);
-            output.writeBytes(bytes, 0, length);
+        /////////////
+        bytes = b.toByteArray();
+        length = bytes.length;
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
 
-            /////////////
-            bytes = order.toByteArray();
-            length = bytes.length;
-            output.writeInt(length, true);
-            output.writeBytes(bytes, 0, length);
-
-
-            /////////////
-            bytes = cofactor.toByteArray();
-            length = bytes.length;
-            output.writeInt(length, true);
-            output.writeBytes(bytes, 0, length);
+        /////////////
+        bytes = order.toByteArray();
+        length = bytes.length;
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
 
 
-            /////////////
-            bytes = q.toByteArray();
-            length = bytes.length;
-            output.writeInt(length, true);
-            output.writeBytes(bytes, 0, length);
+        /////////////
+        bytes = cofactor.toByteArray();
+        length = bytes.length;
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
 
 
-            // coordinate system
-            int coordinateSystem = curve.getCoordinateSystem();
-            output.writeInt(coordinateSystem, true);
-        }
+        /////////////
+        bytes = q.toByteArray();
+        length = bytes.length;
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
+
+
+        // coordinate system
+        int coordinateSystem = curve.getCoordinateSystem();
+        output.writeInt(coordinateSystem, true);
     }
 
     static
@@ -183,14 +192,22 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
         int length;
 
         ECCurve curve;
-        boolean usesOid = input.readBoolean();
+        int serializatioType = input.readInt(true);
+
+        // lookup via name
+        if (serializatioType == usesName) {
+            String curveName = input.readString();
+            X9ECParameters x9Curve = CustomNamedCurves.getByName(curveName);
+            curve = x9Curve.getCurve();
+        }
 
         // this means we just lookup the curve via the OID
-        if (usesOid) {
+        else if (serializatioType == usesOid) {
             String oid = input.readString();
             X9ECParameters x9Curve = CustomNamedCurves.getByOID(new ASN1ObjectIdentifier(oid));
             curve = x9Curve.getCurve();
         }
+
         // we have to read in the entire curve information.
         else {
             /////////////
