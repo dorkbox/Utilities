@@ -51,6 +51,9 @@ import java.util.Arrays;
 public final
 class CryptoECC {
     public static final String p521_curve = "secp521r1";
+    public static final String curve25519 = "curve25519";
+    public static final String default_curve = curve25519;
+
     public static final int macSize = 512;
     // more info about ECC from: http://www.johannes-bauer.com/compsci/ecc/?menuid=4
     // http://stackoverflow.com/questions/7419183/problems-implementing-ecdh-on-android-using-bouncycastle
@@ -59,7 +62,6 @@ class CryptoECC {
     // https://github.com/nelenkov/ecdh-kx/blob/master/src/org/nick/ecdhkx/Crypto.java
     // http://nelenkov.blogspot.com/2011/12/using-ecdh-on-android.html
     // http://www.secg.org/collateral/sec1_final.pdf
-    static final String ECC_NAME = "EC";
 
     /**
      * Uses SHA512
