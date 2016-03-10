@@ -736,24 +736,36 @@ class Sys {
 
     public static
     void printArray(byte[] bytes, int length, boolean includeByteCount) {
-        printArray(bytes, length, includeByteCount, 40);
+        printArray(bytes, length, includeByteCount, 40, null);
     }
 
     public static
-    void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength) {
-        if (includeByteCount) {
-            System.err.println("Bytes: " + length);
-        }
-
+    void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength, String header) {
         int comma = length - 1;
 
-        StringBuilder builder;
+        int builderLength = length + comma + 2;
+        if (includeByteCount) {
+            builderLength += 7 + Integer.toString(length)
+                                        .length();
+        }
         if (lineLength > 0) {
-            builder = new StringBuilder(length + comma + length / lineLength + 2);
+            builderLength += length / lineLength;
         }
-        else {
-            builder = new StringBuilder(length + comma + 2);
+        if (header != null) {
+            builderLength += header.length() + 2;
         }
+
+        StringBuilder builder = new StringBuilder(builderLength);
+
+        if (header != null) {
+            builder.append(header)
+                   .append(OS.LINE_SEPARATOR);
+        }
+
+        if (includeByteCount) {
+            builder.append("Bytes: ").append(length).append(OS.LINE_SEPARATOR);
+        }
+
         builder.append("{");
 
         for (int i = 0; i < length; i++) {
