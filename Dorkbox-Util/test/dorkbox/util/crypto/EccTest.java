@@ -47,8 +47,8 @@ public class EccTest {
     public void EccStreamMode() throws IOException {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
         IESParameters cipherParams = CryptoECC.generateSharedParameters(secureRandom);
 
@@ -86,8 +86,8 @@ public class EccTest {
         // test AES encrypt mode
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
 
         PaddedBufferedBlockCipher aesEngine1 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
@@ -128,8 +128,8 @@ public class EccTest {
         // test DH key exchange
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
-        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
+        AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
         BasicAgreement e1 = new ECDHCBasicAgreement();
         BasicAgreement e2 = new ECDHCBasicAgreement();
@@ -149,7 +149,7 @@ public class EccTest {
     public void EccDsa() throws IOException {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
         ParametersWithRandom param = new ParametersWithRandom(key1.getPrivate(), new SecureRandom());
 
@@ -172,7 +172,7 @@ public class EccTest {
     public void EccSerialization() {
         SecureRandom secureRandom = new SecureRandom();
 
-        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.p521_curve, secureRandom);
+        AsymmetricCipherKeyPair key1 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
         IESParameters cipherAParams = CryptoECC.generateSharedParameters(secureRandom);
         IESWithCipherParameters cipherBParams = CryptoECC.generateSharedParametersWithCipher(secureRandom);
@@ -255,7 +255,7 @@ public class EccTest {
 
     @Test
     public void EccJceSerialization() throws IOException {
-        AsymmetricCipherKeyPair generateKeyPair = CryptoECC.generateKeyPair(CryptoECC.p521_curve, new SecureRandom());
+        AsymmetricCipherKeyPair generateKeyPair = CryptoECC.generateKeyPair(CryptoECC.default_curve, new SecureRandom());
         ECPrivateKeyParameters privateKey = (ECPrivateKeyParameters) generateKeyPair.getPrivate();
         ECPublicKeyParameters publicKey = (ECPublicKeyParameters) generateKeyPair.getPublic();
 
