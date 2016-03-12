@@ -19,12 +19,12 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import com.esotericsoftware.reflectasm.FieldAccess;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.x9.X9ECParameters;
 import org.bouncycastle.crypto.ec.CustomNamedCurves;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
-import org.bouncycastle.math.ec.ECAccessor;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -35,6 +35,11 @@ import java.math.BigInteger;
  */
 public
 class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
+
+    // we use ASM here
+    private static final FieldAccess ecCurveAccess = FieldAccess.get(ECCurve.class);
+    private static final int ecCoordIndex = ecCurveAccess.getIndex("coord");
+
 
     private static final byte usesName = (byte) 1;
     private static final byte usesOid = (byte) 2;
@@ -245,7 +250,7 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
             int coordinateSystem = input.readInt(true);
 
             curve = new ECCurve.Fp(q, a, b, order, cofactor);
-            ECAccessor.setCoordSystem(curve, coordinateSystem);
+            ecCurveAccess.setInt(curve, ecCoordIndex, coordinateSystem);
         }
         return curve;
     }
