@@ -225,6 +225,7 @@ class CryptoAES {
         int length = data.length;
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(true, aesIVAndKey);
 
         int minSize = aesEngine.getOutputSize(length);
@@ -273,6 +274,7 @@ class CryptoAES {
         byte[] outbuf = new byte[512];
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(true, aesIVAndKey);
 
         try {
@@ -315,6 +317,7 @@ class CryptoAES {
         byte[] outbuf = new byte[512];
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(true, aesIVAndKey);
 
         try {
@@ -451,6 +454,7 @@ class CryptoAES {
         int length = data.length;
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(false, aesIVAndKey);
 
         int minSize = aesEngine.getOutputSize(length);
@@ -498,6 +502,7 @@ class CryptoAES {
         int length = data.length;
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(false, aesIVAndKey);
 
         int minSize = aesEngine.getOutputSize(length);
@@ -540,6 +545,7 @@ class CryptoAES {
         byte[] outbuf = new byte[512];
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(false, aesIVAndKey);
 
         try {
@@ -587,6 +593,7 @@ class CryptoAES {
         byte[] outbuf = new byte[512];
 
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
+        aesEngine.reset();
         aesEngine.init(false, aesIVAndKey);
 
         try {
