@@ -47,7 +47,7 @@
     <orderEntry type="library" name="bouncyCastle bcprov-jdk15on (1.53)" level="application" />
     <orderEntry type="library" name="reflectasm (1.11.1)" level="application" />
     <orderEntry type="library" name="asm (5.0.4)" level="application" />
-    <orderEntry type="library" name="joda-time (2.4)" level="application" />
+    <orderEntry type="library" name="joda-time (2.9.2)" level="application" />
     <orderEntry type="library" name="javassist (3.20.0-GA)" level="application" />
     <orderEntry type="library" name="objenesis (2.2)" level="application" />
     <orderEntry type="library" name="kryo3" level="application" />
