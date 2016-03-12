@@ -207,8 +207,7 @@ public class CryptoX509 {
            }
 
         public static String getDigestNameFromCert(X509CertificateHolder x509CertificateHolder) {
-            String digestName = CryptoX509.Util.getDigestNameFromSigAlgId(x509CertificateHolder.getSignatureAlgorithm().getAlgorithm());
-            return digestName;
+            return Util.getDigestNameFromSigAlgId(x509CertificateHolder.getSignatureAlgorithm().getAlgorithm());
         }
 
         public static String getDigestNameFromSigAlgId(ASN1ObjectIdentifier algorithm) {
@@ -380,7 +379,7 @@ public class CryptoX509 {
             AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
 
 
-            SubjectPublicKeyInfo subjectPublicKeyInfo = null;
+            SubjectPublicKeyInfo subjectPublicKeyInfo;
             DSAParameters parameters = publicKey.getParameters();
             try {
                 byte[] encoded = new SubjectPublicKeyInfo(new AlgorithmIdentifier(X9ObjectIdentifiers.id_dsa,
@@ -402,7 +401,7 @@ public class CryptoX509 {
 
             BcDSAContentSignerBuilder contentSignerBuilder = new BcDSAContentSignerBuilder(sigAlgId, digAlgId);
 
-            ContentSigner build = null;
+            ContentSigner build;
             try {
                 build = contentSignerBuilder.build(privateKey);
             } catch (OperatorCreationException e) {
@@ -410,8 +409,7 @@ public class CryptoX509 {
                 return null;
             }
 
-            X509CertificateHolder certHolder = v3CertBuilder.build(build);
-            return certHolder;
+            return v3CertBuilder.build(build);
         }
 
 
@@ -422,7 +420,7 @@ public class CryptoX509 {
          * <p>
          * @return true if it was a valid cert.
          */
-        public static final boolean validate(X509CertificateHolder x509CertificateHolder) {
+        public static boolean validate(X509CertificateHolder x509CertificateHolder) {
             try {
 
                 // this is unique in that it verifies that the certificate is a LEGIT certificate, but not necessarily
@@ -475,8 +473,8 @@ public class CryptoX509 {
                 SignedData newSignedData = SignedData.getInstance(tagged.getObject());
 
                 @SuppressWarnings("rawtypes")
-                Enumeration newSigOjects = newSignedData.getCertificates().getObjects();
-                Object newSigElement = newSigOjects.nextElement();
+                Enumeration newSigObjects = newSignedData.getCertificates().getObjects();
+                Object newSigElement = newSigObjects.nextElement();
 
                 if (newSigElement instanceof DERSequence) {
                     DERSequence newSigDERElement = (DERSequence) newSigElement;
@@ -519,6 +517,7 @@ public class CryptoX509 {
         }
     }
 
+    @SuppressWarnings("unused")
     public static class RSA {
         static {
             addProvider();
@@ -681,27 +680,53 @@ public class CryptoX509 {
         /**
          * Generate a cert that is signed by a CA cert.
          */
-        public static X509Certificate generateCert(KeyFactory factory, Date startDate, Date expiryDate,
-                                                    X509Certificate issuerCert, String subject, String friendlyName,
-                                                    RSAKeyParameters publicKey, RSAPrivateCrtKeyParameters signingCaKey) throws InvalidKeySpecException, InvalidKeyException, IOException, OperatorCreationException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+        public static
+        X509Certificate generateCert(KeyFactory factory,
+                                     Date startDate,
+                                     Date expiryDate,
+                                     X509Certificate issuerCert,
+                                     String subject,
+                                     String friendlyName,
+                                     RSAKeyParameters publicKey,
+                                     RSAPrivateCrtKeyParameters signingCaKey)
+                        throws InvalidKeySpecException, InvalidKeyException, IOException, OperatorCreationException, CertificateException,
+                               NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 
-            return CryptoX509.RSA.generateCert(factory, startDate,  expiryDate,
-                                               X500Name.getInstance(PrincipalUtil.getSubjectX509Principal(issuerCert)), new X500Name(subject), friendlyName,
+            return CryptoX509.RSA.generateCert(factory,
+                                               startDate,
+                                               expiryDate,
+                                               X500Name.getInstance(PrincipalUtil.getSubjectX509Principal(issuerCert)),
+                                               new X500Name(subject),
+                                               friendlyName,
                                                publicKey,
-                                               issuerCert, signingCaKey);
+                                               issuerCert,
+                                               signingCaKey);
         }
 
 
         /**
          * Generate a cert that is self signed.
          */
-        public static X509Certificate generateCert(KeyFactory factory, Date startDate, Date expiryDate,
-                                                     String subject, String friendlyName,
-                                                     RSAKeyParameters publicKey, RSAPrivateCrtKeyParameters privateKey) throws InvalidKeySpecException, InvalidKeyException, IOException, OperatorCreationException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+        public static
+        X509Certificate generateCert(KeyFactory factory,
+                                     Date startDate,
+                                     Date expiryDate,
+                                     String subject,
+                                     String friendlyName,
+                                     RSAKeyParameters publicKey,
+                                     RSAPrivateCrtKeyParameters privateKey)
+                        throws InvalidKeySpecException, InvalidKeyException, IOException, OperatorCreationException, CertificateException,
+                               NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 
-            return CryptoX509.RSA.generateCert(factory, startDate,  expiryDate,
-                                               new X500Name(subject), new X500Name(subject), friendlyName,
-                                               publicKey, null, privateKey);
+            return CryptoX509.RSA.generateCert(factory,
+                                               startDate,
+                                               expiryDate,
+                                               new X500Name(subject),
+                                               new X500Name(subject),
+                                               friendlyName,
+                                               publicKey,
+                                               null,
+                                               privateKey);
         }
 
 
@@ -709,7 +734,9 @@ public class CryptoX509 {
         private static X509Certificate generateCert(KeyFactory factory, Date startDate, Date expiryDate,
                                                      X500Name issuer, X500Name subject, String friendlyName,
                                                      RSAKeyParameters certPublicKey,
-                                                     X509Certificate signingCertificate, RSAPrivateCrtKeyParameters signingPrivateKey) throws InvalidKeySpecException, IOException, InvalidKeyException, OperatorCreationException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
+                                                     X509Certificate signingCertificate, RSAPrivateCrtKeyParameters signingPrivateKey)
+                        throws InvalidKeySpecException, IOException, InvalidKeyException, OperatorCreationException, CertificateException,
+                               NoSuchAlgorithmException, NoSuchProviderException, SignatureException {
 
 
             String signatureAlgorithm = "SHA1withRSA";
@@ -842,8 +869,8 @@ public class CryptoX509 {
 
         public static PrivateKey convertToJCE(KeyFactory keyFactory, RSAKeyParameters publicKey, RSAPrivateCrtKeyParameters privateKey) throws InvalidKeySpecException {
             return keyFactory.generatePrivate(new RSAPrivateCrtKeySpec(publicKey.getModulus(), publicKey.getExponent(),
-                                                                          privateKey.getExponent(), privateKey.getP(), privateKey.getQ(),
-                                                                          privateKey.getDP(), privateKey.getDQ(), privateKey.getQInv()));
+                                                                       privateKey.getExponent(), privateKey.getP(), privateKey.getQ(),
+                                                                       privateKey.getDP(), privateKey.getDQ(), privateKey.getQInv()));
         }
 
         /**
@@ -862,7 +889,7 @@ public class CryptoX509 {
             AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
 
 
-            SubjectPublicKeyInfo subjectPublicKeyInfo = null;
+            SubjectPublicKeyInfo subjectPublicKeyInfo;
 
             try {
                 // JCE format needed for the certificate - because getEncoded() is necessary...
@@ -896,9 +923,8 @@ public class CryptoX509 {
 
 
                 ContentSigner hashSigner = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(privateKey);
-                X509CertificateHolder certHolder = certBuilder.build(hashSigner);
 
-                return certHolder;
+                return certBuilder.build(hashSigner);
             } catch (Exception e) {
                 logger.error("Error generating certificate.", e);
                 return null;
@@ -913,7 +939,7 @@ public class CryptoX509 {
          * <p>
          * @return true if it was a valid cert.
          */
-        public static final boolean validate(X509CertificateHolder x509CertificateHolder) {
+        public static boolean validate(X509CertificateHolder x509CertificateHolder) {
             try {
 
                 // this is unique in that it verifies that the certificate is a LEGIT certificate, but not necessarily
@@ -1033,7 +1059,7 @@ public class CryptoX509 {
             AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find(signatureAlgorithm);
             AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
 
-            SubjectPublicKeyInfo subjectPublicKeyInfo = null;
+            SubjectPublicKeyInfo subjectPublicKeyInfo;
 
             try {
                 byte[] encoded = pubKey.getEncoded();
@@ -1050,7 +1076,7 @@ public class CryptoX509 {
 
             BcECDSAContentSignerBuilder contentSignerBuilder = new BcECDSAContentSignerBuilder(sigAlgId, digAlgId);
 
-            ContentSigner build = null;
+            ContentSigner build;
             try {
                 build = contentSignerBuilder.build(privateKey);
             } catch (OperatorCreationException e) {
@@ -1058,8 +1084,7 @@ public class CryptoX509 {
                 return null;
             }
 
-            X509CertificateHolder certHolder = v3CertBuilder.build(build);
-            return certHolder;
+            return v3CertBuilder.build(build);
         }
 
         /**
@@ -1069,7 +1094,7 @@ public class CryptoX509 {
          * <p>
          * @return true if it was a valid cert.
          */
-        public static final boolean validate(X509CertificateHolder x509CertificateHolder) {
+        public static boolean validate(X509CertificateHolder x509CertificateHolder) {
             try {
 
                 // this is unique in that it verifies that the certificate is a LEGIT certificate, but not necessarily
@@ -1213,12 +1238,7 @@ public class CryptoX509 {
 
             SignerIdentifier sigId = new SignerIdentifier(new IssuerAndSerialNumber(x509CertificateHolder.toASN1Structure()));
 
-            SignerInfo inf = new SignerInfo(sigId,
-                                             digAlgId,
-                                             (ASN1Set) null,
-                                             digEncryptionAlgorithm,
-                                             new DEROctetString(sigBytes),
-                                             (ASN1Set) null);
+            SignerInfo inf = new SignerInfo(sigId, digAlgId, null, digEncryptionAlgorithm, new DEROctetString(sigBytes), (ASN1Set) null);
 
             digestAlgs.add(inf.getDigestAlgorithm());
             signerInfos.add(inf);
@@ -1240,9 +1260,8 @@ public class CryptoX509 {
 
             ContentInfo contentInfo = new ContentInfo(CMSObjectIdentifiers.signedData, sd);
             CMSSignedData cmsSignedData2 = new CMSSignedData(content, contentInfo);
-            byte[] signatureBlock = cmsSignedData2.getEncoded();
 
-            return signatureBlock;
+            return cmsSignedData2.getEncoded();
         } catch (Throwable t) {
             logger.error("Error signing data.", t);
             throw new RuntimeException("Error trying to sign data. " + t.getMessage());
