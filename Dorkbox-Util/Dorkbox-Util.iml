@@ -38,13 +38,14 @@
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="jdk" jdkName="1.6" jdkType="JavaSDK" />
+    <orderEntry type="library" name="logging slf4j-api" level="application" />
+    <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
+    <orderEntry type="library" name="bouncyCastle bcprov-jdk15on" level="application" />
+    <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
     <orderEntry type="module" module-name="JavaLauncher-Util" />
     <orderEntry type="library" name="dorkbox object_pool" level="application" />
     <orderEntry type="library" name="dorkbox message_bus" level="application" />
-    <orderEntry type="library" name="logging slf4j-api" level="application" />
     <orderEntry type="library" name="lzma-java" level="application" />
-    <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
-    <orderEntry type="library" name="bouncyCastle bcprov-jdk15on" level="application" />
     <orderEntry type="library" name="reflectasm" level="application" />
     <orderEntry type="library" name="asm" level="application" />
     <orderEntry type="library" name="joda-time" level="application" />
@@ -55,7 +56,6 @@
     <orderEntry type="library" name="netty-all" level="application" />
     <orderEntry type="library" name="controlsfx" level="application" />
     <orderEntry type="library" name="junit-4.12" level="application" />
-    <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
     <orderEntry type="library" name="lz4_xxhash" level="application" />
     <orderEntry type="library" name="logging logback" level="application" />
     <orderEntry type="library" name="disruptor" level="application" />
