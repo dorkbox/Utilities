@@ -150,16 +150,16 @@ class Sys {
     public static
     String getSizePretty(final long size) {
         if (size > TERABYTE) {
-            return String.format("%2.2dTB", (double) size / TERABYTE);
+            return String.format("%2.2fTB", (double) size / TERABYTE);
         }
         if (size > GIGABYTE) {
-            return String.format("%2.2dGB", (double) size / GIGABYTE);
+            return String.format("%2.2fGB", (double) size / GIGABYTE);
         }
         if (size > MEGABYTE) {
-            return String.format("%2.2dMB", (double) size / MEGABYTE);
+            return String.format("%2.2fMB", (double) size / MEGABYTE);
         }
         if (size > KILOBYTE) {
-            return String.format("%2.2dKB", (double) size / KILOBYTE);
+            return String.format("%2.2fKB", (double) size / KILOBYTE);
         }
 
         return String.valueOf(size) + "B";
