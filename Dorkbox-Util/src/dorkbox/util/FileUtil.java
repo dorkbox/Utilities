@@ -37,7 +37,6 @@ import java.util.zip.ZipInputStream;
  * Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
  * Jeremias Maerki, Stephen Colebourne
  */
-@SuppressWarnings("unused")
 public
 class FileUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
@@ -255,7 +254,6 @@ class FileUtil {
     /**
      * Copies the contents of file two onto the END of file one.
      */
-    @SuppressWarnings("resource")
     public static
     File concatFiles(File one, File two) {
         if (one == null) {
@@ -357,7 +355,6 @@ class FileUtil {
     /**
      * Copies a directory from one location to another
      */
-    @SuppressWarnings("Duplicates")
     public static
     void copyDirectory(File src_, File dest_, String... fileNamesToIgnore) throws IOException {
         File src = FileUtil.normalize(src_);
@@ -412,7 +409,6 @@ class FileUtil {
     /**
      * Safely moves a directory from one location to another (by copying it first, then deleting the original).
      */
-    @SuppressWarnings("Duplicates")
     public static
     void moveDirectory(File src, File dest, String... fileNamesToIgnore) throws IOException {
         if (fileNamesToIgnore.length > 0) {
@@ -648,7 +644,6 @@ class FileUtil {
         try {
             in.mark(ZIP_HEADER.length);
             for (int i = 0; i < ZIP_HEADER.length; i++) {
-                //noinspection NumericCastThatLosesPrecision
                 if (ZIP_HEADER[i] != (byte) in.read()) {
                     isZip = false;
                     break;
@@ -677,7 +672,6 @@ class FileUtil {
     /**
      * @return true if the file is a zip/jar file
      */
-    @SuppressWarnings("Duplicates")
     public static
     boolean isZipFile(File file) {
         boolean isZip = true;
@@ -887,6 +881,10 @@ class FileUtil {
         LinkedList<File> directories = new LinkedList<File>();
 
         rootDirectory = FileUtil.normalize(rootDirectory.getAbsoluteFile());
+
+        if (!rootDirectory.exists()) {
+            throw new IOException("Location does not exist: " + rootDirectory.getAbsolutePath());
+        }
 
         if (rootDirectory.isDirectory()) {
             directories.add(rootDirectory);
