@@ -347,8 +347,8 @@ class FileUtil {
      * Copies a directory from one location to another
      */
     public static
-    void copyDirectory(String src, String dest, String... dirNamesToIgnore) throws IOException {
-        copyDirectory(new File(src), new File(dest), dirNamesToIgnore);
+    void copyDirectory(String src, String dest, String... namesToIgnore) throws IOException {
+        copyDirectory(new File(src), new File(dest), namesToIgnore);
     }
 
 
@@ -356,13 +356,13 @@ class FileUtil {
      * Copies a directory from one location to another
      */
     public static
-    void copyDirectory(File src_, File dest_, String... fileNamesToIgnore) throws IOException {
+    void copyDirectory(File src_, File dest_, String... namesToIgnore) throws IOException {
         File src = FileUtil.normalize(src_);
         File dest = FileUtil.normalize(dest_);
 
-        if (fileNamesToIgnore.length > 0) {
+        if (namesToIgnore.length > 0) {
             String name = src.getName();
-            for (String ignore : fileNamesToIgnore) {
+            for (String ignore : namesToIgnore) {
                 if (name.equals(ignore)) {
                     return;
                 }
@@ -389,7 +389,7 @@ class FileUtil {
                 File destFile = new File(dest, file);
 
                 // recursive copy
-                copyDirectory(srcFile, destFile, fileNamesToIgnore);
+                copyDirectory(srcFile, destFile, namesToIgnore);
             }
         }
         else {
