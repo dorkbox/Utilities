@@ -26,7 +26,7 @@ class DB_Server {
     /**
      * Address 0.0.0.0/32 may be used as a source address for this host on this network.
      */
-    public static final ByteArrayWrapper IP_LOCALHOST = ByteArrayWrapper.wrap(new byte[] {127, 0, 0, 1});
+    public static final ByteArrayWrapper IP_SELF = ByteArrayWrapper.wrap(new byte[] {0, 0, 0, 0});
 
     // salt + IP address is used for equals!
     private byte[] ipAddress;
