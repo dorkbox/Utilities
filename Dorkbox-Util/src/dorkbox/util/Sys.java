@@ -736,11 +736,16 @@ class Sys {
 
     public static
     void printArray(byte[] bytes, int length, boolean includeByteCount) {
-        printArray(bytes, length, includeByteCount, 40, null);
+        printArray(bytes, 0, length, includeByteCount, 40, null);
     }
 
     public static
-    void printArray(byte[] bytes, int length, boolean includeByteCount, int lineLength, String header) {
+    void printArray(byte[] bytes, int inputOffset, int length, boolean includeByteCount) {
+        printArray(bytes, inputOffset, length, includeByteCount, 40, null);
+    }
+
+    public static
+    void printArray(byte[] bytes, int inputOffset, int length, boolean includeByteCount, int lineLength, String header) {
         int comma = length - 1;
 
         int builderLength = length + comma + 2;
@@ -768,12 +773,12 @@ class Sys {
 
         builder.append("{");
 
-        for (int i = 0; i < length; i++) {
+        for (int i = inputOffset; i < length; i++) {
             builder.append(bytes[i]);
             if (i < comma) {
                 builder.append(",");
             }
-            if (i > 0 && lineLength > 0 && i % lineLength == 0) {
+            if (i > inputOffset && lineLength > 0 && i % lineLength == 0) {
                 builder.append(OS.LINE_SEPARATOR);
             }
         }
