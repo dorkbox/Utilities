@@ -204,6 +204,50 @@ class Sys {
 
         // convert the unit into the largest time unit possible (since that is often what makes sense)
         double value = (double) nanoSeconds / TimeUnit.NANOSECONDS.convert(1, unit);
+        return String.format("%.4g" + text, value);
+    }
+
+    /**
+     * Returns a PRETTY string representation of the specified time.
+     */
+    public static String getTimePrettyFull(long nanoSeconds) {
+        final TimeUnit unit;
+        String text;
+
+        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.DAYS;
+            text = "day";
+        }
+        else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.HOURS;
+            text = "hour";
+        }
+        else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MINUTES;
+            text = "minute";
+        }
+        else  if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.SECONDS;
+            text = "second";
+        }
+        else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MILLISECONDS;
+            text = "milli-second";
+        }
+        else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            unit = TimeUnit.MICROSECONDS;
+            text = "micro-second";
+        }
+        else {
+            unit = TimeUnit.NANOSECONDS;
+            text = "nano-second";
+        }
+
+        // convert the unit into the largest time unit possible (since that is often what makes sense)
+        double value = (double) nanoSeconds / TimeUnit.NANOSECONDS.convert(1, unit);
+        if (value > 1.0D) {
+            text += "s";
+        }
         return String.format("%.4g " + text, value);
     }
 
