@@ -467,7 +467,8 @@ class FileUtil {
     /**
      * Deletes a file or directory and all files and sub-directories under it.
      *
-     * @param namesToIgnore if prefaced with a '/', it will ignore as a directory instead of file
+     * @param namesToIgnore if prefaced with a '/', it will treat the name to ignore as a directory instead of file
+     *
      * @return true iff the file/dir was deleted (or didn't exist)
      */
     public static
@@ -490,8 +491,8 @@ class FileUtil {
 
                     if (file2.isDirectory()) {
                         for (String name : namesToIgnore) {
-                            if (name.startsWith("/") && name.equals(name2)) {
-                                // only name match
+                            if (name.charAt(0) == UNIX_SEPARATOR && name.equals(name2)) {
+                                // only name match if our name To Ignore starts with a / or \
                                 if (logger2.isTraceEnabled()) {
                                     logger2.trace("Skipping delete dir: {}", file2);
                                 }
@@ -519,7 +520,7 @@ class FileUtil {
                     }
                     else {
                         for (String name : namesToIgnore) {
-                            if (!name.startsWith("/") && name.equals(name2)) {
+                            if (name.charAt(0) != UNIX_SEPARATOR && name.equals(name2)) {
                                 // only name match
                                 if (logger2.isTraceEnabled()) {
                                     logger2.trace("Skipping delete file: {}", file2);
