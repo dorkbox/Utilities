@@ -89,18 +89,18 @@ class ConcurrentIterator<T> {
         ConcurrentEntry concurrentEntry = entries.get(listener);
 
         if (concurrentEntry != null) {
-            ConcurrentEntry head1 = headREF.get(this);
+            ConcurrentEntry head = headREF.get(this);
 
-            if (concurrentEntry == head1) {
+            if (concurrentEntry == head) {
                 // if it was second, now it's first
-                head1 = head1.next();
+                head = head.next();
                 //oldHead.clear(); // optimize for GC not possible because of potentially running iterators
             }
             else {
                 concurrentEntry.remove();
             }
 
-            headREF.lazySet(this, head1);
+            headREF.lazySet(this, head);
             this.entries.remove(listener);
         }
     }
