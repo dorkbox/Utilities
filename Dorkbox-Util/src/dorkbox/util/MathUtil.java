@@ -20,23 +20,20 @@ package dorkbox.util;
 public
 class MathUtil {
 
-    private static final ThreadLocal<MersenneTwisterFast> random = new ThreadLocal<MersenneTwisterFast>();
+    private static final FastThreadLocal<MersenneTwisterFast> random = new FastThreadLocal<MersenneTwisterFast>() {
+        @Override
+        public
+        MersenneTwisterFast initialValue() {
+            return new MersenneTwisterFast();
+        }
+    };
 
     /**
      * Creates the thread local MersenneTwister (as it's not thread safe), if necessary
      */
     public static
     MersenneTwisterFast random() {
-        MersenneTwisterFast mersenneTwisterFast = random.get();
-
-        if (mersenneTwisterFast == null) {
-            mersenneTwisterFast = new MersenneTwisterFast();
-            random.set(mersenneTwisterFast);
-            return mersenneTwisterFast;
-        }
-        else {
-            return mersenneTwisterFast;
-        }
+        return random.get();
     }
 
     /**
@@ -44,7 +41,7 @@ class MathUtil {
      */
     public static
     int randomInt() {
-        return random().nextInt();
+        return random.get().nextInt();
     }
 
     /**
@@ -52,7 +49,7 @@ class MathUtil {
      */
     public static
     int randomInt(int range) {
-        return random().nextInt(range + 1);
+        return random.get().nextInt(range + 1);
     }
 
     /**
@@ -60,7 +57,7 @@ class MathUtil {
      */
     public static
     int randomInt(int start, int end) {
-        return start + random().nextInt(end - start + 1);
+        return start + random.get().nextInt(end - start + 1);
     }
 
     /**
@@ -68,7 +65,7 @@ class MathUtil {
      */
     public static
     boolean randomBoolean() {
-        return random().nextBoolean();
+        return random.get().nextBoolean();
     }
 
     /**
@@ -76,7 +73,7 @@ class MathUtil {
      */
     public static
     float randomFloat() {
-        return random().nextFloat();
+        return random.get().nextFloat();
     }
 
     /**
@@ -84,7 +81,7 @@ class MathUtil {
      */
     public static
     float randomFloat(float range) {
-        return random().nextFloat() * range;
+        return random.get().nextFloat() * range;
     }
 
     /**
@@ -92,7 +89,7 @@ class MathUtil {
      */
     public static
     float randomFloat(float start, float end) {
-        return start + random().nextFloat() * (end - start);
+        return start + random.get().nextFloat() * (end - start);
     }
 
     // ---
