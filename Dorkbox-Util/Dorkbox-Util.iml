@@ -59,7 +59,6 @@
     <orderEntry type="library" name="javassist" level="application" />
     <orderEntry type="library" name="objenesis" level="application" />
     <orderEntry type="library" name="kryo3" level="application" />
-    <orderEntry type="library" name="jansi" level="application" />
     <orderEntry type="library" name="netty-all" level="application" />
     <orderEntry type="library" name="controlsfx" level="application" />
     <orderEntry type="library" name="junit-4.12" level="application" />
