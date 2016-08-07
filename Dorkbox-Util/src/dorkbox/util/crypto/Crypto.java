@@ -16,8 +16,17 @@
 package dorkbox.util.crypto;
 
 
-import dorkbox.util.OS;
-import dorkbox.util.bytes.LittleEndian;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.Provider;
+import java.security.Security;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.PBEParametersGenerator;
 import org.bouncycastle.crypto.digests.MD5Digest;
@@ -29,16 +38,10 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.Provider;
-import java.security.Security;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import dorkbox.util.OS;
+import dorkbox.util.bytes.LittleEndian;
+import net.jpountz.xxhash.StreamingXXHash32;
+import net.jpountz.xxhash.XXHashFactory;
 
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B http://www.nsa.gov/ia/programs/suiteb_cryptography/
@@ -122,17 +125,6 @@ class Crypto {
      */
     public static
     byte[] hashFile(File file, Digest digest, long lengthFromEnd, Logger logger) {
-        return hashFile(file, digest, lengthFromEnd, null, logger);
-    }
-
-    /**
-     * Return the hash of the file or NULL if the file is invalid. ALSO includes the hash of the 'extraData' if specified.
-     *
-     * @param logger
-     *                 may be null, if no log output is necessary
-     */
-    public static
-    byte[] hashFile(File file, Digest digest, long lengthFromEnd, byte[] extraData, Logger logger) {
         if (file.isFile() && file.canRead()) {
             InputStream inputStream = null;
             try {
@@ -178,10 +170,6 @@ class Crypto {
                 }
             }
 
-            if (extraData != null) {
-                digest.update(extraData, 0, extraData.length);
-            }
-
             byte[] digestBytes = new byte[digest.getDigestSize()];
 
             digest.doFinal(digestBytes, 0);
@@ -190,6 +178,74 @@ class Crypto {
         }
         else {
             return null;
+        }
+    }
+
+    /**
+     * Return the xxhash of the file as or 0 if file is invalid
+     *
+     * @param logger
+     *                 may be null, if no log output is necessary
+     */
+    public static
+    int xxHashFile(File file, long lengthFromEnd, Logger logger) {
+        if (file.isFile() && file.canRead()) {
+            InputStream inputStream = null;
+
+            // used to initialize the hash value, use whatever value you want, but always the same
+            int seed = 0x9747b28c;  // must match number in C (in Auth::xxHash32())
+
+            XXHashFactory hashFactory = XXHashFactory.fastestInstance();
+            StreamingXXHash32 hash32 = hashFactory.newStreamingHash32(seed);
+
+            try {
+                inputStream = new FileInputStream(file);
+                long size = file.length();
+
+                if (lengthFromEnd > 0 && lengthFromEnd < size) {
+                    size -= lengthFromEnd;
+                }
+
+                int bufferSize = 4096;
+                byte[] buffer = new byte[bufferSize];
+
+                int readBytes;
+
+                while (size > 0) {
+                    //noinspection NumericCastThatLosesPrecision
+                    int maxToRead = (int) Math.min(bufferSize, size);
+                    readBytes = inputStream.read(buffer, 0, maxToRead);
+                    size -= readBytes;
+
+                    if (readBytes == 0) {
+                        //wtf. finally still gets called.
+                        return 0;
+                    }
+
+                    hash32.update(buffer, 0, readBytes);
+                }
+            } catch (Exception e) {
+                if (logger != null) {
+                    logger.error("Error hashing file: {}", file.getAbsolutePath(), e);
+                } else {
+                    e.printStackTrace();
+                }
+            } finally {
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            int value = hash32.getValue();
+            hash32.reset();
+            return value;
+        }
+        else {
+            return 0;
         }
     }
 
