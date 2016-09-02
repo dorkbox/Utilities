@@ -1,20 +1,26 @@
 package dorkbox.util.swing;
 
-import dorkbox.util.ActionHandlerLong;
-import dorkbox.util.Property;
-
-import javax.swing.JFrame;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.image.BufferStrategy;
 
+import javax.swing.JFrame;
+
+import dorkbox.util.ActionHandlerLong;
+import dorkbox.util.Property;
+
 /**
  * Loop that controls the active rendering process
  */
+public
 class ActiveRenderLoop implements Runnable {
 
     @Property
-    /** How many frames per second we want the Swing ActiveRender thread to run at */
+    /**
+     * How many frames per second we want the Swing ActiveRender thread to run at
+     *
+     * NOTE: The ActiveRenderLoop replaces the Swing EDT in order to enable smoother animations.
+     */
     public static int TARGET_FPS = 30;
 
     @SuppressWarnings("WhileLoopReplaceableByForEach")
