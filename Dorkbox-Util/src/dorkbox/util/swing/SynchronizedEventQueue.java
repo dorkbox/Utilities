@@ -4,7 +4,7 @@ import java.awt.AWTEvent;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
 
-final
+public final
 class SynchronizedEventQueue extends EventQueue {
     public static final Object MUTEX = new Object();
 
