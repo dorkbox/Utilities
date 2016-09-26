@@ -15,130 +15,54 @@
  */
 package dorkbox.util;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
 
 @SuppressWarnings("unused")
 public
 class IO {
     /**
-     * Convenient close for a stream.
+     * Convenient close for a Closeable.
      */
     @SuppressWarnings("Duplicates")
     public static
-    void close(InputStream inputStream) {
-        if (inputStream != null) {
+    void close(final Closeable closeable) {
+        if (closeable != null) {
             try {
-                inputStream.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing the input stream:" + inputStream);
-                ioe.printStackTrace();
+                closeable.close();
+            } catch (IOException e) {
+                System.err.println("Error closing : " + closeable);
+                e.printStackTrace();
             }
         }
     }
 
     /**
-     * Convenient close for a stream.
+     * Convenient close for a Closeable.
      */
     @SuppressWarnings("Duplicates")
     public static
-    void closeQuietly(InputStream inputStream) {
-        if (inputStream != null) {
+    void close(final Closeable closeable, final org.slf4j.Logger logger) {
+        if (closeable != null) {
             try {
-                inputStream.close();
-            } catch (IOException ignored) {
+                closeable.close();
+            } catch (IOException e) {
+                logger.error("Error closing: {}", closeable, e);
             }
         }
     }
 
     /**
-     * Convenient close for a stream.
+     * Convenient close for a Closeable.
      */
     @SuppressWarnings("Duplicates")
     public static
-    void close(OutputStream outputStream) {
-        if (outputStream != null) {
+    void closeQuietly(final Closeable closeable) {
+        if (closeable != null) {
             try {
-                outputStream.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing the output stream:" + outputStream);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a stream.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(OutputStream outputStream) {
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Reader.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(Reader inputReader) {
-        if (inputReader != null) {
-            try {
-                inputReader.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing input reader: " + inputReader);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Reader.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(Reader inputReader) {
-        if (inputReader != null) {
-            try {
-                inputReader.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Writer.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(Writer outputWriter) {
-        if (outputWriter != null) {
-            try {
-                outputWriter.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing output writer: " + outputWriter);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Writer.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(Writer outputWriter) {
-        if (outputWriter != null) {
-            try {
-                outputWriter.close();
+                closeable.close();
             } catch (IOException ignored) {
             }
         }
@@ -150,9 +74,10 @@ class IO {
      * DOES NOT CLOSE THE STEAMS!
      */
     public static
-    <T extends OutputStream> T copyStream(InputStream inputStream, T outputStream) throws IOException {
+    <T extends OutputStream> T copyStream(final InputStream inputStream, final T outputStream) throws IOException {
         byte[] buffer = new byte[4096];
         int read;
+
         while ((read = inputStream.read(buffer)) > 0) {
             outputStream.write(buffer, 0, read);
         }
@@ -160,5 +85,4 @@ class IO {
 
         return outputStream;
     }
-
 }
