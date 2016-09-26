@@ -15,16 +15,25 @@
  */
 package dorkbox.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * File related utilities.
@@ -37,6 +46,7 @@ import java.util.zip.ZipInputStream;
  * Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
  * Jeremias Maerki, Stephen Colebourne
  */
+@SuppressWarnings({"WeakerAccess", "Duplicates", "unused"})
 public
 class FileUtil {
     private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
@@ -114,9 +124,9 @@ class FileUtil {
         try {
             fin = new FileInputStream(source);
             fout = new FileOutputStream(dest);
-            Sys.copyStream(fin, fout);
+            IO.copyStream(fin, fout);
 
-            Sys.close(fin);
+            IO.close(fin);
             if (!source.delete()) {
                 logger.warn("Failed to delete {} after brute force copy to {}.", source, dest);
             }
@@ -127,8 +137,8 @@ class FileUtil {
             return false;
 
         } finally {
-            Sys.close(fin);
-            Sys.close(fout);
+            IO.close(fin);
+            IO.close(fout);
         }
     }
 
@@ -141,10 +151,12 @@ class FileUtil {
         List<String> lines = new ArrayList<String>();
         try {
             BufferedReader bin = new BufferedReader(in);
-            for (String line; (line = bin.readLine()) != null; lines.add(line)) {
+            String line;
+            while ((line = bin.readLine()) != null) {
+                lines.add(line);
             }
         } finally {
-            Sys.close(in);
+            IO.close(in);
         }
         return lines;
     }
@@ -212,6 +224,7 @@ class FileUtil {
         // if out doesn't exist, then create it.
         File parentOut = out.getParentFile();
         if (!parentOut.canWrite()) {
+            //noinspection ResultOfMethodCallIgnored
             parentOut.mkdirs();
         }
 
@@ -246,6 +259,7 @@ class FileUtil {
             }
         }
 
+        //noinspection ResultOfMethodCallIgnored
         out.setLastModified(in.lastModified());
 
         return out;
@@ -299,6 +313,7 @@ class FileUtil {
             }
         }
 
+        //noinspection ResultOfMethodCallIgnored
         one.setLastModified(System.currentTimeMillis());
 
         return one;
@@ -333,6 +348,7 @@ class FileUtil {
         }
 
         if (out.canRead()) {
+            //noinspection ResultOfMethodCallIgnored
             out.delete();
         }
 
@@ -373,6 +389,7 @@ class FileUtil {
         if (src.isDirectory()) {
             // if directory not exists, create it
             if (!dest.exists()) {
+                //noinspection ResultOfMethodCallIgnored
                 dest.mkdir();
                 Logger logger2 = logger;
                 if (logger2.isTraceEnabled()) {
@@ -383,13 +400,15 @@ class FileUtil {
             // list all the directory contents
             String files[] = src.list();
 
-            for (String file : files) {
-                // construct the src and dest file structure
-                File srcFile = new File(src, file);
-                File destFile = new File(dest, file);
+            if (files != null) {
+                for (String file : files) {
+                    // construct the src and dest file structure
+                    File srcFile = new File(src, file);
+                    File destFile = new File(dest, file);
 
-                // recursive copy
-                copyDirectory(srcFile, destFile, namesToIgnore);
+                    // recursive copy
+                    copyDirectory(srcFile, destFile, namesToIgnore);
+                }
             }
         }
         else {
@@ -424,6 +443,7 @@ class FileUtil {
         if (src.isDirectory()) {
             // if directory not exists, create it
             if (!dest.exists()) {
+                //noinspection ResultOfMethodCallIgnored
                 dest.mkdir();
                 Logger logger2 = logger;
                 if (logger2.isTraceEnabled()) {
@@ -434,13 +454,15 @@ class FileUtil {
             // list all the directory contents
             String files[] = src.list();
 
-            for (String file : files) {
-                // construct the src and dest file structure
-                File srcFile = new File(src, file);
-                File destFile = new File(dest, file);
+            if (files != null) {
+                for (String file : files) {
+                    // construct the src and dest file structure
+                    File srcFile = new File(src, file);
+                    File destFile = new File(dest, file);
 
-                // recursive copy
-                moveDirectory(srcFile, destFile, fileNamesToIgnore);
+                    // recursive copy
+                    moveDirectory(srcFile, destFile, fileNamesToIgnore);
+                }
             }
         }
         else {
@@ -465,11 +487,12 @@ class FileUtil {
     }
 
     /**
-     * Deletes a file or directory and all files and sub-directories under it.
+     * Deletes a file, directory + all files and sub-directories under it. The directory is ALSO deleted if it because empty as a result
+     * of this operation
      *
      * @param namesToIgnore if prefaced with a '/', it will treat the name to ignore as a directory instead of file
      *
-     * @return true iff the file/dir was deleted (or didn't exist)
+     * @return true IFF the file/dir was deleted or didn't exist at first
      */
     public static
     boolean delete(File file, String... namesToIgnore) {
@@ -477,6 +500,7 @@ class FileUtil {
             return true;
         }
 
+        boolean thingsDeleted = false;
         boolean ignored = false;
         Logger logger2 = logger;
         if (file.isDirectory()) {
@@ -544,7 +568,7 @@ class FileUtil {
                             if (logger2.isTraceEnabled()) {
                                 logger2.trace("Deleting file: {}", file2);
                             }
-                            file2.delete();
+                            thingsDeleted |= file2.delete();
                         }
                     }
                 }
@@ -563,7 +587,8 @@ class FileUtil {
             logger2.trace("Deleting file: {}", file);
         }
 
-        return file.delete();
+        thingsDeleted |= file.delete();
+        return thingsDeleted;
     }
 
 
@@ -645,6 +670,7 @@ class FileUtil {
         try {
             in.mark(ZIP_HEADER.length);
             for (int i = 0; i < ZIP_HEADER.length; i++) {
+                //noinspection NumericCastThatLosesPrecision
                 if (ZIP_HEADER[i] != (byte) in.read()) {
                     isZip = false;
                     break;
@@ -833,13 +859,13 @@ class FileUtil {
 
                 FileOutputStream output = new FileOutputStream(file);
                 try {
-                    Sys.copyStream(inputStream, output);
+                    IO.copyStream(inputStream, output);
                 } finally {
-                    Sys.close(output);
+                    IO.close(output);
                 }
             }
         } finally {
-            Sys.close(inputStream);
+            IO.close(inputStream);
         }
     }
 
@@ -1096,7 +1122,6 @@ class FileUtil {
      * Extracts a file from a zip into a TEMP file, if possible. The TEMP file is deleted upon JVM exit.
      *
      * @return the location of the extracted file, or NULL if the file cannot be extracted or doesn't exist.
-     * @throws IOException
      */
     public static
     String extractFromZip(String zipFile, String fileToExtract) throws IOException {
@@ -1127,7 +1152,7 @@ class FileUtil {
 
                     FileOutputStream output = new FileOutputStream(tempFile);
                     try {
-                        Sys.copyStream(inputStrem, output);
+                        IO.copyStream(inputStrem, output);
                     } finally {
                         output.close();
                     }
@@ -1675,13 +1700,13 @@ class FileUtil {
             if (ch1 == ':') {
                 ch0 = Character.toUpperCase(ch0);
                 if (ch0 >= 'A' && ch0 <= 'Z') {
+                    //noinspection PointlessBooleanExpression
                     if (len == 2 || isSeparator(filename.charAt(2)) == false) {
                         return 2;
                     }
                     return 3;
                 }
                 return -1;
-
             }
             else if (isSeparator(ch0) && isSeparator(ch1)) {
                 int posUnix = filename.indexOf(UNIX_SEPARATOR, 2);
@@ -1724,16 +1749,20 @@ class FileUtil {
     /**
      * Gets the extension of a file (text after the last '.')
      *
-     * @return  null if there is no extension
+     * @return "" if there is no extension or fileName is null
      */
     public static
     String getExtension(String fileName) {
+        if (fileName == null) {
+            return "";
+        }
+
         int dot = fileName.lastIndexOf('.');
         if (dot > -1) {
             return fileName.substring(dot + 1);
         }
         else {
-            return null;
+            return "";
         }
     }
 

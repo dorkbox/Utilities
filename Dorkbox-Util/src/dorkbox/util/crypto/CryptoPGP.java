@@ -15,20 +15,6 @@
  */
 package dorkbox.util.crypto;
 
-import dorkbox.util.OS;
-import dorkbox.util.Sys;
-import org.bouncycastle.bcpg.ArmoredOutputStream;
-import org.bouncycastle.bcpg.BCPGOutputStream;
-import org.bouncycastle.bcpg.CompressionAlgorithmTags;
-import org.bouncycastle.openpgp.*;
-import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
-import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
-import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -46,6 +32,39 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
+import org.bouncycastle.openpgp.PGPCompressedData;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
+import org.bouncycastle.openpgp.PGPEncryptedData;
+import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureList;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.PGPUtil;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
+import org.bouncycastle.openpgp.operator.bc.BcKeyFingerprintCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
+
+import dorkbox.util.IO;
+import dorkbox.util.OS;
 
 /**
  * PGP crypto related methods
@@ -158,7 +177,7 @@ class CryptoPGP {
         } catch (IOException e) {
             throw new PGPException("Unable to save signature to file " + file.getAbsolutePath() + ".asc", e);
         } finally {
-            Sys.close(fileOutputStream1);
+            IO.close(fileOutputStream1);
         }
     }
 
@@ -260,9 +279,9 @@ class CryptoPGP {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            Sys.close(bcOutputStream);
-            Sys.close(outputStream);
-            Sys.close(literalDataOutput);
+            IO.close(bcOutputStream);
+            IO.close(outputStream);
+            IO.close(literalDataOutput);
         }
 
         return byteArrayOutputStream.toByteArray();
@@ -366,9 +385,9 @@ class CryptoPGP {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            Sys.close(bcOutputStream);
-            Sys.close(outputStream);
-            Sys.close(literalDataOutput);
+            IO.close(bcOutputStream);
+            IO.close(outputStream);
+            IO.close(literalDataOutput);
         }
 
         return byteArrayOutputStream.toByteArray();
@@ -394,7 +413,7 @@ class CryptoPGP {
         } catch (IOException e) {
             throw new PGPException("No private key found in stream!", e);
         } finally {
-            Sys.close(inputStream);
+            IO.close(inputStream);
         }
 
         // look for the key ring that is used to authenticate our reporting facilities
@@ -605,7 +624,7 @@ class CryptoPGP {
             throw e;
         } finally {
             compressedDataGenerator.close();
-            Sys.close(compressedOutput);
+            IO.close(compressedOutput);
         }
 
         SecureRandom random = new SecureRandom();
@@ -638,8 +657,8 @@ class CryptoPGP {
         } catch (PGPException e) {
             throw e;
         } finally {
-            Sys.close(encryptedOutput);
-            Sys.close(armoredOut);
+            IO.close(encryptedOutput);
+            IO.close(armoredOut);
         }
         String encrypted = new String(byteArrayOutputStream.toByteArray());
 
@@ -804,12 +823,12 @@ class CryptoPGP {
         FileOutputStream fileOutputStream = new FileOutputStream(new File("/home/user/dorkbox/hello2.txt"));
         fileOutputStream.write(textBytes);
         fileOutputStream.flush();
-        Sys.close(fileOutputStream);
+        IO.close(fileOutputStream);
 
 
         FileOutputStream fileOutputStream1 = new FileOutputStream(new File("/home/user/dorkbox/hello2.txt.asc"));
         fileOutputStream1.write(bytes);
         fileOutputStream1.flush();
-        Sys.close(fileOutputStream1);
+        IO.close(fileOutputStream1);
     }
 }

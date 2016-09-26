@@ -15,15 +15,10 @@
  */
 package dorkbox.util;
 
-import org.bouncycastle.crypto.digests.SHA256Digest;
-
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +27,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import org.bouncycastle.crypto.digests.SHA256Digest;
+
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final
 class Sys {
     public static final int KILOBYTE = 1024;
@@ -251,144 +249,6 @@ class Sys {
         return String.format("%.4g " + text, value);
     }
 
-
-    /**
-     * Convenient close for a stream.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(InputStream inputStream) {
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing the input stream:" + inputStream);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a stream.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(InputStream inputStream) {
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a stream.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(OutputStream outputStream) {
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing the output stream:" + outputStream);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a stream.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(OutputStream outputStream) {
-        if (outputStream != null) {
-            try {
-                outputStream.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Reader.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(Reader inputReader) {
-        if (inputReader != null) {
-            try {
-                inputReader.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing input reader: " + inputReader);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Reader.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(Reader inputReader) {
-        if (inputReader != null) {
-            try {
-                inputReader.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Writer.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void close(Writer outputWriter) {
-        if (outputWriter != null) {
-            try {
-                outputWriter.close();
-            } catch (IOException ioe) {
-                System.err.println("Error closing output writer: " + outputWriter);
-                ioe.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Convenient close for a Writer.
-     */
-    @SuppressWarnings("Duplicates")
-    public static
-    void closeQuietly(Writer outputWriter) {
-        if (outputWriter != null) {
-            try {
-                outputWriter.close();
-            } catch (IOException ignored) {
-            }
-        }
-    }
-
-    /**
-     * Copy the contents of the input stream to the output stream.
-     * <p/>
-     * DOES NOT CLOSE THE STEAMS!
-     */
-    public static
-    <T extends OutputStream> T copyStream(InputStream inputStream, T outputStream) throws IOException {
-        byte[] buffer = new byte[4096];
-        int read;
-        while ((read = inputStream.read(buffer)) > 0) {
-            outputStream.write(buffer, 0, read);
-        }
-        outputStream.flush();
-
-        return outputStream;
-    }
-
     /**
      * Convert the contents of the input stream to a byte array.
      */
@@ -498,6 +358,7 @@ class Sys {
         // NOTE: this saves the char array in UTF-16 format of bytes.
         byte[] bytes = new byte[text.length * 2];
         for (int i = 0; i < text.length; i++) {
+            //noinspection CharUsedInArithmeticContext
             bytes[2 * i] = (byte) (text[i] >> 8);
             bytes[2 * i + 1] = (byte) text[i];
         }
@@ -518,6 +379,7 @@ class Sys {
                 return new byte[length];
             }
 
+            //noinspection NumericCastThatLosesPrecision
             bytes[i] = (byte) intValue;
         }
 
@@ -635,8 +497,9 @@ class Sys {
     /**
      * A 4-digit hex result.
      */
+    @SuppressWarnings("CharUsedInArithmeticContext")
     public static
-    void hex4(char c, StringBuilder sb) {
+    void hex4(final char c, final StringBuilder sb) {
         sb.append(HEX_CHARS[(c & 0xF000) >> 12]);
         sb.append(HEX_CHARS[(c & 0x0F00) >> 8]);
         sb.append(HEX_CHARS[(c & 0x00F0) >> 4]);
