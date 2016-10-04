@@ -278,7 +278,7 @@ class SwingUtil {
         }
 
         if (cannotBrowse) {
-            JOptionPane.showMessageDialog(parent, "It seems that I can't open a website using your" + "default browser, sorry.");
+            JOptionPane.showMessageDialog(parent, "It seems that I can't open a website using your default browser, sorry.");
         }
     }
 
