@@ -15,10 +15,21 @@
  */
 package dorkbox.util;
 
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Image;
+import java.awt.MouseInfo;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.WindowListener;
@@ -30,6 +41,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public
 class SwingUtil {
@@ -278,17 +293,24 @@ class SwingUtil {
     }
 
     public static
-    void invokeAndWait(final Runnable runnable) {
+    void invokeAndWait(final Runnable runnable) throws InvocationTargetException, InterruptedException {
+        if (EventQueue.isDispatchThread()) {
+            runnable.run();
+        }
+        else {
+            EventQueue.invokeAndWait(runnable);
+        }
+    }
+
+    public static
+    void invokeAndWaitQuietly(final Runnable runnable) {
         if (EventQueue.isDispatchThread()) {
             runnable.run();
         }
         else {
             try {
                 EventQueue.invokeAndWait(runnable);
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (Exception ignore) {
             }
         }
     }
