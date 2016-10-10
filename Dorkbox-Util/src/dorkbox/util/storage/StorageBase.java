@@ -15,14 +15,6 @@
  */
 package dorkbox.util.storage;
 
-import com.esotericsoftware.kryo.KryoException;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +30,16 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.esotericsoftware.kryo.KryoException;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
+import dorkbox.util.SerializationManager;
+import dorkbox.util.bytes.ByteArrayWrapper;
 
 
 // a note on file locking between c and java
@@ -567,7 +569,7 @@ class StorageBase {
                 else {
                     // because there is no "previous", that means we MIGHT be the FIRST record
                     // well, we're not the first record. which one is RIGHT before us?
-                    // it should be "previous", so something fucked up
+                    // it should be "previous", so something messed up
                     this.logger.error("Trying to delete an object, and it's in a weird state");
                 }
             }
