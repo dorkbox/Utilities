@@ -23,10 +23,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Locale;
 
 public
@@ -48,13 +46,6 @@ class CacheUtil {
 
         digest = digest_;
     }
-
-    private static final long runtimeRandom = new SecureRandom().nextLong();
-
-    /**
-     * if true, we will essentially "not cache" the image. If false, we will cache the file by name+size, and reuse between runs.
-     */
-    public static boolean setUniqueCachePerRun = false;
 
     public static String tempDir = "";
 
@@ -347,12 +338,6 @@ class CacheUtil {
             }
         }
 
-
-        if (setUniqueCachePerRun) {
-            // KDE is unique per run, so this prevents buildup
-            newFile.deleteOnExit();
-        }
-
         //get the name of the new file
         return newFile.getAbsoluteFile();
     }
@@ -391,14 +376,6 @@ class CacheUtil {
 
         digest.reset();
         digest.update(bytes);
-
-        // For KDE4, it must also be unique across runs
-        if (setUniqueCachePerRun) {
-            byte[] longBytes = new byte[8];
-            ByteBuffer wrap = ByteBuffer.wrap(longBytes);
-            wrap.putLong(runtimeRandom);
-            digest.update(longBytes);
-        }
 
         // convert to alpha-numeric. see https://stackoverflow.com/questions/29183818/why-use-tostring32-and-not-tostring36
         return new BigInteger(1, digest.digest()).toString(32).toUpperCase(Locale.US);
