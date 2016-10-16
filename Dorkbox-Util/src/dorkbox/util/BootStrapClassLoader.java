@@ -19,13 +19,15 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.sun.jna.Native;
-import com.sun.jna.Platform;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.PointerByReference;
 
 // http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/be698ac28848/src/share/native/java/lang/ClassLoader.c
 // http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/tip/src/share/vm/prims/jvm.cpp
+
+// objdump -T <file> | grep foo
+// otool -T <file> | grep foo
 
 /**
  * Gives us the ability to inject bytes directly into java's bootstrap classloader.
@@ -73,7 +75,6 @@ public class BootStrapClassLoader {
         int JNI_GetCreatedJavaVMs(JavaVM.ByReference[] vmArray, int bufsize, int[] vmCount);
     }
 
-
     public static
     class JNIInvokeInterface extends Structure {
         public static
@@ -119,8 +120,23 @@ public class BootStrapClassLoader {
      */
     public static
     void defineClass(byte[] classBytes) throws Exception {
+
         if (libjvm == null) {
-            String libName = Platform.isMac() ? "JavaVM" : "jvm";
+            String libName;
+            if (OS.isMacOsX()) {
+                if (OS.javaVersion < 7) {
+                    libName = "JavaVM";
+                } else {
+                    String javaLocation = System.getProperty("java.home");
+
+                    // have to explicitly specify the JVM library via full path
+                    // this is OK, because for java on MacOSX, this is the only location it can exist
+                    libName = javaLocation + "/lib/server/libjvm.dylib";
+                }
+            }
+            else {
+                libName = "jvm";
+            }
             libjvm = (JVM) Native.loadLibrary(libName, JVM.class);
         }
 
