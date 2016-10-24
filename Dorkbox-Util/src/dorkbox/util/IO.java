@@ -15,12 +15,15 @@
  */
 package dorkbox.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-@SuppressWarnings("unused")
+import javax.imageio.stream.ImageInputStream;
+
+@SuppressWarnings({"unused", "Duplicates"})
 public
 class IO {
     /**
@@ -70,11 +73,67 @@ class IO {
 
     /**
      * Copy the contents of the input stream to the output stream.
-     * <p/>
+     * <p>
      * DOES NOT CLOSE THE STEAMS!
      */
     public static
     <T extends OutputStream> T copyStream(final InputStream inputStream, final T outputStream) throws IOException {
+        byte[] buffer = new byte[4096];
+        int read;
+
+        while ((read = inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, read);
+        }
+        outputStream.flush();
+
+        return outputStream;
+    }
+
+    /**
+     * Copy the contents of the input stream to the output stream.
+     * <p>
+     * DOES NOT CLOSE THE STEAMS!
+     */
+    public static
+    <T extends OutputStream> T copyStream(final ImageInputStream inputStream, final T outputStream) throws IOException {
+        byte[] buffer = new byte[4096];
+        int read;
+
+        while ((read = inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, read);
+        }
+        outputStream.flush();
+
+        return outputStream;
+    }
+
+    /**
+     * Copy the contents of the input stream to a new output stream.
+     * <p>
+     * DOES NOT CLOSE THE STEAMS!
+     */
+    public static
+    ByteArrayOutputStream copyStream(final InputStream inputStream) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(4096);
+        byte[] buffer = new byte[4096];
+        int read;
+
+        while ((read = inputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, read);
+        }
+        outputStream.flush();
+
+        return outputStream;
+    }
+
+    /**
+     * Copy the contents of the input stream to a new output stream.
+     * <p>
+     * DOES NOT CLOSE THE STEAMS!
+     */
+    public static
+    ByteArrayOutputStream copyStream(final ImageInputStream inputStream) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream(4096);
         byte[] buffer = new byte[4096];
         int read;
 
