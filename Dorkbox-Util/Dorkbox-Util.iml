@@ -65,5 +65,6 @@
     <orderEntry type="library" name="lz4_xxhash" level="application" />
     <orderEntry type="library" name="logging logback" level="application" />
     <orderEntry type="library" name="disruptor" level="application" />
+    <orderEntry type="library" name="jna" level="application" />
   </component>
 </module>
