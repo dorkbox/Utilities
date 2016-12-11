@@ -85,8 +85,15 @@ class ProcessProxy extends Thread {
                 while ((readInt = is.read()) != -1) {
                     os.write(readInt);
 
-                    // always flush after a write
-                    os.flush();
+
+                    // flush the output on new line. (same for both windows '\r\n' and linux '\n')
+                    if (readInt == '\n') {
+                        os.flush();
+
+                        synchronized (os) {
+                            os.notify();
+                        }
+                    }
                 }
             }
         } catch (Exception ignore) {

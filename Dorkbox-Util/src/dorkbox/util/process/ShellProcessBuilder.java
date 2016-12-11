@@ -15,8 +15,6 @@
  */
 package dorkbox.util.process;
 
-import dorkbox.util.OS;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -24,6 +22,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import dorkbox.util.OS;
 
 /**
  * If you want to save off the output from the process, set a PrintStream to the following:
@@ -39,6 +39,8 @@ import java.util.List;
 public
 class ShellProcessBuilder {
 
+    // TODO: Add the ability to get the process PID via java for mac/windows/linux. Linux is avail from jvm, windows needs JNA
+
     private final PrintStream outputStream;
     private final PrintStream outputErrorStream;
     private final InputStream inputStream;
@@ -47,14 +49,17 @@ class ShellProcessBuilder {
     private String workingDirectory = null;
     private String executableName = null;
     private String executableDirectory = null;
-    private Process process = null;
 
-    // true if we want to save off (usually for debugging) the initial output from this
-    private boolean debugInfo = false;
+    private Process process = null;
+    private ProcessProxy writeToProcess_input = null;
+    private ProcessProxy readFromProcess_output = null;
+    private ProcessProxy readFromProcess_error = null;
+
     private boolean createReadWriterThreads = false;
 
     private boolean isShell;
     private String pipeToNullString = "";
+    private List<String> fullCommand;
 
     /**
      * This will cause the spawned process to pipe it's output to null.
@@ -65,17 +70,17 @@ class ShellProcessBuilder {
     }
 
     public
-    ShellProcessBuilder(PrintStream out) {
+    ShellProcessBuilder(final PrintStream out) {
         this(null, out, out);
     }
 
     public
-    ShellProcessBuilder(InputStream in, PrintStream out) {
+    ShellProcessBuilder(final InputStream in, final PrintStream out) {
         this(in, out, out);
     }
 
     public
-    ShellProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+    ShellProcessBuilder(final InputStream in, final PrintStream out, final PrintStream err) {
         this.inputStream = in;
         this.outputStream = out;
         this.outputErrorStream = err;
@@ -101,20 +106,20 @@ class ShellProcessBuilder {
      * When launched from eclipse, the working directory is USUALLY the root of the project folder
      */
     public final
-    ShellProcessBuilder setWorkingDirectory(String workingDirectory) {
+    ShellProcessBuilder setWorkingDirectory(final String workingDirectory) {
         // MUST be absolute path!!
         this.workingDirectory = new File(workingDirectory).getAbsolutePath();
         return this;
     }
 
     public final
-    ShellProcessBuilder addArgument(String argument) {
+    ShellProcessBuilder addArgument(final String argument) {
         this.arguments.add(argument);
         return this;
     }
 
     public final
-    ShellProcessBuilder addArguments(String... paths) {
+    ShellProcessBuilder addArguments(final String... paths) {
         for (String path : paths) {
             this.arguments.add(path);
         }
@@ -122,32 +127,33 @@ class ShellProcessBuilder {
     }
 
     public final
-    ShellProcessBuilder addArguments(List<String> paths) {
+    ShellProcessBuilder addArguments(final List<String> paths) {
         this.arguments.addAll(paths);
         return this;
     }
 
     public final
-    ShellProcessBuilder setExecutable(String executableName) {
+    ShellProcessBuilder setExecutable(final String executableName) {
         this.executableName = executableName;
         return this;
     }
 
     public
-    ShellProcessBuilder setExecutableDirectory(String executableDirectory) {
+    ShellProcessBuilder setExecutableDirectory(final String executableDirectory) {
         // MUST be absolute path!!
         this.executableDirectory = new File(executableDirectory).getAbsolutePath();
         return this;
     }
 
+    /**
+     * Sends all output data for this process to "null" in a cross platform method
+     */
     public
-    ShellProcessBuilder addDebugInfo() {
-        this.debugInfo = true;
-        return this;
-    }
+    ShellProcessBuilder pipeOutputToNull() throws IllegalArgumentException {
+        if (outputStream != null || outputErrorStream != null) {
+            throw new IllegalArgumentException("Cannot pipe shell command to 'null' if an output stream is specified");
+        }
 
-    public
-    ShellProcessBuilder pipeOutputToNull() {
         if (OS.isWindows()) {
             // >NUL on windows
             pipeToNullString = ">NUL";
@@ -160,10 +166,30 @@ class ShellProcessBuilder {
         return this;
     }
 
+    /**
+     * @return the executable command issued to the shell
+     */
+    public
+    String getCommand() {
+        StringBuilder execCommand = new StringBuilder();
+
+        Iterator<String> iterator = fullCommand.iterator();
+        while (iterator.hasNext()) {
+            String s = iterator.next();
+
+            execCommand.append(s);
+
+            if (iterator.hasNext()) {
+                execCommand.append(" ");
+            }
+        }
+
+        return execCommand.toString();
+    }
 
     public
     int start() {
-        List<String> argumentsList = new ArrayList<String>();
+        fullCommand = new ArrayList<String>();
 
         // if no executable, then use the command shell
         if (this.executableName == null) {
@@ -173,8 +199,8 @@ class ShellProcessBuilder {
                 // windows
                 this.executableName = "cmd";
 
-                argumentsList.add(this.executableName);
-                argumentsList.add("/c");
+                fullCommand.add(this.executableName);
+                fullCommand.add("/c");
             }
             else {
                 // *nix
@@ -185,8 +211,8 @@ class ShellProcessBuilder {
                     this.executableName = "/bin/sh";
                 }
 
-                argumentsList.add(this.executableName);
-                argumentsList.add("-c");
+                fullCommand.add(this.executableName);
+                fullCommand.add("-c");
             }
         }
         else {
@@ -203,9 +229,9 @@ class ShellProcessBuilder {
                     this.executableDirectory += File.separator;
                 }
 
-                argumentsList.add(0, this.executableDirectory + this.executableName);
+                fullCommand.add(0, this.executableDirectory + this.executableName);
             } else {
-                argumentsList.add(this.executableName);
+                fullCommand.add(this.executableName);
             }
         }
 
@@ -231,55 +257,30 @@ class ShellProcessBuilder {
                 }
             }
 
-            argumentsList.add(stringBuilder.toString());
+            fullCommand.add(stringBuilder.toString());
 
         } else {
             for (String arg : this.arguments) {
-                argumentsList.add(arg);
+                if (arg.contains(" ")) {
+                    // individual arguments MUST be in their own element in order to be processed properly
+                    // (this is how it works on the command line!)
+                    String[] split = arg.split(" ");
+                    for (String s : split) {
+                        fullCommand.add(s);
+                    }
+                } else {
+                    fullCommand.add(arg);
+                }
             }
 
             if (pipeToNull) {
-                argumentsList.add(pipeToNullString);
+                fullCommand.add(pipeToNullString);
             }
         }
 
 
 
-        if (this.debugInfo) {
-            if (outputErrorStream != null) {
-                this.outputErrorStream.print("Executing: ");
-            } else {
-                System.err.print("Executing: ");
-            }
-
-            Iterator<String> iterator = argumentsList.iterator();
-            while (iterator.hasNext()) {
-                String s = iterator.next();
-                if (outputErrorStream != null) {
-                    this.outputErrorStream.print(s);
-                } else {
-                    System.err.print(s);
-                }
-                if (iterator.hasNext()) {
-                    if (outputErrorStream != null) {
-                        this.outputErrorStream.print(" ");
-                    } else {
-                        System.err.print(" ");
-                    }
-                }
-            }
-
-            if (outputErrorStream != null) {
-                this.outputErrorStream.print(OS.LINE_SEPARATOR);
-            } else {
-                System.err.print(OS.LINE_SEPARATOR);
-            }
-        }
-
-
-
-
-        ProcessBuilder processBuilder = new ProcessBuilder(argumentsList);
+        ProcessBuilder processBuilder = new ProcessBuilder(fullCommand);
         if (this.workingDirectory != null) {
             processBuilder.directory(new File(this.workingDirectory));
         }
@@ -315,10 +316,6 @@ class ShellProcessBuilder {
         }
 
         if (this.process != null) {
-            ProcessProxy writeToProcess_input = null;
-            ProcessProxy readFromProcess_output = null;
-            ProcessProxy readFromProcess_error = null;
-
             if (this.outputErrorStream == null && this.outputStream == null) {
                 if (!pipeToNull) {
                     NullOutputStream nullOutputStream = new NullOutputStream();
@@ -360,24 +357,26 @@ class ShellProcessBuilder {
 
 
             // the process can be killed in two ways
-            // If not in eclipse, by this shutdown hook. (clicking the red square to terminate a process will not run it's shutdown hooks)
+            // If not in IDE, by this shutdown hook. (clicking the red square to terminate a process will not run it's shutdown hooks)
             // Typing "exit" will always terminate the process
             Thread hook = new Thread(new Runnable() {
                 @Override
                 public
                 void run() {
-                    if (ShellProcessBuilder.this.debugInfo) {
-                        final PrintStream errorStream = ShellProcessBuilder.this.outputErrorStream;
-                        if (errorStream != null) {
-                            errorStream.println("Terminating process: " + ShellProcessBuilder.this.executableName);
-                        }
-                    }
                     ShellProcessBuilder.this.process.destroy();
                 }
             });
+            hook.setName("ShellProcess Shutdown Hook");
+
             // add a shutdown hook to make sure that we properly terminate our spawned processes.
-            Runtime.getRuntime()
-                   .addShutdownHook(hook);
+            // hook is NOT set to daemon mode, because this is run during shutdown
+            // add a shutdown hook to make sure that we properly terminate our spawned processes.
+            try {
+                Runtime.getRuntime()
+                       .addShutdownHook(hook);
+            } catch (IllegalStateException ignored) {
+                // can happen, safe to ignore
+            }
 
             if (writeToProcess_input != null) {
                 if (createReadWriterThreads) {
@@ -433,8 +432,11 @@ class ShellProcessBuilder {
             }
 
             // remove the shutdown hook now that we've shutdown.
-            Runtime.getRuntime()
-                   .removeShutdownHook(hook);
+            try {
+                Runtime.getRuntime().removeShutdownHook(hook);
+            } catch (IllegalStateException ignored) {
+                // can happen, safe to ignore
+            }
 
             return exitValue;
         }
@@ -444,17 +446,50 @@ class ShellProcessBuilder {
     }
 
     /**
-     * Converts the baos to a string in a safe way. There might be a trailing newline character at the end of this output.
+     * Converts the baos to a string in a safe way. There will never be a trailing newline character at the end of this output.
      *
      * @param byteArrayOutputStream the baos that is used in the {@link ShellProcessBuilder#ShellProcessBuilder(PrintStream)} (or similar
      *                              calls)
      *
-     * @return A string representing the output of the process
+     * @return A string representing the output of the process, null if the thread for this was interrupted
      */
     public static
     String getOutput(final ByteArrayOutputStream byteArrayOutputStream) {
         String s;
         synchronized (byteArrayOutputStream) {
+            s = byteArrayOutputStream.toString();
+            byteArrayOutputStream.reset();
+        }
+
+        // remove trailing newline character(s)
+        int endIndex = s.lastIndexOf(OS.LINE_SEPARATOR);
+        if (endIndex > -1) {
+            return s.substring(0, endIndex);
+        }
+
+        return s;
+    }
+
+    /**
+     * Converts the baos to a string in a safe way. There will never be a trailing newline character at the end of this output. This will
+     * block until there is a line of input available.
+     *
+     * @param byteArrayOutputStream the baos that is used in the {@link ShellProcessBuilder#ShellProcessBuilder(PrintStream)} (or similar
+     *                              calls)
+     *
+     * @return A string representing the output of the process, null if the thread for this was interrupted
+     */
+    public String
+    getOutputLineBuffered(final ByteArrayOutputStream byteArrayOutputStream) {
+        String s;
+
+        synchronized (byteArrayOutputStream) {
+            try {
+                byteArrayOutputStream.wait();
+            } catch (InterruptedException ignored) {
+                return null;
+            }
+
             s = byteArrayOutputStream.toString();
             byteArrayOutputStream.reset();
         }
