@@ -356,7 +356,7 @@ class CacheUtil {
         // can be wimpy, only one at a time
         String hash = hashName(cachedName);
         String extension = FileUtil.getExtension(cachedName);
-        if (extension.length() == 0) {
+        if (extension.isEmpty()) {
             extension = "cache";
         }
 
