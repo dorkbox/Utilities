@@ -186,8 +186,6 @@ class OsUtil {
 
                 // ID=fedora
                 if (output.contains("ID=fedora\n")) {
-                    int fedoraVersion = 0;
-
                     // should be: VERSION_ID=23\n  or something
                     int beginIndex = output.indexOf("VERSION_ID=") + 11;
                     String fedoraVersion_ = output.substring(beginIndex, output.indexOf(OS.LINE_SEPARATOR_UNIX, beginIndex));
@@ -221,6 +219,11 @@ class OsUtil {
             }
 
             return false;
+        }
+
+        public static
+        boolean isFedora() {
+            return getInfo().contains("ID=fedora\n");
         }
 
         public static
