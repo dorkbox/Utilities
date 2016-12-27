@@ -76,7 +76,7 @@ class OsUtil {
             int[] version = new int[3];
             version[0] = 0;
             version[1] = 0;
-            version[3] = 0;
+            version[2] = 0;
 
             if (!OS.isWindows()) {
                 return version;
