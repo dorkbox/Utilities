@@ -32,7 +32,7 @@ import dorkbox.util.process.ShellProcessBuilder;
  * depend on any native libraries)
  */
 public
-class OsUtil {
+class OSUtil {
     public static
     class Windows {
         /**
