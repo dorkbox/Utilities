@@ -240,7 +240,10 @@ class OSUtil {
             try {
                 String output = getInfo();
                 // ID="elementary"  (notice the extra quotes)
-                return output.contains("ID=\"elementary\"\n") || output.contains("ID=elementary\n");
+                return output.contains("ID=\"elementary\"\n") || output.contains("ID=elementary\n") ||
+
+                       // this is specific to eOS < 0.3.2
+                       output.contains("ID=\"elementary OS\"\n");
             } catch (Throwable ignored) {
             }
 
