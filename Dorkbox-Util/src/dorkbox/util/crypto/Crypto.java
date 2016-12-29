@@ -58,6 +58,10 @@ import net.jpountz.xxhash.XXHashFactory;
  * <p/>
  * <p/>
  * To determine if we have hardware accelerated AES java -XX:+PrintFlagsFinal -version | grep UseAES
+ *
+ * Per NIST SP800-38D,
+ * The total number of invocations of the authenticated encryption function shall not exceed 232, including all IV lengths and all instances of the authenticated encryption function with the given key.
+ *
  */
 public final
 class Crypto {
