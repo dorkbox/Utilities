@@ -261,116 +261,121 @@ class OSUtil {
         boolean isUbuntu() {
             return getInfo("ubuntu");
         }
+    }
 
+    public static
+    class DesktopEnv {
         public static
-        class DesktopEnv {
-            public static
-            boolean isGnome() {
-                if (!OS.isLinux()) {
-                    return false;
-                }
-
-                try {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                    PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
-                    // ps a | grep [g]nome-shell
-                    final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
-                    shell.setExecutable("ps");
-                    shell.addArgument("a");
-                    shell.start();
-
-                    String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
-                    return output.contains("gnome-shell");
-                } catch (Throwable ignored) {
-                }
-
+        boolean isGnome() {
+            if (!OS.isLinux() && !OS.isUnix()) {
                 return false;
             }
 
-            public static
-            String getGnomeVersion() {
-                if (!OS.isLinux()) {
-                    return "";
-                }
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
 
-                try {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                    PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
-                    // gnome-shell --version
-                    final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
-                    shellVersion.setExecutable("gnome-shell");
-                    shellVersion.addArgument("--version");
-                    shellVersion.start();
-
-                    String versionString = ShellProcessBuilder.getOutput(byteArrayOutputStream);
-
-                    if (!versionString.isEmpty()) {
-                        // GNOME Shell 3.14.1
-                        String version = versionString.replaceAll("[^\\d.]", "");
-                        if (version.length() > 0 && version.indexOf('.') > 0) {
-                            // should just be 3.14.1 or 3.20 or similar
-                            return version;
-                        }
-                    }
-                } catch (Throwable ignored) {
-                }
-
-                return null;
-            }
-
-            // cannot represent '5.6.5' as a number, so we return just the first two decimal places instead
-            public static
-            double getPlasmaVersion() {
-                String versionAsString = getPlasmaVersionFull();
-                if (versionAsString.startsWith("0")) {
-                    return 0;
-                }
-
-                // this isn't the BEST way to do this, but it's simple and easy to understand
-                String[] split = versionAsString.split("\\.",3);
-                if (split.length > 2) {
-                    return Double.parseDouble(split[0] + "." + split[1]);
+                // ps a | grep gnome-shell
+                // ps x | grep gnome-shell
+                final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                shell.setExecutable("ps");
+                if (OS.isLinux()) {
+                    shell.addArgument("a");
                 } else {
-                    return Double.parseDouble(split[0]);
+                    shell.addArgument("x");
                 }
+                shell.start();
+
+                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                return output.contains("gnome-shell");
+            } catch (Throwable ignored) {
             }
 
-            // cannot represent '5.6.5' as a number, so we return a String instead
-            public static
-            String getPlasmaVersionFull() {
-                if (!OS.isLinux()) {
-                    return "";
-                }
+            return false;
+        }
 
-                try {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                    PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+        public static
+        String getGnomeVersion() {
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return "";
+            }
 
-                    // plasma-desktop -v
-                    // plasmashell --version
-                    final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
-                    shellVersion.setExecutable("plasmashell");
-                    shellVersion.addArgument("--version");
-                    shellVersion.start();
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
 
-                    String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                // gnome-shell --version
+                final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
+                shellVersion.setExecutable("gnome-shell");
+                shellVersion.addArgument("--version");
+                shellVersion.start();
 
-                    if (!output.isEmpty()) {
-                        // DEFAULT icon size is 16. KDE is bananas on what they did with tray icon scale
-                        // should be: plasmashell 5.6.5   or something
-                        String s = "plasmashell ";
-                        if (output.contains(s) && !output.contains("not installed")) {
-                            return output.substring(output.indexOf(s) + s.length(), output.length());
-                        }
+                String versionString = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+
+                if (!versionString.isEmpty()) {
+                    // GNOME Shell 3.14.1
+                    String version = versionString.replaceAll("[^\\d.]", "");
+                    if (version.length() > 0 && version.indexOf('.') > 0) {
+                        // should just be 3.14.1 or 3.20 or similar
+                        return version;
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
                 }
-
-                return "0";
+            } catch (Throwable ignored) {
             }
+
+            return null;
+        }
+
+        // cannot represent '5.6.5' as a number, so we return just the first two decimal places instead
+        public static
+        double getPlasmaVersion() {
+            String versionAsString = getPlasmaVersionFull();
+            if (versionAsString.startsWith("0")) {
+                return 0;
+            }
+
+            // this isn't the BEST way to do this, but it's simple and easy to understand
+            String[] split = versionAsString.split("\\.",3);
+            if (split.length > 2) {
+                return Double.parseDouble(split[0] + "." + split[1]);
+            } else {
+                return Double.parseDouble(split[0]);
+            }
+        }
+
+        // cannot represent '5.6.5' as a number, so we return a String instead
+        public static
+        String getPlasmaVersionFull() {
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return "";
+            }
+
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+
+                // plasma-desktop -v
+                // plasmashell --version
+                final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
+                shellVersion.setExecutable("plasmashell");
+                shellVersion.addArgument("--version");
+                shellVersion.start();
+
+                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+
+                if (!output.isEmpty()) {
+                    // DEFAULT icon size is 16. KDE is bananas on what they did with tray icon scale
+                    // should be: plasmashell 5.6.5   or something
+                    String s = "plasmashell ";
+                    if (output.contains(s) && !output.contains("not installed")) {
+                        return output.substring(output.indexOf(s) + s.length(), output.length());
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            return "0";
         }
     }
 }
