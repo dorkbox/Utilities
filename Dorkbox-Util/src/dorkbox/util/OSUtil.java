@@ -119,6 +119,32 @@ class OSUtil {
     }
 
     public static
+    class Unix {
+        public static
+        boolean isFreeBSD() {
+            if (!OS.isUnix()) {
+                return false;
+            }
+
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+
+                // uname
+                final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                shell.setExecutable("uname");
+                shell.start();
+
+                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                return output.startsWith("FreeBSD");
+            } catch (Throwable ignored) {
+            }
+
+            return false;
+        }
+    }
+
+    public static
     class Linux {
         public static
         String getInfo() {
