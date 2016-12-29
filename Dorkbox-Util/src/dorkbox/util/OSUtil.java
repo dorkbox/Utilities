@@ -283,19 +283,32 @@ class OSUtil {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
                 PrintStream outputStream = new PrintStream(byteArrayOutputStream);
 
-                // ps a | grep gnome-shell
+                // note: some versions of linux can ONLY access "ps a"; FreeBSD and most linux is "ps x"
+                // we try "x" first
+
                 // ps x | grep gnome-shell
-                final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
                 shell.setExecutable("ps");
-                if (OS.isLinux()) {
-                    shell.addArgument("a");
-                } else {
-                    shell.addArgument("x");
-                }
+                shell.addArgument("x");
                 shell.start();
 
                 String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
-                return output.contains("gnome-shell");
+                boolean contains = output.contains("gnome-shell");
+
+                if (!contains && OS.isLinux()) {
+                    // only try again if we are linux
+
+                    // ps a | grep gnome-shell
+                    shell = new ShellProcessBuilder(outputStream);
+                    shell.setExecutable("ps");
+                    shell.addArgument("a");
+                    shell.start();
+
+                    output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                    contains = output.contains("gnome-shell");
+                }
+
+                return contains;
             } catch (Throwable ignored) {
             }
 
