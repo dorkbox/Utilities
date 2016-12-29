@@ -236,6 +236,11 @@ class OSUtil {
         }
 
         public static
+        boolean isDebian() {
+            return getInfo("debian");
+        }
+
+        public static
         boolean isElementaryOS() {
             try {
                 String output = getInfo();
@@ -252,7 +257,7 @@ class OSUtil {
 
         public static
         boolean isFedora() {
-            return getInfo().contains("ID=fedora\n");
+            return getInfo("fedora");
         }
 
         public static
