@@ -952,6 +952,8 @@ class FileUtil {
      * Gets the relative path of a file to a specific directory in it's hierarchy.
      * <p/>
      * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
+     *
+     * @return null if there is no child
      */
     public static
     String getChildRelativeToDir(String fileName, String dirInHeirarchy) {
@@ -967,7 +969,7 @@ class FileUtil {
      * <p/>
      * For example: getChildRelativeToDir("/a/b/c/d/e.bah", "c") -> "d/e.bah"
      *
-     * @return null if it cannot be found
+     * @return null if there is no child
      */
     public static
     String getChildRelativeToDir(File file, String dirInHeirarchy) {
@@ -1010,9 +1012,13 @@ class FileUtil {
                     if (parentName.equals(split[splitIndex])) {
                         splitIndex--;
                         if (splitIndex < 0) {
-                            parent = parent.getParentFile();
-                            parentName = parent.getAbsolutePath();
-                            return absolutePath.substring(parentName.length() + 1);
+                            // this means the ENTIRE path matched
+                            if (absolutePath.length() == dirInHeirarchy.length()) {
+                                return null;
+                            }
+
+                            // +1 to account for the separator char
+                            return absolutePath.substring(dirInHeirarchy.length() + 1, absolutePath.length());
                         }
                     }
                     else {
