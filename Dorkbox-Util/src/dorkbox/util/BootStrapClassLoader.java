@@ -15,13 +15,19 @@
  */
 package dorkbox.util;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.sun.jna.Library;
 import com.sun.jna.Native;
+import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.ptr.PointerByReference;
+import com.sun.jna.win32.StdCallFunctionMapper;
 
 // http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/be698ac28848/src/share/native/java/lang/ClassLoader.c
 // http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/tip/src/share/vm/prims/jvm.cpp
@@ -69,6 +75,7 @@ public class BootStrapClassLoader {
         }
     }
 
+    // Note: this does not work in java8 x86 *on windows XP windows7, etc. It only works on x64
     public
     interface JVM extends com.sun.jna.Library {
         void JVM_DefineClass(Pointer env, String name, Object loader, byte[] buffer, int length, Object protectionDomain);
@@ -110,6 +117,45 @@ public class BootStrapClassLoader {
         }
     }
 
+    static {
+        String libName;
+        if (OS.isMacOsX()) {
+            if (OS.javaVersion < 7) {
+                libName = "JavaVM";
+            } else {
+                String javaLocation = System.getProperty("java.home");
+
+                // have to explicitly specify the JVM library via full path
+                // this is OK, because for java on MacOSX, this is the only location it can exist
+                libName = javaLocation + "/lib/server/libjvm.dylib";
+            }
+        }
+        else {
+            libName = "jvm";
+        }
+
+        // function name is SLIGHTLY different on windows x32 java builds.
+        // For actual name use: http://www.nirsoft.net/utils/dll_export_viewer.html
+        if (OS.isWindows() && OS.is32bit()) {
+            Map options = new HashMap();
+            options.put(Library.OPTION_FUNCTION_MAPPER, new StdCallFunctionMapper() {
+                @Override
+                public
+                String getFunctionName(NativeLibrary library, Method method) {
+                    String methodName = method.getName();
+                    if (methodName.equals("JVM_DefineClass")) {
+                        // specifically Oracle Java 32bit builds. Tested on XP and Win7
+                        return "_JVM_DefineClass@24";
+                    }
+                    return methodName;
+                }
+            });
+            libjvm = Native.loadLibrary(libName, JVM.class, options);
+        } else {
+            libjvm = Native.loadLibrary(libName, JVM.class);
+        }
+    }
+
     /**
      * Inject class bytes directly into the bootstrap classloader.
      * <p>
@@ -121,24 +167,6 @@ public class BootStrapClassLoader {
     public static
     void defineClass(byte[] classBytes) throws Exception {
 
-        if (libjvm == null) {
-            String libName;
-            if (OS.isMacOsX()) {
-                if (OS.javaVersion < 7) {
-                    libName = "JavaVM";
-                } else {
-                    String javaLocation = System.getProperty("java.home");
-
-                    // have to explicitly specify the JVM library via full path
-                    // this is OK, because for java on MacOSX, this is the only location it can exist
-                    libName = javaLocation + "/lib/server/libjvm.dylib";
-                }
-            }
-            else {
-                libName = "jvm";
-            }
-            libjvm = (JVM) Native.loadLibrary(libName, JVM.class);
-        }
 
         // get the number of JVM's running
         int[] jvmCount = {100};
