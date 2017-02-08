@@ -51,7 +51,7 @@ public
 class SwingUtil {
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
     @Property
-    public static boolean LOAD_ALL_FONTS = true;
+    public static boolean LOAD_ALL_FONTS = false;
 
     /** Default location where all the fonts are stored */
     @Property
