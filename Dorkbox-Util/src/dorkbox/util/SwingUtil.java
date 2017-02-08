@@ -59,7 +59,7 @@ class SwingUtil {
 
     /** Sets the entire L&F to the Nimbus L&F. Set this to a different one (or null to disable) */
     @Property
-    public static String CUSTOM_LOOK_AND_FEEL = "Nimbus";
+    public static String CUSTOM_LOOK_AND_FEEL = null;
 
     static {
         /*
