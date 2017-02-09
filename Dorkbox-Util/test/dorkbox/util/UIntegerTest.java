@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2011-2013, Lukas Eder, lukas.eder@gmail.com
  * All rights reserved.
  * <p/>
@@ -35,13 +35,21 @@
  */
 package dorkbox.util;
 
-import dorkbox.util.bytes.UInteger;
+import static dorkbox.util.bytes.Unsigned.uint;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
 import org.junit.Test;
 
-import java.io.*;
-
-import static dorkbox.util.bytes.Unsigned.uint;
-import static org.junit.Assert.*;
+import dorkbox.util.bytes.UInteger;
 
 public
 class UIntegerTest {

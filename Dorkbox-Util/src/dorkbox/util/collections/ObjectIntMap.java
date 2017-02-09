@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2010 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 package dorkbox.util.collections;
 
 import com.esotericsoftware.kryo.util.ObjectMap;
+
 import dorkbox.util.MathUtil;
 
 /** An unordered map where the values are ints. This implementation is a cuckoo hash map using 3 hashes, random walking, and a

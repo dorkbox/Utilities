@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2011-2013, Lukas Eder, lukas.eder@gmail.com
  * All rights reserved.
  *
@@ -35,20 +35,28 @@
  */
 package dorkbox.util;
 
-import dorkbox.util.bytes.*;
-import org.junit.Test;
+import static dorkbox.util.bytes.ULong.MAX_VALUE_LONG;
+import static dorkbox.util.bytes.Unsigned.ubyte;
+import static dorkbox.util.bytes.Unsigned.uint;
+import static dorkbox.util.bytes.Unsigned.ulong;
+import static dorkbox.util.bytes.Unsigned.ushort;
+import static java.math.BigInteger.ONE;
+import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static dorkbox.util.bytes.ULong.MAX_VALUE_LONG;
-import static dorkbox.util.bytes.Unsigned.*;
-import static java.math.BigInteger.ONE;
-import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.junit.Test;
+
+import dorkbox.util.bytes.UByte;
+import dorkbox.util.bytes.UInteger;
+import dorkbox.util.bytes.ULong;
+import dorkbox.util.bytes.UNumber;
+import dorkbox.util.bytes.UShort;
 
 /**
  * @author Lukas Eder

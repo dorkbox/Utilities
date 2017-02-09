@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2011-2013, Lukas Eder, lukas.eder@gmail.com
  * All rights reserved.
  *

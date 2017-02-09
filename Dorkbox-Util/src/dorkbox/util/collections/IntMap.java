@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright 2010 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,10 @@
 package dorkbox.util.collections;
 
 
-import dorkbox.util.MathUtil;
-
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import dorkbox.util.MathUtil;
 
 /** An unordered map that uses int keys. This implementation is a cuckoo hash map using 3 hashes, random walking, and a small stash
  * for problematic keys. Null values are allowed. No allocation is done except when growing the table size. <br>
