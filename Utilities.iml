@@ -21,5 +21,6 @@
     <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
     <orderEntry type="library" name="reflectasm" level="application" />
     <orderEntry type="library" name="lz4_xxhash" level="application" />
+    <orderEntry type="library" name="lzma-java" level="application" />
   </component>
 </module>
