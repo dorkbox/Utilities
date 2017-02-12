@@ -28,7 +28,7 @@ import dorkbox.util.FileUtil;
 import dorkbox.util.SerializationManager;
 
 public
-class Store {
+class StorageType {
     private static final Logger logger = LoggerFactory.getLogger(DiskStorage.class);
 
     @SuppressWarnings("SpellCheckingInspection")
@@ -39,7 +39,7 @@ class Store {
         @Override
         public
         void run() {
-            Store.shutdown();
+            StorageType.shutdown();
         }
     });
 
@@ -162,6 +162,10 @@ class Store {
         Storage make() {
             if (this.file == null) {
                 throw new IllegalArgumentException("file cannot be null!");
+            }
+
+            if (this.serializationManager == null) {
+                throw new IllegalArgumentException("serializer cannot be null!");
             }
 
             // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
