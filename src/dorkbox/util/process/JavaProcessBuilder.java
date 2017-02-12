@@ -15,14 +15,14 @@
  */
 package dorkbox.util.process;
 
-import dorkbox.util.FileUtil;
-import dorkbox.util.OS;
-
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import dorkbox.util.FileUtil;
+import dorkbox.util.OS;
 
 /**
  * This will FORK the java process initially used to start the currently running JVM. Changing the java executable will change this behaviors
@@ -61,8 +61,8 @@ class JavaProcessBuilder extends ShellProcessBuilder {
         // even though the former is a symlink to the latter! To work around this, see if the
         // desired jvm is in fact pointed to by /usr/bin/java and, if so, use that instead.
         if (OS.isMacOsX()) {
-            String localVM = FileUtil.normalize(new File("/usr/bin/java").getAbsolutePath());
-            String vmCheck = FileUtil.normalize(new File(vmpath).getAbsolutePath());
+            String localVM = FileUtil.normalize("/usr/bin/java").getAbsolutePath();
+            String vmCheck = FileUtil.normalize(vmpath).getAbsolutePath();
             if (localVM.equals(vmCheck)) {
                 vmpath = "/usr/bin/java";
             }
@@ -171,7 +171,7 @@ class JavaProcessBuilder extends ShellProcessBuilder {
         for (String classpathEntry : this.classpathEntries) {
             try {
                 // make sure the classpath is ABSOLUTE pathname
-                classpathEntry = FileUtil.normalize(new File(classpathEntry).getAbsolutePath());
+                classpathEntry = FileUtil.normalize(classpathEntry).getAbsolutePath();
 
                 // fix a nasty problem when spaces aren't properly escaped!
                 classpathEntry = classpathEntry.replaceAll(" ", "\\ ");

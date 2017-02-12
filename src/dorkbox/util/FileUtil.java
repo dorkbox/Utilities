@@ -212,8 +212,8 @@ class FileUtil {
         }
 
 
-        String normalizedIn = normalize(in.getAbsolutePath());
-        String normalizedout = normalize(out.getAbsolutePath());
+        String normalizedIn = normalize(in).getAbsolutePath();
+        String normalizedout = normalize(out).getAbsolutePath();
 
         if (normalizedIn.equalsIgnoreCase(normalizedout)) {
             logger.warn("Source equals destination! " + normalizedIn);
@@ -277,8 +277,8 @@ class FileUtil {
             throw new IllegalArgumentException("two cannot be null.");
         }
 
-        String normalizedOne = normalize(one.getAbsolutePath());
-        String normalizedTwo = normalize(two.getAbsolutePath());
+        String normalizedOne = normalize(one).getAbsolutePath();
+        String normalizedTwo = normalize(two).getAbsolutePath();
 
         Logger logger2 = logger;
         if (logger2.isTraceEnabled()) {
@@ -511,7 +511,7 @@ class FileUtil {
                     boolean delete = true;
                     final File file2 = files[i];
                     String name2 = file2.getName();
-                    String name2Full = normalize(file2.getAbsolutePath());
+                    String name2Full = normalize(file2).getAbsolutePath();
 
                     if (file2.isDirectory()) {
                         for (String name : namesToIgnore) {
@@ -1175,6 +1175,7 @@ class FileUtil {
 
 
     //-----------------------------------------------------------------------
+
     /*
      * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
      *   http://commons.apache.org/proper/commons-io/
@@ -1186,6 +1187,8 @@ class FileUtil {
 
     /**
      * Normalizes a path, removing double and single dot path steps.
+     * <p/>
+     * THIS IS DIFFERENT in that it might not be a path that resolves to anything
      * <p/>
      * This method normalizes a path to a standard format.
      * The input may contain separators in either Unix or Windows format.
@@ -1222,10 +1225,11 @@ class FileUtil {
      * (Note the file separator returned will be correct for Windows/Unix)
      *
      * @param filename the filename to normalize, null returns null
+     *
      * @return the normalized filename, or null if invalid
      */
     public static
-    String normalize(String filename) {
+    String normalizeRaw(String filename) {
         return doNormalize(filename, SYSTEM_SEPARATOR, true);
     }
 
@@ -1275,12 +1279,21 @@ class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param filename the filename to normalize, null returns null
-     * @return the normalized filename, or null if invalid
+     * @param file the file to normalize, null returns null
+     * @return the normalized file, or null if invalid
      */
     public static
-    String normalizeAsFile(String filename) {
-        return doNormalize(new File(filename).getAbsolutePath(), SYSTEM_SEPARATOR, true);
+    File normalize(String filename) {
+        if (filename == null) {
+            return null;
+        }
+
+        String asString = doNormalize(new File(filename).getAbsolutePath(), SYSTEM_SEPARATOR, true);
+        if (asString == null) {
+            return null;
+        }
+
+        return new File(asString);
     }
 
     /*
