@@ -15,15 +15,17 @@
  */
 package dorkbox.util.storage;
 
-import dorkbox.util.SerializationManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import dorkbox.util.FileUtil;
+import dorkbox.util.SerializationManager;
 
 public
 class Store {
@@ -140,7 +142,13 @@ class Store {
 
         public
         DiskMaker file(File file) {
-            this.file = file;
+            this.file = FileUtil.normalize(file);
+            return this;
+        }
+
+        public
+        DiskMaker file(String file) {
+            this.file = FileUtil.normalize(file);
             return this;
         }
 
