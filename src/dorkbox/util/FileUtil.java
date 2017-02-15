@@ -907,7 +907,7 @@ class FileUtil {
         List<File> jarList = new LinkedList<File>();
         LinkedList<File> directories = new LinkedList<File>();
 
-        rootDirectory = FileUtil.normalize(rootDirectory.getAbsoluteFile());
+        rootDirectory = FileUtil.normalize(rootDirectory);
 
         if (!rootDirectory.exists()) {
             throw new IOException("Location does not exist: " + rootDirectory.getAbsolutePath());
