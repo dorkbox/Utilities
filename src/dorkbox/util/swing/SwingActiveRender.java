@@ -18,6 +18,7 @@ package dorkbox.util.swing;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
@@ -41,7 +42,7 @@ public final
 class SwingActiveRender {
     private static Thread activeRenderThread = null;
 
-    static final List<JFrame> activeRenders = new CopyOnWriteArrayList<JFrame>();
+    static final List<JFrame> activeRenders = new ArrayList<JFrame>();
     static final List<ActionHandlerLong> activeRenderEvents = new CopyOnWriteArrayList<ActionHandlerLong>();
 
     // volatile, so that access triggers thread synchrony, since 1.6. See the Java Language Spec, Chapter 17

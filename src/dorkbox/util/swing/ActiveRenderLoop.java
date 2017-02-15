@@ -65,26 +65,28 @@ class ActiveRenderLoop implements Runnable {
                 actionHandlerLong.handle(updateDeltaNanos);
             }
 
-            for (int i = 0; i < SwingActiveRender.activeRenders.size(); i++) {
-                JFrame jFrame = SwingActiveRender.activeRenders.get(i);
+            // this needs to be synchronized because we don't want to our frame removed WHILE we are rendering it.
+            synchronized (SwingActiveRender.activeRenders) {
+                for (int i = 0; i < SwingActiveRender.activeRenders.size(); i++) {
+                    JFrame jFrame = SwingActiveRender.activeRenders.get(i);
 
-                final BufferStrategy buffer = jFrame.getBufferStrategy();
+                    final BufferStrategy buffer = jFrame.getBufferStrategy();
 
-                // maybe the frame was closed
-                if (buffer != null) {
-                    try {
-                        graphics = buffer.getDrawGraphics();
-                        jFrame.paint(graphics);
-                    } catch (IllegalStateException ignored) {
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (graphics != null) {
-                            graphics.dispose();
+                    // maybe the frame was closed
+                    if (buffer != null) {
+                        try {
+                            graphics = buffer.getDrawGraphics();
+                            jFrame.paint(graphics);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        } finally {
+                            if (graphics != null) {
+                                graphics.dispose();
 
-                            // blit the back buffer to the screen
-                            if (!buffer.contentsLost()) {
-                                buffer.show();
+                                // blit the back buffer to the screen
+                                if (!buffer.contentsLost()) {
+                                    buffer.show();
+                                }
                             }
                         }
                     }
