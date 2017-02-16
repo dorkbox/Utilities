@@ -15,10 +15,6 @@
  */
 package dorkbox.util.storage;
 
-import dorkbox.util.DelayTimer;
-import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -26,6 +22,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.slf4j.Logger;
+
+import dorkbox.util.DelayTimer;
+import dorkbox.util.SerializationManager;
+import dorkbox.util.bytes.ByteArrayWrapper;
 
 
 /**
@@ -48,9 +50,8 @@ class DiskStorage implements Storage {
     /**
      * Creates or opens a new database file.
      */
-    protected
-    DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly) throws IOException {
-        this.storage = new StorageBase(storageFile, serializationManager);
+    DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly, final Logger logger) throws IOException {
+        this.storage = new StorageBase(storageFile, serializationManager, logger);
         this.defaultKey = ByteArrayWrapper.wrap("");
 
         if (readOnly) {

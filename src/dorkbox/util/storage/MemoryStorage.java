@@ -15,11 +15,11 @@
  */
 package dorkbox.util.storage;
 
-import dorkbox.util.bytes.ByteArrayWrapper;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+
+import dorkbox.util.bytes.ByteArrayWrapper;
 
 /**
  * Storage that is in memory only (and is not persisted to disk)
@@ -30,7 +30,6 @@ class MemoryStorage implements Storage {
     private int version;
 
 
-    public
     MemoryStorage() {
         this.storage = new ConcurrentHashMap<ByteArrayWrapper, Object>();
         this.defaultKey = ByteArrayWrapper.wrap("");

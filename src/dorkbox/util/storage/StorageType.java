@@ -22,15 +22,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
 
 import dorkbox.util.FileUtil;
 import dorkbox.util.SerializationManager;
 
 public
 class StorageType {
-    private static final Logger logger = LoggerFactory.getLogger(DiskStorage.class);
-
     @SuppressWarnings("SpellCheckingInspection")
     private static final Map<File, Storage> storages = new HashMap<File, Storage>(1);
 
@@ -86,15 +84,7 @@ class StorageType {
     void close(Storage _storage) {
         synchronized (storages) {
             File file = _storage.getFile();
-            Storage storage = storages.get(file);
-            if (storage instanceof DiskStorage) {
-                final DiskStorage diskStorage = (DiskStorage) storage;
-                boolean isLastOne = diskStorage.decrementReference();
-                if (isLastOne) {
-                    diskStorage.close();
-                    storages.remove(file);
-                }
-            }
+            close(file);
         }
     }
 
@@ -138,7 +128,8 @@ class StorageType {
     class DiskMaker {
         private File file;
         private SerializationManager serializationManager;
-        private boolean readOnly;
+        private boolean readOnly = false;
+        private Logger logger = null;
 
         public
         DiskMaker file(File file) {
@@ -168,6 +159,10 @@ class StorageType {
                 throw new IllegalArgumentException("serializer cannot be null!");
             }
 
+            if (this.logger == null) {
+                this.logger = NOPLogger.NOP_LOGGER;
+            }
+
             // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
             // without saving the existing storage first --- whoops!
             synchronized (storages) {
@@ -188,7 +183,7 @@ class StorageType {
                 }
                 else {
                     try {
-                        storage = new DiskStorage(this.file, this.serializationManager, this.readOnly);
+                        storage = new DiskStorage(this.file, this.serializationManager, this.readOnly, this.logger);
                         storages.put(this.file, storage);
                     } catch (IOException e) {
                         logger.error("Unable to open storage", e);
@@ -202,6 +197,12 @@ class StorageType {
         public
         DiskMaker readOnly() {
             this.readOnly = true;
+            return this;
+        }
+
+        public
+        DiskMaker logger(final Logger logger) {
+            this.logger = logger;
             return this;
         }
     }

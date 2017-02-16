@@ -32,7 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
@@ -48,7 +47,7 @@ import dorkbox.util.bytes.ByteArrayWrapper;
 
 
 class StorageBase {
-    private final Logger logger = LoggerFactory.getLogger(getClass().getSimpleName());
+    private final Logger logger;
 
 
     // File pointer to the data start pointer header.
@@ -108,8 +107,9 @@ class StorageBase {
     /**
      * Creates or opens a new database file.
      */
-    StorageBase(File filePath, SerializationManager serializationManager) throws IOException {
+    StorageBase(final File filePath, final SerializationManager serializationManager, final Logger logger) throws IOException {
         this.serializationManager = serializationManager;
+        this.logger = logger;
 
         this.logger.info("Opening storage file: '{}'", filePath.getAbsolutePath());
 
@@ -152,7 +152,7 @@ class StorageBase {
         }
 
         //noinspection AutoBoxing
-        this.logger.info("Storage version: {}", this.databaseVersion);
+        logger.info("Storage version: {}", this.databaseVersion);
 
 
         // If we want to use compression (no need really, since this file is small already),
@@ -291,7 +291,7 @@ class StorageBase {
 
             return readRecordData;
         } catch (KryoException e) {
-            this.logger.error("Error while getting data from disk. Ignoring previous value.");
+            this.logger.error("Error while getting data from disk. Ignoring previous value.", e);
             return null;
         } catch (Exception e) {
             this.logger.error("Error while getting data from disk", e);
