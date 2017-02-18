@@ -8,7 +8,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="kryo3" level="application" />
     <orderEntry type="library" name="bouncyCastle bcprov-jdk15on" level="application" />
     <orderEntry type="library" name="jna" level="application" />
     <orderEntry type="library" scope="TEST" name="junit-4.12" level="application" />
@@ -16,9 +15,10 @@
     <orderEntry type="library" name="logging slf4j-api" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
-    <orderEntry type="library" name="reflectasm" level="application" />
+    <orderEntry type="library" name="kryo" level="application" />
     <orderEntry type="library" name="lz4_xxhash" level="application" />
     <orderEntry type="library" name="lzma-java" level="application" />
+    <orderEntry type="library" name="reflectasm" level="application" />
     <orderEntry type="library" name="dorkbox message_bus" level="application" />
     <orderEntry type="library" name="dorkbox object_pool" level="application" />
   </component>
