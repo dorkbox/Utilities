@@ -33,7 +33,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
-import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -111,7 +110,9 @@ class StorageBase {
         this.serializationManager = serializationManager;
         this.logger = logger;
 
-        this.logger.info("Opening storage file: '{}'", filePath.getAbsolutePath());
+        if (logger != null) {
+            logger.info("Opening storage file: '{}'", filePath.getAbsolutePath());
+        }
 
         this.baseFile = filePath;
 
@@ -146,13 +147,17 @@ class StorageBase {
             this.dataPosition = this.randomAccessFile.readLong();
 
             if (this.randomAccessFile.length() < this.dataPosition) {
-                this.logger.error("Corrupted storage file!");
+                if (logger != null) {
+                    logger.error("Corrupted storage file!");
+                }
                 throw new IllegalArgumentException("Unable to parse header information from storage. Maybe it's corrupted?");
             }
         }
 
         //noinspection AutoBoxing
-        logger.info("Storage version: {}", this.databaseVersion);
+        if (logger != null) {
+            logger.info("Storage version: {}", this.databaseVersion);
+        }
 
 
         // If we want to use compression (no need really, since this file is small already),
@@ -182,7 +187,9 @@ class StorageBase {
 
             if (this.memoryIndex.size() != this.numberOfRecords) {
                 setRecordCount(this.randomAccessFile, this.memoryIndex.size());
-                this.logger.warn("Mismatch record count in storage, auto-correcting size.");
+                if (logger != null) {
+                   logger.warn("Mismatch record count in storage, auto-correcting size.");
+                }
             }
         }
     }
@@ -290,11 +297,13 @@ class StorageBase {
             }
 
             return readRecordData;
-        } catch (KryoException e) {
-            this.logger.error("Error while getting data from disk. Ignoring previous value.", e);
-            return null;
         } catch (Exception e) {
-            this.logger.error("Error while getting data from disk", e);
+            if (this.logger != null) {
+                this.logger.error("Error while getting data from disk", e);
+            }
+            else {
+                e.printStackTrace();
+            }
             return null;
         }
     }
@@ -315,7 +324,11 @@ class StorageBase {
             deleteRecordIndex(key, delRec);
             return true;
         } catch (IOException e) {
-            this.logger.error("Error while deleting data from disk", e);
+            if (this.logger != null) {
+                this.logger.error("Error while deleting data from disk", e);
+            } else {
+                e.printStackTrace();
+            }
             return false;
         }
     }
@@ -328,7 +341,9 @@ class StorageBase {
         // pending ops flushed (protected by lock)
         // not protected by lock
 
-        this.logger.info("Closing storage file: '{}'", this.baseFile.getAbsolutePath());
+        if (this.logger != null) {
+            this.logger.info("Closing storage file: '{}'", this.baseFile.getAbsolutePath());
+        }
 
         try {
             this.randomAccessFile.getFD()
@@ -338,7 +353,11 @@ class StorageBase {
             this.memoryIndex.clear();
 
         } catch (IOException e) {
-            this.logger.error("Error while closing the file", e);
+            if (this.logger != null) {
+                this.logger.error("Error while closing the file", e);
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -352,7 +371,11 @@ class StorageBase {
         try {
             return this.randomAccessFile.length();
         } catch (IOException e) {
-            this.logger.error("Error getting file size for {}", this.baseFile.getAbsolutePath(), e);
+            if (this.logger != null) {
+                this.logger.error("Error getting file size for {}", this.baseFile.getAbsolutePath(), e);
+            } else {
+                e.printStackTrace();
+            }
             return -1L;
         }
     }
@@ -423,7 +446,11 @@ class StorageBase {
 
                 metaData.writeDataInfo(this.randomAccessFile);
             } catch (IOException e) {
-                this.logger.error("Error while saving data to disk", e);
+                if (this.logger != null) {
+                    this.logger.error("Error while saving data to disk", e);
+                } else {
+                    e.printStackTrace();
+                }
             }
         }
         else {
@@ -464,7 +491,11 @@ class StorageBase {
                 // have to save it.
                 metaData.writeDataInfo(this.randomAccessFile);
             } catch (IOException e) {
-                this.logger.error("Error while writing data to disk", e);
+                if (this.logger != null) {
+                    this.logger.error("Error while writing data to disk", e);
+                } else {
+                    e.printStackTrace();
+                }
                 return;
             }
         }
@@ -570,7 +601,11 @@ class StorageBase {
                     // because there is no "previous", that means we MIGHT be the FIRST record
                     // well, we're not the first record. which one is RIGHT before us?
                     // it should be "previous", so something messed up
-                    this.logger.error("Trying to delete an object, and it's in a weird state");
+                    if (this.logger != null) {
+                        this.logger.error("Trying to delete an object, and it's in a weird state");
+                    } else {
+                        System.err.println("Trying to delete an object, and it's in a weird state");
+                    }
                 }
             }
         }
@@ -652,7 +687,11 @@ class StorageBase {
         try {
             setVersion(this.randomAccessFile, versionNumber);
         } catch (IOException e) {
-            this.logger.error("Unable to set the version number", e);
+            if (this.logger != null) {
+                this.logger.error("Unable to set the version number", e);
+            } else {
+                e.printStackTrace();
+            }
         }
     }
 

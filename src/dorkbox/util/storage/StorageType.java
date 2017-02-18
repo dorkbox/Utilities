@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
-import org.slf4j.helpers.NOPLogger;
 
 import dorkbox.util.FileUtil;
 import dorkbox.util.SerializationManager;
@@ -157,10 +156,6 @@ class StorageType {
 
             if (this.serializationManager == null) {
                 throw new IllegalArgumentException("serializer cannot be null!");
-            }
-
-            if (this.logger == null) {
-                this.logger = NOPLogger.NOP_LOGGER;
             }
 
             // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
