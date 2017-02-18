@@ -38,22 +38,22 @@ interface Storage {
     /**
      * Reads a object using the DEFAULT key ("") key, and casts it to the expected class
      */
-    <T> T get();
+    <T> T get() throws IOException;
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(String key);
+    <T> T get(String key) throws IOException;
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(byte[] key);
+    <T> T get(byte[] key) throws IOException;
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(ByteArrayWrapper key);
+    <T> T get(ByteArrayWrapper key) throws IOException;
 
     /**
      * Uses the DEFAULT key ("") to return saved data.

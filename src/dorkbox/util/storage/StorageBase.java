@@ -33,9 +33,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
+import dorkbox.util.OS;
 import dorkbox.util.SerializationManager;
 import dorkbox.util.bytes.ByteArrayWrapper;
 
@@ -251,7 +253,7 @@ class StorageBase {
      * @return an object for a specified key form referenceCache FIRST, then from DISK
      */
     final
-    <T> T get(ByteArrayWrapper key) {
+    <T> T get(ByteArrayWrapper key) throws IOException {
         // NOT protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -298,13 +300,11 @@ class StorageBase {
 
             return readRecordData;
         } catch (Exception e) {
-            if (this.logger != null) {
-                this.logger.error("Error while getting data from disk", e);
+            if (e instanceof KryoException && e.getMessage().contains("(missing no-arg constructor)")) {
+                throw new IOException("Cannot get data from disk: " + e.getMessage().substring(0, e.getMessage().indexOf(OS.LINE_SEPARATOR)));
+            } else {
+                throw new IOException("Cannot get data from disk", e);
             }
-            else {
-                e.printStackTrace();
-            }
-            return null;
         }
     }
 

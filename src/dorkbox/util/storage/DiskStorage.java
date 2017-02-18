@@ -35,6 +35,7 @@ import dorkbox.util.bytes.ByteArrayWrapper;
  * <p/>
  * Be wary of opening the database file in different JVM instances. Even with file-locks, you can corrupt the data.
  */
+@SuppressWarnings({"Convert2Diamond", "Convert2Lambda"})
 class DiskStorage implements Storage {
     private final DelayTimer timer;
     private final ByteArrayWrapper defaultKey;
@@ -122,37 +123,45 @@ class DiskStorage implements Storage {
 
     /**
      * Reads a object using the default (blank) key, and casts it to the expected class
+     *
+     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get() {
+    <T> T get() throws IOException {
         return get0(this.defaultKey);
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
+     *
+     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(String key) {
+    <T> T get(String key) throws IOException {
         return get0(ByteArrayWrapper.wrap(key));
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
+     *
+     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(byte[] key) {
+    <T> T get(byte[] key) throws IOException {
         return get0(ByteArrayWrapper.wrap(key));
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
+     *
+     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(ByteArrayWrapper key) {
+    <T> T get(ByteArrayWrapper key) throws IOException {
         return get0(key);
     }
 
@@ -223,9 +232,11 @@ class DiskStorage implements Storage {
 
     /**
      * Reads a object from pending or from storage
+     *
+     * @throws IOException if there is a problem deserializing data from disk
      */
     private
-    <T> T get0(ByteArrayWrapper key) {
+    <T> T get0(ByteArrayWrapper key) throws IOException {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
