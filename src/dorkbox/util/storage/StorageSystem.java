@@ -22,12 +22,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.slf4j.Logger;
+import org.slf4j.helpers.NOPLogger;
 
 import dorkbox.util.FileUtil;
 import dorkbox.util.SerializationManager;
 
 public
-class StorageType {
+class StorageSystem {
     @SuppressWarnings("SpellCheckingInspection")
     private static final Map<File, Storage> storages = new HashMap<File, Storage>(1);
 
@@ -36,7 +37,7 @@ class StorageType {
         @Override
         public
         void run() {
-            StorageType.shutdown();
+            StorageSystem.shutdown();
         }
     });
 
@@ -46,21 +47,28 @@ class StorageType {
                .addShutdownHook(shutdownHook);
     }
 
+    /**
+     * Creates a persistent, on-disk storage system. Writes to disk are queued, so it is recommended to NOT edit/change an object after
+     * it has been put into storage, or whenever it does changes, make sure to put it back into storage (to update the saved record)
+     */
     public static
     DiskMaker Disk() {
         return new DiskMaker();
     }
 
+    /**
+     * Creates an in-memory only storage system
+     */
     public static
     MemoryMaker Memory() {
         return new MemoryMaker();
     }
 
     /**
-     * Closes the storage.
+     * Closes the specified storage system based on the file used
      */
     public static
-    void close(File file) {
+    void close(final File file) {
         synchronized (storages) {
             Storage storage = storages.get(file);
             if (storage != null) {
@@ -77,24 +85,27 @@ class StorageType {
     }
 
     /**
-     * Closes the storage.
+     * Closes the specified storage system
      */
     public static
-    void close(Storage _storage) {
+    void close(final Storage storage) {
         synchronized (storages) {
-            File file = _storage.getFile();
+            File file = storage.getFile();
             close(file);
         }
     }
 
+    /**
+     * Saves and closes all open storage systems
+     */
     public static
     void shutdown() {
         synchronized (storages) {
             Collection<Storage> values = storages.values();
             for (Storage storage : values) {
                 if (storage instanceof DiskStorage) {
-                    //noinspection StatementWithEmptyBody
                     final DiskStorage diskStorage = (DiskStorage) storage;
+                    //noinspection StatementWithEmptyBody
                     while (!diskStorage.decrementReference()) {
                     }
                     diskStorage.close();
@@ -104,6 +115,11 @@ class StorageType {
         }
     }
 
+    /**
+     * Closes (if in use) and deletes the specified storage file.
+     * <p>
+     * The file is checked to see if it is in use by the storage system first, and closes if so.
+     */
     public static
     void delete(File file) {
         synchronized (storages) {
@@ -116,13 +132,20 @@ class StorageType {
         }
     }
 
+    /**
+     * Closes (if in use) and deletes the specified storage.
+     */
     public static
     void delete(Storage storage) {
         File file = storage.getFile();
         delete(file);
     }
 
-
+    /**
+     * Creates a persistent, on-disk storage system. Writes to disk are queued, so it is recommended to NOT edit/change an object after
+     * it has been put into storage, or whenever it does changes, make sure to put it back into storage (to update the saved record)
+     */
+    @SuppressWarnings("unused")
     public static
     class DiskMaker {
         private File file;
@@ -130,24 +153,64 @@ class StorageType {
         private boolean readOnly = false;
         private Logger logger = null;
 
+        /**
+         * Specify the file to write to on disk when saving objects
+         */
         public
         DiskMaker file(File file) {
             this.file = FileUtil.normalize(file);
             return this;
         }
 
+        /**
+         * Specify the file to write to on disk when saving objects
+         */
         public
         DiskMaker file(String file) {
             this.file = FileUtil.normalize(file);
             return this;
         }
 
+        /**
+         * Specify the serialization manager to use. This is what serializes the files (which are then saved to disk)
+         */
         public
         DiskMaker serializer(SerializationManager serializationManager) {
             this.serializationManager = serializationManager;
             return this;
         }
 
+        /**
+         * Mark this storage system as read only
+         */
+        public
+        DiskMaker readOnly() {
+            this.readOnly = true;
+            return this;
+        }
+
+        /**
+         * Assigns a logger to use for the storage system. If null, then only errors will be logged to the error console.
+         */
+        public
+        DiskMaker logger(final Logger logger) {
+            this.logger = logger;
+            return this;
+        }
+
+        /**
+         * Assigns a No Operation (NOP) logger which will ignore everything. This is not recommended for normal use, as it will also
+         * suppress serialization errors.
+         */
+        public
+        DiskMaker nologger() {
+            this.logger = NOPLogger.NOP_LOGGER;
+            return this;
+        }
+
+        /**
+         * Makes the storage system
+         */
         public
         Storage make() {
             if (this.file == null) {
@@ -188,23 +251,18 @@ class StorageType {
                 return storage;
             }
         }
-
-        public
-        DiskMaker readOnly() {
-            this.readOnly = true;
-            return this;
-        }
-
-        public
-        DiskMaker logger(final Logger logger) {
-            this.logger = logger;
-            return this;
-        }
     }
 
 
+    /**
+     * Creates an in-memory only storage system
+     */
     public static
     class MemoryMaker {
+
+        /**
+         * Makes the storage system
+         */
         public
         MemoryStorage make() throws IOException {
             return new MemoryStorage();
