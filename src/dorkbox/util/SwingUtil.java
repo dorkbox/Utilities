@@ -22,6 +22,8 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.FontFormatException;
+import java.awt.FontMetrics;
+import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -34,6 +36,7 @@ import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowListener;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -236,6 +239,40 @@ class SwingUtil {
                     }
                 }
             });
+        }
+    }
+
+    /**
+     * Gets the correct font (in GENERAL) for a specified pixel height.
+     * @param font the font we are checking
+     * @param height the height in pixels we want to get as close as possible to
+     *
+     * @return the font (derived from the specified font) that is as close as possible to the requested height
+     */
+    private static
+    Font getFontForSpecificHeight(final Font font, final int height) {
+        int size = font.getSize();
+        Boolean lastAction = null;
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+
+        while (true) {
+            Font fontCheck = new Font(font.getName(), Font.PLAIN, size);
+
+            FontMetrics metrics = g.getFontMetrics(fontCheck);
+            Rectangle2D rect = metrics.getStringBounds("Tj|", g);  // Tj| are letters that are at the top/bottom of the fontset (usually)
+            int testHeight = (int) rect.getHeight();
+
+            if (testHeight < height && lastAction != Boolean.FALSE) {
+                size++;
+                lastAction = Boolean.TRUE;
+            } else if (testHeight > height && lastAction != Boolean.TRUE) {
+                size--;
+                lastAction = Boolean.FALSE;
+            } else {
+                // either we are the exact size, or we are ONE font size to big/small (depending on what our initial guess was)
+                return fontCheck;
+            }
         }
     }
 
