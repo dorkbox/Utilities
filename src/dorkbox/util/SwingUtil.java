@@ -53,17 +53,10 @@ import javax.swing.UIManager;
 
 public
 class SwingUtil {
-    /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
-    @Property
-    public static boolean LOAD_ALL_FONTS = false;
 
     /** Default location where all the fonts are stored */
     @Property
     public static String FONTS_LOCATION = "resources/fonts";
-
-    /** Sets the entire L&F to the Nimbus L&F. Set this to a different one (or null to disable) */
-    @Property
-    public static String CUSTOM_LOOK_AND_FEEL = null;
 
     static {
         /*
@@ -75,70 +68,87 @@ class SwingUtil {
          * event).
          */
         Toolkit.getDefaultToolkit();
+    }
 
-        // loads fonts into the system, and sets the default look and feel.
-        if (LOAD_ALL_FONTS) {
-            boolean isJava6 = OS.javaVersion == 6;
-
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            Enumeration<URL> fonts = LocationResolver.getResources(FONTS_LOCATION);
-            if (fonts.hasMoreElements()) {
-                // skip the FIRST one, since we always know that the first one is the directory we asked for
-                fonts.nextElement();
-
-                while (fonts.hasMoreElements()) {
-                    URL url = fonts.nextElement();
-                    InputStream is = null;
-
-                    //noinspection TryWithIdenticalCatches
-                    try {
-                        String path = url.toURI()
-                                         .getPath();
-
-                        // only support TTF fonts (java6) and OTF fonts (7+).
-                        if (path.endsWith(".ttf") || (!isJava6 && path.endsWith(".otf"))) {
-                            is = url.openStream();
-
-                            Font newFont = Font.createFont(Font.TRUETYPE_FONT, is);
-                            // fonts that ALREADY exist are not re-registered
-                            ge.registerFont(newFont);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (URISyntaxException e) {
-                        e.printStackTrace();
-                    } catch (FontFormatException e) {
-                        e.printStackTrace();
-                    } finally {
-                        if (is != null) {
-                            try {
-                                is.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
+    /**
+     * Sets the entire L&F based on "simple" name. Null to set to the system L&F. If this is not called (or set), Swing will use the
+     * default CrossPlatform L&F, which is 'Metal'
+     *
+     * @param lookAndFeel the simple name or null for the system default
+     */
+    public static
+    void setLookAndFeel(final String lookAndFeel) {
+        if (lookAndFeel == null) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+            return;
         }
 
+        // register a different L&F
+        String specified = lookAndFeel.toLowerCase(Locale.US).trim();
+        String current = UIManager.getLookAndFeel().getName().toLowerCase(Locale.US);
 
-        if (CUSTOM_LOOK_AND_FEEL != null && !CUSTOM_LOOK_AND_FEEL.isEmpty()) {
-            // register a different L&F
-            String specified = CUSTOM_LOOK_AND_FEEL.toLowerCase(Locale.US);
-            String current = UIManager.getLookAndFeel().getName().toLowerCase(Locale.US);
+        if (!specified.equals(current)) {
+            try {
+                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                    if (specified.equals(info.getName().toLowerCase(Locale.US))) {
+                        UIManager.setLookAndFeel(info.getClassName());
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                // whoops. something isn't right!
+                e.printStackTrace();
+            }
+        }
+    }
 
-            if (!specified.equals(current)) {
+    /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
+    public static
+    void loadAllFonts() {
+        boolean isJava6 = OS.javaVersion == 6;
+
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        Enumeration<URL> fonts = LocationResolver.getResources(FONTS_LOCATION);
+
+        if (fonts.hasMoreElements()) {
+            // skip the FIRST one, since we always know that the first one is the directory we asked for
+            fonts.nextElement();
+
+            while (fonts.hasMoreElements()) {
+                URL url = fonts.nextElement();
+                InputStream is = null;
+
+                //noinspection TryWithIdenticalCatches
                 try {
-                    for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                        if (specified.equals(info.getName().toLowerCase(Locale.US))) {
-                            UIManager.setLookAndFeel(info.getClassName());
-                            break;
+                    String path = url.toURI()
+                                     .getPath();
+
+                    // only support TTF fonts (java6) and OTF fonts (7+).
+                    if (path.endsWith(".ttf") || (!isJava6 && path.endsWith(".otf"))) {
+                        is = url.openStream();
+
+                        Font newFont = Font.createFont(Font.TRUETYPE_FONT, is);
+                        // fonts that ALREADY exist are not re-registered
+                        ge.registerFont(newFont);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                } catch (FontFormatException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (is != null) {
+                        try {
+                            is.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
-                } catch (Exception e) {
-                    // whoops. something isn't right!
-                    e.printStackTrace();
                 }
             }
         }
