@@ -45,6 +45,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.Locale;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -123,23 +124,21 @@ class SwingUtil {
 
 
         if (CUSTOM_LOOK_AND_FEEL != null && !CUSTOM_LOOK_AND_FEEL.isEmpty()) {
-            // register a better looking L&F (default we use is Nimbus)
-            String name = UIManager.getLookAndFeel().getName();
+            // register a different L&F
+            String specified = CUSTOM_LOOK_AND_FEEL.toLowerCase(Locale.US);
+            String current = UIManager.getLookAndFeel().getName().toLowerCase(Locale.US);
 
-            if (!CUSTOM_LOOK_AND_FEEL.equals(name)) {
+            if (!specified.equals(current)) {
                 try {
                     for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                        if (CUSTOM_LOOK_AND_FEEL.equals(info.getName())) {
+                        if (specified.equals(info.getName().toLowerCase(Locale.US))) {
                             UIManager.setLookAndFeel(info.getClassName());
                             break;
                         }
                     }
                 } catch (Exception e) {
-                    // If Nimbus is not available, fall back to cross-platform
-                    try {
-                        UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-                    } catch (Exception ignored) {
-                    }
+                    // whoops. something isn't right!
+                    e.printStackTrace();
                 }
             }
         }
