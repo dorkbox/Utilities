@@ -44,10 +44,13 @@ class OSUtil {
          *
          * Windows Home Server		5.2.3790  (2007-06-16)
          *
+         * -------------------------------------------------
+         *
          * Windows Vista	        6.0.6000  (2006-11-08)
          * Windows Server 2008 SP1	6.0.6001  (2008-02-27)
          * Windows Server 2008 SP2	6.0.6002  (2009-04-28)
          *
+         * -------------------------------------------------
          *
          * Windows 7                    6.1.7600  (2009-10-22)
          * Windows Server 2008 R2       6.1.7600  (2009-10-22)
@@ -55,18 +58,23 @@ class OSUtil {
          *
          * Windows Home Server 2011		6.1.8400  (2011-04-05)
          *
+         * -------------------------------------------------
+         *
          * Windows 8                    6.2.9200  (2012-10-26)
          * Windows Server 2012	        6.2.9200  (2012-09-04)
          *
+         * -------------------------------------------------
+         *
          * Windows 8.1                  6.3.9600  (2013-10-18)
          * Windows Server 2012 R2       6.3.9600  (2013-10-18)
+         *
+         * -------------------------------------------------
          *
          * Windows 10	                10.0.10240  (2015-07-29)
          * Windows 10	                10.0.10586  (2015-11-12)
          * Windows 10	                10.0.14393  (2016-07-18)
          *
          * Windows Server 2016          10.0.14393  (2016-10-12)
-         *
          *
          * @return the [major][minor][patch] version of windows, ie: Windows Version 10.0.10586 -> [10][0][10586]
          */
@@ -114,6 +122,58 @@ class OSUtil {
             }
 
             return version;
+        }
+
+        /**
+         * @return is windows XP or equivalent
+         */
+        public static
+        boolean isWindowsXP() {
+            return getVersion()[0] == 5;
+        }
+
+        /**
+         * @return is windows Vista or equivalent
+         */
+        public static
+        boolean isWindowsVista() {
+            int[] version = getVersion();
+            return version[0] == 6 && version[1] == 0;
+        }
+
+        /**
+         * @return is windows 7 or equivalent
+         */
+        public static
+        boolean isWindows7() {
+            int[] version = getVersion();
+            return version[0] == 6 && version[1] == 1;
+        }
+
+        /**
+         * @return is windows 8 or equivalent
+         */
+        public static
+        boolean isWindows8() {
+            int[] version = getVersion();
+            return version[0] == 6 && version[1] == 2;
+        }
+
+        /**
+         * @return is windows 8.1 or equivalent
+         */
+        public static
+        boolean isWindows8_1() {
+            int[] version = getVersion();
+            return version[0] == 6 && version[1] == 3;
+        }
+
+        /**
+         * @return is windows 10 or equivalent
+         */
+        public static
+        boolean isWindows10() {
+            return getVersion()[0] == 10;
         }
     }
 
