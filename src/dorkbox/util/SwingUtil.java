@@ -272,7 +272,7 @@ class SwingUtil {
             Font fontCheck = new Font(font.getName(), Font.PLAIN, size);
 
             FontMetrics metrics = g.getFontMetrics(fontCheck);
-            Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are letters that are at the top/bottom of the fontset (usually)
+            Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are glyphs that are at the top/bottom of the fontset (usually)
             int testHeight = (int) rect.getHeight();
 
             if (testHeight < height && lastAction != Boolean.FALSE) {
