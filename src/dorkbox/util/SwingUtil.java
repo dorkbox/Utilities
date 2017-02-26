@@ -96,7 +96,7 @@ class SwingUtil {
                 for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
                     if (specified.equals(info.getName().toLowerCase(Locale.US))) {
                         UIManager.setLookAndFeel(info.getClassName());
-                        break;
+                        return;
                     }
                 }
             } catch (Exception e) {
@@ -104,6 +104,9 @@ class SwingUtil {
                 e.printStackTrace();
             }
         }
+
+        // this means we couldn't find our L&F
+        new Exception("Could not load " + lookAndFeel + ", it was not available.").printStackTrace();
     }
 
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
@@ -269,7 +272,7 @@ class SwingUtil {
             Font fontCheck = new Font(font.getName(), Font.PLAIN, size);
 
             FontMetrics metrics = g.getFontMetrics(fontCheck);
-            Rectangle2D rect = metrics.getStringBounds("Tj|", g);  // Tj| are letters that are at the top/bottom of the fontset (usually)
+            Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are letters that are at the top/bottom of the fontset (usually)
             int testHeight = (int) rect.getHeight();
 
             if (testHeight < height && lastAction != Boolean.FALSE) {
