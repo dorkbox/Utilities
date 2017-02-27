@@ -76,46 +76,25 @@ class OSUtil {
          *
          * Windows Server 2016          10.0.14393  (2016-10-12)
          *
-         * @return the [major][minor][patch] version of windows, ie: Windows Version 10.0.10586 -> [10][0][10586]
+         * @return the [major][minor] version of windows, ie: Windows Version 10.0.10586 -> [10][0]
          */
         public static
         int[] getVersion() {
-            int[] version = new int[3];
+            int[] version = new int[2];
             version[0] = 0;
             version[1] = 0;
-            version[2] = 0;
 
             if (!OS.isWindows()) {
                 return version;
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+                String output = System.getProperty("os.version");
+                String[] split = output.split("\\.",-1);
 
-                // cmd.exe /c ver
-                final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
-                shellVersion.setExecutable("cmd.exe");
-                shellVersion.addArgument("/c");
-                shellVersion.addArgument("ver");
-                shellVersion.start();
-
-                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
-
-                if (!output.isEmpty()) {
-                    // should be: Microsoft Windows [Version 10.0.10586]   or something
-                    if (output.contains("ersion ")) {
-                        int beginIndex = output.indexOf("ersion ") + 7;
-                        int endIndex = output.lastIndexOf("]");
-
-                        String versionString = output.substring(beginIndex, endIndex);
-                        String[] split = versionString.split("\\.",-1);
-
-                        if (split.length <= 3) {
-                            for (int i = 0; i < split.length; i++) {
-                                version[i] = Integer.parseInt(split[i]);
-                            }
-                        }
+                if (split.length <= 2) {
+                    for (int i = 0; i < split.length; i++) {
+                        version[i] = Integer.parseInt(split[i]);
                     }
                 }
             } catch (Throwable ignored) {
