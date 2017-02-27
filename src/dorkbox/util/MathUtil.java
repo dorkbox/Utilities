@@ -94,6 +94,11 @@ class MathUtil {
     // ---
 
 
+    public static
+    boolean isEven(int value) {
+        return (value & 1) == 0;
+    }
+
     /**
      * Returns the next power of two. Returns the specified value if the value is already a power of two.
      */
