@@ -19,80 +19,176 @@ package dorkbox.util;
 public
 class MathUtil {
 
-    private static final FastThreadLocal<MersenneTwisterFast> random = new FastThreadLocal<MersenneTwisterFast>() {
-        @Override
-        public
-        MersenneTwisterFast initialValue() {
-            return new MersenneTwisterFast();
+    /**
+     * Checks to see if the string is an integer
+     *
+     * @return true if it's an integer, false otherwise
+     */
+    public static
+    boolean isInteger(final String string) {
+        return isNumber(string, 10);
+    }
+
+    /**
+     * Checks to see if the string is a long
+     *
+     * @return true if it's a long, false otherwise
+     */
+    public static
+    boolean isLong(final String string) {
+        return isNumber(string, 19);
+    }
+
+    /**
+     * Checks to see if the string is a number
+     *
+     * @return true if it's a number, false otherwise
+     */
+    public static
+    boolean isNumber(final String string, long sizeLimit) {
+        if (string == null) {
+            return false;
         }
-    };
+        if (sizeLimit <= 0) {
+            return false;
+        }
 
-    /**
-     * Creates the thread local MersenneTwister (as it's not thread safe), if necessary
-     */
-    public static
-    MersenneTwisterFast random() {
-        return random.get();
+        int length = string.length();
+        if (length == 0) {
+            return false;
+        }
+
+        int i = 0;
+        if (string.charAt(0) == '-') {
+            if (length == 1) {
+                return false;
+            }
+            i = 1;
+        }
+
+        if (length - i > sizeLimit) {
+            return false;
+        }
+
+        for (; i < length; i++) {
+            char c = string.charAt(i);
+            if (c < '0' || c > '9') {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
-     * Returns a random integer
+     * Gets the number of digits represented by the specified number
+     *
+     * @param number the number to check, negative numbers are also acceptable but the sign is not counted
+     *
+     * @return the number of digits of the number, from 1-19.
      */
     public static
-    int randomInt() {
-        return random.get().nextInt();
+    int numberOfDigits(long number) {
+        // have to make it always positive for the following checks to pass.
+        if (number < 0L) {
+            number = -number;
+        }
+
+        // Guessing 4 digit numbers will be more probable.
+        // They are set in the first branch.
+        if (number < 10000L) { // from 1 to 4
+            if (number < 100L) { // 1 or 2
+                if (number < 10L) {
+                    return 1;
+                }
+                else {
+                    return 2;
+                }
+            }
+            else { // 3 or 4
+                if (number < 1000L) {
+                    return 3;
+                }
+                else {
+                    return 4;
+                }
+            }
+        }
+        else { // from 5 to 20 (albeit longs can't have more than 18 or 19)
+            if (number < 1000000000000L) { // from 5 to 12
+                if (number < 100000000L) { // from 5 to 8
+                    if (number < 1000000L) { // 5 or 6
+                        if (number < 100000L) {
+                            return 5;
+                        }
+                        else {
+                            return 6;
+                        }
+                    }
+                    else { // 7 u 8
+                        if (number < 10000000L) {
+                            return 7;
+                        }
+                        else {
+                            return 8;
+                        }
+                    }
+                }
+                else { // from 9 to 12
+                    if (number < 10000000000L) { // 9 or 10
+                        if (number < 1000000000L) {
+                            return 9;
+                        }
+                        else {
+                            return 10;
+                        }
+                    }
+                    else { // 11 or 12
+                        if (number < 100000000000L) {
+                            return 11;
+                        }
+                        else {
+                            return 12;
+                        }
+                    }
+                }
+            }
+            else { // from 13 to ... (18 or 20)
+                if (number < 10000000000000000L) { // from 13 to 16
+                    if (number < 100000000000000L) { // 13 or 14
+                        if (number < 10000000000000L) {
+                            return 13;
+                        }
+                        else {
+                            return 14;
+                        }
+                    }
+                    else { // 15 or 16
+                        if (number < 1000000000000000L) {
+                            return 15;
+                        }
+                        else {
+                            return 16;
+                        }
+                    }
+                }
+                else { // from 17 to ... 20?
+                    if (number < 1000000000000000000L) { // 17 or 18
+                        if (number < 100000000000000000L) {
+                            return 17;
+                        }
+                        else {
+                            return 18;
+                        }
+                    }
+                    else { // 19? Can it be?
+                        // 10000000000000000000L isn't a valid long.
+                        return 19;
+                    }
+                }
+            }
+        }
     }
-
-    /**
-     * Returns a random number between 0 (inclusive) and the specified value (inclusive).
-     */
-    public static
-    int randomInt(int range) {
-        return random.get().nextInt(range + 1);
-    }
-
-    /**
-     * Returns a random number between start (inclusive) and end (inclusive).
-     */
-    public static
-    int randomInt(int start, int end) {
-        return start + random.get().nextInt(end - start + 1);
-    }
-
-    /**
-     * Returns a random boolean value.
-     */
-    public static
-    boolean randomBoolean() {
-        return random.get().nextBoolean();
-    }
-
-    /**
-     * Returns random number between 0.0 (inclusive) and 1.0 (exclusive).
-     */
-    public static
-    float randomFloat() {
-        return random.get().nextFloat();
-    }
-
-    /**
-     * Returns a random number between 0 (inclusive) and the specified value (exclusive).
-     */
-    public static
-    float randomFloat(float range) {
-        return random.get().nextFloat() * range;
-    }
-
-    /**
-     * Returns a random number between start (inclusive) and end (exclusive).
-     */
-    public static
-    float randomFloat(float start, float end) {
-        return start + random.get().nextFloat() * (end - start);
-    }
-
-    // ---
-
 
     public static
     boolean isEven(int value) {
