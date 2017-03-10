@@ -15,6 +15,7 @@
  */
 package dorkbox.util;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Desktop;
@@ -30,6 +31,7 @@ import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.HierarchyEvent;
@@ -47,6 +49,8 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Locale;
 
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -104,6 +108,39 @@ class SwingUtil {
                 e.printStackTrace();
             }
         }
+
+        // display all properties for the specified look and feel
+//        Set<Map.Entry<Object, Object>> entries = UIManager.getLookAndFeelDefaults()
+//                                                          .entrySet();
+//        for (Map.Entry<Object, Object> e : entries) {
+//            String key;
+//
+//
+//            if (e.getKey() instanceof StringBuffer) {
+//                StringBuffer s = (StringBuffer) e.getKey();
+//                key = s.toString();
+//            }
+//            else {
+//                key = (String) e.getKey();
+//            }
+//
+//            //Print all the keys available in UI manager
+//            if (e.getValue() != null && (key.toLowerCase().contains("icon") || key.toLowerCase().contains("image"))) {
+//                System.out.println("Key:  " + key);
+//            }
+//
+//            if (key.endsWith("TabbedPane.font")) {
+//                Font font = UIManager.getFont(key);
+//                Font biggerFont = font.deriveFont(2 * font.getSize2D());
+//                // change ui default to bigger font
+//                UIManager.put(key, biggerFont);
+//            }
+//            else if (key.endsWith("Tree.rowHeight")) {
+//                int rowHeight = UIManager.getInt(key);
+//                int bigRowHeight = 2 * rowHeight;
+//                UIManager.put(key, bigRowHeight);
+//            }
+//        }
 
         // this means we couldn't find our L&F
         new Exception("Could not load " + lookAndFeel + ", it was not available.").printStackTrace();
@@ -256,12 +293,14 @@ class SwingUtil {
 
     /**
      * Gets the correct font (in GENERAL) for a specified pixel height.
+     *
      * @param font the font we are checking
      * @param height the height in pixels we want to get as close as possible to
      *
-     * @return the font (derived from the specified font) that is as close as possible to the requested height
+     * @return the font (derived from the specified font) that is as close as possible to the requested height. If our font-size is less
+     *          than the height, then the approach is from the low size (so the returned font will always fit inside the box)
      */
-    private static
+    public static
     Font getFontForSpecificHeight(final Font font, final int height) {
         int size = font.getSize();
         Boolean lastAction = null;
@@ -273,7 +312,7 @@ class SwingUtil {
 
             FontMetrics metrics = g.getFontMetrics(fontCheck);
             Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are glyphs that are at the top/bottom of the fontset (usually)
-            int testHeight = (int) rect.getHeight();
+            double testHeight = rect.getHeight();
 
             if (testHeight < height && lastAction != Boolean.FALSE) {
                 size++;
@@ -283,10 +322,121 @@ class SwingUtil {
                 lastAction = Boolean.FALSE;
             } else {
                 // either we are the exact size, or we are ONE font size to big/small (depending on what our initial guess was)
+                g.dispose();
                 return fontCheck;
             }
         }
     }
+
+
+    /**
+     * Gets the specified font height
+     * @param font
+     * @return
+     */
+    public static
+    int getFontHeight(final Font font) {
+        // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = image.createGraphics();
+
+        FontMetrics metrics = g.getFontMetrics(font);
+        Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are glyphs that are at the top/bottom of the fontset (usually)
+        int testHeight = (int) rect.getHeight();
+
+        g.dispose();
+
+        return testHeight;
+    }
+
+    /**
+     * Gets the specified text (with a font) and as an image
+     * @param font
+     * @return
+     */
+    public static
+    BufferedImage getFontAsImage(final Font font, String text, Color foregroundColor) {
+        // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
+        BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = img.createGraphics();
+        g2d.setFont(font);
+
+        FontMetrics fm = g2d.getFontMetrics();
+        int width = fm.stringWidth(text);
+        int height = fm.getHeight();
+        g2d.dispose();
+
+        // make it square
+        if (width > height) {
+            height = width;
+        } else {
+            width = height;
+        }
+
+        img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        g2d = img.createGraphics();
+
+        g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_DITHERING, RenderingHints.VALUE_DITHER_ENABLE);
+        g2d.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+
+        g2d.setFont(font);
+        fm = g2d.getFontMetrics();
+
+        g2d.setColor(foregroundColor);
+
+        // width/4 centers the text in the image
+        g2d.drawString(text, width/4, fm.getAscent());
+        g2d.dispose();
+
+        return img;
+    }
+
+    /**
+     * Gets the largest icon/image for a button (or other JComponent that has .setIcon(image) method) without affecting the size of the
+     * button. An image that is any larger will require that the button increases it's height or width.
+     *
+     * @param button The button (or JMenuItem, etc that has the .setIcon() method ) that you want to measure
+     *
+     * @return the largest height of an icon before the button will increase in size (as a result of a larger image)
+     */
+    public static
+    int getLargestIconHeightForButton(AbstractButton button) {
+        // of note, components can ALSO have different sizes attached to them!
+        // mini
+        //      myButton.putClientProperty("JComponent.sizeVariant", "mini");
+        // small
+        //      mySlider.putClientProperty("JComponent.sizeVariant", "small");
+        // large
+        //      myTextField.putClientProperty("JComponent.sizeVariant", "large");
+
+        int minHeight = 0;
+        int iconSize = 0;
+        for (int i = 1; i < 128; i++) {
+            ImageIcon imageIcon = new ImageIcon(new BufferedImage(1, i, BufferedImage.TYPE_BYTE_BINARY));
+            button.setIcon(imageIcon);
+            button.invalidate();
+            int height = (int) button.getPreferredSize()
+                                     .getHeight();
+
+            if (minHeight == 0) {
+                minHeight = height;
+            } else if (minHeight != height) {
+                break;
+            }
+
+            // this is the largest icon size before the size of the component changes
+            iconSize = imageIcon.getIconHeight();
+        }
+
+        return iconSize;
+    }
+
 
     /**
      * Centers a component according to the window location.
