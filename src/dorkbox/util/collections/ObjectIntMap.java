@@ -17,7 +17,7 @@ package dorkbox.util.collections;
 
 import com.esotericsoftware.kryo.util.ObjectMap;
 
-import dorkbox.util.MathUtil;
+import dorkbox.util.RandomUtil;
 
 /** An unordered map where the values are ints. This implementation is a cuckoo hash map using 3 hashes, random walking, and a
  * small stash for problematic keys. Null keys are not allowed. No allocation is done except when growing the table size. <br>
@@ -210,7 +210,7 @@ public class ObjectIntMap<K> {
         int i = 0, pushIterations = this.pushIterations;
         do {
             // Replace the key and value for one of the hashes.
-            switch (MathUtil.randomInt(2)) {
+            switch (RandomUtil.int_(2)) {
             case 0:
                 evictedKey = key1;
                 evictedValue = valueTable[index1];

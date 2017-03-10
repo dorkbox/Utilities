@@ -21,7 +21,7 @@ package dorkbox.util.collections;
 
 import java.util.Arrays;
 
-import dorkbox.util.MathUtil;
+import dorkbox.util.RandomUtil;
 
 /** A resizable, ordered or unordered int array. Avoids the boxing that occurs with ArrayList<Integer>. If unordered, this class
  * avoids a memory copy when removing elements (the last element is moved to the removed element's position).
@@ -291,7 +291,7 @@ public class IntArray {
 
     public void shuffle () {
         for (int i = this.size - 1; i >= 0; i--) {
-            int ii = MathUtil.randomInt(i);
+            int ii = RandomUtil.int_(i);
             int temp = this.items[i];
             this.items[i] = this.items[ii];
             this.items[ii] = temp;
@@ -311,7 +311,7 @@ public class IntArray {
         if (this.size == 0) {
             return 0;
         }
-        return this.items[MathUtil.randomInt(0, this.size - 1)];
+        return this.items[RandomUtil.int_(0, this.size - 1)];
     }
 
     public int[] toArray () {
