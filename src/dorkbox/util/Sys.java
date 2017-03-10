@@ -50,13 +50,13 @@ class Sys {
 
     public static
     void eraseString(String string) {
-//      You can change the value of the inner char[] using reflection.
-//
-//      You must be careful to either change it with an array of the same length,
-//      or to also update the count field.
-//
-//      If you want to be able to use it as an entry in a set or as a value in map,
-//      you will need to recalculate the hash code and set the value of the hashCode field.
+        // You can change the value of the inner char[] using reflection.
+        //
+        // You must be careful to either change it with an array of the same length,
+        // or to also update the count field.
+        //
+        // If you want to be able to use it as an entry in a set or as a value in map,
+        // you will need to recalculate the hash code and set the value of the hashCode field.
 
         //noinspection TryWithIdenticalCatches
         try {
@@ -94,19 +94,14 @@ class Sys {
     /**
      * FROM: https://www.cqse.eu/en/blog/string-replace-performance/
      * <p/>
-     * Replaces all occurrences of keys of the given map in the given string
-     * with the associated value in that map.
+     * Replaces all occurrences of keys of the given map in the given string with the associated value in that map.
      * <p/>
-     * This method is semantically the same as calling
-     * {@link String#replace(CharSequence, CharSequence)} for each of the
-     * entries in the map, but may be significantly faster for many replacements
-     * performed on a short string, since
-     * {@link String#replace(CharSequence, CharSequence)} uses regular
-     * expressions internally and results in many String object allocations when
-     * applied iteratively.
+     * This method is semantically the same as calling {@link String#replace(CharSequence, CharSequence)} for each of the
+     * entries in the map, but may be significantly faster for many replacements performed on a short string, since
+     * {@link String#replace(CharSequence, CharSequence)} uses regular expressions internally and results in many String
+     * object allocations when applied iteratively.
      * <p/>
-     * The order in which replacements are applied depends on the order of the
-     * map's entry set.
+     * The order in which replacements are applied depends on the order of the map's entry set.
      */
     public static
     String replaceStringFast(String string, Map<String, String> replacements) {
