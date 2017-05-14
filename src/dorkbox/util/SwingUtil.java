@@ -76,7 +76,10 @@ class SwingUtil {
 
     /**
      * Sets the entire L&F based on "simple" name. Null to set to the system L&F. If this is not called (or set), Swing will use the
-     * default CrossPlatform L&F, which is 'Metal'
+     * default CrossPlatform L&F, which is 'Metal'.
+     *
+     * NOTE: if null (which is the 'getSystemLookAndFeelClassName') and on Linux, this will cause GTK2 to get loaded first, which
+     * will cause conflicts if one tries to use GTK3
      *
      * @param lookAndFeel the simple name or null for the system default
      */
@@ -84,6 +87,7 @@ class SwingUtil {
     void setLookAndFeel(final String lookAndFeel) {
         if (lookAndFeel == null) {
             try {
+                // NOTE: On Linux + swing, this will cause GTK2 to get loaded, which will cause conflicts if one tries to ALSO use GTK3
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 e.printStackTrace();
