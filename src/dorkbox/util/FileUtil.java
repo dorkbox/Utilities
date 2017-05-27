@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -85,6 +86,74 @@ class FileUtil {
     public static byte[] ZIP_HEADER = {'P', 'K', (byte) 0x3, (byte) 0x4};
 
     /**
+     * Converts the content of a file into a list of strings.
+     *
+     * @param file the input file to read. Throws an error if this file cannot be read.
+     *
+     * @return A list of strings, one line per string, of the content
+     */
+    public static
+    List<String> read(final File file) throws IOException {
+        return read(file, false);
+    }
+
+    /**
+     * Converts the content of a file into a list of strings.
+     *
+     * @param file the input file to read. Throws an error if this file cannot be read.
+     * @param includeEmptyLines true if you want the resulting list of String to include blank/empty lines from the file
+     *
+     * @return A list of strings, one line per string, of the content
+     */
+    public static
+    List<String> read(final File file, final boolean includeEmptyLines) throws IOException {
+        List<String> lines = new ArrayList<String>();
+        if (!file.canRead()) {
+            return lines;
+        }
+
+        FileReader fileReader = new FileReader(file);
+        try {
+            BufferedReader bin = new BufferedReader(fileReader);
+            String line;
+
+            if (includeEmptyLines) {
+                while (( line = bin.readLine()) != null) {
+                    lines.add(line);
+                }
+            } else {
+                while (( line = bin.readLine()) != null) {
+                    if (!line.isEmpty()) {
+                        lines.add(line);
+                    }
+                }
+            }
+        } finally {
+            IO.closeQuietly(fileReader);
+        }
+        return lines;
+    }
+
+    /**
+     * Reads the contents of the supplied input stream into a list of lines.
+     * Closes the reader on successful or failed completion.
+     */
+    public static
+    List<String> readLines(Reader in) throws IOException {
+        List<String> lines = new ArrayList<String>();
+        try {
+            BufferedReader bin = new BufferedReader(in);
+            String line;
+            while ((line = bin.readLine()) != null) {
+                lines.add(line);
+            }
+        } finally {
+            IO.close(in);
+        }
+        return lines;
+    }
+
+    /**
      * Renames a file. Windows has all sorts of problems which are worked around.
      *
      * @return true if successful, false otherwise
@@ -140,25 +209,6 @@ class FileUtil {
             IO.close(fin);
             IO.close(fout);
         }
-    }
-
-    /**
-     * Reads the contents of the supplied input stream into a list of lines.
-     * Closes the reader on successful or failed completion.
-     */
-    public static
-    List<String> readLines(Reader in) throws IOException {
-        List<String> lines = new ArrayList<String>();
-        try {
-            BufferedReader bin = new BufferedReader(in);
-            String line;
-            while ((line = bin.readLine()) != null) {
-                lines.add(line);
-            }
-        } finally {
-            IO.close(in);
-        }
-        return lines;
     }
 
     /**
