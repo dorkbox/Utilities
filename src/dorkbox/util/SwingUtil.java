@@ -355,8 +355,9 @@ class SwingUtil {
 
     /**
      * Gets the specified text (with a font) and as an image
-     * @param font
-     * @return
+     *
+     * @param font the specified font to render the image
+     * @return a BufferedImage of the specified text, font, and color
      */
     public static
     BufferedImage getFontAsImage(final Font font, String text, Color foregroundColor) {
@@ -395,7 +396,7 @@ class SwingUtil {
         g2d.setColor(foregroundColor);
 
         // width/4 centers the text in the image
-        g2d.drawString(text, width/4, fm.getAscent());
+        g2d.drawString(text, width/4.0f, fm.getAscent());
         g2d.dispose();
 
         return img;
