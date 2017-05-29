@@ -86,19 +86,7 @@ class FileUtil {
     public static byte[] ZIP_HEADER = {'P', 'K', (byte) 0x3, (byte) 0x4};
 
     /**
-     * Converts the content of a file into a list of strings.
-     *
-     * @param file the input file to read. Throws an error if this file cannot be read.
-     *
-     * @return A list of strings, one line per string, of the content
-     */
-    public static
-    List<String> read(final File file) throws IOException {
-        return read(file, false);
-    }
-
-    /**
-     * Converts the content of a file into a list of strings.
+     * Converts the content of a file into a list of strings. Lines are trimmed.
      *
      * @param file the input file to read. Throws an error if this file cannot be read.
      * @param includeEmptyLines true if you want the resulting list of String to include blank/empty lines from the file
@@ -108,10 +96,6 @@ class FileUtil {
     public static
     List<String> read(final File file, final boolean includeEmptyLines) throws IOException {
         List<String> lines = new ArrayList<String>();
-        if (!file.canRead()) {
-            return lines;
-        }
-
         FileReader fileReader = new FileReader(file);
         try {
             BufferedReader bin = new BufferedReader(fileReader);
@@ -122,7 +106,7 @@ class FileUtil {
                     lines.add(line);
                 }
             } else {
-                while (( line = bin.readLine()) != null) {
+                while ((line = bin.readLine()) != null) {
                     if (!line.isEmpty()) {
                         lines.add(line);
                     }
@@ -132,6 +116,42 @@ class FileUtil {
             IO.closeQuietly(fileReader);
         }
         return lines;
+    }
+
+    /**
+     * Convenience method that converts the content of a file into a giant string.
+     *
+     * @param file the input file to read. Throws an error if this file cannot be read.
+     *
+     * @return A string, matching the contents of the file
+     */
+    public static
+    String readAsString(final File file) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder((int) (file.length()));
+        read(file, stringBuilder);
+
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Writes the content of a file to the passed in StringBuilder.
+     *
+     * @param file the input file to read. Throws an error if this file cannot be read.
+     * @param stringBuilder the stringBuilder this file will be written to
+     */
+    public static
+    void read(final File file, final StringBuilder stringBuilder) throws IOException {
+        FileReader fileReader = new FileReader(file);
+        try {
+            BufferedReader bin = new BufferedReader(fileReader);
+            String line;
+
+            while (( line = bin.readLine()) != null) {
+                stringBuilder.append(line).append(OS.LINE_SEPARATOR);
+            }
+        } finally {
+            IO.closeQuietly(fileReader);
+        }
     }
 
     /**
@@ -1329,7 +1349,7 @@ class FileUtil {
      * </pre>
      * (Note the file separator returned will be correct for Windows/Unix)
      *
-     * @param file the file to normalize, null returns null
+     * @param filename the file to normalize, null returns null
      * @return the normalized file, or null if invalid
      */
     public static
