@@ -78,7 +78,22 @@ class SwingUtil {
      * Sets the entire L&F based on "simple" name. Null to set to the system L&F. If this is not called (or set), Swing will use the
      * default CrossPlatform L&F, which is 'Metal'.
      *
-     * NOTE: if null (which is the 'getSystemLookAndFeelClassName') and on Linux, this will cause GTK2 to get loaded first, which
+     * NOTE: On Linux + swing if the SystemLookAndFeel is the GtkLookAndFeel, this will cause GTK2 to get first which
+     * will cause conflicts if one tries to use GTK3
+     *
+     * @param lookAndFeel the class or null for the system default
+     */
+    public static
+    void setLookAndFeel(final Class<?> lookAndFeel) {
+        setLookAndFeel(lookAndFeel.getName());
+    }
+
+
+    /**
+     * Sets the entire L&F based on "simple" name. Null to set to the system L&F. If this is not called (or set), Swing will use the
+     * default CrossPlatform L&F, which is 'Metal'.
+     *
+     * NOTE: On Linux + swing if the SystemLookAndFeel is the GtkLookAndFeel, this will cause GTK2 to get first which
      * will cause conflicts if one tries to use GTK3
      *
      * @param lookAndFeel the simple name or null for the system default
@@ -87,7 +102,8 @@ class SwingUtil {
     void setLookAndFeel(final String lookAndFeel) {
         if (lookAndFeel == null) {
             try {
-                // NOTE: On Linux + swing, this will cause GTK2 to get loaded, which will cause conflicts if one tries to ALSO use GTK3
+                // NOTE: On Linux + swing if the SystemLookAndFeel is the GtkLookAndFeel, this will cause GTK2 to get loaded first, which
+                // will cause conflicts if one tries to ALSO use GTK3
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -102,7 +118,9 @@ class SwingUtil {
         if (!specified.equals(current)) {
             try {
                 for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                    if (specified.equals(info.getName().toLowerCase(Locale.US))) {
+                    String name = info.getName().toLowerCase(Locale.US);
+                    String className = info.getClassName().toLowerCase(Locale.US);
+                    if (specified.equals(name) || specified.equals(className)) {
                         UIManager.setLookAndFeel(info.getClassName());
                         return;
                     }
@@ -113,7 +131,12 @@ class SwingUtil {
             }
         }
 
-        // display all properties for the specified look and feel
+//        // display available look and feels by name
+//        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+//            System.err.println(info.getClassName());
+//        }
+//
+//        // display all properties for the specified look and feel
 //        Set<Map.Entry<Object, Object>> entries = UIManager.getLookAndFeelDefaults()
 //                                                          .entrySet();
 //        for (Map.Entry<Object, Object> e : entries) {
