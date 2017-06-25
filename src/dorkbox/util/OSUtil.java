@@ -602,5 +602,47 @@ class OSUtil {
 
             return "0";
         }
+
+
+        /**
+         * @param channel which XFCE channel to query. Cannot be null
+         * @param property which property (in the channel) to query. Null will list all properties in the channel
+         *
+         * @return the property value or "".
+         */
+        public static
+        String queryXfce(String channel, String property) {
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return "";
+            }
+
+            if (channel == null) {
+                return "";
+            }
+
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
+                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+
+                // xfconf-query -c xfce4-panel -l
+                final ShellProcessBuilder xfconf_query = new ShellProcessBuilder(outputStream);
+                xfconf_query.setExecutable("xfconf-query");
+                xfconf_query.addArgument("-c " + channel);
+                if (property != null) {
+                    // get property for channel
+                    xfconf_query.addArgument("-p " + property);
+                } else {
+                    // list all properties for the channel
+                    xfconf_query.addArgument("-l");
+                }
+                xfconf_query.start();
+
+                return ShellProcessBuilder.getOutput(byteArrayOutputStream);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            return "";
+        }
     }
 }
