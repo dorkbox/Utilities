@@ -81,8 +81,6 @@ class FileUtil {
     }
 
 
-    public static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-
     public static byte[] ZIP_HEADER = {'P', 'K', (byte) 0x3, (byte) 0x4};
 
     /**

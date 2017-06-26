@@ -30,8 +30,6 @@ import java.util.Locale;
 public
 class CacheUtil {
 
-    public static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
-
     // will never be null.
     private static final MessageDigest digest;
 
@@ -57,7 +55,7 @@ class CacheUtil {
     void clear() {
         // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
-        FileUtil.delete(new File(TEMP_DIR, tempDir));
+        FileUtil.delete(new File(OS.TEMP_DIR, tempDir));
     }
 
 
@@ -67,9 +65,9 @@ class CacheUtil {
      * This cache is not persisted across runs.
      */
     public static synchronized
-    File check(File file) throws IOException {
+    File check(final File file) {
         if (file == null) {
-            throw new IOException("file cannot be null");
+            throw new NullPointerException("file");
         }
 
         // if we already have this fileName, reuse it
@@ -80,13 +78,14 @@ class CacheUtil {
      * Checks to see if the specified file is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
     public static synchronized
-    File check(String fileName) throws IOException {
+    File check(final String fileName) {
         if (fileName == null) {
-            throw new IOException("fileName cannot be null");
+            throw new NullPointerException("fileName");
         }
 
         // if we already have this fileName, reuse it
         File newFile = makeCacheFile(fileName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile;
@@ -99,11 +98,10 @@ class CacheUtil {
      * Checks to see if the specified URL is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
     public static synchronized
-    File check(final URL fileResource) throws IOException {
+    File check(final URL fileResource) {
         if (fileResource == null) {
-            throw new IOException("fileResource cannot be null");
+            throw new NullPointerException("fileResource");
         }
-
 
         return check(fileResource.getPath());
     }
@@ -115,7 +113,7 @@ class CacheUtil {
     public static synchronized
     File check(final InputStream fileStream) throws IOException {
         if (fileStream == null) {
-            throw new IOException("fileStream cannot be null");
+            throw new NullPointerException("fileStream");
         }
 
         return check(null, fileStream);
@@ -128,7 +126,7 @@ class CacheUtil {
     public static synchronized
     File check(String cacheName, final InputStream fileStream) throws IOException {
         if (fileStream == null) {
-            throw new IOException("fileStream cannot be null");
+            throw new NullPointerException("fileStream");
         }
 
         if (cacheName == null) {
@@ -137,6 +135,7 @@ class CacheUtil {
 
         // if we already have this fileName, reuse it
         File newFile = makeCacheFile(cacheName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile;
@@ -195,6 +194,7 @@ class CacheUtil {
 
         // if we already have this fileName, reuse it
         File newFile = makeCacheFile(cacheName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile;
@@ -239,6 +239,7 @@ class CacheUtil {
 
         // if we already have this fileName, reuse it
         File newFile = makeCacheFile(cacheName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile;
@@ -256,7 +257,7 @@ class CacheUtil {
     public static synchronized
     File save(final InputStream fileStream) throws IOException {
         if (fileStream == null) {
-            throw new IOException("fileStream cannot be null");
+            throw new NullPointerException("fileStream");
         }
 
         return save(null, fileStream);
@@ -274,6 +275,7 @@ class CacheUtil {
 
         // if we already have this fileName, reuse it
         File newFile = makeCacheFile(cacheName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile;
@@ -294,6 +296,8 @@ class CacheUtil {
 
 
     /**
+     * must be called from synchronized block!
+     *
      * @param cacheName needs name+extension for the resource
      * @param resourceStream the resource to copy to a file on disk
      *
@@ -301,12 +305,17 @@ class CacheUtil {
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static
-    File makeFileViaStream(String cacheName, final InputStream resourceStream) throws IOException {
+    File makeFileViaStream(final String cacheName, final InputStream resourceStream) throws IOException {
         if (resourceStream == null) {
-            throw new IOException("resourceStream is null");
+            throw new NullPointerException("resourceStream");
+        }
+
+        if (cacheName == null) {
+            throw new NullPointerException("cacheName");
         }
 
         File newFile = makeCacheFile(cacheName);
+
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile()) {
             return newFile.getAbsoluteFile();
@@ -324,7 +333,7 @@ class CacheUtil {
         } catch (IOException e) {
             // Send up exception
             String message = "Unable to copy '" + cacheName + "' to temporary location: '" + newFile.getAbsolutePath() + "'";
-            throw new RuntimeException(message, e);
+            throw new IOException(message, e);
         } finally {
             try {
                 resourceStream.close();
@@ -342,20 +351,30 @@ class CacheUtil {
         return newFile.getAbsoluteFile();
     }
 
+    /**
+     * @param cacheName the name of the file to use in the cache. This file name can use invalid file name characters
+     *
+     * @return the file on disk represented by the file name
+     */
+    public static synchronized
+    File create(final String cacheName) {
+        return makeCacheFile(cacheName);
+    }
+
     // creates the file that will be cached. It may, or may not already exist
     // must be called from synchronized block!
-    // never retuns null
+    // never returns null
     private static
-    File makeCacheFile(final String cachedName) throws IOException {
-        if (cachedName == null) {
-            throw new IOException("cachedName is null.");
+    File makeCacheFile(final String cacheName) {
+        if (cacheName == null) {
+            throw new NullPointerException("cacheName");
         }
 
-        File saveDir = new File(TEMP_DIR, tempDir);
+        File saveDir = new File(OS.TEMP_DIR, tempDir);
 
         // can be wimpy, only one at a time
-        String hash = hashName(cachedName);
-        String extension = FileUtil.getExtension(cachedName);
+        String hash = hashName(cacheName);
+        String extension = FileUtil.getExtension(cacheName);
         if (extension.isEmpty()) {
             extension = "cache";
         }
@@ -369,8 +388,9 @@ class CacheUtil {
     }
 
     // must be called from synchronized block!
+    // hashed name to prevent invalid file names from being used
     private static
-    String hashName(String name) {
+    String hashName(final String name) {
         // figure out the fileName
         byte[] bytes = name.getBytes(OS.UTF_8);
 
@@ -383,7 +403,7 @@ class CacheUtil {
 
     // this is if we DO NOT have a file name. We hash the resourceStream bytes to base the name on that. The extension will be ".cache"
     public static synchronized
-    String createNameAsHash(final InputStream resourceStream) {
+    String createNameAsHash(final InputStream resourceStream) throws IOException {
         digest.reset();
 
         try {
@@ -403,7 +423,7 @@ class CacheUtil {
         } catch (IOException e) {
             // Send up exception
             String message = "Unable to copy InputStream to memory.";
-            throw new RuntimeException(message, e);
+            throw new IOException(message, e);
         } finally {
             try {
                 resourceStream.close();

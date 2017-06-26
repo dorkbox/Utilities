@@ -15,6 +15,7 @@
  */
 package dorkbox.util;
 
+import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
@@ -28,9 +29,12 @@ class OS {
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
     public static final String LINE_SEPARATOR_UNIX = "\n";
     public static final String LINE_SEPARATOR_WINDOWS = "\r\n";
+
     public static final Charset US_ASCII = Charset.forName("US-ASCII");
     public static final Charset UTF_8 = Charset.forName("UTF-8");
     public static final Charset UTF_16LE = Charset.forName("UTF-16LE");
+
+    public static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 
     /**
      * The currently running java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7
@@ -49,6 +53,7 @@ class OS {
          * necessary on Windows.
          */
         Thread timerAccuracyThread = new Thread(new Runnable() {
+            @Override
             public
             void run() {
                 //noinspection InfiniteLoopStatement

@@ -62,7 +62,7 @@ class ImageUtil {
         }
 
         // now have to resize this file.
-        File newFile = new File(FileUtil.TEMP_DIR, "temp_resize." + extension).getAbsoluteFile();
+        File newFile = new File(OS.TEMP_DIR, "temp_resize." + extension).getAbsoluteFile();
         Image image;
 
         // is file sitting on drive
@@ -113,7 +113,7 @@ class ImageUtil {
     public static
     File getTransparentImage(final int size, final File fileToUse) throws IOException {
         if (fileToUse.canRead() && fileToUse.isFile()) {
-            return fileToUse;
+            return fileToUse.getAbsoluteFile();
         }
 
         // make sure the directory exists
@@ -121,7 +121,7 @@ class ImageUtil {
 
         final BufferedImage image = getTransparentImageAsBufferedImage(size);
         ImageIO.write(image, "png", fileToUse);
-        return fileToUse;
+        return fileToUse.getAbsoluteFile();
     }
 
     @SuppressWarnings("WeakerAccess")
