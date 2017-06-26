@@ -226,7 +226,6 @@ class OS {
         return osType.isSolaris();
     }
 
-
     public static
     boolean isWindows() {
         return osType.isWindows();
