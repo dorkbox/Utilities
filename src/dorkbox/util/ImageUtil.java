@@ -44,12 +44,12 @@ class ImageUtil {
      * @return the file string on disk that is the resized icon
      */
     public static
-    String resizeFileOrResource(final int sizeWidth, final String fileName) throws IOException {
+    String resizeFileOrResource(final int size, final String fileName) throws IOException {
         FileInputStream fileInputStream = new FileInputStream(fileName);
 
         Dimension imageSize = getImageSize(fileInputStream);
         //noinspection NumericCastThatLosesPrecision
-        if (sizeWidth == ((int) imageSize.getWidth())) {
+        if (size == ((int) imageSize.getWidth()) && size == ((int) imageSize.getHeight())) {
             // we can reuse this file.
             return fileName;
         }
@@ -71,20 +71,30 @@ class ImageUtil {
             final String absolutePath = iconTest.getAbsolutePath();
 
             // resize the image, keep aspect
-            image = new ImageIcon(absolutePath).getImage().getScaledInstance(sizeWidth, -1, Image.SCALE_SMOOTH);
-            image.flush();
+            image = new ImageIcon(absolutePath).getImage();
         }
         else {
             // suck it out of a URL/Resource (with debugging if necessary)
             final URL systemResource = LocationResolver.getResource(fileName);
 
             // resize the image, keep aspect
-            image = new ImageIcon(systemResource).getImage().getScaledInstance(sizeWidth, -1, Image.SCALE_SMOOTH);
-            image.flush();
+            image = new ImageIcon(systemResource).getImage();
         }
 
         // have to do this twice, so that it will finish loading the image (weird callback stuff is required if we don't do this)
         image = new ImageIcon(image).getImage();
+
+        int height = image.getHeight(null);
+        int width = image.getWidth(null);
+
+        if (width > height) {
+            // fit on the width
+            image = image.getScaledInstance(size, -1, Image.SCALE_SMOOTH);
+        } else {
+            // fit on the height
+            image = image.getScaledInstance(-1, size, Image.SCALE_SMOOTH);
+        }
+
         image.flush();
 
         // make whatever dirs we need to.
@@ -102,7 +112,7 @@ class ImageUtil {
         }
 
         // now write out the new one
-        BufferedImage bufferedImage = getBufferedImage(image);
+        BufferedImage bufferedImage = getSquareBufferedImage(image);
         ImageIO.write(bufferedImage, extension, newFile);
 
         return newFile.getAbsolutePath();
@@ -138,7 +148,45 @@ class ImageUtil {
 
 
     /**
-     * @return the image as a Buffered Image
+     * This will always return a square image, with whatever value is smaller to have padding (so it will be centered)
+     *
+     * @return the image as a SQUARE Buffered Image
+     */
+    public static
+    BufferedImage getSquareBufferedImage(Image image) {
+        if (image instanceof BufferedImage) {
+            return (BufferedImage) image;
+        }
+
+        int width = image.getWidth(null);
+        int height = image.getHeight(null);
+
+        int paddingX = 0;
+        int paddingY = 0;
+
+        int size = width;
+
+        if (width < height) {
+            size = height;
+            paddingX = (height - width) / 2;
+        } else {
+            paddingY = (width - height) / 2;
+        }
+
+        BufferedImage bimage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D bGr = bimage.createGraphics();
+        bGr.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING,
+                                                 RenderingHints.VALUE_RENDER_QUALITY));
+        bGr.drawImage(image, paddingX, paddingY, null);
+        bGr.dispose();
+
+        // Return the buffered image
+        return bimage;
+    }
+
+    /**
+     * @return the image, unmodified, as a Buffered Image
      */
     public static
     BufferedImage getBufferedImage(Image image) {
