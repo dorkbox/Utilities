@@ -39,6 +39,7 @@ import java.net.URISyntaxException;
 import java.util.Locale;
 
 import javax.swing.AbstractButton;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -223,6 +224,11 @@ class SwingUtil {
         // large
         //      myTextField.putClientProperty("JComponent.sizeVariant", "large");
 
+        // save the icon + text
+        Icon icon = button.getIcon();
+        String text = button.getText();
+
+        button.setText("`Tj|┃");  // `Tj|┃ are glyphs that are at the top/bottom of the fontset (usually));
         int minHeight = 0;
         int iconSize = 0;
         for (int i = 1; i < 128; i++) {
@@ -231,6 +237,8 @@ class SwingUtil {
             button.invalidate();
             int height = (int) button.getPreferredSize()
                                      .getHeight();
+
+//            System.out.println(imageIcon.getIconHeight() + "x" + imageIcon.getIconHeight() + " icon \t>>>>>>>>> " + height + "px tall item");
 
             if (minHeight == 0) {
                 minHeight = height;
@@ -241,6 +249,10 @@ class SwingUtil {
             // this is the largest icon size before the size of the component changes
             iconSize = imageIcon.getIconHeight();
         }
+
+        // restore original values
+        button.setIcon(icon);
+        button.setText(text);
 
         return iconSize;
     }
