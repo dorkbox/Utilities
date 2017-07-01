@@ -24,7 +24,6 @@ import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,7 +137,8 @@ class FontUtil {
 
 
     /**
-     * Gets the correct font (in GENERAL) for a specified pixel height.
+     * Gets the correct font for a specified pixel height. This measures the maximum font height possible for the specified font. This
+     * can be different than the alpha-numeric height.
      *
      * @param font the font we are checking
      * @param height the height in pixels we want to get as close as possible to
@@ -150,44 +150,39 @@ class FontUtil {
     Font getFontForSpecificHeight(final Font font, final int height) {
         int size = font.getSize();
         Boolean lastAction = null;
-        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = image.createGraphics();
 
         while (true) {
             Font fontCheck = new Font(font.getName(), Font.PLAIN, size);
+            int maxFontHeight = getMaxFontHeight(fontCheck);
 
-            FontMetrics metrics = g.getFontMetrics(fontCheck);
-            Rectangle2D rect = metrics.getStringBounds("`Tj|┃", g);  // `Tj|┃ are glyphs that are at the top/bottom of the fontset (usually)
-            double testHeight = rect.getHeight();
-
-            if (testHeight < height && lastAction != Boolean.FALSE) {
+            if (maxFontHeight < height && lastAction != Boolean.FALSE) {
                 size++;
                 lastAction = Boolean.TRUE;
-            } else if (testHeight > height && lastAction != Boolean.TRUE) {
+            } else if (maxFontHeight > height && lastAction != Boolean.TRUE) {
                 size--;
                 lastAction = Boolean.FALSE;
             } else {
                 // either we are the exact size, or we are ONE font size to big/small (depending on what our initial guess was)
-                g.dispose();
                 return fontCheck;
             }
         }
     }
 
-
     /**
-     * Gets the specified font height for a specific string
+     * Gets the specified font height for a specific string, as rendered on the screen.
      *
-     * @param font the font to use
-     * @param string the string to get the size of
+     * @param font the font to use for rendering the string
+     * @param string the string used to get the height
      *
      * @return the height of the string
      */
     public static
     int getFontHeight(final Font font, final String string) {
-        BufferedImage image = new BufferedImage(1, 1, 1);
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+
         Graphics2D g = image.createGraphics();
         FontRenderContext frc = g.getFontRenderContext();
+
         GlyphVector gv = font.createGlyphVector(frc, string);
         int height = gv.getPixelBounds(null, 0, 0).height;
         g.dispose();
@@ -196,12 +191,12 @@ class FontUtil {
     }
 
     /**
-     * Gets the maximum font height used by alpha-numeric characters ONLY
+     * Gets the maximum font height used by alpha-numeric characters ONLY, as recorded by the font.
      */
     public static
-    int getAlphaNumbericFontHeight(final Font font) {
+    int getAlphaNumericFontHeight(final Font font) {
         // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
-        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         FontMetrics metrics = g.getFontMetrics(font);
@@ -212,12 +207,12 @@ class FontUtil {
     }
 
     /**
-     * Gets the maximum font height used by of ALL characters.
+     * Gets the maximum font height used by of ALL characters, as recorded by the font.
      */
     public static
-    int getFontHeight(final Font font) {
+    int getMaxFontHeight(final Font font) {
         // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
-        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         FontMetrics metrics = g.getFontMetrics(font);
