@@ -190,6 +190,34 @@ class MathUtil {
         }
     }
 
+    /**
+     * Removes any characters from the end that are not a number
+     *
+     * @param text the input text that may, or may not, contain a mix of numbers and letters
+     * @return the value as an integer
+     */
+    public static
+    int stripTrailingNonDigits(final String text) {
+        if (text == null || text.isEmpty()) {
+            return 0;
+        }
+
+        int numberIndex = 0;
+        int length = text.length();
+
+        while (numberIndex < length && Character.isDigit(text.charAt(numberIndex))) {
+            numberIndex++;
+        }
+
+        String substring = text.substring(0, numberIndex);
+        try {
+            return Integer.parseInt(substring);
+        } catch (Exception ignored) {
+        }
+
+        return 0;
+    }
+
     public static
     boolean isEven(int value) {
         return (value & 1) == 0;
