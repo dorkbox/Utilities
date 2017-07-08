@@ -119,9 +119,17 @@ class ImageUtil {
     }
 
 
+    /**
+     * Creates an image of the specified size, and saves the PNG to disk
+     *
+     * @param size the size of the image to create
+     * @param color the color to use. NULL to create a transparent image
+     *
+     * @return the PNG File output the created image (size + color specified)
+     */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static
-    File getTransparentImage(final int size, final File fileToUse) throws IOException {
+    File createImage(final int size, final File fileToUse, final Color color) throws IOException {
         if (fileToUse.canRead() && fileToUse.isFile()) {
             return fileToUse.getAbsoluteFile();
         }
@@ -129,17 +137,29 @@ class ImageUtil {
         // make sure the directory exists
         fileToUse.getParentFile().mkdirs();
 
-        final BufferedImage image = getTransparentImageAsBufferedImage(size);
+        final BufferedImage image = createImageAsBufferedImage(size, color);
         ImageIO.write(image, "png", fileToUse);
         return fileToUse.getAbsoluteFile();
     }
 
+    /**
+     * Creates an image of the specified size.
+     *
+     * @param size the size of the image to create
+     * @param color the color to use. NULL to create a transparent image
+     *
+     * @return a BufferedImage of the size + color specified.
+     */
     @SuppressWarnings("WeakerAccess")
     public static
-    BufferedImage getTransparentImageAsBufferedImage(final int size) {
+    BufferedImage createImageAsBufferedImage(final int size, final Color color) {
         final BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
-        g2d.setColor(new Color(0, 0, 0, 0));
+        if (color == null) {
+            g2d.setColor(new Color(0, 0, 0, 0));
+        } else {
+            g2d.setColor(color);
+        }
         g2d.fillRect(0, 0, size, size);
         g2d.dispose();
 
