@@ -185,6 +185,8 @@ class CacheUtil {
 
     /**
      * Saves the name of the file in a cache, based on name. If cacheName is NULL, it will use the file's name.
+     *
+     * @return the newly create cache file, or an IOException if there were problems
      */
     public static synchronized
     File save(String cacheName, final String fileName) throws IOException {
@@ -203,7 +205,11 @@ class CacheUtil {
 
         // is file sitting on drive
         File iconTest = new File(fileName);
-        if (iconTest.isFile() && iconTest.canRead()) {
+        if (iconTest.isFile()) {
+            if (!iconTest.canRead()) {
+                throw new IOException("File exists but unable to read source file " + fileName);
+            }
+
             // have to copy the resource to the cache
             FileUtil.copyFile(iconTest, newFile);
 
@@ -212,6 +218,10 @@ class CacheUtil {
         else {
             // suck it out of a URL/Resource (with debugging if necessary)
             final URL systemResource = LocationResolver.getResource(fileName);
+
+            if (systemResource == null) {
+                throw new IOException("Unable to load URL resource " + fileName);
+            }
 
             InputStream inStream = systemResource.openStream();
 
