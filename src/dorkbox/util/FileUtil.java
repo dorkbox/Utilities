@@ -154,19 +154,41 @@ class FileUtil {
 
     /**
      * Reads the contents of the supplied input stream into a list of lines.
-     * Closes the reader on successful or failed completion.
+     *
+     * @return Always returns a list, even if the file does not exist, or there are errors reading it.
      */
     public static
-    List<String> readLines(Reader in) throws IOException {
+    List<String> readLines(final File file) {
+        FileReader fileReader = null;
+        try {
+            fileReader = new FileReader(file);
+        } catch (FileNotFoundException ignored) {
+            return new ArrayList<String>();
+        }
+        return readLines(fileReader);
+    }
+
+    /**
+     * Reads the contents of the supplied input stream into a list of lines.
+     * <p>
+     * Closes the reader on successful or failed completion.
+     *
+     * @return Always returns a list, even if the file does not exist, or there are errors reading it.
+     */
+    public static
+    List<String> readLines(Reader in) {
         List<String> lines = new ArrayList<String>();
         try {
             BufferedReader bin = new BufferedReader(in);
             String line;
-            while ((line = bin.readLine()) != null) {
-                lines.add(line);
+            try {
+                while ((line = bin.readLine()) != null) {
+                    lines.add(line);
+                }
+            } catch (IOException ignored) {
             }
         } finally {
-            IO.close(in);
+            IO.closeQuietly(in);
         }
         return lines;
     }
