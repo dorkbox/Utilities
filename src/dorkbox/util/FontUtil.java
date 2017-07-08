@@ -34,6 +34,7 @@ import java.util.Enumeration;
 /**
  * Java Font utilities
  */
+@SuppressWarnings("unused")
 public
 class FontUtil {
     /** Default location where all the fonts are stored */

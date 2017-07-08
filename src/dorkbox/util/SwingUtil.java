@@ -45,6 +45,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+@SuppressWarnings("unused")
 public
 class SwingUtil {
     static {
@@ -67,7 +68,11 @@ class SwingUtil {
      */
     public static
     void setLookAndFeel(final Class<?> lookAndFeel) {
-        setLookAndFeel(lookAndFeel.getName());
+        if (lookAndFeel == null) {
+            setLookAndFeelByName(null);
+        } else {
+            setLookAndFeelByName(lookAndFeel.getName());
+        }
     }
 
 
@@ -81,7 +86,7 @@ class SwingUtil {
      * @param lookAndFeel the simple name or null for the system default
      */
     public static
-    void setLookAndFeel(final String lookAndFeel) {
+    void setLookAndFeelByName(final String lookAndFeel) {
         if (lookAndFeel == null) {
             try {
                 // NOTE: On Linux + swing if the SystemLookAndFeel is the GtkLookAndFeel, this will cause GTK2 to get loaded first, which
@@ -238,7 +243,7 @@ class SwingUtil {
             int height = (int) button.getPreferredSize()
                                      .getHeight();
 
-//            System.out.println(imageIcon.getIconHeight() + "x" + imageIcon.getIconHeight() + " icon \t>>>>>>>>> " + height + "px tall item");
+            // System.err.println(imageIcon.getIconHeight() + "x" + imageIcon.getIconHeight() + " icon \t>>>>>>>>> " + height + "px tall item")
 
             if (minHeight == 0) {
                 minHeight = height;
