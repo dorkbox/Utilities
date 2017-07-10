@@ -15,7 +15,7 @@
  */
 package dorkbox.util.jna.windows;
 
-import com.sun.jna.Pointer;
+import static com.sun.jna.platform.win32.WinDef.HDC;
 
 import dorkbox.util.jna.JnaHelper;
 
@@ -46,5 +46,5 @@ class Gdi32 {
      * @param handle A handle to the DC.
      * @param nIndex The item to be returned.
      */
-    public static native int GetDeviceCaps(Pointer handle, int nIndex);
+    public static native int GetDeviceCaps(HDC handle, int nIndex);
 }

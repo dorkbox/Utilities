@@ -65,4 +65,7 @@ class ShCore {
      */
     public static native
     Pointer GetDpiForMonitor(Pointer hmonitor, int dpiType, IntByReference dpiX, IntByReference dpiY);
+
+    public static native
+    Pointer SetProcessDpiAwareness(int dpiAwareness);
 }
