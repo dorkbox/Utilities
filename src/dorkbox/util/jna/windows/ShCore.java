@@ -15,10 +15,11 @@
  */
 package dorkbox.util.jna.windows;
 
+import com.sun.jna.Native;
+import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-
-import dorkbox.util.jna.JnaHelper;
+import com.sun.jna.win32.W32APIOptions;
 
 
 /**
@@ -36,9 +37,8 @@ import dorkbox.util.jna.JnaHelper;
 public
 class ShCore {
     static {
-        JnaHelper.register("shcore", ShCore.class);
+        Native.register(NativeLibrary.getInstance("shcore", W32APIOptions.DEFAULT_OPTIONS));
     }
-
 
     /**
      * https://msdn.microsoft.com/de-de/library/windows/desktop/dn280510(v=vs.85).aspx
