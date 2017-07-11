@@ -171,6 +171,14 @@ class OSUtil {
         boolean isWindows10() {
             return getVersion()[0] == 10;
         }
+
+        /**
+         * @return is windows 10 or greater
+         */
+        public static
+        boolean isWindows10_plus() {
+            return getVersion()[0] >= 10;
+        }
     }
 
     public static
