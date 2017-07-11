@@ -33,12 +33,28 @@ import dorkbox.util.jna.windows.structs.LOGFONT;
 
 public
 class GDI32 {
+    public static final int ETO_OPAQUE = 2;
+    public static final int SRCCOPY = 0xCC0020;
+    /**
+     * Number of pixels per logical inch along the screen width. In a system with multiple display monitors, this value is the same for
+     * all monitors.
+     */
+    public static final int LOGPIXELSX = 88;
+
     static {
         Native.register(NativeLibrary.getInstance("GDI32", W32APIOptions.DEFAULT_OPTIONS));
     }
 
-    public static final int ETO_OPAQUE = 2;
-    public static final int SRCCOPY = 0xCC0020;
+    /**
+     * The GetDeviceCaps function retrieves device-specific information for the specified device.
+     * <p>
+     * https://msdn.microsoft.com/en-us/library/dd144877(v=vs.85).aspx
+     *
+     * @param handle A handle to the DC.
+     * @param nIndex The item to be returned.
+     */
+    public static native
+    int GetDeviceCaps(HDC handle, int nIndex);
 
     /**
      * http://msdn.microsoft.com/en-us/library/windows/desktop/dd144938(v=vs.85).aspx
