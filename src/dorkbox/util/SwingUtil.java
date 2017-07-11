@@ -89,8 +89,6 @@ class SwingUtil {
     void setLookAndFeelByName(final String lookAndFeel) {
         if (lookAndFeel == null) {
             try {
-                // NOTE: On Linux + swing if the SystemLookAndFeel is the GtkLookAndFeel, this will cause GTK2 to get loaded first, which
-                // will cause conflicts if one tries to ALSO use GTK3
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
                 e.printStackTrace();
@@ -158,6 +156,17 @@ class SwingUtil {
 
         // this means we couldn't find our L&F
         new Exception("Could not load " + lookAndFeel + ", it was not available.").printStackTrace();
+    }
+
+    /**
+     * @return true if the System is configured to use the System L&F. False otherwise
+     */
+    public static
+    boolean isDefaultLookAndFeel() {
+        return UIManager.getLookAndFeel()
+                        .getClass()
+                        .getName()
+                        .equals(UIManager.getSystemLookAndFeelClassName());
     }
 
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
