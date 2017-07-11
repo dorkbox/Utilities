@@ -15,6 +15,7 @@
  */
 package dorkbox.util;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -31,6 +32,7 @@ import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
 @SuppressWarnings("WeakerAccess")
@@ -195,11 +197,12 @@ class ImageUtil {
 
         BufferedImage bimage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
 
-        Graphics2D bGr = bimage.createGraphics();
-        bGr.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING,
-                                                 RenderingHints.VALUE_RENDER_QUALITY));
-        bGr.drawImage(image, paddingX, paddingY, null);
-        bGr.dispose();
+        Graphics2D g = bimage.createGraphics();
+        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
+        g.drawImage(image, paddingX, paddingY, null);
+        g.dispose();
 
         // Return the buffered image
         return bimage;
@@ -216,16 +219,37 @@ class ImageUtil {
 
         BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
 
-        Graphics2D bGr = bimage.createGraphics();
-        bGr.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING,
-                                                 RenderingHints.VALUE_RENDER_QUALITY));
-        bGr.drawImage(image, 0, 0, null);
-        bGr.dispose();
+        Graphics2D g = bimage.createGraphics();
+        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
 
         // Return the buffered image
         return bimage;
     }
 
+    /**
+     * @return the icon, unmodified, as a Buffered Image
+     */
+    public static
+    BufferedImage getBufferedImage(Icon icon) {
+        if (icon instanceof BufferedImage) {
+            return (BufferedImage) icon;
+        }
+
+        BufferedImage bimage = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g = bimage.createGraphics();
+        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
+        icon.paintIcon(null, g, 0, 0);
+        g.dispose();
+
+        return bimage;
+    }
 
     /**
      * Reads the image size information from the specified file, without loading the entire file.
