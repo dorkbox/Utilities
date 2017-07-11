@@ -110,9 +110,7 @@ class WindowsEventDispatch implements Runnable {
     // always from inside lock!
     private void
     stop_() {
-        WPARAM wparam = new WPARAM(0);
-        LPARAM lparam = new LPARAM(0);
-        User32.IMPL.SendMessage(hWnd, WM_QUIT, wparam, lparam);
+        User32.IMPL.SendMessage(hWnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
 
         try {
             // wait for the dispatch thread to quit (but only if we are not on the dispatch thread)
