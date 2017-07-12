@@ -23,7 +23,6 @@ import static com.sun.jna.platform.win32.WinDef.HWND;
 import static com.sun.jna.platform.win32.WinDef.LPARAM;
 import static com.sun.jna.platform.win32.WinDef.LRESULT;
 import static com.sun.jna.platform.win32.WinDef.POINT;
-import static com.sun.jna.platform.win32.WinDef.RECT;
 import static com.sun.jna.platform.win32.WinDef.WPARAM;
 
 import com.sun.jna.Callback;
@@ -33,82 +32,21 @@ import com.sun.jna.platform.win32.WinNT;
 
 import dorkbox.util.OS;
 import dorkbox.util.jna.windows.structs.ICONINFO;
-import dorkbox.util.jna.windows.structs.MENUITEMINFO;
-import dorkbox.util.jna.windows.structs.NONCLIENTMETRICS;
 
 @SuppressWarnings("WeakerAccess")
 public
 interface User32 {
     User32 IMPL = OS.is64bit() ? new User32_64() : new User32_32();
 
-    int SPI_GETNONCLIENTMETRICS = 0x0029;
-    int COLOR_MENU = 4;
-    int COLOR_MENUTEXT = 7;
-    int COLOR_HIGHLIGHTTEXT = 14;
-    int COLOR_HIGHLIGHT = 13;
-    int COLOR_GRAYTEXT = 17;
-
     int GWL_WNDPROC = -4;
 
     int WM_LBUTTONUP = 0x202;
     int WM_RBUTTONUP = 0x205;
 
-    int MF_BYPOSITION = 0x400;
-
     /**
      * This is overridden by the 64-bit version to be SetWindowLongPtr instead.
      */
     int SetWindowLong(HWND hWnd, int nIndex, Callback procedure);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms647626(v=vs.85).aspx
-     */
-    HMENU CreatePopupMenu();
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms647616(v=vs.85).aspx
-     */
-    boolean AppendMenu(HMENU hMenu, int uFlags, int uIDNewItem, String lpNewItem);
-
-    /**
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/ms647629(v=vs.85).aspx
-     */
-    boolean DeleteMenu(HMENU hMenu, int uPosition, int uFlags);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms647631(v=vs.85).aspx
-     */
-    boolean DestroyMenu(HMENU hMenu);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms648002(v=vs.85).aspx
-     */
-    boolean TrackPopupMenu(HMENU hMenu, int uFlags, int x, int y, int nReserved, HWND hWnd, RECT prcRect);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms648001(v=vs.85).aspx
-     */
-    boolean SetMenuItemInfo(HMENU hMenu, int uItem, boolean fByPosition, MENUITEMINFO lpmii);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms647980(v=vs.85).aspx
-     */
-    boolean GetMenuItemInfo(HMENU hMenu, int uItem, boolean fByPosition, MENUITEMINFO lpmii);
-
-    /**
-     * Brings the thread that created the specified window into the foreground
-     * and activates the window. Keyboard input is directed to the window, and
-     * various visual cues are changed for the user. The system assigns a
-     * slightly higher priority to the thread that created the foreground window
-     * than it does to other threads.
-     *
-     * @param hWnd A handle to the window that should be activated and brought to
-     * the foreground.
-     *
-     * @return If the window was brought to the foreground, the return value is
-     * nonzero.
-     */
-    boolean SetForegroundWindow(HWND hWnd);
 
     /**
      * The GetSystemMetrics function retrieves various system metrics (widths
@@ -130,11 +68,6 @@ interface User32 {
     int GetSystemMetrics(int nIndex);
 
     /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms633500(v=vs.85).aspx
-     */
-    HWND FindWindowEx(HWND hwndParent, HWND hwndChildAfter, String lpszClass, String lpszWindow);
-
-    /**
      * http://msdn.microsoft.com/en-us/library/windows/desktop/ms644950(v=vs.85).aspx
      */
     LRESULT SendMessage(HWND hWnd, int Msg, WPARAM wParam, LPARAM lParam);
@@ -148,16 +81,6 @@ interface User32 {
      * http://msdn.microsoft.com/en-us/library/windows/desktop/ms632682(v=vs.85).aspx
      */
     boolean DestroyWindow(HWND hWnd);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms724947(v=vs.85).aspx
-     */
-    boolean SystemParametersInfo(int uiAction, int uiParam, NONCLIENTMETRICS pvParam, int fWinIni);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/ms724371(v=vs.85).aspx
-     */
-    COLORREF GetSysColor(int nIndex);
 
     /**
      * This function places a message in the message queue associated with the
@@ -238,10 +161,8 @@ interface User32 {
     int ReleaseDC(HWND hWnd, HDC hDC);
 
 
-    boolean GetCursorPos(POINT point);
-
     /**
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/dd145062(v=vs.85).aspx
+     * https://msdn.microsoft.com/en-us/library/windows/desktop/ms648390(v=vs.85).aspx
      */
-    Pointer MonitorFromPoint(POINT pt, int shouldBeOne);
+    boolean GetCursorPos(POINT point);
 }

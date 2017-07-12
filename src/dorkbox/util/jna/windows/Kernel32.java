@@ -116,7 +116,6 @@ class Kernel32 {
     public static native
     int FormatMessage(int flags, Pointer source, int messageId, int languageId, PointerByReference buffer, int size, long[] args);
 
-
     /**
      * https://msdn.microsoft.com/en-us/library/ms683171%28VS.85%29.aspx
      */
@@ -147,7 +146,6 @@ class Kernel32 {
     public static native
     int FillConsoleOutputCharacter(HANDLE consoleOutput, char character, int length, COORD.ByValue writeCoord, IntByReference numberOfCharsWritten);
 
-
     /**
      * https://msdn.microsoft.com/en-us/library/ms683167%28VS.85%29.aspx
      */
@@ -159,7 +157,6 @@ class Kernel32 {
      */
     public static native
     int SetConsoleMode(HANDLE handle, int mode);
-
 
     /**
      * https://msdn.microsoft.com/en-us/library/ms684961(v=VS.85).aspx

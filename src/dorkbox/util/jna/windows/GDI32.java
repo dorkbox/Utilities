@@ -17,88 +17,20 @@ package dorkbox.util.jna.windows;
 
 import static com.sun.jna.platform.win32.WinDef.HBITMAP;
 import static com.sun.jna.platform.win32.WinDef.HDC;
-import static com.sun.jna.platform.win32.WinDef.HFONT;
-import static com.sun.jna.platform.win32.WinDef.RECT;
 import static com.sun.jna.platform.win32.WinGDI.BITMAPINFO;
 import static com.sun.jna.platform.win32.WinNT.HANDLE;
 
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
-import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.win32.W32APIOptions;
 
-import dorkbox.util.jna.windows.structs.LOGFONT;
-
 public
 class GDI32 {
-    public static final int ETO_OPAQUE = 2;
-    public static final int SRCCOPY = 0xCC0020;
-    /**
-     * Number of pixels per logical inch along the screen width. In a system with multiple display monitors, this value is the same for
-     * all monitors.
-     */
-    public static final int LOGPIXELSX = 88;
-
     static {
         Native.register(NativeLibrary.getInstance("GDI32", W32APIOptions.DEFAULT_OPTIONS));
     }
-
-    /**
-     * The GetDeviceCaps function retrieves device-specific information for the specified device.
-     * <p>
-     * https://msdn.microsoft.com/en-us/library/dd144877(v=vs.85).aspx
-     *
-     * @param handle A handle to the DC.
-     * @param nIndex The item to be returned.
-     */
-    public static native
-    int GetDeviceCaps(HDC handle, int nIndex);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/dd144938(v=vs.85).aspx
-     */
-    public static native
-    boolean GetTextExtentPoint32(HDC hdc, String lpString, int c, WinUser.SIZE lpSize);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/dd145093(v=vs.85).aspx
-     */
-    public static native
-    COLORREF SetTextColor(HDC hdc, COLORREF crColor);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/dd162964(v=vs.85).aspx
-     */
-    public static native
-    COLORREF SetBkColor(HDC hdc, COLORREF crColor);
-
-    /**
-     * http://msdn.microsoft.com/en-us/library/windows/desktop/dd162713(v=vs.85).aspx
-     */
-    public static native
-    boolean ExtTextOut(HDC hdc, int X, int Y, int fuOptions, RECT lprc, String lpString, int cbCount, int[] lpDx);
-
-    /**
-     * https://msdn.microsoft.com/ru-ru/library/windows/desktop/dd183500(v=vs.85).aspx
-     */
-    public static native
-    HFONT CreateFontIndirect(LOGFONT l);
-
-    /**
-     * The SelectObject function selects an object into the specified device context (DC).
-     * The new object replaces the previous object of the same type.
-     *
-     * @param hDC Handle to the DC.
-     * @param hGDIObj Handle to the object to be selected.
-     *
-     * @return If the selected object is not a region and the function succeeds, the return value
-     * is a handle to the object being replaced. If the selected object is a region and the
-     * function succeeds, the return value is one of the REGION values.
-     */
-    public static native
-    HANDLE SelectObject(HDC hDC, HANDLE hGDIObj);
 
     /**
      * The CreateCompatibleDC function creates a memory device context (DC) compatible with the specified device.

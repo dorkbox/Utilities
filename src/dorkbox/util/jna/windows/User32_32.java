@@ -23,7 +23,6 @@ import static com.sun.jna.platform.win32.WinDef.HWND;
 import static com.sun.jna.platform.win32.WinDef.LPARAM;
 import static com.sun.jna.platform.win32.WinDef.LRESULT;
 import static com.sun.jna.platform.win32.WinDef.POINT;
-import static com.sun.jna.platform.win32.WinDef.RECT;
 import static com.sun.jna.platform.win32.WinDef.WPARAM;
 
 import com.sun.jna.Callback;
@@ -35,8 +34,6 @@ import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.win32.W32APIOptions;
 
 import dorkbox.util.jna.windows.structs.ICONINFO;
-import dorkbox.util.jna.windows.structs.MENUITEMINFO;
-import dorkbox.util.jna.windows.structs.NONCLIENTMETRICS;
 
 /**
  * On first glance, this appears to be unnecessary to have a DirectMapping class implement an interface - however this is so different
@@ -58,49 +55,7 @@ class User32_32 implements User32 {
 
     @Override
     public native
-    HMENU CreatePopupMenu();
-
-    @Override
-    public native
-    boolean AppendMenu(final HMENU hMenu, final int uFlags, final int uIDNewItem, final String lpNewItem);
-
-    @Override
-    public native
-    boolean DeleteMenu(final HMENU hMenu, final int uPosition, final int uFlags);
-
-    @Override
-    public native
-    boolean DestroyMenu(final HMENU hMenu);
-
-    @Override
-    public native
-    boolean TrackPopupMenu(final HMENU hMenu,
-                           final int uFlags,
-                           final int x,
-                           final int y,
-                           final int nReserved,
-                           final HWND hWnd,
-                           final RECT prcRect);
-
-    @Override
-    public native
-    boolean SetMenuItemInfo(final HMENU hMenu, final int uItem, final boolean fByPosition, final MENUITEMINFO lpmii);
-
-    @Override
-    public native
-    boolean GetMenuItemInfo(final HMENU hMenu, final int uItem, final boolean fByPosition, final MENUITEMINFO lpmii);
-
-    @Override
-    public native
-    boolean SetForegroundWindow(final HWND hWnd);
-
-    @Override
-    public native
     int GetSystemMetrics(final int nIndex);
-
-    @Override
-    public native
-    HWND FindWindowEx(final HWND hwndParent, final HWND hwndChildAfter, final String lpszClass, final String lpszWindow);
 
     @Override
     public native
@@ -113,14 +68,6 @@ class User32_32 implements User32 {
     @Override
     public native
     boolean DestroyWindow(final HWND hWnd);
-
-    @Override
-    public native
-    boolean SystemParametersInfo(final int uiAction, final int uiParam, final NONCLIENTMETRICS pvParam, final int fWinIni);
-
-    @Override
-    public native
-    COLORREF GetSysColor(final int nIndex);
 
     @Override
     public native
@@ -172,8 +119,4 @@ class User32_32 implements User32 {
     @Override
     public native
     boolean GetCursorPos(final POINT point);
-
-    @Override
-    public native
-    Pointer MonitorFromPoint(final POINT pt, final int shouldBeOne);
 }
