@@ -68,15 +68,6 @@ class Kernel32 {
 
     public static final int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
 
-//    public static
-//    String getLastErrorMessage() {
-//        int errorCode = Native.getLastError();
-//        int bufferSize = 160;
-//        byte data[] = new byte[bufferSize];
-//        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, Pointer.NULL, errorCode, 0, data, bufferSize, null);
-//        return new String(data);
-//    }
-
     public static void ASSERT(final int returnValue, final String message) {
         // if returnValue == 0, throw assertion error
         assert returnValue != 0 : message + " : " + getLastErrorMessage();
@@ -91,8 +82,6 @@ class Kernel32 {
             Memory memory = new Memory(1024);
             PointerByReference reference = new PointerByReference(memory);
 
-//            // Must be Kernel32.INSTANCE because of how it pulls in variety arguments.
-//            com.sun.jna.platform.win32.Kernel32.INSTANCE.FormatMessage(com.sun.jna.platform.win32.Kernel32.FORMAT_MESSAGE_FROM_SYSTEM, null, errorCode, 0, reference, (int) memory.size(), null);
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, null, errorCode, 0, reference, (int) memory.size(), null);
 
             String memoryMessage = reference.getPointer()
@@ -148,7 +137,6 @@ class Kernel32 {
      * https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx
      */
     public static native
-//    int FormatMessage(int flags, Pointer source, int messageId, int languageId, byte[] buffer, int size, long[] args);
     int FormatMessage(int flags, Pointer source, int messageId, int languageId, PointerByReference buffer, int size, long[] args);
 
 
