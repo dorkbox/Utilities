@@ -92,29 +92,6 @@ class Kernel32 {
         }
     }
 
-    private interface Win10 {
-        boolean IsWindows10OrGreater();
-    }
-
-    /**
-     * Windows 10+ supports ANSI according to microsoft
-     */
-    public static
-    boolean isWindows10OrGreater() {
-        try {
-            final Object kernel32 = Native.loadLibrary("kernel32", Win10.class);
-            if (kernel32 != null) {
-                boolean isWin10Plus = ((Win10)kernel32).IsWindows10OrGreater();
-                Native.unregister(Win10.class);
-                return isWin10Plus;
-            }
-
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     /**
      * https://msdn.microsoft.com/en-us/library/ms683231%28VS.85%29.aspx
      */
