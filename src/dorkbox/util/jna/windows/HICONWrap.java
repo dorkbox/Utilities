@@ -17,6 +17,7 @@ package dorkbox.util.jna.windows;
 
 import static com.sun.jna.platform.win32.WinDef.HBITMAP;
 import static com.sun.jna.platform.win32.WinDef.HICON;
+import static dorkbox.util.jna.windows.User32.User32;
 
 import com.sun.jna.Pointer;
 
@@ -33,7 +34,7 @@ public class HICONWrap extends HICON {
         info.MaskBitmap = bm;
         info.ColorBitmap = bm;
 
-        HICON hicon = User32.IMPL.CreateIconIndirect(info);
+        HICON hicon = User32.CreateIconIndirect(info);
         if (hicon == null) {
             throw new GetLastErrorException();
         }

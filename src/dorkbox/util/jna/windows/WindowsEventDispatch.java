@@ -20,6 +20,7 @@ import static com.sun.jna.platform.win32.WinDef.LPARAM;
 import static com.sun.jna.platform.win32.WinDef.LRESULT;
 import static com.sun.jna.platform.win32.WinDef.WPARAM;
 import static com.sun.jna.platform.win32.WinUser.WM_QUIT;
+import static dorkbox.util.jna.windows.User32.User32;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,7 +40,7 @@ class WindowsEventDispatch implements Runnable {
 
     private static final String NAME = "WindowsEventDispatch";
 
-    public static final int WM_TASKBARCREATED = User32.IMPL.RegisterWindowMessage(new WString("TaskbarCreated"));
+    public static final int WM_TASKBARCREATED = User32.RegisterWindowMessage(new WString("TaskbarCreated"));
     public static final int WM_COMMAND = 0x0111;
     public static final int WM_SHELLNOTIFY = WinUser.WM_USER + 1;
     public static final int WM_MEASUREITEM = 44;
@@ -110,7 +111,7 @@ class WindowsEventDispatch implements Runnable {
     // always from inside lock!
     private void
     stop_() {
-        User32.IMPL.SendMessage(hWnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
+        User32.SendMessage(hWnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
 
         try {
             // wait for the dispatch thread to quit (but only if we are not on the dispatch thread)
@@ -175,30 +176,30 @@ class WindowsEventDispatch implements Runnable {
                     }
                 }
 
-                return User32.IMPL.DefWindowProc(hWnd, msg, wParam, lParam);
+                return User32.DefWindowProc(hWnd, msg, wParam, lParam);
             }
         };
 
-        hWnd = User32.IMPL.CreateWindowEx(0, "STATIC", NAME, 0, 0, 0, 0, 0, null, null, null,
-                              null);
+        hWnd = User32.CreateWindowEx(0, "STATIC", NAME, 0, 0, 0, 0, 0, null, null, null,
+                                            null);
         if (hWnd == null) {
             throw new GetLastErrorException();
         }
 
-        User32.IMPL.SetWindowLong(hWnd, User32.GWL_WNDPROC, WndProc);
+        User32.SetWindowLong(hWnd, User32.GWL_WNDPROC, WndProc);
 
         synchronized (lock) {
             lock.notifyAll();
         }
 
         MSG msg = new MSG();
-        while (User32.IMPL.GetMessage(msg, null, 0, 0)) {
-            User32.IMPL.TranslateMessage(msg);
-            User32.IMPL.DispatchMessage(msg);
+        while (User32.GetMessage(msg, null, 0, 0)) {
+            User32.TranslateMessage(msg);
+            User32.DispatchMessage(msg);
         }
 
         if (hWnd != null) {
-            if (!User32.IMPL.DestroyWindow(hWnd)) {
+            if (!User32.DestroyWindow(hWnd)) {
                 throw new GetLastErrorException();
             }
             hWnd = null;

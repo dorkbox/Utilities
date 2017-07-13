@@ -17,6 +17,7 @@ package dorkbox.util.jna.windows;
 
 import static com.sun.jna.platform.win32.WinDef.HBITMAP;
 import static com.sun.jna.platform.win32.WinDef.HDC;
+import static dorkbox.util.jna.windows.User32.User32;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
@@ -34,7 +35,7 @@ public class HBITMAPWrap extends HBITMAP {
     HBITMAP createBitmap(BufferedImage image) {
         int w = image.getWidth(null);
         int h = image.getHeight(null);
-        HDC screenDC = User32.IMPL.GetDC(null);
+        HDC screenDC = User32.GetDC(null);
         HDC memDC = GDI32.CreateCompatibleDC(screenDC);
         HBITMAP hBitmap = null;
 
@@ -72,7 +73,7 @@ public class HBITMAPWrap extends HBITMAP {
             pbits.write(0, bits, 0, bits.length);
             return hBitmap;
         } finally {
-            User32.IMPL.ReleaseDC(null, screenDC);
+            User32.ReleaseDC(null, screenDC);
             GDI32.DeleteDC(memDC);
         }
     }
