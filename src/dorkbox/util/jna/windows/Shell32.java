@@ -15,16 +15,13 @@
  */
 package dorkbox.util.jna.windows;
 
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
-import com.sun.jna.win32.W32APIOptions;
-
+import dorkbox.util.jna.JnaHelper;
 import dorkbox.util.jna.windows.structs.NOTIFYICONDATA;
 
 public
 class Shell32 {
     static {
-        Native.register(NativeLibrary.getInstance("shell32", W32APIOptions.DEFAULT_OPTIONS));
+        JnaHelper.register("shell32", Shell32.class);
     }
 
     static public final int NIM_ADD = 0x0;

@@ -26,13 +26,11 @@ import static com.sun.jna.platform.win32.WinDef.POINT;
 import static com.sun.jna.platform.win32.WinDef.WPARAM;
 
 import com.sun.jna.Callback;
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.platform.win32.WinNT;
-import com.sun.jna.win32.W32APIOptions;
 
+import dorkbox.util.jna.JnaHelper;
 import dorkbox.util.jna.windows.structs.ICONINFO;
 
 /**
@@ -45,7 +43,7 @@ import dorkbox.util.jna.windows.structs.ICONINFO;
 public
 class User32_64 implements User32 {
     static {
-        Native.register(NativeLibrary.getInstance("user32", W32APIOptions.DEFAULT_OPTIONS));
+        JnaHelper.register("user32", User32_64.class);
     }
 
     @Override

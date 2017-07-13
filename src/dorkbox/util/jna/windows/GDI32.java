@@ -20,16 +20,15 @@ import static com.sun.jna.platform.win32.WinDef.HDC;
 import static com.sun.jna.platform.win32.WinGDI.BITMAPINFO;
 import static com.sun.jna.platform.win32.WinNT.HANDLE;
 
-import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
-import com.sun.jna.win32.W32APIOptions;
+
+import dorkbox.util.jna.JnaHelper;
 
 public
 class GDI32 {
     static {
-        Native.register(NativeLibrary.getInstance("GDI32", W32APIOptions.DEFAULT_OPTIONS));
+        JnaHelper.register("GDI32", GDI32.class);
     }
 
     /**

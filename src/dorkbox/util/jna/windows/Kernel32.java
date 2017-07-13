@@ -19,12 +19,11 @@ import static com.sun.jna.platform.win32.WinNT.HANDLE;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
-import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
-import com.sun.jna.win32.W32APIOptions;
 
+import dorkbox.util.jna.JnaHelper;
 import dorkbox.util.jna.windows.structs.CONSOLE_SCREEN_BUFFER_INFO;
 import dorkbox.util.jna.windows.structs.COORD;
 import dorkbox.util.jna.windows.structs.INPUT_RECORD;
@@ -33,7 +32,7 @@ import dorkbox.util.jna.windows.structs.SMALL_RECT;
 public
 class Kernel32 {
     static {
-        Native.register(NativeLibrary.getInstance("kernel32", W32APIOptions.DEFAULT_OPTIONS));
+        JnaHelper.register("kernel32", Kernel32.class);
     }
 
     // see: http://msdn.microsoft.com/en-us/library/ms682013%28VS.85%29.aspx

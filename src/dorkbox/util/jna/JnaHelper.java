@@ -17,10 +17,14 @@ package dorkbox.util.jna;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
+import com.sun.jna.win32.W32APIOptions;
+
+import dorkbox.util.OS;
 
 /**
  * Helper method to get the library info from JNA when registering via direct map
@@ -32,6 +36,13 @@ class JnaHelper {
     NativeLibrary register(final String libraryName, final Class<?> clazz) throws IllegalArgumentException {
         final Map<String, Object> options = new HashMap<String, Object>();
         options.put(Library.OPTION_CLASSLOADER, clazz.getClassLoader());
+
+        if (OS.isWindows()) {
+            Set<Map.Entry<String, Object>> entries = W32APIOptions.DEFAULT_OPTIONS.entrySet();
+            for (Map.Entry<String, Object> entry : entries) {
+                options.put(entry.getKey(), entry.getValue());
+            }
+        }
 
         final NativeLibrary library = NativeLibrary.getInstance(libraryName, options);
         if (library == null) {
