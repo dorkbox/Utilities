@@ -402,6 +402,7 @@ class OSUtil {
             Gnome,
             KDE,
             Unity,
+            Unity7,
             XFCE,
             LXDE,
             Pantheon,
@@ -434,19 +435,23 @@ class OSUtil {
             if ("unity".equalsIgnoreCase(XDG)) {
                 return Env.Unity;
             }
-            else if ("xfce".equalsIgnoreCase(XDG)) {
+            // Ubuntu Unity7 is a weird combination. It's "Gnome", but it's not "Gnome Shell".
+            if ("unity:unity7".equalsIgnoreCase(XDG)) {
+                return Env.Unity7;
+            }
+            if ("xfce".equalsIgnoreCase(XDG)) {
                 return Env.XFCE;
             }
-            else if ("lxde".equalsIgnoreCase(XDG)) {
+            if ("lxde".equalsIgnoreCase(XDG)) {
                 return Env.LXDE;
             }
-            else if ("kde".equalsIgnoreCase(XDG)) {
+            if ("kde".equalsIgnoreCase(XDG)) {
                 return Env.KDE;
             }
-            else if ("pantheon".equalsIgnoreCase(XDG)) {
+            if ("pantheon".equalsIgnoreCase(XDG)) {
                 return Env.Pantheon;
             }
-            else if ("gnome".equalsIgnoreCase(XDG)) {
+            if ("gnome".equalsIgnoreCase(XDG)) {
                 return Env.Gnome;
             }
 
