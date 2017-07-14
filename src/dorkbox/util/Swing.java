@@ -17,7 +17,6 @@ package dorkbox.util;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
@@ -32,22 +31,18 @@ import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Locale;
 
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 @SuppressWarnings("unused")
 public
-class SwingUtil {
+class Swing {
     static {
         /*
          * hack workaround for starting the Toolkit thread before any Timer stuff javax.swing.Timer uses the Event Dispatch Thread, which is not
@@ -286,34 +281,6 @@ class SwingUtil {
         loc.x += (size.width - cmpSize.width) / 2;
         loc.y += (size.height - cmpSize.height) / 2;
         component.setBounds(loc.x, loc.y, cmpSize.width, cmpSize.height);
-    }
-
-    /**
-     * Opens the given website in the default browser, or show a message saying that no default browser could be accessed.
-     *
-     * @param parent The parent of the error message, if raised
-     * @param uri The website uri
-     */
-    public static
-    void browse(final Component parent, final String uri) {
-        boolean cannotBrowse = false;
-        if (Desktop.isDesktopSupported() && Desktop.getDesktop()
-                                                   .isSupported(Desktop.Action.BROWSE)) {
-            try {
-                Desktop.getDesktop()
-                       .browse(new URI(uri));
-            } catch (URISyntaxException ignored) {
-            } catch (IOException ex) {
-                cannotBrowse = true;
-            }
-        }
-        else {
-            cannotBrowse = true;
-        }
-
-        if (cannotBrowse) {
-            JOptionPane.showMessageDialog(parent, "It seems that I can't open a website using your default browser, sorry.");
-        }
     }
 
     public static
