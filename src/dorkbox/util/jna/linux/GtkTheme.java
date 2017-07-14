@@ -39,7 +39,6 @@ import dorkbox.util.Framework;
 import dorkbox.util.MathUtil;
 import dorkbox.util.OS;
 import dorkbox.util.OSUtil;
-import dorkbox.util.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;
@@ -143,30 +142,26 @@ class GtkTheme {
         screenScale.set(0D);
         screenDPI.set(0);
 
-        if (Framework.isSwtLoaded) {
-            screenDPI.set(Swt.getDpi());
-        } else {
-            GtkEventDispatch.dispatchAndWait(new Runnable() {
-                @Override
-                public
-                void run() {
-                    // screen DPI
-                    Pointer screen = Gtk2.gdk_screen_get_default(); // DOES NOT like SWT
-                    if (screen != null) {
-                        // this call makes NO SENSE, but reading the documentation shows it is the CORRECT call.
-                        screenDPI.set((int) Gtk2.gdk_screen_get_resolution(screen));
-                    }
+        GtkEventDispatch.dispatchAndWait(new Runnable() {
+            @Override
+            public
+            void run() {
+                // screen DPI
+                Pointer screen = Gtk2.gdk_screen_get_default();
+                if (screen != null) {
+                    // this call makes NO SENSE, but reading the documentation shows it is the CORRECT call.
+                    screenDPI.set((int) Gtk2.gdk_screen_get_resolution(screen));
+                }
 
-                    if (Gtk2.isGtk3) {
-                        Pointer window = Gtk2.gdk_get_default_root_window();  // DOES NOT LIKE SWT
-                        if (window != null) {
-                            double scale = Gtk3.gdk_window_get_scale_factor(window);
-                            screenScale.set(scale);
-                        }
+                if (Gtk2.isGtk3) {
+                    Pointer window = Gtk2.gdk_get_default_root_window();
+                    if (window != null) {
+                        double scale = Gtk3.gdk_window_get_scale_factor(window);
+                        screenScale.set(scale);
                     }
                 }
-            });
-        }
+            }
+        });
 
         // fallback
         if (screenDPI.get() == 0) {
