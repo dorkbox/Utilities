@@ -22,5 +22,8 @@
     <orderEntry type="library" name="reflectasm" level="application" />
     <orderEntry type="library" name="dorkbox message_bus" level="application" />
     <orderEntry type="library" name="dorkbox object_pool" level="application" />
+    <orderEntry type="library" name="asm" level="application" />
+    <orderEntry type="library" name="javassist" level="application" />
+    <orderEntry type="library" name="swt" level="application" />
   </component>
 </module>

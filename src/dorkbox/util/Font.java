@@ -16,7 +16,6 @@
 package dorkbox.util;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -36,7 +35,7 @@ import java.util.Enumeration;
  */
 @SuppressWarnings("unused")
 public
-class FontUtil {
+class Font {
     /** Default location where all the fonts are stored */
     @Property
     public static String FONTS_LOCATION = "resources/fonts";
@@ -67,7 +66,7 @@ class FontUtil {
                     if (path.endsWith(".ttf") || (!isJava6 && path.endsWith(".otf"))) {
                         is = url.openStream();
 
-                        Font newFont = Font.createFont(Font.TRUETYPE_FONT, is);
+                        java.awt.Font newFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, is);
                         // fonts that ALREADY exist are not re-registered
                         ge.registerFont(newFont);
                     }
@@ -108,7 +107,7 @@ class FontUtil {
      * @return the specified font
      */
     public static
-    Font parseFont(final String fontInfo) {
+    java.awt.Font parseFont(final String fontInfo) {
         try {
             final int sizeIndex = fontInfo.lastIndexOf(" ");
 
@@ -117,20 +116,20 @@ class FontUtil {
             // hint is at most 6 (ITALIC) before sizeIndex - we can use this to our benefit.
             int styleIndex = fontInfo.indexOf(" ", sizeIndex - 7);
             String styleString = fontInfo.substring(styleIndex + 1, sizeIndex);
-            int style = Font.PLAIN;
+            int style = java.awt.Font.PLAIN;
 
             if (styleString.equalsIgnoreCase("bold")) {
-                style = Font.BOLD;
+                style = java.awt.Font.BOLD;
             }
             else if (styleString.equalsIgnoreCase("italic")) {
-                style = Font.ITALIC;
+                style = java.awt.Font.ITALIC;
             }
 
             String fontName = fontInfo.substring(0, styleIndex);
 
             // this can be WRONG, in which case it will just error out
             //noinspection MagicConstant
-            return new Font(fontName, style, Integer.parseInt(size));
+            return new java.awt.Font(fontName, style, Integer.parseInt(size));
         } catch (Exception e) {
             throw new RuntimeException("Unable to load font info from '" + fontInfo + "'", e);
         }
@@ -148,12 +147,12 @@ class FontUtil {
      *          than the height, then the approach is from the low size (so the returned font will always fit inside the box)
      */
     public static
-    Font getFontForSpecificHeight(final Font font, final int height) {
+    java.awt.Font getFontForSpecificHeight(final java.awt.Font font, final int height) {
         int size = font.getSize();
         Boolean lastAction = null;
 
         while (true) {
-            Font fontCheck = new Font(font.getName(), Font.PLAIN, size);
+            java.awt.Font fontCheck = new java.awt.Font(font.getName(), java.awt.Font.PLAIN, size);
             int maxFontHeight = getMaxFontHeight(fontCheck);
 
             if (maxFontHeight < height && lastAction != Boolean.FALSE) {
@@ -178,7 +177,7 @@ class FontUtil {
      * @return the height of the string
      */
     public static
-    int getFontHeight(final Font font, final String string) {
+    int getFontHeight(final java.awt.Font font, final String string) {
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g = image.createGraphics();
@@ -195,7 +194,7 @@ class FontUtil {
      * Gets the maximum font height used by alpha-numeric characters ONLY, as recorded by the font.
      */
     public static
-    int getAlphaNumericFontHeight(final Font font) {
+    int getAlphaNumericFontHeight(final java.awt.Font font) {
         // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
@@ -211,7 +210,7 @@ class FontUtil {
      * Gets the maximum font height used by of ALL characters, as recorded by the font.
      */
     public static
-    int getMaxFontHeight(final Font font) {
+    int getMaxFontHeight(final java.awt.Font font) {
         // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
@@ -231,7 +230,7 @@ class FontUtil {
      * @return a BufferedImage of the specified text, font, and color
      */
     public static
-    BufferedImage getFontAsImage(final Font font, String text, Color foregroundColor) {
+    BufferedImage getFontAsImage(final java.awt.Font font, String text, Color foregroundColor) {
         // Because font metrics is based on a graphics context, we need to create a small, temporary image to determine the width and height
         BufferedImage img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();

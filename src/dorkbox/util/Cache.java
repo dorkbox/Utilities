@@ -28,7 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
 public
-class CacheUtil {
+class Cache {
 
     // will never be null.
     private static final MessageDigest digest;
