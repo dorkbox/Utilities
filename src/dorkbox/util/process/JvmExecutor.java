@@ -28,7 +28,7 @@ import dorkbox.util.OS;
  * This will FORK the java process initially used to start the currently running JVM. Changing the java executable will change this behaviors
  */
 public
-class JavaProcessBuilder extends ShellProcessBuilder {
+class JvmExecutor extends ShellExecutor {
 
     /**
      * The directory into which a local VM installation should be unpacked.
@@ -111,12 +111,12 @@ class JavaProcessBuilder extends ShellProcessBuilder {
     private String jarFile;
 
     public
-    JavaProcessBuilder() {
+    JvmExecutor() {
         super(null, null, null);
     }
 
     public
-    JavaProcessBuilder(InputStream in, PrintStream out, PrintStream err) {
+    JvmExecutor(InputStream in, PrintStream out, PrintStream err) {
         super(in, out, err);
     }
 
