@@ -22,6 +22,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import dorkbox.util.OS;
 
@@ -36,51 +37,85 @@ import dorkbox.util.OS;
  * String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
  * }</pre>
  */
+@SuppressWarnings({"UnusedReturnValue", "unused", "ManualArrayToCollectionCopy", "UseBulkOperation", "Convert2Diamond", "Convert2Lambda",
+                   "Anonymous2MethodRef", "WeakerAccess"})
 public
-class ShellProcessBuilder {
+class ShellExecutor {
 
     // TODO: Add the ability to get the process PID via java for mac/windows/linux. Linux is avail from jvm, windows needs JNA
+
+    private static String defaultShell = null;
 
     private final PrintStream outputStream;
     private final PrintStream outputErrorStream;
     private final InputStream inputStream;
 
     protected List<String> arguments = new ArrayList<String>();
+    private Map<String, String> environment = null;
     private String workingDirectory = null;
     private String executableName = null;
     private String executableDirectory = null;
 
     private Process process = null;
+
     private ProcessProxy writeToProcess_input = null;
     private ProcessProxy readFromProcess_output = null;
     private ProcessProxy readFromProcess_error = null;
 
     private boolean createReadWriterThreads = false;
 
-    private boolean isShell;
+    private boolean executeAsShell;
     private String pipeToNullString = "";
+    private ByteArrayOutputStream byteArrayOutputStream;
+
     private List<String> fullCommand;
 
     /**
-     * This will cause the spawned process to pipe it's output to null.
+     * This is a convenience method to easily create a default ShellExecutor. Will block until the process is finished running
+     *
+     * @param executableName the name of the executable to run
+     * @param args the arguments for the executable
+     *
+     * @return true if the process ran successfully (exit value was 0), otherwise false
+     */
+    public static boolean run(String executableName, String... args) {
+        ShellExecutor shellExecutor = new ShellExecutor();
+        shellExecutor.setExecutable(executableName);
+        shellExecutor.addArguments(args);
+
+        // blocks until finished
+        return shellExecutor.start() == 0;
+    }
+
+    /**
+     * This will cause the spawned process to pipe it's output to a String, so it can be retrieved.
      */
     public
-    ShellProcessBuilder() {
-        this(null, null, null);
+    ShellExecutor() {
+        byteArrayOutputStream = new ByteArrayOutputStream(8196);
+        PrintStream outputStream = new PrintStream(byteArrayOutputStream);
+
+        this.inputStream = null;
+        this.outputStream = outputStream;
+        this.outputErrorStream = outputStream;
     }
 
     public
-    ShellProcessBuilder(final PrintStream out) {
-        this(null, out, out);
+    ShellExecutor(final PrintStream out) {
+        this.inputStream = null;
+        this.outputStream = out;
+        this.outputErrorStream = out;
     }
 
     public
-    ShellProcessBuilder(final InputStream in, final PrintStream out) {
-        this(in, out, out);
+    ShellExecutor(final InputStream in, final PrintStream out) {
+        this.inputStream = in;
+        this.outputStream = out;
+        this.outputErrorStream = out;
     }
 
     public
-    ShellProcessBuilder(final InputStream in, final PrintStream out, final PrintStream err) {
+    ShellExecutor(final InputStream in, final PrintStream out, final PrintStream err) {
         this.inputStream = in;
         this.outputStream = out;
         this.outputErrorStream = err;
@@ -97,7 +132,7 @@ class ShellProcessBuilder {
      *
      */
     public final
-    ShellProcessBuilder createReadWriterThreads() {
+    ShellExecutor createReadWriterThreads() {
         createReadWriterThreads = true;
         return this;
     }
@@ -106,20 +141,30 @@ class ShellProcessBuilder {
      * When launched from eclipse, the working directory is USUALLY the root of the project folder
      */
     public final
-    ShellProcessBuilder setWorkingDirectory(final String workingDirectory) {
+    ShellExecutor setWorkingDirectory(final String workingDirectory) {
         // MUST be absolute path!!
         this.workingDirectory = new File(workingDirectory).getAbsolutePath();
         return this;
     }
 
+    /**
+     * The Shell's execution environment variables. Set to `null` to only use the default environment variables (From what
+     * {@link System#getenv} returns)
+     */
     public final
-    ShellProcessBuilder addArgument(final String argument) {
+    ShellExecutor setEnvironment(final Map<String,String> environment) {
+        this.environment = environment;
+        return this;
+    }
+
+    public final
+    ShellExecutor addArgument(final String argument) {
         this.arguments.add(argument);
         return this;
     }
 
     public final
-    ShellProcessBuilder addArguments(final String... paths) {
+    ShellExecutor addArguments(final String... paths) {
         for (String path : paths) {
             this.arguments.add(path);
         }
@@ -127,29 +172,41 @@ class ShellProcessBuilder {
     }
 
     public final
-    ShellProcessBuilder addArguments(final List<String> paths) {
+    ShellExecutor addArguments(final List<String> paths) {
         this.arguments.addAll(paths);
         return this;
     }
 
     public final
-    ShellProcessBuilder setExecutable(final String executableName) {
+    ShellExecutor setExecutable(final String executableName) {
         this.executableName = executableName;
         return this;
     }
 
     public
-    ShellProcessBuilder setExecutableDirectory(final String executableDirectory) {
+    ShellExecutor setExecutableDirectory(final String executableDirectory) {
         // MUST be absolute path!!
         this.executableDirectory = new File(executableDirectory).getAbsolutePath();
         return this;
     }
 
     /**
+     * This will execute as a shell command (bash/cmd/etc) instead of as a forked process.
+     */
+    public
+    ShellExecutor executeAsShellCommand() {
+        this.executeAsShell = true;
+        return this;
+    }
+
+
+
+
+    /**
      * Sends all output data for this process to "null" in a cross platform method
      */
     public
-    ShellProcessBuilder pipeOutputToNull() throws IllegalArgumentException {
+    ShellExecutor pipeOutputToNull() throws IllegalArgumentException {
         if (outputStream != null || outputErrorStream != null) {
             throw new IllegalArgumentException("Cannot pipe shell command to 'null' if an output stream is specified");
         }
@@ -190,34 +247,50 @@ class ShellProcessBuilder {
     public
     int start() {
         fullCommand = new ArrayList<String>();
-
-        // if no executable, then use the command shell
-        if (this.executableName == null) {
-            isShell = true;
-
+        if (executeAsShell) {
             if (OS.isWindows()) {
-                // windows
-                this.executableName = "cmd";
-
-                fullCommand.add(this.executableName);
+                fullCommand.add("cmd");
                 fullCommand.add("/c");
             }
             else {
-                // *nix
-                this.executableName = "/bin/bash";
+                if (defaultShell == null) {
+                    String[] shells = new String[] {"/bin/bash", "/usr/bin/bash",
+                                                    "/bin/pfbash", "/usr/bin/pfbash",
+                                                    "/bin/csh", "/usr/bin/csh",
+                                                    "/bin/pfcsh", "/usr/bin/pfcsh",
+                                                    "/bin/jsh", "/usr/bin/jsh",
+                                                    "/bin/ksh", "/usr/bin/ksh",
+                                                    "/bin/pfksh", "/usr/bin/pfksh",
+                                                    "/bin/ksh93", "/usr/bin/ksh93",
+                                                    "/bin/pfksh93", "/usr/bin/pfksh93",
+                                                    "/bin/pfsh", "/usr/bin/pfsh",
+                                                    "/bin/tcsh", "/usr/bin/tcsh",
+                                                    "/bin/pftcsh", "/usr/bin/pftcsh",
+                                                    "/usr/xpg4/bin/sh", "/usr/xp4/bin/pfsh",
+                                                    "/bin/zsh", "/usr/bin/zsh",
+                                                    "/bin/pfzsh", "/usr/bin/pfzsh",
+                                                    "/bin/sh", "/usr/bin/sh",};
 
-                File file = new File(this.executableName);
-                if (!file.canExecute()) {
-                    this.executableName = "/bin/sh";
+                    for (String shell : shells) {
+                        if (new File(shell).canExecute()) {
+                            defaultShell = shell;
+                            break;
+                        }
+                    }
                 }
 
-                fullCommand.add(this.executableName);
+                if (defaultShell == null) {
+                    throw new RuntimeException("Unable to determine the default shell for the linux/unix environment.");
+                }
+
+                // *nix
+                fullCommand.add(defaultShell);
                 fullCommand.add("-c");
             }
-        }
-        else {
-            // shell and working/exe directory are mutually exclusive
 
+            fullCommand.add(this.executableName);
+        } else {
+            // shell and working/exe directory are mutually exclusive
             if (this.workingDirectory != null) {
                 if (!this.workingDirectory.endsWith(File.separator)) {
                     this.workingDirectory += File.separator;
@@ -239,7 +312,7 @@ class ShellProcessBuilder {
         // if we don't want output...
         boolean pipeToNull = !pipeToNullString.isEmpty();
 
-        if (isShell && !OS.isWindows()) {
+        if (executeAsShell && !OS.isWindows()) {
             // when a shell AND on *nix, we have to place ALL the args into a single "arg" that is passed in
             final StringBuilder stringBuilder = new StringBuilder(1024);
 
@@ -266,7 +339,10 @@ class ShellProcessBuilder {
                     // (this is how it works on the command line!)
                     String[] split = arg.split(" ");
                     for (String s : split) {
-                        fullCommand.add(s);
+                        s = s.trim();
+                        if (!s.isEmpty()) {
+                            fullCommand.add(s);
+                        }
                     }
                 } else {
                     fullCommand.add(arg);
@@ -283,6 +359,25 @@ class ShellProcessBuilder {
         ProcessBuilder processBuilder = new ProcessBuilder(fullCommand);
         if (this.workingDirectory != null) {
             processBuilder.directory(new File(this.workingDirectory));
+        }
+
+
+        // These env variables are a copy of System.getenv()
+        Map<String, String> environment = processBuilder.environment();
+
+        // Make sure all shell calls are LANG=en_US.UTF-8    THIS CAN BE OVERRIDDEN
+        if (OS.isMacOsX()) {
+            // Enable LANG overrides
+            environment.put("SOFTWARE", "");
+        }
+
+        // "export LANG=en_US.UTF-8"
+        environment.put("LANG", "C");
+
+        if (this.environment != null) {
+            for (Map.Entry<String, String> e : this.environment.entrySet()) {
+                environment.put(e.getKey(), e.getValue());
+            }
         }
 
         // combine these so output is properly piped to null.
@@ -329,7 +424,7 @@ class ShellProcessBuilder {
             }
             // we want to pipe our input/output from process to ourselves
             else {
-                /**
+                /*
                  * Proxy the System.out and System.err from the spawned process back
                  * to the user's window. This is important or the spawned process could block.
                  */
@@ -346,7 +441,7 @@ class ShellProcessBuilder {
             }
 
             if (this.inputStream != null) {
-                /**
+                /*
                  * Proxy System.in from the user's window to the spawned process
                  */
                 // writer (read console -> write process)
@@ -363,7 +458,7 @@ class ShellProcessBuilder {
                 @Override
                 public
                 void run() {
-                    ShellProcessBuilder.this.process.destroy();
+                    ShellExecutor.this.process.destroy();
                 }
             });
             hook.setName("ShellProcess Shutdown Hook");
@@ -446,9 +541,38 @@ class ShellProcessBuilder {
     }
 
     /**
+     * There will never be a trailing newline character at the end of this output.
+     *
+     * @return A string representing the output of the process, null if the thread for this was interrupted or the output wasn't saved
+     */
+    public
+    String getOutput() {
+        if (byteArrayOutputStream != null) {
+            return getOutput(byteArrayOutputStream);
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts the baos to a string in a safe way. There will never be a trailing newline character at the end of this output. This will
+     * block until there is a line of input available.
+     *
+     * @return A string representing the output of the process, null if the thread for this was interrupted or the output wasn't saved
+     */
+    public
+    String getOutputLineBuffered() {
+        if (byteArrayOutputStream != null) {
+            return getOutputLineBuffered(byteArrayOutputStream);
+        }
+
+        return null;
+    }
+
+    /**
      * Converts the baos to a string in a safe way. There will never be a trailing newline character at the end of this output.
      *
-     * @param byteArrayOutputStream the baos that is used in the {@link ShellProcessBuilder#ShellProcessBuilder(PrintStream)} (or similar
+     * @param byteArrayOutputStream the baos that is used in the {@link ShellExecutor#ShellExecutor(PrintStream)} (or similar
      *                              calls)
      *
      * @return A string representing the output of the process, null if the thread for this was interrupted
@@ -474,15 +598,14 @@ class ShellProcessBuilder {
      * Converts the baos to a string in a safe way. There will never be a trailing newline character at the end of this output. This will
      * block until there is a line of input available.
      *
-     * @param byteArrayOutputStream the baos that is used in the {@link ShellProcessBuilder#ShellProcessBuilder(PrintStream)} (or similar
-     *                              calls)
+     * @param byteArrayOutputStream the baos that is used in the {@link ShellExecutor#ShellExecutor(PrintStream)} (or similar
+     * calls)
      *
      * @return A string representing the output of the process, null if the thread for this was interrupted
      */
-    public String
-    getOutputLineBuffered(final ByteArrayOutputStream byteArrayOutputStream) {
+    public static
+    String getOutputLineBuffered(final ByteArrayOutputStream byteArrayOutputStream) {
         String s;
-
         synchronized (byteArrayOutputStream) {
             try {
                 byteArrayOutputStream.wait();
