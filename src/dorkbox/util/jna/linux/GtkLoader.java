@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.Function;
 import com.sun.jna.NativeLibrary;
 
-import dorkbox.util.Framework;
 import dorkbox.util.OS;
+import dorkbox.util.Swt;
 import dorkbox.util.jna.JnaHelper;
 
 /**
@@ -170,7 +170,7 @@ class GtkLoader {
 
             // depending on how the system is initialized, SWT may, or may not, have the gtk_main loop running. It will EVENTUALLY run, so we
             // do not want to run our own GTK event loop.
-            _alreadyRunningGTK |= Framework.isSwtLoaded;
+            _alreadyRunningGTK |= Swt.isLoaded;
 
             alreadyRunningGTK = _alreadyRunningGTK;
             isGtk2 = _isGtk2;

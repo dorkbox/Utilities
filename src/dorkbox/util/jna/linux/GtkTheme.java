@@ -35,10 +35,10 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
 import dorkbox.util.FileUtil;
-import dorkbox.util.Framework;
 import dorkbox.util.MathUtil;
 import dorkbox.util.OS;
 import dorkbox.util.OSUtil;
+import dorkbox.util.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;
@@ -413,7 +413,7 @@ My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 fac
                 final AtomicInteger traySize = new AtomicInteger();
 
 
-                if (Framework.isSwtLoaded) {
+                if (Swt.isLoaded) {
                 } else {
                     GtkEventDispatch.dispatchAndWait(new Runnable() {
                         @Override

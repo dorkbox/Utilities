@@ -27,55 +27,81 @@ import org.slf4j.LoggerFactory;
  */
 public
 class JavaFX {
+    public final static boolean isLoaded;
+    public final static boolean isGtk3;
+
     // Methods are cached for performance
     private static final Method dispatchMethod;
     private static final Method isEventThreadMethod;
     private static final Object isEventThreadObject;
 
+
     static {
+        boolean isJavaFxLoaded_ = false;
+        boolean isJavaFxGtk3_ = false;
+
+        try {
+            // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
+            java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+            m.setAccessible(true);
+            ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+            // JavaFX Java7,8 is GTK2 only. Java9 can have it be GTK3 if -Djdk.gtk.version=3 is specified
+            // see http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
+            isJavaFxLoaded_ = (null != m.invoke(cl, "com.sun.javafx.tk.Toolkit")) || (null != m.invoke(cl, "javafx.application.Application"));
+
+            if (isJavaFxLoaded_) {
+                // JavaFX Java7,8 is GTK2 only. Java9 can MAYBE have it be GTK3 if `-Djdk.gtk.version=3` is specified
+                // see
+                // http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
+                // https://docs.oracle.com/javafx/2/system_requirements_2-2-3/jfxpub-system_requirements_2-2-3.htm
+                // from the page: JavaFX 2.2.3 for Linux requires gtk2 2.18+.
+
+                isJavaFxGtk3_ = OS.javaVersion >= 9 && System.getProperty("jdk.gtk.version", "2").equals("3");
+            }
+        } catch (Throwable e) {
+            LoggerFactory.getLogger(Framework.class).debug("Error detecting if JavaFX is loaded", e);
+        }
+
+        isLoaded = isJavaFxLoaded_;
+        isGtk3 = isJavaFxGtk3_;
+
+
         Method _isEventThreadMethod = null;
         Method _dispatchMethod = null;
         Object _isEventThreadObject = null;
 
-        try {
-            Class<?> clazz = Class.forName("javafx.application.Platform");
-            _dispatchMethod = clazz.getMethod("runLater", Runnable.class);
+        if (isJavaFxLoaded_) {
+            try {
+                Class<?> clazz = Class.forName("javafx.application.Platform");
+                _dispatchMethod = clazz.getMethod("runLater", Runnable.class);
 
-            // JAVA 7
-            // javafx.application.Platform.isFxApplicationThread();
+                // JAVA 7
+                // javafx.application.Platform.isFxApplicationThread();
 
-            // JAVA 8
-            // com.sun.javafx.tk.Toolkit.getToolkit().isFxUserThread();
-            if (OS.javaVersion <= 7) {
-                clazz = Class.forName("javafx.application.Platform");
-                _isEventThreadMethod = clazz.getMethod("isFxApplicationThread");
-                _isEventThreadObject = null;
-            } else {
-                clazz = Class.forName("com.sun.javafx.tk.Toolkit");
-                _isEventThreadMethod = clazz.getMethod("getToolkit");
+                // JAVA 8
+                // com.sun.javafx.tk.Toolkit.getToolkit().isFxUserThread();
+                if (OS.javaVersion <= 7) {
+                    clazz = Class.forName("javafx.application.Platform");
+                    _isEventThreadMethod = clazz.getMethod("isFxApplicationThread");
+                    _isEventThreadObject = null;
+                } else {
+                    clazz = Class.forName("com.sun.javafx.tk.Toolkit");
+                    _isEventThreadMethod = clazz.getMethod("getToolkit");
 
-                _isEventThreadObject = _isEventThreadMethod.invoke(null);
-                _isEventThreadMethod = _isEventThreadObject.getClass()
-                            .getMethod("isFxUserThread", (java.lang.Class<?>[])null);
+                    _isEventThreadObject = _isEventThreadMethod.invoke(null);
+                    _isEventThreadMethod = _isEventThreadObject.getClass()
+                                .getMethod("isFxUserThread", (java.lang.Class<?>[])null);
+                }
+            } catch (Throwable e) {
+                LoggerFactory.getLogger(JavaFX.class).error("Cannot initialize JavaFX", e);
             }
-        } catch (Throwable e) {
-            LoggerFactory.getLogger(JavaFX.class).error("Cannot initialize JavaFX", e);
         }
 
         dispatchMethod = _dispatchMethod;
         isEventThreadMethod = _isEventThreadMethod;
         isEventThreadObject = _isEventThreadObject;
-    }
-
-    public static
-    void init() {
-        if (dispatchMethod == null || isEventThreadMethod == null) {
-            LoggerFactory.getLogger(JavaFX.class)
-                         .error("Unable to initialize JavaFX! Please create an issue with your OS and Java " +
-                                "version so we may further investigate this issue.");
-        }
-    }
-
+}
 
     public static
     void dispatch(final Runnable runnable) {

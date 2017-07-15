@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
-import dorkbox.util.Framework;
 import dorkbox.util.JavaFX;
 import dorkbox.util.Swt;
 
@@ -35,9 +34,6 @@ public
 class GtkEventDispatch {
     static boolean FORCE_GTK2 = false;
     static boolean DEBUG = false;
-
-    private static final boolean isSwtLoaded = Framework.isSwtLoaded;
-    private static final boolean isJavaFxLoaded = Framework.isJavaFxLoaded;
 
     // have to save these in a field to prevent GC on the objects (since they go out-of-scope from java)
     private static final LinkedList<Object> gtkCallbacks = new LinkedList<Object>();
@@ -135,7 +131,7 @@ class GtkEventDispatch {
             }
         });
 
-        if (isJavaFxLoaded) {
+        if (JavaFX.isLoaded) {
             if (!JavaFX.isEventThread()) {
                 try {
                     if (!blockUntilStarted.await(10, TimeUnit.SECONDS)) {
@@ -161,7 +157,7 @@ class GtkEventDispatch {
                 }
             }
         }
-        else if (isSwtLoaded) {
+        else if (Swt.isLoaded) {
             if (!Swt.isEventThread()) {
                 // we have to WAIT until all events are done processing, OTHERWISE we have initialization issues
                 try {
@@ -219,7 +215,7 @@ class GtkEventDispatch {
     public static
     void dispatch(final Runnable runnable) {
         if (GtkLoader.alreadyRunningGTK) {
-            if (isJavaFxLoaded) {
+            if (JavaFX.isLoaded) {
                 // JavaFX only
                 if (JavaFX.isEventThread()) {
                     // Run directly on the JavaFX event thread
@@ -232,7 +228,7 @@ class GtkEventDispatch {
                 return;
             }
 
-            if (isSwtLoaded) {
+            if (Swt.isLoaded) {
                 if (Swt.isEventThread()) {
                     // Run directly on the SWT event thread. If it's not on the dispatch thread, we can use raw GTK to put it there
                     runnable.run();
