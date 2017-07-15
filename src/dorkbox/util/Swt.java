@@ -71,7 +71,7 @@ class Swt {
                 }
             }
         } catch (Throwable e) {
-            LoggerFactory.getLogger(Framework.class).debug("Error detecting if SWT is loaded", e);
+            LoggerFactory.getLogger(Swt.class).debug("Error detecting if SWT is loaded", e);
         }
 
         isLoaded = isSwtLoaded_;
