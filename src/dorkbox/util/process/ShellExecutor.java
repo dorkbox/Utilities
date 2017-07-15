@@ -79,12 +79,12 @@ class ShellExecutor {
      * @return true if the process ran successfully (exit value was 0), otherwise false
      */
     public static boolean run(String executableName, String... args) {
-        ShellExecutor shellExecutor = new ShellExecutor();
-        shellExecutor.setExecutable(executableName);
-        shellExecutor.addArguments(args);
+        ShellExecutor shell = new ShellExecutor();
+        shell.setExecutable(executableName);
+        shell.addArguments(args);
 
         // blocks until finished
-        return shellExecutor.start() == 0;
+        return shell.start() == 0;
     }
 
     /**
@@ -246,6 +246,11 @@ class ShellExecutor {
 
     public
     int start() {
+        return start(true);
+    }
+
+    public
+    int start(final boolean waitForProcesses) {
         fullCommand = new ArrayList<String>();
         if (executeAsShell) {
             if (OS.isWindows()) {
@@ -288,7 +293,7 @@ class ShellExecutor {
                 fullCommand.add("-c");
             }
 
-            fullCommand.add(this.executableName);
+            // fullCommand.add(this.executableName); // done elsewhere!
         } else {
             // shell and working/exe directory are mutually exclusive
             if (this.workingDirectory != null) {
@@ -315,6 +320,8 @@ class ShellExecutor {
         if (executeAsShell && !OS.isWindows()) {
             // when a shell AND on *nix, we have to place ALL the args into a single "arg" that is passed in
             final StringBuilder stringBuilder = new StringBuilder(1024);
+
+            stringBuilder.append(this.executableName).append(" ");
 
             for (String arg : this.arguments) {
                 stringBuilder.append(arg).append(" ");
@@ -390,10 +397,11 @@ class ShellExecutor {
         } catch (Exception ex) {
             if (outputErrorStream != null) {
                 this.outputErrorStream.println("There was a problem executing the program.  Details:");
+                ex.printStackTrace(this.outputErrorStream);
             } else {
                 System.err.println("There was a problem executing the program.  Details:");
+                ex.printStackTrace();
             }
-            ex.printStackTrace(this.outputErrorStream);
 
             if (this.process != null) {
                 try {
@@ -458,10 +466,39 @@ class ShellExecutor {
                 @Override
                 public
                 void run() {
+                    try {
+                        // wait for the READER threads to die (meaning their streams have closed/EOF'd)
+                        if (writeToProcess_input != null) {
+                            // the INPUT (from stdin). It should be via the InputConsole, but if it's in eclipse,etc -- then this doesn't do anything
+                            // We are done reading input, since our program has closed...
+                            writeToProcess_input.close();
+                            if (createReadWriterThreads) {
+                                writeToProcess_input.join();
+                            }
+                        }
+
+                        readFromProcess_output.close();
+                        if (createReadWriterThreads) {
+                            readFromProcess_output.join();
+                        }
+
+                        if (readFromProcess_error != null) {
+                            readFromProcess_error.close();
+                            if (createReadWriterThreads) {
+                                readFromProcess_error.join();
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread()
+                              .interrupt();
+                    }
+
+                    // forcibly terminate the process when it's streams have closed.
+                    // this is for cleanup ONLY, not to actually do anything.
                     ShellExecutor.this.process.destroy();
                 }
             });
-            hook.setName("ShellProcess Shutdown Hook");
+            hook.setName("ShellExecutor Shutdown Hook for " + this.executableName);
 
             // add a shutdown hook to make sure that we properly terminate our spawned processes.
             // hook is NOT set to daemon mode, because this is run during shutdown
@@ -488,6 +525,7 @@ class ShellExecutor {
             else {
                 readFromProcess_output.run();
             }
+
             if (readFromProcess_error != null) {
                 if (createReadWriterThreads) {
                     readFromProcess_error.start();
@@ -499,38 +537,22 @@ class ShellExecutor {
 
             int exitValue = 0;
 
-            try {
-                this.process.waitFor();
-
-                exitValue = this.process.exitValue();
-
-                // wait for the READER threads to die (meaning their streams have closed/EOF'd)
-                if (writeToProcess_input != null) {
-                    // the INPUT (from stdin). It should be via the InputConsole, but if it's in eclipse,etc -- then this doesn't do anything
-                    // We are done reading input, since our program has closed...
-                    writeToProcess_input.close();
-                    writeToProcess_input.join();
-                }
-                readFromProcess_output.close();
-                readFromProcess_output.join();
-                if (readFromProcess_error != null) {
-                    readFromProcess_error.close();
-                    readFromProcess_error.join();
+            if (waitForProcesses) {
+                try {
+                    this.process.waitFor();
+                    exitValue = this.process.exitValue();
+                    hook.run();
+                } catch (InterruptedException e) {
+                    Thread.currentThread()
+                          .interrupt();
                 }
 
-                // forcibly terminate the process when it's streams have closed.
-                // this is for cleanup ONLY, not to actually do anything.
-                this.process.destroy();
-            } catch (InterruptedException e) {
-                Thread.currentThread()
-                      .interrupt();
-            }
-
-            // remove the shutdown hook now that we've shutdown.
-            try {
-                Runtime.getRuntime().removeShutdownHook(hook);
-            } catch (IllegalStateException ignored) {
-                // can happen, safe to ignore
+                // remove the shutdown hook now that we've shutdown.
+                try {
+                    Runtime.getRuntime().removeShutdownHook(hook);
+                } catch (IllegalStateException ignored) {
+                    // can happen, safe to ignore
+                }
             }
 
             return exitValue;
