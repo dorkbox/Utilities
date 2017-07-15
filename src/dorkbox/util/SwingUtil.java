@@ -42,7 +42,7 @@ import javax.swing.UIManager;
 
 @SuppressWarnings("unused")
 public
-class Swing {
+class SwingUtil {
     static {
         /*
          * hack workaround for starting the Toolkit thread before any Timer stuff javax.swing.Timer uses the Event Dispatch Thread, which is not

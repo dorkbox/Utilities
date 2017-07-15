@@ -35,7 +35,7 @@ import java.util.Enumeration;
  */
 @SuppressWarnings("unused")
 public
-class Font {
+class FontUtil {
     /** Default location where all the fonts are stored */
     @Property
     public static String FONTS_LOCATION = "resources/fonts";
