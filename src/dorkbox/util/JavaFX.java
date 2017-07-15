@@ -60,7 +60,7 @@ class JavaFX {
                 isJavaFxGtk3_ = OS.javaVersion >= 9 && System.getProperty("jdk.gtk.version", "2").equals("3");
             }
         } catch (Throwable e) {
-            LoggerFactory.getLogger(Framework.class).debug("Error detecting if JavaFX is loaded", e);
+            LoggerFactory.getLogger(JavaFX.class).debug("Error detecting if JavaFX is loaded", e);
         }
 
         isLoaded = isJavaFxLoaded_;
