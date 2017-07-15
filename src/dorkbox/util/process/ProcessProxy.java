@@ -45,7 +45,7 @@ class ProcessProxy extends Thread {
                 os.flush(); // this goes to the console, so we don't want to close it!
             }
             this.is.close();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         }
     }
 
@@ -91,7 +91,7 @@ class ProcessProxy extends Thread {
                         os.flush();
 
                         synchronized (os) {
-                            os.notify();
+                            os.notifyAll();
                         }
                     }
                 }
