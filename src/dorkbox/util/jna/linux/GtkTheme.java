@@ -21,9 +21,7 @@ import static dorkbox.util.jna.linux.Gtk.Gtk3;
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,7 +40,7 @@ import dorkbox.util.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;
-import dorkbox.util.process.ShellProcessBuilder;
+import dorkbox.util.process.ShellExecutor;
 
 /**
  * Class to contain all of the various methods needed to get information set by a GTK theme.
@@ -230,18 +228,15 @@ class GtkTheme {
         OSUtil.DesktopEnv.Env env = OSUtil.DesktopEnv.get();
         // sometimes the scaling-factor is set. If we have gsettings, great! otherwise try KDE
         try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-            PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
             // gsettings get org.gnome.desktop.interface scaling-factor
-            final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
+            final ShellExecutor shellVersion = new ShellExecutor();
             shellVersion.setExecutable("gsettings");
             shellVersion.addArgument("get");
             shellVersion.addArgument("org.gnome.desktop.interface");
             shellVersion.addArgument("scaling-factor");
             shellVersion.start();
 
-            String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+            String output = shellVersion.getOutput();
 
             if (!output.isEmpty()) {
                 // DEFAULT icon size is 16. HiDpi changes this scale, so we should use it as well.

@@ -16,15 +16,13 @@
 package dorkbox.util;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.PrintStream;
 import java.util.LinkedList;
 import java.util.List;
 
 import dorkbox.util.jna.linux.Gtk;
-import dorkbox.util.process.ShellProcessBuilder;
+import dorkbox.util.process.ShellExecutor;
 
 /**
  * Container for all OS specific tests and methods. These do not exist in OS.java, because of dependency issues (OS.java should not
@@ -191,15 +189,12 @@ class OSUtil {
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                 // uname
-                final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                final ShellExecutor shell = new ShellExecutor();
                 shell.setExecutable("uname");
                 shell.start();
 
-                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                String output = shell.getOutput();
                 return output.startsWith("FreeBSD");
             } catch (Throwable ignored) {
             }
@@ -378,16 +373,13 @@ class OSUtil {
             if (!isSudoOrRoot) {
                 // running as root (also can be "sudo" user). A lot slower that checking a sys env, but this is guaranteed to work
                 try {
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                    PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                     // id -u
-                    final ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                    final ShellExecutor shell = new ShellExecutor();
                     shell.setExecutable("id");
                     shell.addArgument("-u");
                     shell.start();
 
-                    String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                    String output = shell.getOutput();
                     isSudoOrRoot = "0".equals(output);
                 } catch (Throwable ignored) {
                 }
@@ -489,31 +481,28 @@ class OSUtil {
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                 // note: some versions of linux can ONLY access "ps a"; FreeBSD and most linux is "ps x"
                 // we try "x" first
 
                 // ps x | grep gnome-shell
-                ShellProcessBuilder shell = new ShellProcessBuilder(outputStream);
+                ShellExecutor shell = new ShellExecutor();
                 shell.setExecutable("ps");
                 shell.addArgument("x");
                 shell.start();
 
-                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                String output = shell.getOutput();
                 boolean contains = output.contains("gnome-shell");
 
                 if (!contains && OS.isLinux()) {
                     // only try again if we are linux
 
                     // ps a | grep gnome-shell
-                    shell = new ShellProcessBuilder(outputStream);
+                    shell = new ShellExecutor();
                     shell.setExecutable("ps");
                     shell.addArgument("a");
                     shell.start();
 
-                    output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                    output = shell.getOutput();
                     contains = output.contains("gnome-shell");
                 }
 
@@ -533,16 +522,13 @@ class OSUtil {
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                 // gnome-shell --version
-                final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
+                final ShellExecutor shellVersion = new ShellExecutor();
                 shellVersion.setExecutable("gnome-shell");
                 shellVersion.addArgument("--version");
                 shellVersion.start();
 
-                String versionString = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                String versionString = shellVersion.getOutput();
 
                 if (!versionString.isEmpty()) {
                     // GNOME Shell 3.14.1
@@ -605,17 +591,14 @@ class OSUtil {
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                 // plasma-desktop -v
                 // plasmashell --version
-                final ShellProcessBuilder shellVersion = new ShellProcessBuilder(outputStream);
+                final ShellExecutor shellVersion = new ShellExecutor();
                 shellVersion.setExecutable("plasmashell");
                 shellVersion.addArgument("--version");
                 shellVersion.start();
 
-                String output = ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                String output = shellVersion.getOutput();
 
                 if (!output.isEmpty()) {
                     // DEFAULT icon size is 16. KDE is bananas on what they did with tray icon scale
@@ -650,11 +633,8 @@ class OSUtil {
             }
 
             try {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8196);
-                PrintStream outputStream = new PrintStream(byteArrayOutputStream);
-
                 // xfconf-query -c xfce4-panel -l
-                final ShellProcessBuilder xfconf_query = new ShellProcessBuilder(outputStream);
+                final ShellExecutor xfconf_query = new ShellExecutor();
                 xfconf_query.setExecutable("xfconf-query");
                 xfconf_query.addArgument("-c " + channel);
                 if (property != null) {
@@ -666,7 +646,7 @@ class OSUtil {
                 }
                 xfconf_query.start();
 
-                return ShellProcessBuilder.getOutput(byteArrayOutputStream);
+                return xfconf_query.getOutput();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
