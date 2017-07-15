@@ -71,7 +71,7 @@ class ShellExecutor {
     private List<String> fullCommand;
 
     /**
-     * This is a convenience method to easily create a default ShellExecutor. Will block until the process is finished running
+     * This is a convenience method to easily create a default process. Will block until the process is finished running
      *
      * @param executableName the name of the executable to run
      * @param args the arguments for the executable
