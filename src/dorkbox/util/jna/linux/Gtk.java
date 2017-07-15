@@ -379,5 +379,16 @@ interface Gtk {
      * @return a new GtkImageMenuItem.
      */
     Pointer gtk_image_menu_item_new_from_stock(String stock_id, Pointer accel_group);
+
+
+    /**
+     * A convenience function for launching the default application to show the uri. Like gtk_show_uri_on_window(), but takes a screen
+     * as transient parent instead of a window.
+     *
+     * @param timestamp GDK_CURRENT_TIME = 0 (this is what you should use)
+     * @since 2.14
+     */
+    @Deprecated
+    boolean gtk_show_uri(Pointer screen, String uri, int timestamp, Pointer error);
 }
 
