@@ -38,7 +38,7 @@ interface Gtk {
 
     // make specific versions of GTK2 vs GTK3 APIs
     // ALSO, GTK must be loaded via .init()
-    Gtk Gtk2 = GtkLoader.init() && GtkLoader.isGtk2 ? new Gtk2() : new Gtk3();
+    Gtk Gtk2 = GtkLoader.isGtk2 ? new Gtk2() : new Gtk3();
     Gtk3 Gtk3 = GtkLoader.isGtk2 ? null : (Gtk3) Gtk2;
 
     boolean isGtk2 = GtkLoader.isGtk2;

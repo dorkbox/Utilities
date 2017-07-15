@@ -199,10 +199,5 @@ class GtkLoader {
             }
         }
     }
-
-    public static
-    boolean init() {
-        return true;
-    }
 }
 
