@@ -24,11 +24,35 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import dorkbox.util.jna.linux.Gtk2;
+import dorkbox.util.jna.linux.GtkEventDispatch;
 import dorkbox.util.process.ShellExecutor;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "Convert2Lambda"})
 public
 class Desktop {
+    /**
+     * Launches the default browser to display the specified HTTP address.
+     *
+     * If the default browser is not able to handle the specified address, the application registered for handling
+     * HTTP requests of the specified type is invoked.
+     *
+     * @param address the URL to browse/open
+     */
+    public static void browseURL(String address) throws IOException {
+        if (address == null || address.isEmpty()) {
+            throw new IOException("Address must not be null or empty.");
+        }
+
+        URI uri;
+        try {
+            uri = new URI(address);
+            browseURL(uri);
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid URI " + address);
+        }
+    }
+
     /**
      * Launches the default browser to display a {@code URI}.
      *
@@ -37,15 +61,24 @@ class Desktop {
      * defined by the {@code URI} class.
      *
      * @param uri the URL to browse/open
-     *
-     * @throws IOException
      */
     public static void browseURL(URI uri) throws IOException {
+        if (uri == null) {
+            throw new IOException("URI must not be null.");
+        }
+
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded && OSUtil.DesktopEnv.isGtk3) {
-            if (!ShellExecutor.run("xdg-open", uri.toString())) {
-                throw new IOException("Error running xdg-open for " + uri.toString());
-            }
+        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
+        // Additionally, xdg-open  can cause problems in Linux with Chrome installed but not the default browser. It will crash Chrome
+        //      if Chrome was open before this app opened a URL
+        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+            GtkEventDispatch.dispatch(new Runnable() {
+                @Override
+                public
+                void run() {
+                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                }
+            });
         }
         else {
             if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
@@ -60,12 +93,18 @@ class Desktop {
      * Launches the mail composing window of the user default mail client for the specified address.
      *
      * @param address who the email goes to
-     *
-     * @throws IOException
      */
     public static void launchEmail(String address) throws IOException {
-        URI uri = null;
+        if (address == null || address.isEmpty()) {
+            throw new IOException("Address must not be null or empty.");
+        }
+
+        URI uri;
         try {
+            if (!address.startsWith("mailto:")) {
+                address = "mailto:" + address;
+            }
+
             uri = new URI(address);
             launchEmail(uri);
         } catch (URISyntaxException e) {
@@ -81,15 +120,21 @@ class Desktop {
      * details.
      *
      * @param uri the specified {@code mailto:} URI
-     *
-     * @throws IOException
      */
     public static void launchEmail(final URI uri) throws IOException {
+        if (uri == null) {
+            throw new IOException("URI must not be null.");
+        }
+
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded && OSUtil.DesktopEnv.isGtk3) {
-            if (!ShellExecutor.run("xdg-email", uri.toString())) {
-                throw new IOException("Error running xdg-email for " + uri.toString());
-            }
+        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+            GtkEventDispatch.dispatch(new Runnable() {
+                @Override
+                public
+                void run() {
+                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                }
+            });
         }
         else {
             if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
@@ -105,13 +150,15 @@ class Desktop {
      *
      * Works around several OS limitations:
      *  - Apple tries to launch <code>.app</code> bundle directories as applications rather than browsing contents
-     *  - Linux has mixed support for <code>Desktop.getDesktop()</code>.  Uses the <code>xdg-open</code> fallback.
+     *  - Linux has mixed support for <code>Desktop.getDesktop()</code>.  Uses <code>JNA</code> instead.
      *
      * @param path The directory to browse
-     *
-     * @throws IOException
      */
     public static void browseDirectory(String path) throws IOException {
+        if (path == null || path.isEmpty()) {
+            throw new IOException("Path must not be null or empty.");
+        }
+
         if (OS.isMacOsX()) {
             File directory = new File(path);
 
@@ -123,13 +170,26 @@ class Desktop {
                 if (!ShellExecutor.run("open", "-R", child.getCanonicalPath())) {
                     throw new IOException("Error opening the directory for " + path);
                 }
+                return;
             }
         } else {
             // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-            if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded && OSUtil.DesktopEnv.isGtk3) {
-                if (!ShellExecutor.run("xdg-open", path)) {
-                    throw new IOException("Error running xdg-open for " + path);
+            // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
+            if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+                // it can actually be MORE that just "file://" (ie, "ftp://" is legit as well)
+                if (!path.contains("://")) {
+                    path = "file://" + path;
                 }
+
+                final String finalPath = path;
+                GtkEventDispatch.dispatch(new Runnable() {
+                    @Override
+                    public
+                    void run() {
+                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
+                    }
+                });
+                return;
             }
             else {
                 if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)) {
