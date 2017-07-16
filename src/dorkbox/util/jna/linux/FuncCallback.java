@@ -21,6 +21,7 @@ import com.sun.jna.Pointer;
 import dorkbox.util.Keep;
 
 @Keep
+public
 interface FuncCallback extends Callback {
     /**
      * @return Gtk.FALSE if it will be automatically removed from the stack once it's handled
