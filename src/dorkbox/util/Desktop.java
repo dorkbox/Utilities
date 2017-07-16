@@ -33,13 +33,14 @@ public
 class Desktop {
     /**
      * Launches the default browser to display the specified HTTP address.
-     *
+     * <p>
      * If the default browser is not able to handle the specified address, the application registered for handling
      * HTTP requests of the specified type is invoked.
      *
      * @param address the URL to browse/open
      */
-    public static void browseURL(String address) throws IOException {
+    public static
+    void browseURL(String address) throws IOException {
         if (address == null || address.isEmpty()) {
             throw new IOException("Address must not be null or empty.");
         }
@@ -55,14 +56,15 @@ class Desktop {
 
     /**
      * Launches the default browser to display a {@code URI}.
-     *
+     * <p>
      * If the default browser is not able to handle the specified {@code URI}, the application registered for handling
      * {@code URIs} of the specified type is invoked. The application is determined from the protocol and path of the {@code URI}, as
      * defined by the {@code URI} class.
      *
      * @param uri the URL to browse/open
      */
-    public static void browseURL(final URI uri) throws IOException {
+    public static
+    void browseURL(final URI uri) throws IOException {
         if (uri == null) {
             throw new IOException("URI must not be null.");
         }
@@ -80,12 +82,13 @@ class Desktop {
                 }
             });
         }
+        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
+                                                                          .isSupported(java.awt.Desktop.Action.BROWSE)) {
+            java.awt.Desktop.getDesktop()
+                            .browse(uri);
+        }
         else {
-            if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
-                java.awt.Desktop.getDesktop().browse(uri);
-            } else {
-                throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
-            }
+            throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
         }
     }
 
@@ -94,7 +97,8 @@ class Desktop {
      *
      * @param address who the email goes to
      */
-    public static void launchEmail(String address) throws IOException {
+    public static
+    void launchEmail(String address) throws IOException {
         if (address == null || address.isEmpty()) {
             throw new IOException("Address must not be null or empty.");
         }
@@ -121,7 +125,8 @@ class Desktop {
      *
      * @param uri the specified {@code mailto:} URI
      */
-    public static void launchEmail(final URI uri) throws IOException {
+    public static
+    void launchEmail(final URI uri) throws IOException {
         if (uri == null) {
             throw new IOException("URI must not be null.");
         }
@@ -136,25 +141,27 @@ class Desktop {
                 }
             });
         }
+        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
+                                                                          .isSupported(java.awt.Desktop.Action.MAIL)) {
+            java.awt.Desktop.getDesktop()
+                            .mail(uri);
+        }
         else {
-            if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.MAIL)) {
-                java.awt.Desktop.getDesktop().mail(uri);
-            } else {
-                throw new IOException("Current OS and desktop configuration does not support launching an email client");
-            }
+            throw new IOException("Current OS and desktop configuration does not support launching an email client");
         }
     }
 
     /**
      * Opens the specified path in the system-default file browser.
-     *
+     * <p>
      * Works around several OS limitations:
-     *  - Apple tries to launch <code>.app</code> bundle directories as applications rather than browsing contents
-     *  - Linux has mixed support for <code>Desktop.getDesktop()</code>.  Uses <code>JNA</code> instead.
+     * - Apple tries to launch <code>.app</code> bundle directories as applications rather than browsing contents
+     * - Linux has mixed support for <code>Desktop.getDesktop()</code>.  Uses <code>JNA</code> instead.
      *
      * @param path The directory to browse
      */
-    public static void browseDirectory(String path) throws IOException {
+    public static
+    void browseDirectory(String path) throws IOException {
         if (path == null || path.isEmpty()) {
             throw new IOException("Path must not be null or empty.");
         }
@@ -170,37 +177,32 @@ class Desktop {
                 if (!ShellExecutor.run("open", "-R", child.getCanonicalPath())) {
                     throw new IOException("Error opening the directory for " + path);
                 }
-                return;
-            }
-        } else {
-            // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-            // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-            if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
-                // it can actually be MORE that just "file://" (ie, "ftp://" is legit as well)
-                if (!path.contains("://")) {
-                    path = "file://" + path;
-                }
-
-                final String finalPath = path;
-                GtkEventDispatch.dispatch(new Runnable() {
-                    @Override
-                    public
-                    void run() {
-                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
-                    }
-                });
-                return;
-            }
-            else {
-                if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)) {
-                    java.awt.Desktop.getDesktop().open(new File(path));
-                    return;
-                } else {
-                    throw new IOException("Current OS and desktop configuration does not support opening a directory to browse");
-                }
             }
         }
+        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
+        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
+        else if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+            // it can actually be MORE that just "file://" (ie, "ftp://" is legit as well)
+            if (!path.contains("://")) {
+                path = "file://" + path;
+            }
 
-        throw new IOException("Unable to open " + path);
+            final String finalPath = path;
+            GtkEventDispatch.dispatch(new Runnable() {
+                @Override
+                public
+                void run() {
+                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
+                }
+            });
+        }
+        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
+                                                                          .isSupported(java.awt.Desktop.Action.OPEN)) {
+            java.awt.Desktop.getDesktop()
+                            .open(new File(path));
+        }
+        else {
+            throw new IOException("Current OS and desktop configuration does not support opening a directory to browse");
+        }
     }
 }
