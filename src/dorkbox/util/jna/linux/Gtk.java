@@ -25,7 +25,7 @@ import dorkbox.util.jna.linux.structs.GtkStyle;
  * <p>
  * Direct-mapping, See: https://github.com/java-native-access/jna/blob/master/www/DirectMapping.md
  */
-@SuppressWarnings({"Duplicates", "SameParameterValue", "DeprecatedIsStillUsed", "WeakerAccess"})
+@SuppressWarnings({"Duplicates", "SameParameterValue", "DeprecatedIsStillUsed", "WeakerAccess", "UnusedReturnValue"})
 public
 interface Gtk {
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
@@ -35,6 +35,12 @@ interface Gtk {
     // For funsies to look at, SyncThing did a LOT of work on compatibility in python (unfortunate for us, but interesting).
     // https://github.com/syncthing/syncthing-gtk/blob/b7a3bc00e3bb6d62365ae62b5395370f3dcc7f55/syncthing_gtk/statusicon.py
 
+    int FALSE = 0;
+    int TRUE = 1;
+
+    int MAJOR = GtkLoader.MAJOR;
+    int MINOR = GtkLoader.MINOR;
+    int MICRO = GtkLoader.MICRO;
 
     // make specific versions of GTK2 vs GTK3 APIs
     // ALSO, GTK must be loaded via .init()
@@ -49,12 +55,7 @@ interface Gtk {
 
     Function gtk_status_icon_position_menu = GtkLoader.gtk_status_icon_position_menu;
 
-    int FALSE = 0;
-    int TRUE = 1;
 
-    int MAJOR = GtkLoader.MAJOR;
-    int MINOR = GtkLoader.MINOR;
-    int MICRO = GtkLoader.MICRO;
 
     /**
      * Adds a function to be called whenever there are no higher priority events pending. If the function returns FALSE it is automatically
@@ -77,11 +78,6 @@ interface Gtk {
      * innermost invocation of the main loop return.
      */
     void gtk_main();
-
-    /**
-     * aks for the current nesting level of the main loop. Useful to determine (at startup) if GTK is already running
-     */
-    int gtk_main_level();
 
     /**
      * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS you know

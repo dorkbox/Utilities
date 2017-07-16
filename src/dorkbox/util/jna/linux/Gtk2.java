@@ -43,10 +43,6 @@ class Gtk2 implements Gtk {
 
     @Override
     public native
-    int gtk_main_level();
-
-    @Override
-    public native
     void gtk_main_quit();
 
     @Override

@@ -15,8 +15,6 @@
  */
 package dorkbox.util.jna.linux;
 
-import static dorkbox.util.jna.linux.Gtk.Gtk2;
-
 import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Function;
@@ -84,23 +82,23 @@ class GtkLoader {
         String gtk2LibName = "gtk-x11-2.0";
         String gtk3LibName = "libgtk-3.so.0";
 
-
         if (!_isLoaded && shouldUseGtk2) {
             try {
                 NativeLibrary library = JnaHelper.register(gtk2LibName, Gtk2.class);
-                gtk_status_icon_position_menu = Function.getFunction(gtk2LibName, "gtk_status_icon_position_menu");
-                _isGtk2 = true;
-                Gtk gtk = new Gtk2();
 
-                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
-                // when it's '1', it means that someone else has started GTK -- so we DO NOT NEED TO.
-                _alreadyRunningGTK = gtk.gtk_main_level() != 0;
-                _isLoaded = true;
+                _isGtk2 = true;
 
                 major = library.getGlobalVariableAddress("gtk_major_version").getInt(0);
                 minor = library.getGlobalVariableAddress("gtk_minor_version").getInt(0);
                 micro = library.getGlobalVariableAddress("gtk_micro_version").getInt(0);
 
+                gtk_status_icon_position_menu = library.getFunction( "gtk_status_icon_position_menu");
+                Function gtk_main_level = library.getFunction("gtk_main_level");
+
+                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                // when it's '1', it means that someone else has started GTK -- so we DO NOT NEED TO.
+                _alreadyRunningGTK = gtk_main_level.invokeInt(null) != 0;
+                _isLoaded = true;
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk2LibName);
                 }
@@ -116,26 +114,35 @@ class GtkLoader {
         // start with version 3
         if (!_isLoaded) {
             try {
-                // ALSO map Gtk2.java to GTK3 library.
-                JnaHelper.register(gtk3LibName, Gtk3.class);
-                gtk_status_icon_position_menu = Function.getFunction(gtk3LibName, "gtk_status_icon_position_menu");
-                Gtk3 gtk = new Gtk3();
+                // have to get the version information FIRST, because there are some really old GTK3 libraries out there.
+                NativeLibrary library = JnaHelper.register(gtk3LibName, Gtk3VersionInfo.class);
+
+                Gtk3VersionInfo version = new Gtk3VersionInfo();
+                major = version.gtk_get_major_version();
+                minor = version.gtk_get_minor_version();
+                micro = version.gtk_get_micro_version();
+                library.dispose();
+
+                library = JnaHelper.register(gtk3LibName, Gtk3.class);
+                if (major >= 3 && minor >= 10) {
+                    // Abusing static fields this way is not proper, but it gets the job done nicely.
+                    Gtk3.gdk_window_get_scale_factor = library.getFunction("gdk_window_get_scale_factor");
+                }
+
+                gtk_status_icon_position_menu = library.getFunction( "gtk_status_icon_position_menu");
+                Function gtk_main_level = library.getFunction("gtk_main_level");
 
                 // when running inside of JavaFX, this will be '1'. All other times this should be '0'
                 // when it's '1', it means that someone else has started GTK -- so we DO NOT NEED TO.
-                _alreadyRunningGTK = gtk.gtk_main_level() != 0;
+                _alreadyRunningGTK = gtk_main_level.invokeInt(null) != 0;
                 _isLoaded = true;
-
-                major = gtk.gtk_get_major_version();
-                minor = gtk.gtk_get_minor_version();
-                micro = gtk.gtk_get_micro_version();
 
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk3LibName);
                 }
             } catch (Throwable e) {
                 if (GtkEventDispatch.DEBUG) {
-                    LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
+                    LoggerFactory.getLogger(GtkLoader.class).error("Error loading library.", e);
                 }
             }
         }
@@ -144,18 +151,19 @@ class GtkLoader {
         if (!_isLoaded) {
             try {
                 NativeLibrary library = JnaHelper.register(gtk2LibName, Gtk2.class);
-                gtk_status_icon_position_menu = Function.getFunction(gtk2LibName, "gtk_status_icon_position_menu");
+
                 _isGtk2 = true;
-
-                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
-                // when it's '1', it means that someone else has started GTK -- so we DO NOT NEED TO.
-                _alreadyRunningGTK = Gtk2.gtk_main_level() != 0;
-                _isLoaded = true;
-
                 major = library.getGlobalVariableAddress("gtk_major_version").getInt(0);
                 minor = library.getGlobalVariableAddress("gtk_minor_version").getInt(0);
                 micro = library.getGlobalVariableAddress("gtk_micro_version").getInt(0);
 
+                gtk_status_icon_position_menu = Function.getFunction(gtk2LibName, "gtk_status_icon_position_menu");
+                Function gtk_main_level = library.getFunction("gtk_main_level");
+
+                // when running inside of JavaFX, this will be '1'. All other times this should be '0'
+                // when it's '1', it means that someone else has started GTK -- so we DO NOT NEED TO.
+                _alreadyRunningGTK = gtk_main_level.invokeInt(null) != 0;
+                _isLoaded = true;
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk2LibName);
                 }

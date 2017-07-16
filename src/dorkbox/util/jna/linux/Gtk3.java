@@ -27,24 +27,19 @@ import dorkbox.util.jna.linux.structs.GtkStyle;
  */
 public
 class Gtk3 implements Gtk {
+    static Function gdk_window_get_scale_factor = null;
+
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 | grep gtk
     // objdump -T /usr/local/lib/libgtk-3.so.0 | grep gtk
 
-    /**
-     * This function is typically used when implementing a GtkContainer subclass. Obtains the preferred size of a widget. The
-     * container uses this information to arrange its child widgets and decide what size allocations to give them with
-     * gtk_widget_size_allocate().
-     *
-     * You can also call this function from an application, with some caveats. Most notably, getting a size request requires the
-     * widget to be associated with a screen, because font information may be needed. Multihead-aware applications should keep this in mind.
-     *
-     * Also remember that the size request is not necessarily the size a widget will actually be allocated.
-     */
-    @Override
-    public
-    void gtk_widget_size_request(final Pointer widget, final Pointer requisition) {
-        this.gtk_widget_get_preferred_size(widget, requisition, null);
-    }
+    public native
+    int gtk_get_major_version();
+
+    public native
+    int gtk_get_minor_version();
+
+    public native
+    int gtk_get_micro_version();
 
     /**
      * Retrieves the minimum and natural size of a widget, taking into account the widget’s preference for height-for-width management.
@@ -64,15 +59,6 @@ class Gtk3 implements Gtk {
     public native
     void gtk_widget_get_preferred_size(final Pointer widget, final Pointer minimum_size, final Pointer natural_size);
 
-    public native
-    int gtk_get_major_version();
-
-    public native
-    int gtk_get_minor_version();
-
-    public native
-    int gtk_get_micro_version();
-
     /**
      * Returns the internal scale factor that maps from window coordinates to the actual device pixels. On traditional systems this is 1,
      * but on very high density outputs this can be a higher value (often 2).
@@ -87,11 +73,34 @@ class Gtk3 implements Gtk {
      *
      * @since 3.10
      */
-    public native
-    int gdk_window_get_scale_factor(Pointer window);
+    public
+    int gdk_window_get_scale_factor(Pointer window) {
+        if (gdk_window_get_scale_factor != null) {
+            return gdk_window_get_scale_factor.invokeInt(new Object[]{window});
+        } else {
+            return 0;
+        }
+    }
 
+    ///////////////////////////
+    //// GTK2 methods
+    ///////////////////////////
 
-
+    /**
+     * This function is typically used when implementing a GtkContainer subclass. Obtains the preferred size of a widget. The
+     * container uses this information to arrange its child widgets and decide what size allocations to give them with
+     * gtk_widget_size_allocate().
+     *
+     * You can also call this function from an application, with some caveats. Most notably, getting a size request requires the
+     * widget to be associated with a screen, because font information may be needed. Multihead-aware applications should keep this in mind.
+     *
+     * Also remember that the size request is not necessarily the size a widget will actually be allocated.
+     */
+    @Override
+    public
+    void gtk_widget_size_request(final Pointer widget, final Pointer requisition) {
+        this.gtk_widget_get_preferred_size(widget, requisition, null);
+    }
 
     @Override
     public native
@@ -104,10 +113,6 @@ class Gtk3 implements Gtk {
     @Override
     public native
     void gtk_main();
-
-    @Override
-    public native
-    int gtk_main_level();
 
     @Override
     public native

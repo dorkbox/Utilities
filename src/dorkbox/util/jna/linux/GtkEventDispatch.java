@@ -81,6 +81,7 @@ class GtkEventDispatch {
                     void run() {
                         Glib.GLogFunc orig = null;
                         if (DEBUG) {
+                            // don't suppress GTK warnings in debug mode
                             LoggerFactory.getLogger(GtkEventDispatch.class).debug("Running GTK Native Event Loop");
                         } else {
                             // NOTE: This can output warnings, so we suppress them
