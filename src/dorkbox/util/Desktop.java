@@ -62,7 +62,7 @@ class Desktop {
      *
      * @param uri the URL to browse/open
      */
-    public static void browseURL(URI uri) throws IOException {
+    public static void browseURL(final URI uri) throws IOException {
         if (uri == null) {
             throw new IOException("URI must not be null.");
         }
