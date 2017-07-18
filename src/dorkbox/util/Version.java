@@ -65,8 +65,8 @@ class Version implements Comparable<Version> {
     private final String version;
     private final int[] internalVersion;
 
-    private final boolean isBeta;
-    private final String build;
+    private boolean isBeta;
+    private String build;
 
     /**
      * Creates a comparable version based on only numbers
@@ -201,7 +201,8 @@ class Version implements Comparable<Version> {
      */
     public
     Version beta() {
-        return new Version(version, true, build);
+        this.isBeta = true;
+        return this;
     }
 
     /**
@@ -212,7 +213,32 @@ class Version implements Comparable<Version> {
      */
     public
     Version build(String build) {
-        return new Version(version, isBeta, build);
+        this.build = build;
+        return this;
+    }
+
+    /**
+     * @return the version information, as an array.
+     */
+    public
+    int[] getVersion() {
+        return internalVersion;
+    }
+
+    /**
+     * @return true if this version is a beta or not
+     */
+    public
+    boolean isBeta() {
+        return isBeta;
+    }
+
+    /**
+     * @return the build information, if any
+     */
+    public
+    String getBuild() {
+        return build;
     }
 
     public
