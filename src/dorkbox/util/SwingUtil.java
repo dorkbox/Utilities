@@ -31,6 +31,7 @@ import java.awt.event.HierarchyListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
 
@@ -163,6 +164,64 @@ class SwingUtil {
                         .getName()
                         .equals(UIManager.getSystemLookAndFeelClassName());
     }
+
+    /**
+     * Checks to see if GTK is loaded by Swing, and if so - which version is loaded.
+     *
+     * @return the version of GTK loaded (if any) otherwise 0 for no version of GTK is loaded
+     */
+    public static
+    int getLoadedGtkVersion() {
+        // is GTK already loaded by java?
+        boolean isGtkAlreadyLoadedByJava = false;
+        try {
+            // Don't want to load the toolkit!!!
+            Class<?> toolkitClass = Class.forName("java.awt.Toolkit");
+            Field kitField = toolkitClass.getDeclaredField("toolkit");
+            kitField.setAccessible(true);
+            Object toolkit = kitField.get(null);
+            if (toolkit != null) {
+                Class<?> unixTkClazz = Class.forName("sun.awt.UNIXToolkit");
+                if (unixTkClazz.isAssignableFrom(toolkit.getClass())) {
+                    Field field = unixTkClazz.getDeclaredField("nativeGTKLoaded");
+                    field.setAccessible(true);
+                    Boolean o = (Boolean) field.get(toolkit);
+                    if (o != null) {
+                        //noinspection UnnecessaryUnboxing
+                        isGtkAlreadyLoadedByJava = o.booleanValue();
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        if (isGtkAlreadyLoadedByJava) {
+            // THIS IS NOT DOCUMENTED ANYWHERE...
+            String swingGtkVersion = System.getProperty("swing.gtk.version");
+            if (swingGtkVersion != null && swingGtkVersion.length() > 1) {
+                char c = swingGtkVersion.charAt(0);
+                if (MathUtil.isNumber(c)) {
+                    return (int) c;
+                }
+            }
+
+            if (OS.javaVersion >= 9) {
+                String property = System.getProperty("jdk.gtk.version", "2");
+                if (property != null) {
+                    char c = property.charAt(0);
+                    if (MathUtil.isNumber(c)) {
+                        return (int) c;
+                    }
+                }
+            }
+
+            // by default, this is the version GTK java uses (if none of the properties are set, but GTK is loaded)
+            return 2;
+        }
+
+        return 0;
+    }
+
 
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
     public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
