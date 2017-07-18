@@ -40,6 +40,17 @@ class MathUtil {
     }
 
     /**
+     * Checks to see if the character is a number
+     *
+     * @return true if it's a number, false otherwise
+     */
+    public static
+    boolean isNumber(final char character) {
+        // way faster than Character.isDigit()
+        return character >= '0' && character <= '9';
+    }
+
+    /**
      * Checks to see if the string is a number
      *
      * @return true if it's a number, false otherwise
@@ -72,6 +83,7 @@ class MathUtil {
 
         for (; i < length; i++) {
             char c = string.charAt(i);
+            // way faster than Character.isDigit()
             if (c < '0' || c > '9') {
                 return false;
             }
