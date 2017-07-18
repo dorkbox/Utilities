@@ -216,6 +216,7 @@ class OSUtil {
                 List<File> releaseFiles = new LinkedList<File>();
                 int totalLength = 0;
 
+                // looking for files like /etc/os-release
                 File file = new File("/etc");
                 if (file.isDirectory()) {
                     File[] list = file.listFiles();
@@ -292,17 +293,19 @@ class OSUtil {
 
         /**
          * @param id the info ID to check, ie: ubuntu, arch, debian, etc... This is what the OS vendor uses to ID their OS.
-         *
          * @return true if this OS is identified as the specified ID.
          */
+        private static String info = null;
         public static
         boolean getInfo(String id) {
-            String output = getInfo();
+            if (info == null) {
+                info = getInfo();
+            }
             // ID=linuxmint/fedora/arch/ubuntu/etc
-            return output.contains("ID=" + id +"\n");
+            return info.contains("ID=" + id +"\n");
         }
 
-        private static volatile Boolean isArch = null;
+        private static Boolean isArch = null;
         public static
         boolean isArch() {
             if (isArch == null) {
@@ -311,7 +314,7 @@ class OSUtil {
             return isArch;
         }
 
-        private static volatile Boolean isDebian = null;
+        private static Boolean isDebian = null;
         public static
         boolean isDebian() {
             if (isDebian == null) {
@@ -320,7 +323,7 @@ class OSUtil {
             return isDebian;
         }
 
-        private static volatile Boolean isElementaryOS = null;
+        private static Boolean isElementaryOS = null;
         public static
         boolean isElementaryOS() {
             if (isElementaryOS == null) {
@@ -338,7 +341,7 @@ class OSUtil {
             return isElementaryOS;
         }
 
-        private static volatile Boolean isFedora = null;
+        private static Boolean isFedora = null;
         public static
         boolean isFedora() {
             if (isFedora == null) {
@@ -347,7 +350,7 @@ class OSUtil {
             return isFedora;
         }
 
-        private static volatile Boolean isLinuxMint = null;
+        private static Boolean isLinuxMint = null;
         public static
         boolean isLinuxMint() {
             if (isLinuxMint == null) {
@@ -356,13 +359,22 @@ class OSUtil {
             return isLinuxMint;
         }
 
-        private static volatile Boolean isUbuntu = null;
+        private static Boolean isUbuntu = null;
         public static
         boolean isUbuntu() {
             if (isUbuntu == null) {
                 isUbuntu = getInfo("ubuntu");
             }
             return isUbuntu;
+        }
+
+        private static Boolean isKali = null;
+        public static
+        boolean isKali() {
+            if (isKali == null) {
+                isKali = getInfo("kali");
+            }
+            return isKali;
         }
 
         public static
