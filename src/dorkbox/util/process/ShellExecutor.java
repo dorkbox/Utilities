@@ -88,6 +88,25 @@ class ShellExecutor {
     }
 
     /**
+     * This is a convenience method to easily create a default process. Will immediately return, and does not wait for the process to finish
+     *
+     * @param executableName the name of the executable to run
+     * @param args the arguments for the executable
+     *
+     * @return true if the process ran successfully (exit value was 0), otherwise false
+     */
+    public static
+    boolean runShell(String executableName, String... args) {
+        ShellExecutor shell = new ShellExecutor();
+        shell.setExecutable(executableName);
+        shell.addArguments(args);
+        shell.executeAsShellCommand();
+
+        // blocks until finished
+        return shell.start() == 0;
+    }
+
+    /**
      * This will cause the spawned process to pipe it's output to a String, so it can be retrieved.
      */
     public
@@ -164,8 +183,8 @@ class ShellExecutor {
     }
 
     public final
-    ShellExecutor addArguments(final String... paths) {
-        for (String path : paths) {
+    ShellExecutor addArguments(final String... args) {
+        for (String path : args) {
             this.arguments.add(path);
         }
         return this;

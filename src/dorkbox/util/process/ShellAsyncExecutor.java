@@ -27,12 +27,29 @@ class ShellAsyncExecutor extends ShellExecutor {
      */
     public static
     boolean run(String executableName, String... args) {
-        ShellExecutor shell = new ShellExecutor();
+        ShellAsyncExecutor shell = new ShellAsyncExecutor();
         shell.setExecutable(executableName);
         shell.addArguments(args);
-        shell.createReadWriterThreads();
 
-        return shell.start(false) == 0;
+        return shell.start() == 0;
+    }
+
+    /**
+     * This is a convenience method to easily create a default process. Will immediately return, and does not wait for the process to finish
+     *
+     * @param executableName the name of the executable to run
+     * @param args the arguments for the executable
+     *
+     * @return true if the process ran successfully (exit value was 0), otherwise false
+     */
+    public static
+    boolean runShell(String executableName, String... args) {
+        ShellAsyncExecutor shell = new ShellAsyncExecutor();
+        shell.setExecutable(executableName);
+        shell.addArguments(args);
+        shell.executeAsShellCommand();
+
+        return shell.start() == 0;
     }
 
     @Override
