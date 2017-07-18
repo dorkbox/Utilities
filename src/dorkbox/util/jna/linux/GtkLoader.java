@@ -75,6 +75,12 @@ class GtkLoader {
             _isLoaded = true;
         }
 
+
+        if (OSUtil.Linux.isKali()) {
+            // Kali linux has some WEIRD graphical oddities via GTK3. GTK2 looks just fine.
+            shouldUseGtk2 = true;
+        }
+
         // we can force the system to use the swing indicator, which WORKS, but doesn't support transparency in the icon. However, there
         // are certain GTK functions we might want to use (even if we are Swing or AWT), so we load GTK anyways...
 
