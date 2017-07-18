@@ -62,7 +62,10 @@ class GtkLoader {
      * SWT uses GTK2 or GTK3. We do not work with the GTK3 version of SWT.
      */
     static {
-        boolean shouldUseGtk2 = GtkEventDispatch.FORCE_GTK2;
+        boolean forceGtk2 = GtkEventDispatch.FORCE_GTK2;
+        // prefer GTK3 and force GTK2 are mutually exclusive
+        boolean preferGtk3 = !forceGtk2 && GtkEventDispatch.PREFER_GTK3;
+
         boolean _isGtk2 = false;
         boolean _isLoaded = false;
         boolean _alreadyRunningGTK = false;
@@ -76,11 +79,6 @@ class GtkLoader {
         }
 
 
-        if (OSUtil.Linux.isKali()) {
-            // Kali linux has some WEIRD graphical oddities via GTK3. GTK2 looks just fine.
-            shouldUseGtk2 = true;
-        }
-
         // we can force the system to use the swing indicator, which WORKS, but doesn't support transparency in the icon. However, there
         // are certain GTK functions we might want to use (even if we are Swing or AWT), so we load GTK anyways...
 
@@ -88,7 +86,7 @@ class GtkLoader {
         String gtk2LibName = "gtk-x11-2.0";
         String gtk3LibName = "libgtk-3.so.0";
 
-        if (!_isLoaded && shouldUseGtk2) {
+        if (!_isLoaded && (forceGtk2 || !preferGtk3)) {
             try {
                 NativeLibrary library = JnaHelper.register(gtk2LibName, Gtk2.class);
 
@@ -112,6 +110,11 @@ class GtkLoader {
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
                 }
+            }
+
+            if (forceGtk2) {
+                // don't try anything else if we forced GTK2
+                _isLoaded = true;
             }
         }
 

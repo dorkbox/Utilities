@@ -33,6 +33,7 @@ import dorkbox.util.Swt;
 public
 class GtkEventDispatch {
     static boolean FORCE_GTK2 = false;
+    static boolean PREFER_GTK3 = false;
     static boolean DEBUG = false;
 
     // have to save these in a field to prevent GC on the objects (since they go out-of-scope from java)
@@ -47,7 +48,7 @@ class GtkEventDispatch {
         }
     };
 
-    private static volatile boolean started = false;
+    private static boolean started = false;
 
     @SuppressWarnings("FieldCanBeLocal")
     private static Thread gtkUpdateThread = null;
@@ -60,14 +61,15 @@ class GtkEventDispatch {
 
 
 
-    public static
-    void startGui(final boolean FORCE_GTK2, final boolean DEBUG) {
+    public static synchronized
+    void startGui(final boolean forceGtk2, final boolean preferGkt3, final boolean debug) {
         // only permit one startup per JVM instance
         if (!started) {
             started = true;
 
-            GtkEventDispatch.FORCE_GTK2 = FORCE_GTK2;
-            GtkEventDispatch.DEBUG = DEBUG;
+            GtkEventDispatch.FORCE_GTK2 = forceGtk2;
+            GtkEventDispatch.PREFER_GTK3 = preferGkt3;
+            GtkEventDispatch.DEBUG = debug;
 
             // startup the GTK GUI event loop. There can be multiple/nested loops.
 
@@ -80,7 +82,7 @@ class GtkEventDispatch {
                     public
                     void run() {
                         Glib.GLogFunc orig = null;
-                        if (DEBUG) {
+                        if (debug) {
                             // don't suppress GTK warnings in debug mode
                             LoggerFactory.getLogger(GtkEventDispatch.class).debug("Running GTK Native Event Loop");
                         } else {
@@ -120,7 +122,7 @@ class GtkEventDispatch {
      * Waits for the all posted events to GTK to finish loading
      */
     @SuppressWarnings("Duplicates")
-    public static
+    public static synchronized
     void waitForEventsToComplete() {
         final CountDownLatch blockUntilStarted = new CountDownLatch(1);
 
@@ -276,22 +278,6 @@ class GtkEventDispatch {
     }
 
     public static
-    void shutdownGui() {
-        dispatchAndWait(new Runnable() {
-            @Override
-            public
-            void run() {
-                // If JavaFX/SWT is used, this is UNNECESSARY (and will break SWT/JavaFX shutdown)
-                if (!GtkLoader.alreadyRunningGTK) {
-                    Gtk2.gtk_main_quit();
-                }
-
-                started = false;
-            }
-        });
-    }
-
-    public static
     void dispatchAndWait(final Runnable runnable) {
         if (isDispatch.get()) {
             // Run directly on the dispatch thread (should not "redispatch" this again)
@@ -356,4 +342,20 @@ class GtkEventDispatch {
             isDispatch.set(false);
         }
     }
+    public static synchronized
+    void shutdownGui() {
+        dispatchAndWait(new Runnable() {
+            @Override
+            public
+            void run() {
+                // If JavaFX/SWT is used, this is UNNECESSARY (and will break SWT/JavaFX shutdown)
+                if (!GtkLoader.alreadyRunningGTK) {
+                    Gtk2.gtk_main_quit();
+                }
+
+                started = false;
+            }
+        });
+    }
+
 }
