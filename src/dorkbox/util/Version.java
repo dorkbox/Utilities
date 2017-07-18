@@ -71,11 +71,32 @@ class Version implements Comparable<Version> {
     /**
      * Creates a comparable version based on only numbers
      *
-     * @param version must consist of just numbers with a maximum of 3 groups separated by a .
+     * @param version must consist of just numbers with a maximum of 1 decimal point
+     */
+    public
+    Version(double version) {
+        this(Double.toString(version), false, null);
+    }
+
+    /**
+     * Creates a comparable version from a string
+     *
+     * @param version The version part must consist of just numbers with a maximum of 3 groups separated by a '.' and BETA or BUILD info
      */
     public
     Version(String version) {
-        this(version, false, null);
+        this(Version.fromString(version));
+    }
+
+    /**
+     * Creates a comparable version based on an existing version
+     */
+    public
+    Version(final Version version) {
+        this.version = version.version;
+        this.internalVersion = version.internalVersion;
+        this.isBeta = version.isBeta;
+        this.build = version.build;
     }
 
     /**
@@ -393,6 +414,33 @@ class Version implements Comparable<Version> {
         return hashCode;
     }
 
+    /**
+     * Converts version information from a string
+     *
+     * @param string The version string, as received by {@link Version#toString()}
+     */
+    public static
+    Version fromString(String string) {
+        int betaIndex = string.indexOf("-BETA");
+        int buildIndex = string.indexOf("+");
+        int lastIndex = string.length();
+
+
+        boolean isBeta = betaIndex > 0;
+        String build = null;
+        if (buildIndex > 0) {
+            build = string.substring(buildIndex + 1, lastIndex);
+            lastIndex = buildIndex;
+        }
+
+        if (isBeta) {
+            lastIndex = betaIndex;
+        }
+
+        String version = string.substring(0, lastIndex);
+
+        return new Version(version, isBeta, build);
+    }
 
     @Override
     public
