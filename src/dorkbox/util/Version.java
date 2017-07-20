@@ -57,16 +57,18 @@ import java.util.Locale;
  * <p>
  * Stable is a version that is exclusively numbers. Builds are always equal, even if a different build commit hash/etc.
  */
-@SuppressWarnings({"unused", "SimplifiableIfStatement"})
+@SuppressWarnings({"unused", "SimplifiableIfStatement", "WeakerAccess"})
 public
 class Version implements Comparable<Version> {
     private static final int[] PRIME = {2, 3, 5};
 
-    private final String version;
-    private final int[] internalVersion;
+    // protected scope to permit overriding functionality
 
-    private boolean isBeta;
-    private String build;
+    protected String version;
+    protected int[] internalVersion;
+
+    protected boolean isBeta;
+    protected String build;
 
     /**
      * Creates a comparable version based on only numbers
@@ -102,7 +104,7 @@ class Version implements Comparable<Version> {
     /**
      * Creates a comparable version based on numbers, BETA status, and BUILD
      *
-     * @param version must consist of only numbers with a maximum of 3 groups separated by a .
+     * @param version must consist of only numbers with a maximum of 3 groups separated by a '.' Leading '0' will be removed
      * @param isBeta true if this is a beta build
      * @param build custom build info, such as the commit sha hash
      */
