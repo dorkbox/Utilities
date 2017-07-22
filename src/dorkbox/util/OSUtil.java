@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import dorkbox.util.jna.linux.Gtk;
 import dorkbox.util.process.ShellExecutor;
 
 /**
@@ -404,17 +403,17 @@ class OSUtil {
     public static
     class DesktopEnv {
         /**
-         * Determine if the application is running via GTK2. This does not cause GTK to load, where calls to {@link Gtk#isGtk2} will
+         * Determine if the application is running via GTK2. This does not cause GTK to load, where calls to Gtk.isGtk2 will
          */
         public static volatile boolean isGtk2 = false;
 
         /**
-         * Determine if the application is running via GTK3. This does not cause GTK to load, where calls to {@link Gtk#isGtk3} will
+         * Determine if the application is running via GTK3. This does not cause GTK to load, where calls to Gtk.isGtk3 will
          */
         public static volatile boolean isGtk3 = false;
 
         /**
-         * Determine if the application has loaded GTK yet or not. This does not cause GTK to load, where calls to {@link Gtk#isLoaded} will
+         * Determine if the application has loaded GTK yet or not. This does not cause GTK to load, where calls to Gtk.isLoaded will
          */
         public static volatile boolean isGtkLoaded = false;
 
