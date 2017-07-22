@@ -157,9 +157,7 @@ class Version implements Comparable<Version> {
         internalVersion = new int[length];
         for (int i = 0; i < length; i++) {
             final String s = version[i];
-            if (!MathUtil.isInteger(s)) {
-                throw new IllegalArgumentException("Version must be a number");
-            }
+            // must be a number
             internalVersion[i] = Integer.parseInt(s);
             builder.append(s)
                    .append('.');
