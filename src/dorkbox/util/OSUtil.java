@@ -410,6 +410,7 @@ class OSUtil {
             XFCE,
             LXDE,
             Pantheon,
+            ChromeOS,
             Unknown,
         }
 
@@ -459,12 +460,18 @@ class OSUtil {
                 return Env.Gnome;
             }
 
+            // maybe it's chromeOS?
+            if (isChromeOS()) {
+                return Env.ChromeOS;
+            }
+
             return Env.Unknown;
         }
 
 
         private static volatile Boolean isGnome = null;
         private static volatile Boolean isKDE = null;
+        private static volatile Boolean isChromeOS = null;
 
         public static
         boolean isGnome() {
@@ -611,6 +618,37 @@ class OSUtil {
             return "0";
         }
 
+
+        public static
+        boolean isChromeOS() {
+            if (isChromeOS == null) {
+                if (!OS.isLinux()) {
+                    isChromeOS = false;
+                    return false;
+                }
+
+                try {
+                    // ps aux | grep chromeos
+                    final ShellExecutor shellVersion = new ShellExecutor();
+                    shellVersion.setExecutable("ps");
+                    shellVersion.addArgument("aux");
+                    shellVersion.start();
+
+                    String output = shellVersion.getOutput();
+
+                    if (!output.isEmpty()) {
+                        if (output.contains("chromeos")) {
+                            isChromeOS = true;
+                            return true;
+                        }
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+
+            return isChromeOS;
+        }
 
         /**
          * @param channel which XFCE channel to query. Cannot be null
