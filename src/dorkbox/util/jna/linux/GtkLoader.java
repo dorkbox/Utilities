@@ -21,7 +21,6 @@ import com.sun.jna.Function;
 import com.sun.jna.NativeLibrary;
 
 import dorkbox.util.OS;
-import dorkbox.util.OSUtil;
 import dorkbox.util.Swt;
 import dorkbox.util.jna.JnaHelper;
 
@@ -211,9 +210,9 @@ class GtkLoader {
         }
 
         // This is so that queries for the GTK version DO NOT try to load GTK
-        OSUtil.DesktopEnv.isGtk2 = isGtk2;
-        OSUtil.DesktopEnv.isGtk3 = isGtk3;
-        OSUtil.DesktopEnv.isGtkLoaded = isLoaded;
+        GtkCheck.isGtk2 = isGtk2;
+        GtkCheck.isGtk3 = isGtk3;
+        GtkCheck.isGtkLoaded = isLoaded;
 
         if (shouldLoadGtk) {
             if (!_isLoaded) {

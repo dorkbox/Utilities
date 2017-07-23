@@ -402,21 +402,6 @@ class OSUtil {
 
     public static
     class DesktopEnv {
-        /**
-         * Determine if the application is running via GTK2. This does not cause GTK to load, where calls to Gtk.isGtk2 will
-         */
-        public static volatile boolean isGtk2 = false;
-
-        /**
-         * Determine if the application is running via GTK3. This does not cause GTK to load, where calls to Gtk.isGtk3 will
-         */
-        public static volatile boolean isGtk3 = false;
-
-        /**
-         * Determine if the application has loaded GTK yet or not. This does not cause GTK to load, where calls to Gtk.isLoaded will
-         */
-        public static volatile boolean isGtkLoaded = false;
-
         public enum Env {
             Gnome,
             KDE,

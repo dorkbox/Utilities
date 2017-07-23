@@ -168,6 +168,9 @@ class SwingUtil {
     /**
      * Checks to see if GTK is loaded by Swing, and if so - which version is loaded.
      *
+     * NOTE: if the UI uses the 'getSystemLookAndFeelClassName' and is on Linux and it's the GtkLookAndFeel, this will cause GTK2
+     * to get loaded first, which will cause conflicts if one tries to use GTK3
+     *
      * @return the version of GTK loaded (if any) otherwise 0 for no version of GTK is loaded
      */
     public static

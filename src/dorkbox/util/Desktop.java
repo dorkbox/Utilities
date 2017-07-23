@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import dorkbox.util.jna.linux.Gtk2;
+import dorkbox.util.jna.linux.GtkCheck;
 import dorkbox.util.jna.linux.GtkEventDispatch;
 import dorkbox.util.process.ShellExecutor;
 
@@ -73,7 +74,7 @@ class Desktop {
         // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
         // Additionally, xdg-open  can cause problems in Linux with Chrome installed but not the default browser. It will crash Chrome
         //      if Chrome was open before this app opened a URL
-        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
             GtkEventDispatch.dispatch(new Runnable() {
                 @Override
                 public
@@ -132,7 +133,7 @@ class Desktop {
         }
 
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
             GtkEventDispatch.dispatch(new Runnable() {
                 @Override
                 public
@@ -181,7 +182,7 @@ class Desktop {
         }
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
         // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        else if ((OS.isUnix() || OS.isLinux()) && OSUtil.DesktopEnv.isGtkLoaded) {
+        else if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
             // it can actually be MORE that just "file://" (ie, "ftp://" is legit as well)
             if (!path.contains("://")) {
                 path = "file://" + path;
