@@ -15,7 +15,7 @@
  */
 package dorkbox.util;
 
-public enum OsType {
+public enum OSType {
     Windows32("windows_32", ".dll"),
     Windows64("windows_64", ".dll"),
     Linux32("linux_32", ".so"),
@@ -50,7 +50,7 @@ public enum OsType {
     private final String name;
     private final String[] libraryNames;
 
-    OsType(String name, String... libraryNames) {
+    OSType(String name, String... libraryNames) {
         this.name = name;
         this.libraryNames = libraryNames;
     }
@@ -65,23 +65,23 @@ public enum OsType {
 
     public
     boolean is64bit() {
-        return this == OsType.Linux64 || this == OsType.LinuxArm64 ||
-               this == OsType.Windows64 || this == OsType.MacOsX64 ||
-               this == OsType.AndroidArm8 || this == OsType.AndroidX86_64 || this == OsType.AndroidMips64 ||
-               this == OsType.Unix64;
+        return this == OSType.Linux64 || this == OSType.LinuxArm64 ||
+               this == OSType.Windows64 || this == OSType.MacOsX64 ||
+               this == OSType.AndroidArm8 || this == OSType.AndroidX86_64 || this == OSType.AndroidMips64 ||
+               this == OSType.Unix64;
     }
 
     public
     boolean is32bit() {
-        return this == OsType.Linux32 || this == OsType.LinuxArm32 ||
-               this == OsType.Windows32 || this == OsType.MacOsX32 ||
-               this == OsType.AndroidArm56 || this == OsType.AndroidArm7 || this == OsType.AndroidX86 || this == OsType.AndroidMips ||
-               this == OsType.UnixArm || this == OsType.Unix32;
+        return this == OSType.Linux32 || this == OSType.LinuxArm32 ||
+               this == OSType.Windows32 || this == OSType.MacOsX32 ||
+               this == OSType.AndroidArm56 || this == OSType.AndroidArm7 || this == OSType.AndroidX86 || this == OSType.AndroidMips ||
+               this == OSType.UnixArm || this == OSType.Unix32;
     }
 
     public
     boolean isMips() {
-        return this == OsType.AndroidMips || this == OsType.AndroidMips64;
+        return this == OSType.AndroidMips || this == OSType.AndroidMips64;
     }
 
     /**
@@ -89,48 +89,48 @@ public enum OsType {
      */
     public
     boolean isX86() {
-        return this == OsType.Linux64 || this == OsType.LinuxArm64 ||
-               this == OsType.Windows64 || this == OsType.MacOsX64 ||
-               this == OsType.Linux32 || this == OsType.LinuxArm32 ||
-               this == OsType.Windows32 || this == OsType.MacOsX32 ||
-               this == OsType.Unix32 || this == OsType.Unix64 ||
-               this == OsType.AndroidX86 || this == OsType.AndroidX86_64;
+        return this == OSType.Linux64 || this == OSType.LinuxArm64 ||
+               this == OSType.Windows64 || this == OSType.MacOsX64 ||
+               this == OSType.Linux32 || this == OSType.LinuxArm32 ||
+               this == OSType.Windows32 || this == OSType.MacOsX32 ||
+               this == OSType.Unix32 || this == OSType.Unix64 ||
+               this == OSType.AndroidX86 || this == OSType.AndroidX86_64;
     }
 
     public
     boolean isArm() {
-        return this == OsType.LinuxArm32 || this == OsType.LinuxArm64 ||
-               this == OsType.AndroidArm56 || this == OsType.AndroidArm7 || this == OsType.AndroidArm8;
+        return this == OSType.LinuxArm32 || this == OSType.LinuxArm64 ||
+               this == OSType.AndroidArm56 || this == OSType.AndroidArm7 || this == OSType.AndroidArm8;
     }
 
     public
     boolean isLinux() {
-        return this == OsType.Linux32 || this == OsType.Linux64 || this == OsType.LinuxArm64 || this == OsType.LinuxArm32;
+        return this == OSType.Linux32 || this == OSType.Linux64 || this == OSType.LinuxArm64 || this == OSType.LinuxArm32;
     }
 
     public
     boolean isUnix() {
-        return this == OsType.Unix32 || this == OsType.Unix64 || this == OsType.UnixArm;
+        return this == OSType.Unix32 || this == OSType.Unix64 || this == OSType.UnixArm;
     }
 
     public
     boolean isSolaris() {
-        return this == OsType.Solaris;
+        return this == OSType.Solaris;
     }
 
     public
     boolean isWindows() {
-        return this == OsType.Windows64 || this == OsType.Windows32;
+        return this == OSType.Windows64 || this == OSType.Windows32;
     }
 
     public
     boolean isMacOsX() {
-        return this == OsType.MacOsX64 || this == OsType.MacOsX32;
+        return this == OSType.MacOsX64 || this == OSType.MacOsX32;
     }
 
     public
     boolean isAndroid() {
-        return this == OsType.AndroidArm56 || this == OsType.AndroidArm7 || this == OsType.AndroidX86 || this == OsType.AndroidMips ||
-               this == OsType.AndroidArm8 || this == OsType.AndroidX86_64 || this == OsType.AndroidMips64;
+        return this == OSType.AndroidArm56 || this == OSType.AndroidArm7 || this == OSType.AndroidX86 || this == OSType.AndroidMips ||
+               this == OSType.AndroidArm8 || this == OSType.AndroidX86_64 || this == OSType.AndroidMips64;
     }
 }

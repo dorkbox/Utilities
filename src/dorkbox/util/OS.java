@@ -42,7 +42,7 @@ class OS {
     public static final int javaVersion = _getJavaVersion();
 
 
-    private static final OsType osType;
+    private static final OSType osType;
     private static final String originalTimeZone = TimeZone.getDefault()
                                                            .getID();
 
@@ -89,31 +89,31 @@ class OS {
                     // android check from https://stackoverflow.com/questions/14859954/android-os-arch-output-for-arm-mips-x86
                     if (osArch.equals("armeabi")) {
                         // really old/low-end non-hf 32bit cpu
-                        osType = OsType.AndroidArm56;
+                        osType = OSType.AndroidArm56;
                     }
                     else if (osArch.equals("armeabi-v7a")) {
                         // 32bit hf cpu
-                        osType = OsType.AndroidArm7;
+                        osType = OSType.AndroidArm7;
                     }
                     else if (osArch.equals("arm64-v8a")) {
                         // 64bit hf cpu
-                        osType = OsType.AndroidArm8;
+                        osType = OSType.AndroidArm8;
                     }
                     else if (osArch.equals("x86")) {
                         // 32bit x86 (usually emulator)
-                        osType = OsType.AndroidX86;
+                        osType = OSType.AndroidX86;
                     }
                     else if (osArch.equals("x86_64")) {
                         // 64bit x86 (usually emulator)
-                        osType = OsType.AndroidX86_64;
+                        osType = OSType.AndroidX86_64;
                     }
                     else if (osArch.equals("mips")) {
                         // 32bit mips
-                        osType = OsType.AndroidMips;
+                        osType = OSType.AndroidMips;
                     }
                     else if (osArch.equals("mips64")) {
                         // 64bit mips
-                        osType = OsType.AndroidMips64;
+                        osType = OSType.AndroidMips64;
                     } else {
                         // who knows?
                         osType = null;
@@ -122,52 +122,52 @@ class OS {
                 else {
                     // normal linux 32/64/arm32/arm64
                     if ("amd64".equals(osArch)) {
-                        osType = OsType.Linux64;
+                        osType = OSType.Linux64;
                     }
                     else {
                         if (osArch.startsWith("arm")) {
                             if (osArch.contains("v8")) {
-                                osType = OsType.LinuxArm64;
+                                osType = OSType.LinuxArm64;
                             }
                             else {
-                                osType = OsType.LinuxArm32;
+                                osType = OSType.LinuxArm32;
                             }
                         }
                         else {
-                            osType = OsType.Linux32;
+                            osType = OSType.Linux32;
                         }
                     }
                 }
             }
             else if (osName.startsWith("windows")) {
                 if ("amd64".equals(osArch)) {
-                    osType = OsType.Windows64;
+                    osType = OSType.Windows64;
                 }
                 else {
-                    osType = OsType.Windows32;
+                    osType = OSType.Windows32;
                 }
             }
             else if (osName.startsWith("mac") || osName.startsWith("darwin")) {
                 if ("x86_64".equals(osArch)) {
-                    osType = OsType.MacOsX64;
+                    osType = OSType.MacOsX64;
                 }
                 else {
-                    osType = OsType.MacOsX32;
+                    osType = OSType.MacOsX32;
                 }
             }
             else if (osName.startsWith("freebsd") || osName.contains("nix") || osName.contains("nux") || osName.startsWith("aix")) {
                 if ("x86".equals(osArch) || "i386".equals(osArch)) {
-                    osType = OsType.Unix32;
+                    osType = OSType.Unix32;
                 }
                 else if ("arm".equals(osArch)) {
-                    osType = OsType.UnixArm;
+                    osType = OSType.UnixArm;
                 }
                 else {
-                    osType = OsType.Unix64;
+                    osType = OSType.Unix64;
                 }
             }
             else if (osName.startsWith("solaris") || osName.startsWith("sunos")) {
-                osType = OsType.Solaris;
+                osType = OSType.Solaris;
             }
             else {
                 osType = null;
@@ -179,7 +179,7 @@ class OS {
     }
 
     public static
-    OsType get() {
+    OSType get() {
         return osType;
     }
 
