@@ -85,9 +85,11 @@ class GtkLoader {
         String gtk2LibName = "gtk-x11-2.0";
         String gtk3LibName = "libgtk-3.so.0";
 
+        NativeLibrary library = null;
+
         if (!_isLoaded && (forceGtk2 || !preferGtk3)) {
             try {
-                NativeLibrary library = JnaHelper.register(gtk2LibName, Gtk2.class);
+                library = JnaHelper.register(gtk2LibName, Gtk2.class);
 
                 _isGtk2 = true;
 
@@ -106,6 +108,10 @@ class GtkLoader {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk2LibName);
                 }
             } catch (Throwable e) {
+                if (library != null) {
+                    library.dispose();
+                }
+
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
                 }
@@ -123,13 +129,14 @@ class GtkLoader {
         if (!_isLoaded) {
             try {
                 // have to get the version information FIRST, because there are some really old GTK3 libraries out there.
-                NativeLibrary library = JnaHelper.register(gtk3LibName, Gtk3VersionInfo.class);
+                library = JnaHelper.register(gtk3LibName, Gtk3VersionInfo.class);
 
                 Gtk3VersionInfo version = new Gtk3VersionInfo();
                 major = version.gtk_get_major_version();
                 minor = version.gtk_get_minor_version();
                 micro = version.gtk_get_micro_version();
                 library.dispose();
+                library = null;
 
                 library = JnaHelper.register(gtk3LibName, Gtk3.class);
                 if (major >= 3 && minor >= 10) {
@@ -149,6 +156,10 @@ class GtkLoader {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk3LibName);
                 }
             } catch (Throwable e) {
+                if (library != null) {
+                    library.dispose();
+                }
+
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).error("Error loading library.", e);
                 }
@@ -158,7 +169,7 @@ class GtkLoader {
         // now version 2
         if (!_isLoaded) {
             try {
-                NativeLibrary library = JnaHelper.register(gtk2LibName, Gtk2.class);
+                library = JnaHelper.register(gtk2LibName, Gtk2.class);
 
                 _isGtk2 = true;
                 major = library.getGlobalVariableAddress("gtk_major_version").getInt(0);
@@ -176,6 +187,10 @@ class GtkLoader {
                     LoggerFactory.getLogger(GtkLoader.class).debug("GTK: {}", gtk2LibName);
                 }
             } catch (Throwable e) {
+                if (library != null) {
+                    library.dispose();
+                }
+
                 if (GtkEventDispatch.DEBUG) {
                     LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
                 }
