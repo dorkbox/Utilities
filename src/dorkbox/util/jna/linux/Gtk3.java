@@ -32,15 +32,6 @@ class Gtk3 implements Gtk {
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 | grep gtk
     // objdump -T /usr/local/lib/libgtk-3.so.0 | grep gtk
 
-    public native
-    int gtk_get_major_version();
-
-    public native
-    int gtk_get_minor_version();
-
-    public native
-    int gtk_get_micro_version();
-
     /**
      * Retrieves the minimum and natural size of a widget, taking into account the widget’s preference for height-for-width management.
      * <p>
@@ -263,4 +254,8 @@ class Gtk3 implements Gtk {
     @Override
     public native
     boolean gtk_show_uri(final Pointer screen, final String uri, final int timestamp, final Pointer error);
+
+    @Override
+    public native
+    void gtk_widget_set_tooltip_text(final Pointer widget, final String text);
 }

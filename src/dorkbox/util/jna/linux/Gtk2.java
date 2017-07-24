@@ -194,4 +194,8 @@ class Gtk2 implements Gtk {
     @Override
     public native
     boolean gtk_show_uri(final Pointer screen, final String uri, final int timestamp, final Pointer error);
+
+    @Override
+    public native
+    void gtk_widget_set_tooltip_text(final Pointer widget, final String text);
 }

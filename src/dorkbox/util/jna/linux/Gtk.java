@@ -376,7 +376,6 @@ interface Gtk {
      */
     Pointer gtk_image_menu_item_new_from_stock(String stock_id, Pointer accel_group);
 
-
     /**
      * A convenience function for launching the default application to show the uri. Like gtk_show_uri_on_window(), but takes a screen
      * as transient parent instead of a window.
@@ -386,5 +385,13 @@ interface Gtk {
      */
     @Deprecated
     boolean gtk_show_uri(Pointer screen, String uri, int timestamp, Pointer error);
+
+    /**
+     * Sets text as the contents of the tooltip. This function will take care of setting “has-tooltip” to TRUE and of the default
+     * handler for the “query-tooltip” signal. Null text will remove the tooltip
+     *
+     * @since 2.12
+     */
+    void gtk_widget_set_tooltip_text(Pointer widget, String text);
 }
 
