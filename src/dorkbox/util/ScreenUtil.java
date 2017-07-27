@@ -15,9 +15,11 @@
  */
 package dorkbox.util;
 
+import java.awt.Container;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 
@@ -61,6 +63,27 @@ class ScreenUtil {
         }
 
         return device;
+    }
+
+    public static
+    void showOnSameScreenAsMouse_Center(final Container frame) {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
+
+        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
+        Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
+                                        .getBounds();
+        frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.y + bounds.height / 2 - frame.getHeight() / 2);
+    }
+
+    public static
+    void showOnSameScreenAsMouse(final Container frame) {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
+
+        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
+        frame.setLocation(deviceAtMouse.getDefaultConfiguration()
+                                       .getBounds().x, frame.getY());
     }
 
     private

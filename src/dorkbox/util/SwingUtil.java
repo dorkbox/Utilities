@@ -16,14 +16,10 @@
 package dorkbox.util;
 
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.GraphicsDevice;
 import java.awt.Image;
-import java.awt.MouseInfo;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.HierarchyEvent;
@@ -228,29 +224,6 @@ class SwingUtil {
 
     /** used when setting various icon components in the GUI to "nothing", since null doesn't work */
     public static final Image BLANK_ICON = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB_PRE);
-
-
-    public static
-    void showOnSameScreenAsMouse_Center(final Container frame) {
-        Point mouseLocation = MouseInfo.getPointerInfo()
-                                       .getLocation();
-
-        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
-        Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
-                                        .getBounds();
-        frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.y + bounds.height / 2 - frame.getHeight() / 2);
-    }
-
-    public static
-    void showOnSameScreenAsMouse(final Container frame) {
-        Point mouseLocation = MouseInfo.getPointerInfo()
-                                       .getLocation();
-
-        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
-        frame.setLocation(deviceAtMouse.getDefaultConfiguration()
-                                       .getBounds().x, frame.getY());
-    }
-
 
     /**
      * Adds a listener to the window parent of the given component. Can be before the component is really added to its hierarchy.
