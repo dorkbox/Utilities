@@ -191,6 +191,28 @@ class FontUtil {
     }
 
     /**
+     * Gets the specified font width for a specific string, as rendered on the screen.
+     *
+     * @param font the font to use for rendering the string
+     * @param string the string used to get the width
+     *
+     * @return the width of the string
+     */
+    public static
+    int getFontWidth(final java.awt.Font font, final String string) {
+        BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g = image.createGraphics();
+        FontRenderContext frc = g.getFontRenderContext();
+
+        GlyphVector gv = font.createGlyphVector(frc, string);
+        int width = gv.getPixelBounds(null, 0, 0).width;
+        g.dispose();
+
+        return width;
+    }
+
+    /**
      * Gets the maximum font height used by alpha-numeric characters ONLY, as recorded by the font.
      */
     public static
