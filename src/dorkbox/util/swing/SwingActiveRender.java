@@ -60,21 +60,20 @@ class SwingActiveRender {
      * animations. <br> This works by removing this object from EDT updates, and instead manually calls paint(g) on the jFrame, updating it
      * on our own thread.
      *
-     * @param jFrame
-     *                 the jFrame to add to the ActiveRender thread.
+     * @param jFrame the jFrame to add to the ActiveRender thread.
      */
     public static
     void addActiveRender(final JFrame jFrame) {
         // this should be on the EDT
         if (!EventQueue.isDispatchThread()) {
-            throw new RuntimeException("adding a swing JFrame to be actively rendered, must be done on the EDT.");
+            throw new RuntimeException("adding a swing JFrame to be actively rendered must be done on the EDT.");
         }
 
         // setup double-buffering, so we can properly use Active-Rendering, so the animations will be smooth
         jFrame.createBufferStrategy(2);
 
         // have to specify ALL children in jFrame to ignore EDT paint requests
-        Deque<Component> components = new ArrayDeque<Component>();
+        Deque<Component> components = new ArrayDeque<Component>(8);
         components.add(jFrame);
 
         Component[] c;
@@ -101,8 +100,7 @@ class SwingActiveRender {
     /**
      * Specifies an ActionHandler to be called when the ActiveRender thread starts to render at each tick.
      *
-     * @param handler
-     *                 the handler to add
+     * @param handler the handler to add
      */
     public static
     void addActiveRenderFrameStart(final ActionHandlerLong handler) {
@@ -114,8 +112,7 @@ class SwingActiveRender {
     /**
      * Potentially SLOW calculation, as it compares each entry in a queue for equality
      *
-     * @param handler
-     *                 this is the handler to check
+     * @param handler this is the handler to check
      *
      * @return true if this handler already exists in the active render, on-frame-start queue
      */
@@ -129,8 +126,7 @@ class SwingActiveRender {
     /**
      * Removes the handler from the on-frame-start queue
      *
-     * @param handler
-     *                 the handler to remove
+     * @param handler the handler to remove
      */
     public static
     void removeActiveRenderFrameStart(final ActionHandlerLong handler) {
@@ -143,8 +139,7 @@ class SwingActiveRender {
     /**
      * Removes a jFrame from the ActiveRender queue. This should happen when the jFrame is closed.
      *
-     * @param jFrame
-     *                 the jFrame to remove
+     * @param jFrame the jFrame to remove
      */
     public static
     void removeActiveRender(final JFrame jFrame) {
@@ -156,6 +151,21 @@ class SwingActiveRender {
 
             if (!hadActiveRenders) {
                 activeRenderThread = null;
+            }
+        }
+
+        // have to specify ALL children in jFrame to obey EDT paint requests
+        Deque<Component> components = new ArrayDeque<Component>(8);
+        components.add(jFrame);
+
+        Component[] c;
+        Component pop;
+        while ((pop = components.poll()) != null) {
+            pop.setIgnoreRepaint(false);
+
+            if (pop instanceof JComponent) {
+                c = ((JComponent) pop).getComponents();
+                Collections.addAll(components, c);
             }
         }
     }
