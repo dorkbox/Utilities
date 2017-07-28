@@ -17,6 +17,7 @@ package dorkbox.util.swing;
 
 import java.awt.Component;
 import java.awt.EventQueue;
+import java.awt.Window;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,24 +26,23 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 
 import dorkbox.util.ActionHandlerLong;
 
 /**
  * Contains all of the appropriate logic to setup and render via "Active" rendering (instead of "Passive" rendering). This permits us to
- * render JFrames (and their contents), OFF of the EDT - even though there are other frames/components that are ON the EDT. <br> Because we
+ * render Windows (and their contents), OFF of the EDT - even though there are other frames/components that are ON the EDT. <br> Because we
  * still want to react to mouse events, etc on the EDT, we do not completely remove the EDT -- we merely allow us to "synchronize" the EDT
  * object to our thread. It's a little bit hacky, but it works beautifully, and permits MUCH nicer animations. <br>
  * <p/>
- * <b>It is also important to REMEMBER -- if you add a component to an actively managed JFrame, YOU MUST make sure to call {@link
+ * <b>It is also important to REMEMBER -- if you add a component to an actively managed Window, YOU MUST make sure to call {@link
  * JComponent#setIgnoreRepaint(boolean)} otherwise this component will "fight" on the EDT for updates. </b>
  */
 public final
 class SwingActiveRender {
     private static Thread activeRenderThread = null;
 
-    static final List<JFrame> activeRenders = new ArrayList<JFrame>();
+    static final List<Window> activeRenders = new ArrayList<Window>();
     static final List<ActionHandlerLong> activeRenderEvents = new CopyOnWriteArrayList<ActionHandlerLong>();
 
     // volatile, so that access triggers thread synchrony, since 1.6. See the Java Language Spec, Chapter 17
@@ -56,25 +56,25 @@ class SwingActiveRender {
 
 
     /**
-     * Enables the jFrame to to added to an "Active Render" thread, at a target "Frames-per-second". This is to support smooth, swing-based
-     * animations. <br> This works by removing this object from EDT updates, and instead manually calls paint(g) on the jFrame, updating it
+     * Enables the window to to added to an "Active Render" thread, at a target "Frames-per-second". This is to support smooth, swing-based
+     * animations. <br> This works by removing this object from EDT updates, and instead manually calls paint(g) on the window, updating it
      * on our own thread.
      *
-     * @param jFrame the jFrame to add to the ActiveRender thread.
+     * @param window the window to add to the ActiveRender thread.
      */
     public static
-    void addActiveRender(final JFrame jFrame) {
+    void addActiveRender(final Window window) {
         // this should be on the EDT
         if (!EventQueue.isDispatchThread()) {
-            throw new RuntimeException("adding a swing JFrame to be actively rendered must be done on the EDT.");
+            throw new RuntimeException("adding a swing Window to be actively rendered must be done on the EDT.");
         }
 
         // setup double-buffering, so we can properly use Active-Rendering, so the animations will be smooth
-        jFrame.createBufferStrategy(2);
+        window.createBufferStrategy(2);
 
-        // have to specify ALL children in jFrame to ignore EDT paint requests
+        // have to specify ALL children in Window to ignore EDT paint requests
         Deque<Component> components = new ArrayDeque<Component>(8);
-        components.add(jFrame);
+        components.add(window);
 
         Component[] c;
         Component pop;
@@ -93,7 +93,7 @@ class SwingActiveRender {
             }
 
             hasActiveRenders = true;
-            activeRenders.add(jFrame);
+            activeRenders.add(window);
         }
     }
 
@@ -137,14 +137,14 @@ class SwingActiveRender {
 
 
     /**
-     * Removes a jFrame from the ActiveRender queue. This should happen when the jFrame is closed.
+     * Removes a window from the ActiveRender queue. This should happen when the window is closed.
      *
-     * @param jFrame the jFrame to remove
+     * @param window the window to remove
      */
     public static
-    void removeActiveRender(final JFrame jFrame) {
+    void removeActiveRender(final Window window) {
         synchronized (activeRenders) {
-            activeRenders.remove(jFrame);
+            activeRenders.remove(window);
 
             final boolean hadActiveRenders = !activeRenders.isEmpty();
             hasActiveRenders = hadActiveRenders;
@@ -154,9 +154,9 @@ class SwingActiveRender {
             }
         }
 
-        // have to specify ALL children in jFrame to obey EDT paint requests
+        // have to specify ALL children in window to obey EDT paint requests
         Deque<Component> components = new ArrayDeque<Component>(8);
-        components.add(jFrame);
+        components.add(window);
 
         Component[] c;
         Component pop;
