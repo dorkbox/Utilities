@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import org.bouncycastle.crypto.digests.SHA256Digest;
-
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final
 class Sys {
@@ -292,56 +290,6 @@ class Sys {
         }
 
         return concatBytes;
-    }
-
-    /**
-     * gets the SHA256 hash + SALT of the specified username, as UTF-16
-     */
-    public static
-    byte[] getSha256WithSalt(String username, byte[] saltBytes) {
-        if (username == null) {
-            return null;
-        }
-
-        byte[] charToBytes = Sys.charToBytes(username.toCharArray());
-        byte[] userNameWithSalt = Sys.concatBytes(charToBytes, saltBytes);
-
-
-        SHA256Digest sha256 = new SHA256Digest();
-        byte[] usernameHashBytes = new byte[sha256.getDigestSize()];
-        sha256.update(userNameWithSalt, 0, userNameWithSalt.length);
-        sha256.doFinal(usernameHashBytes, 0);
-
-        return usernameHashBytes;
-    }
-
-    /**
-     * gets the SHA256 hash of the specified string, as UTF-16
-     */
-    public static
-    byte[] getSha256(String string) {
-        byte[] charToBytes = Sys.charToBytes(string.toCharArray());
-
-        SHA256Digest sha256 = new SHA256Digest();
-        byte[] usernameHashBytes = new byte[sha256.getDigestSize()];
-        sha256.update(charToBytes, 0, charToBytes.length);
-        sha256.doFinal(usernameHashBytes, 0);
-
-        return usernameHashBytes;
-    }
-
-    /**
-     * gets the SHA256 hash of the specified byte array
-     */
-    public static
-    byte[] getSha256(byte[] bytes) {
-
-        SHA256Digest sha256 = new SHA256Digest();
-        byte[] hashBytes = new byte[sha256.getDigestSize()];
-        sha256.update(bytes, 0, bytes.length);
-        sha256.doFinal(hashBytes, 0);
-
-        return hashBytes;
     }
 
     /**
