@@ -424,19 +424,28 @@ class FileUtil {
         return one;
     }
 
+    /**
+     * Moves a file, overwriting any existing file at the destination.
+     */
+    public static
+    File moveFile(String in, File out) throws IOException {
+        return moveFile(new File(in), out);
+    }
+
+    /**
+     * Moves a file, overwriting any existing file at the destination.
+     */
+    public static
+    File moveFile(File in, String out) throws IOException {
+        return moveFile(in, new File(out));
+    }
+
 
     /**
      * Moves a file, overwriting any existing file at the destination.
      */
     public static
     File moveFile(String in, String out) throws IOException {
-        if (in == null || in.isEmpty()) {
-            throw new IllegalArgumentException("in cannot be null.");
-        }
-        if (out == null || out.isEmpty()) {
-            throw new IllegalArgumentException("out cannot be null.");
-        }
-
         return moveFile(new File(in), new File(out));
     }
 
