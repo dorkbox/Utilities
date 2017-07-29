@@ -1383,7 +1383,7 @@ class FileUtil {
             return null;
         }
 
-        return new File(asString);
+        return new File(asString).getAbsoluteFile();
     }
 
     /*
