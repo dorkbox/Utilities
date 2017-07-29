@@ -255,10 +255,25 @@ class FileUtil {
      * Copies a files from one location to another.  Overwriting any existing file at the destination.
      */
     public static
+    File copyFile(String in, File out) throws IOException {
+        return copyFile(new File(in), out);
+    }
+
+    /**
+     * Copies a files from one location to another.  Overwriting any existing file at the destination.
+     */
+    public static
+    File copyFile(File in, String out) throws IOException {
+        return copyFile(in, new File(out));
+    }
+
+    /**
+     * Copies a files from one location to another.  Overwriting any existing file at the destination.
+     */
+    public static
     File copyFile(String in, String out) throws IOException {
         return copyFile(new File(in), new File(out));
     }
-
 
     /**
      * Copies a files from one location to another.  Overwriting any existing file at the destination.
