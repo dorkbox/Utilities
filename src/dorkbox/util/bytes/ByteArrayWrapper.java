@@ -15,8 +15,6 @@
  */
 package dorkbox.util.bytes;
 
-import org.bouncycastle.crypto.digests.SHA256Digest;
-
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
@@ -83,6 +81,9 @@ class ByteArrayWrapper {
         return new ByteArrayWrapper(data, false);
     }
 
+    /**
+     * Gets the UTF8 bytes from the string, and wraps them in a ByteArrayWrapper.
+     */
     public static
     ByteArrayWrapper wrap(String data) {
         if (data == null) {
@@ -90,13 +91,7 @@ class ByteArrayWrapper {
         }
 
         byte[] bytes = data.getBytes(UTF_8);
-
-        SHA256Digest digest = new SHA256Digest();
-        digest.update(bytes, 0, bytes.length);
-        byte[] hashBytes = new byte[digest.getDigestSize()];
-        digest.doFinal(hashBytes, 0);
-
-        return ByteArrayWrapper.wrap(hashBytes);
+        return ByteArrayWrapper.wrap(bytes);
     }
 
     public
