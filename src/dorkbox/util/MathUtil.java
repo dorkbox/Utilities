@@ -258,4 +258,44 @@ class MathUtil {
     boolean intersectRange(double ax1, double ax2, double bx1, double bx2) {
         return Math.max(ax1, bx1) <= Math.min(ax2, bx2);
     }
+
+    /**
+     * Clamps a value to min/max values, where it cannot exceed either.
+     *
+     * @return the new value, clamped
+     */
+    public static
+    int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Clamps a value to min/max values, where it cannot exceed either.
+     *
+     * @return the new value, clamped
+     */
+    public static
+    long clamp(long value, long min, long max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Clamps a value to min/max values, where it cannot exceed either.
+     *
+     * @return the new value, clamped
+     */
+    public static
+    float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    /**
+     * Clamps a value to min/max values, where it cannot exceed either.
+     *
+     * @return the new value, clamped
+     */
+    public static
+    double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
 }
