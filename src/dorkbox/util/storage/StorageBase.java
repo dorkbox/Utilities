@@ -39,7 +39,6 @@ import com.esotericsoftware.kryo.io.Output;
 
 import dorkbox.util.OS;
 import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
 
 
 // a note on file locking between c and java
@@ -65,7 +64,7 @@ class StorageBase {
 
 
     // The in-memory index (for efficiency, all of the record info is cached in memory).
-    private final Map<ByteArrayWrapper, Metadata> memoryIndex;
+    private final Map<StorageKey, Metadata> memoryIndex;
 
     // determines how much the index will grow by
     private final Float weight;
@@ -174,7 +173,7 @@ class StorageBase {
 
         //noinspection AutoBoxing
         this.weight = 0.5F;
-        this.memoryIndex = new ConcurrentHashMap<ByteArrayWrapper, Metadata>(this.numberOfRecords);
+        this.memoryIndex = new ConcurrentHashMap<StorageKey, Metadata>(this.numberOfRecords);
 
         if (!newStorage) {
             Metadata meta;
@@ -210,7 +209,7 @@ class StorageBase {
      * Checks if there is a record belonging to the given key.
      */
     final
-    boolean contains(ByteArrayWrapper key) {
+    boolean contains(StorageKey key) {
         // protected by lock
 
         // check to see if it's in the pending ops
@@ -221,7 +220,7 @@ class StorageBase {
      * @return an object for a specified key ONLY FROM THE REFERENCE CACHE
      */
     final
-    <T> T getCached(ByteArrayWrapper key) {
+    <T> T getCached(StorageKey key) {
         // protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -253,7 +252,7 @@ class StorageBase {
      * @return an object for a specified key form referenceCache FIRST, then from DISK
      */
     final
-    <T> T get(ByteArrayWrapper key) throws IOException {
+    <T> T get(StorageKey key) throws IOException {
         // NOT protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -314,7 +313,7 @@ class StorageBase {
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
     final
-    boolean delete(ByteArrayWrapper key) {
+    boolean delete(StorageKey key) {
         // pending ops flushed (protected by lock)
         // not protected by lock
         Metadata delRec = this.memoryIndex.get(key);
@@ -398,7 +397,7 @@ class StorageBase {
      * Will also save the object in a cache.
      */
     private
-    void save0(ByteArrayWrapper key, Object object) {
+    void save0(StorageKey key, Object object) {
         Metadata metaData = this.memoryIndex.get(key);
         int currentRecordCount = this.numberOfRecords;
 
@@ -519,15 +518,15 @@ class StorageBase {
         return outputStream;
     }
 
-    void doActionThings(Map<ByteArrayWrapper, Object> actions) {
+    void doActionThings(Map<StorageKey, Object> actions) {
 
         // actions is thrown away after this invocation. GC can pick it up.
         // we are only interested in the LAST action that happened for some data.
         // items to be "autosaved" are automatically injected into "actions".
-        final Set<Entry<ByteArrayWrapper, Object>> entries = actions.entrySet();
-        for (Entry<ByteArrayWrapper, Object> entry : entries) {
+        final Set<Entry<StorageKey, Object>> entries = actions.entrySet();
+        for (Entry<StorageKey, Object> entry : entries) {
             Object object = entry.getValue();
-            ByteArrayWrapper key = entry.getKey();
+            StorageKey key = entry.getKey();
 
             // our action list is for explicitly saving objects (but not necessarily "registering" them to be auto-saved
             save0(key, object);
@@ -612,7 +611,7 @@ class StorageBase {
     }
 
     private
-    void deleteRecordIndex(ByteArrayWrapper key, Metadata deleteRecord) throws IOException {
+    void deleteRecordIndex(StorageKey key, Metadata deleteRecord) throws IOException {
         int currentNumRecords = this.memoryIndex.size();
 
         if (deleteRecord.indexPosition != currentNumRecords - 1) {

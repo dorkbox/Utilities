@@ -15,8 +15,6 @@
  */
 package dorkbox.util.storage;
 
-import dorkbox.util.bytes.ByteArrayWrapper;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -53,7 +51,7 @@ interface Storage {
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(ByteArrayWrapper key) throws IOException;
+    <T> T get(StorageKey key) throws IOException;
 
     /**
      * Uses the DEFAULT key ("") to return saved data.
@@ -86,7 +84,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException;
+    <T> T getAndPut(StorageKey key, T data) throws IOException;
 
     /**
      * Saves the given data to storage with the associated key.
@@ -110,7 +108,7 @@ interface Storage {
      * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
      * deleting the old data and adding the new.
      */
-    void put(ByteArrayWrapper key, Object data);
+    void put(StorageKey key, Object data);
 
     /**
      * Adds the given object to the storage using a default (blank) key, OR -- if it has been registered, using it's registered key
@@ -132,7 +130,7 @@ interface Storage {
      *
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
-    boolean delete(ByteArrayWrapper key);
+    boolean delete(StorageKey key);
 
     /**
      * @return the file that backs this storage
@@ -197,5 +195,5 @@ interface Storage {
      * <p/>
      * This will save the ALL of the pending save actions to the file
      */
-    void putAndSave(ByteArrayWrapper key, Object object);
+    void putAndSave(StorageKey key, Object object);
 }

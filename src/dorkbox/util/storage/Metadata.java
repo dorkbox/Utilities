@@ -26,7 +26,6 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
 
 public
 class Metadata {
@@ -44,7 +43,7 @@ class Metadata {
     /**
      * This is the key to the index
      */
-    final ByteArrayWrapper key;
+    final StorageKey key;
 
     /**
      * Indicates this header's position in the file index.
@@ -86,25 +85,26 @@ class Metadata {
      * Returns a file pointer in the index pointing to the first byte in the RECORD pointer located at the given index
      * position.
      */
-    static
+    private static
     long getDataPointer(int position) {
         return Metadata.getMetaDataPointer(position) + KEY_SIZE;
     }
 
 
     private
-    Metadata(ByteArrayWrapper key) {
+    Metadata(StorageKey key) {
         this.key = key;
     }
 
     /**
      * we don't know how much data there is until AFTER we write the data
      */
-    Metadata(ByteArrayWrapper key, int recordIndex, long dataPointer) {
+    Metadata(StorageKey key, int recordIndex, long dataPointer) {
         this(key, recordIndex, dataPointer, 0);
     }
 
-    Metadata(ByteArrayWrapper key, int recordIndex, long dataPointer, int dataCapacity) {
+    private
+    Metadata(StorageKey key, int recordIndex, long dataPointer, int dataCapacity) {
         if (key.getBytes().length > KEY_SIZE) {
             throw new IllegalArgumentException("Bad record key size: " + dataCapacity);
         }
@@ -119,6 +119,7 @@ class Metadata {
         this.dataCount = dataCapacity;
     }
 
+    @SuppressWarnings("unused")
     int getFreeSpace() {
         return this.dataCapacity - this.dataCount;
     }
@@ -139,7 +140,7 @@ class Metadata {
 
         lock.release();
 
-        Metadata r = new Metadata(ByteArrayWrapper.wrap(buf));
+        Metadata r = new Metadata(new StorageKey(buf));
         r.indexPosition = position;
 
         long recordHeaderPointer = Metadata.getDataPointer(position);
@@ -247,6 +248,7 @@ class Metadata {
     /**
      * Reads the record data for the given record header.
      */
+    private
     byte[] readDataRaw(RandomAccessFile file) throws IOException {
 
         byte[] buf = new byte[this.dataCount];

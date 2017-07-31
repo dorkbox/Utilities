@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 
 import dorkbox.util.DelayTimer;
 import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
 
 
 /**
@@ -38,7 +37,7 @@ import dorkbox.util.bytes.ByteArrayWrapper;
 @SuppressWarnings({"Convert2Diamond", "Convert2Lambda"})
 class DiskStorage implements Storage {
     private final DelayTimer timer;
-    private final ByteArrayWrapper defaultKey;
+    private final StorageKey defaultKey;
     private final StorageBase storage;
 
     private final AtomicInteger references = new AtomicInteger(1);
@@ -46,14 +45,14 @@ class DiskStorage implements Storage {
     private final AtomicBoolean isOpen = new AtomicBoolean(false);
     private volatile long milliSeconds = 3000L;
 
-    private volatile Map<ByteArrayWrapper, Object> actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
+    private volatile Map<StorageKey, Object> actionMap = new ConcurrentHashMap<StorageKey, Object>();
 
     /**
      * Creates or opens a new database file.
      */
     DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly, final Logger logger) throws IOException {
         this.storage = new StorageBase(storageFile, serializationManager, logger);
-        this.defaultKey = ByteArrayWrapper.wrap("");
+        this.defaultKey = new StorageKey("");
 
         if (readOnly) {
             this.timer = null;
@@ -65,12 +64,12 @@ class DiskStorage implements Storage {
                 void run() {
                     ReentrantLock actionLock2 = DiskStorage.this.actionLock;
 
-                    Map<ByteArrayWrapper, Object> actions;
+                    Map<StorageKey, Object> actions;
                     try {
                         actionLock2.lock();
                         // do a fast swap on the actionMap.
                         actions = DiskStorage.this.actionMap;
-                        DiskStorage.this.actionMap = new ConcurrentHashMap<ByteArrayWrapper, Object>();
+                        DiskStorage.this.actionMap = new ConcurrentHashMap<StorageKey, Object>();
                     } finally {
                         actionLock2.unlock();
                     }
@@ -116,7 +115,7 @@ class DiskStorage implements Storage {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        final ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
+        final StorageKey wrap = new StorageKey(key);
         // check if our pending actions has it, or if our storage index has it
         return this.actionMap.containsKey(wrap) || this.storage.contains(wrap);
     }
@@ -140,7 +139,7 @@ class DiskStorage implements Storage {
     @Override
     public final
     <T> T get(String key) throws IOException {
-        return get0(ByteArrayWrapper.wrap(key));
+        return get0(new StorageKey(key));
     }
 
     /**
@@ -151,7 +150,7 @@ class DiskStorage implements Storage {
     @Override
     public final
     <T> T get(byte[] key) throws IOException {
-        return get0(ByteArrayWrapper.wrap(key));
+        return get0(new StorageKey(key));
     }
 
     /**
@@ -161,7 +160,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    <T> T get(ByteArrayWrapper key) throws IOException {
+    <T> T get(StorageKey key) throws IOException {
         return get0(key);
     }
 
@@ -186,7 +185,7 @@ class DiskStorage implements Storage {
     @Override
     public
     <T> T getAndPut(String key, T data) throws IOException {
-        ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
+        StorageKey wrap = new StorageKey(key);
 
         return getAndPut(wrap, data);
     }
@@ -199,7 +198,7 @@ class DiskStorage implements Storage {
     @Override
     public
     <T> T getAndPut(byte[] key, T data) throws IOException {
-        return getAndPut(ByteArrayWrapper.wrap(key), data);
+        return getAndPut(new StorageKey(key), data);
     }
 
     /**
@@ -210,7 +209,7 @@ class DiskStorage implements Storage {
     @Override
     @SuppressWarnings("unchecked")
     public
-    <T> T getAndPut(ByteArrayWrapper key, T data) throws IOException {
+    <T> T getAndPut(StorageKey key, T data) throws IOException {
         Object source = get0(key);
 
         if (source == null) {
@@ -236,7 +235,7 @@ class DiskStorage implements Storage {
      * @throws IOException if there is a problem deserializing data from disk
      */
     private
-    <T> T get0(ByteArrayWrapper key) throws IOException {
+    <T> T get0(StorageKey key) throws IOException {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -269,7 +268,7 @@ class DiskStorage implements Storage {
     @Override
     public final
     void put(String key, Object object) {
-        put(ByteArrayWrapper.wrap(key), object);
+        put(new StorageKey(key), object);
     }
 
     /**
@@ -281,7 +280,7 @@ class DiskStorage implements Storage {
     @Override
     public final
     void put(byte[] key, Object object) {
-        put(ByteArrayWrapper.wrap(key), object);
+        put(new StorageKey(key), object);
     }
 
     /**
@@ -292,7 +291,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    void put(ByteArrayWrapper key, Object object) {
+    void put(StorageKey key, Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -338,7 +337,7 @@ class DiskStorage implements Storage {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
+        StorageKey wrap = new StorageKey(key);
 
         // timer action runs on THIS thread, not timer thread
         if (timer != null) {
@@ -357,7 +356,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    boolean delete(ByteArrayWrapper key) {
+    boolean delete(StorageKey key) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
@@ -471,7 +470,7 @@ class DiskStorage implements Storage {
     }
 
     private
-    void action(ByteArrayWrapper key, Object object) {
+    void action(StorageKey key, Object object) {
         try {
             this.actionLock.lock();
 
@@ -537,7 +536,7 @@ class DiskStorage implements Storage {
 
         // timer action runs on THIS thread, not timer thread
         if (timer != null) {
-            action(ByteArrayWrapper.wrap(key), object);
+            action(new StorageKey(key), object);
             this.timer.delay(0L);
         }
     }
@@ -555,7 +554,7 @@ class DiskStorage implements Storage {
         }
 
         if (timer != null) {
-            action(ByteArrayWrapper.wrap(key), object);
+            action(new StorageKey(key), object);
 
             // timer action runs on THIS thread, not timer thread
             this.timer.delay(0L);
@@ -570,7 +569,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    void putAndSave(final ByteArrayWrapper key, final Object object) {
+    void putAndSave(final StorageKey key, final Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }

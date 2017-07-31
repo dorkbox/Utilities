@@ -19,20 +19,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import dorkbox.util.bytes.ByteArrayWrapper;
-
 /**
  * Storage that is in memory only (and is not persisted to disk)
  */
 class MemoryStorage implements Storage {
-    private final ConcurrentHashMap<ByteArrayWrapper, Object> storage;
-    private final ByteArrayWrapper defaultKey;
+    private final ConcurrentHashMap<StorageKey, Object> storage;
+    private final StorageKey defaultKey;
     private int version;
 
 
     MemoryStorage() {
-        this.storage = new ConcurrentHashMap<ByteArrayWrapper, Object>();
-        this.defaultKey = ByteArrayWrapper.wrap("");
+        this.storage = new ConcurrentHashMap<StorageKey, Object>();
+        this.defaultKey = new StorageKey("");
     }
 
 
@@ -51,7 +49,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     boolean contains(final String key) {
-        return storage.containsKey(ByteArrayWrapper.wrap(key));
+        return storage.containsKey(new StorageKey(key));
     }
 
     /**
@@ -70,7 +68,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T get(final String key) {
-        return get(ByteArrayWrapper.wrap(key));
+        return get(new StorageKey(key));
     }
 
     /**
@@ -79,7 +77,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T get(final byte[] key) {
-        return get(ByteArrayWrapper.wrap(key));
+        return get(new StorageKey(key));
     }
 
     /**
@@ -88,7 +86,7 @@ class MemoryStorage implements Storage {
     @SuppressWarnings("unchecked")
     @Override
     public
-    <T> T get(final ByteArrayWrapper key) {
+    <T> T get(final StorageKey key) {
         return (T) storage.get(key);
     }
 
@@ -113,7 +111,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T getAndPut(String key, T data) throws IOException {
-        ByteArrayWrapper wrap = ByteArrayWrapper.wrap(key);
+        StorageKey wrap = new StorageKey(key);
 
         return getAndPut(wrap, data);
     }
@@ -126,13 +124,13 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T getAndPut(byte[] key, T data) throws IOException {
-        return getAndPut(ByteArrayWrapper.wrap(key), data);
+        return getAndPut(new StorageKey(key), data);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public
-    <T> T getAndPut(final ByteArrayWrapper key, final T data) throws IOException {
+    <T> T getAndPut(final StorageKey key, final T data) throws IOException {
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);
@@ -150,7 +148,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     void put(final String key, final Object data) {
-        put(ByteArrayWrapper.wrap(key), data);
+        put(new StorageKey(key), data);
     }
 
     /**
@@ -162,7 +160,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     void put(final byte[] key, final Object data) {
-        put(ByteArrayWrapper.wrap(key), data);
+        put(new StorageKey(key), data);
     }
 
     /**
@@ -173,7 +171,7 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    void put(final ByteArrayWrapper key, final Object object) {
+    void put(final StorageKey key, final Object object) {
         storage.put(key, object);
     }
 
@@ -197,7 +195,7 @@ class MemoryStorage implements Storage {
     @Override
     public
     boolean delete(final String key) {
-        return delete(ByteArrayWrapper.wrap(key));
+        return delete(new StorageKey(key));
     }
 
     /**
@@ -207,7 +205,7 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    boolean delete(final ByteArrayWrapper key) {
+    boolean delete(final StorageKey key) {
         storage.remove(key);
         return true;
     }
@@ -262,18 +260,21 @@ class MemoryStorage implements Storage {
     @Override
     public
     void putAndSave(final String key, final Object object) {
-        // no-op
+        put(key, object);
+        // no-save!
     }
 
     @Override
     public
     void putAndSave(final byte[] key, final Object object) {
-        // no-op
+        put(key, object);
+        // no-save!
     }
 
     @Override
     public
-    void putAndSave(final ByteArrayWrapper key, final Object object) {
-        // no-op
+    void putAndSave(final StorageKey key, final Object object) {
+        put(key, object);
+        // no-save!
     }
 }
