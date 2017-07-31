@@ -31,7 +31,7 @@ class HashUtil {
             return null;
         }
 
-        byte[] charToBytes = Sys.charToBytes(username.toCharArray());
+        byte[] charToBytes = Sys.charToBytes16(username.toCharArray());
         byte[] userNameWithSalt = Sys.concatBytes(charToBytes, saltBytes);
 
 
@@ -48,7 +48,7 @@ class HashUtil {
      */
     public static
     byte[] getSha256(String string) {
-        byte[] charToBytes = Sys.charToBytes(string.toCharArray());
+        byte[] charToBytes = Sys.charToBytes16(string.toCharArray());
 
         SHA256Digest sha256 = new SHA256Digest();
         byte[] usernameHashBytes = new byte[sha256.getDigestSize()];
@@ -70,5 +70,21 @@ class HashUtil {
         sha256.doFinal(hashBytes, 0);
 
         return hashBytes;
+    }
+
+    public static
+    byte[] getSha256WithSalt(byte[] bytes, byte[] saltBytes) {
+        if (bytes == null || saltBytes == null) {
+            return null;
+        }
+
+        byte[] bytesWithSalt = dorkbox.util.Sys.concatBytes(bytes, saltBytes);
+
+        SHA256Digest sha256 = new SHA256Digest();
+        byte[] usernameHashBytes = new byte[sha256.getDigestSize()];
+        sha256.update(bytesWithSalt, 0, bytesWithSalt.length);
+        sha256.doFinal(usernameHashBytes, 0);
+
+        return usernameHashBytes;
     }
 }
