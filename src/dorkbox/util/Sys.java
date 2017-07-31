@@ -297,7 +297,7 @@ class Sys {
      */
     @SuppressWarnings("NumericCastThatLosesPrecision")
     public static
-    byte[] charToBytes(char[] text) {
+    byte[] charToBytes16(char[] text) {
         // NOTE: this saves the char array in UTF-16 format of bytes.
         byte[] bytes = new byte[text.length * 2];
         for (int i = 0; i < text.length; i++) {
