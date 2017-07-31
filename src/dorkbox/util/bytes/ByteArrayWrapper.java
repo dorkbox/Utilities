@@ -15,16 +15,13 @@
  */
 package dorkbox.util.bytes;
 
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
  * Necessary to provide equals and hashcode methods on a byte arrays, if they are to be used as keys in a map/set/etc
  */
-public final
+public
 class ByteArrayWrapper {
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
-
     private byte[] data;
     private Integer hashCode;
 
@@ -39,7 +36,7 @@ class ByteArrayWrapper {
      * @param copyBytes if TRUE, then the byteArray is copied. if FALSE, the byte array is used as-is.
      *                  Using FALSE IS DANGEROUS!!!! If the underlying byte array is modified, this changes as well.
      */
-    private
+    public
     ByteArrayWrapper(byte[] data, boolean copyBytes) {
         if (data == null) {
             throw new NullPointerException();
@@ -79,19 +76,6 @@ class ByteArrayWrapper {
             return null;
         }
         return new ByteArrayWrapper(data, false);
-    }
-
-    /**
-     * Gets the UTF8 bytes from the string, and wraps them in a ByteArrayWrapper.
-     */
-    public static
-    ByteArrayWrapper wrap(String data) {
-        if (data == null) {
-            return null;
-        }
-
-        byte[] bytes = data.getBytes(UTF_8);
-        return ByteArrayWrapper.wrap(bytes);
     }
 
     public
