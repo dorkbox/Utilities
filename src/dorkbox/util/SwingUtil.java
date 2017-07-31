@@ -18,6 +18,8 @@ package dorkbox.util;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Frame;
+import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -34,6 +36,9 @@ import java.util.Locale;
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -567,5 +572,68 @@ class SwingUtil {
         }
 
         return 0;
+    }
+
+    /**
+     * Displays up a dialog in the center of the screen (where the mouse is located) that displays a message using a default icon
+     * determined by the <code>messageType</code> parameter.
+     *
+     * @param title the title for the dialog
+     * @param message the message to display
+     * @param messageType the type (ERROR, QUESTION, etc)
+     *
+     * @return the clicked on value, if any.
+     * @throws HeadlessException
+     */
+    public static
+    int showMessageDialog(final String title, final String message, final int messageType) throws HeadlessException  {
+        JOptionPane pane = new JOptionPane(message, messageType, JOptionPane.DEFAULT_OPTION, null, null, null);
+        pane.setInitialValue(null);
+        Frame rootFrame = JOptionPane.getRootFrame();
+        pane.setComponentOrientation(rootFrame.getComponentOrientation());
+
+        int style;
+
+        switch (messageType) {
+            case JOptionPane.ERROR_MESSAGE:
+                style = JRootPane.ERROR_DIALOG;
+                break;
+            case JOptionPane.QUESTION_MESSAGE:
+                style = JRootPane.QUESTION_DIALOG;
+                break;
+            case JOptionPane.WARNING_MESSAGE:
+                style = JRootPane.WARNING_DIALOG;
+                break;
+            case JOptionPane.INFORMATION_MESSAGE:
+                style = JRootPane.INFORMATION_DIALOG;
+                break;
+            case JOptionPane.PLAIN_MESSAGE:
+            default:
+                style = JRootPane.PLAIN_DIALOG;
+        }
+
+        JDialog dialog = pane.createDialog(title);
+        dialog.setModal(true);
+
+        if (JDialog.isDefaultLookAndFeelDecorated()) {
+            boolean supportsWindowDecorations = UIManager.getLookAndFeel().getSupportsWindowDecorations();
+            if (supportsWindowDecorations) {
+                dialog.setUndecorated(true);
+                dialog.getRootPane().setWindowDecorationStyle(style);
+            }
+        }
+
+        pane.selectInitialValue();
+        ScreenUtil.showOnSameScreenAsMouse_Center(dialog);
+        dialog.show();
+        dialog.dispose();
+
+        Object selectedValue = pane.getValue();
+
+        if (selectedValue instanceof Integer) {
+            return ((Integer) selectedValue).intValue();
+        }
+
+        return JOptionPane.CLOSED_OPTION;
     }
 }
