@@ -187,8 +187,9 @@ class StorageBase {
                 this.memoryIndex.put(meta.key, meta);
             }
 
-            if (this.memoryIndex.size() != this.numberOfRecords) {
-                setRecordCount(this.randomAccessFile, this.memoryIndex.size());
+            // offset by one, because numberOfRecords counts from 1, and memoryIndex.size() is from 0
+            if (this.memoryIndex.size() + 1 != (this.numberOfRecords)) {
+                setRecordCount(this.randomAccessFile, this.memoryIndex.size() + 1);
                 if (logger != null) {
                    logger.warn("Mismatch record count in storage, auto-correcting size.");
                 }
