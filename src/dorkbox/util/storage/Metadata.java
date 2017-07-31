@@ -15,17 +15,18 @@
  */
 package dorkbox.util.storage;
 
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
-import dorkbox.util.SerializationManager;
-import dorkbox.util.bytes.ByteArrayWrapper;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.channels.FileLock;
+
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
+
+import dorkbox.util.SerializationManager;
+import dorkbox.util.bytes.ByteArrayWrapper;
 
 public
 class Metadata {
@@ -123,7 +124,7 @@ class Metadata {
     }
 
     /**
-     * Reads the ith HEADER (key + metadata) from the index.
+     * Reads the Nth HEADER (key + metadata) from the index.
      */
     static
     Metadata readHeader(RandomAccessFile file, int position) throws IOException {
