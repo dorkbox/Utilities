@@ -36,7 +36,7 @@ class ByteArrayWrapper {
     /**
      * Permits the re-use of a byte array.
      *
-     * @param copyBytes if TRUE, then the byteArray is copies. if FALSE, the byte array is uses as-is.
+     * @param copyBytes if TRUE, then the byteArray is copied. if FALSE, the byte array is used as-is.
      *                  Using FALSE IS DANGEROUS!!!! If the underlying byte array is modified, this changes as well.
      */
     private
