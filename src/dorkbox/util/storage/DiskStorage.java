@@ -372,9 +372,17 @@ class DiskStorage implements Storage {
     }
 
     /**
+     * Closes and removes this storage from the storage system. This is the same as calling {@link StorageSystem#close(Storage)}
+     */
+    public
+    void close() {
+        StorageSystem.close(this);
+    }
+
+    /**
      * Closes the database and file.
      */
-    void close() {
+    void closeFully() {
         // timer action runs on THIS thread, not timer thread
         if (timer != null) {
             this.timer.delay(0L);
@@ -507,7 +515,7 @@ class DiskStorage implements Storage {
     /**
      * Save the storage to disk, immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     @Override
     public final
@@ -523,9 +531,9 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then saves the storage to disk, immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     @Override
     public
@@ -542,9 +550,9 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then save the storage to disk, immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     @Override
     public
@@ -563,9 +571,9 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then save the storage to disk, immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     @Override
     public

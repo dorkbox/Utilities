@@ -210,53 +210,86 @@ class MemoryStorage implements Storage {
         return true;
     }
 
+    /**
+     * @return null. There is no file that backs this storage
+     */
     @Override
     public
     File getFile() {
         return null;
     }
 
+    /**
+     * Gets the backing file size.
+     *
+     * @return 0. There is no file that backs this storage
+     */
     @Override
     public
     long getFileSize() {
         return 0;
     }
 
+    /**
+     * @return false. Writes to in-memory storage are immediate.
+     */
     @Override
     public
     boolean hasWriteWaiting() {
         return false;
     }
 
+    /**
+     * @return 0. There is no file that backs this storage
+     */
     @Override
     public
     long getSaveDelay() {
         return 0;
     }
 
+
+    /**
+     * There is no file that backs this storage, so saves/writes are immediate
+     */
     @Override
     public
     void setSaveDelay(final long milliSeconds) {
+        // no-op
     }
 
+    /**
+     * @return the version of data stored in the database
+     */
     @Override
     public synchronized
     int getVersion() {
         return version;
     }
 
+    /**
+     * Sets the version of data stored in the database
+     */
     @Override
     public synchronized
     void setVersion(final int version) {
         this.version = version;
     }
 
+    /**
+     * There is no file that backs this storage, so writes are immediate and saves do nothgin
+     */
     @Override
     public
     void save() {
         // no-op
     }
 
+    /**
+     * Adds a key/value pair to the storage.
+     * <p/>
+     * There is no file that backs this storage, so writes are immediate and saves do nothing
+     */
     @Override
     public
     void putAndSave(final String key, final Object object) {
@@ -264,17 +297,36 @@ class MemoryStorage implements Storage {
         // no-save!
     }
 
+    /**
+     /**
+     * Adds a key/value pair to the storage.
+     * <p/>
+     * There is no file that backs this storage, so writes are immediate and saves do nothing
+     */
     @Override
     public
     void putAndSave(final byte[] key, final Object object) {
         put(key, object);
-        // no-save!
+        // no save because we are in memory!
     }
 
+    /**
+     * Adds a key/value pair to the storage.
+     * <p/>
+     * There is no file that backs this storage, so writes are immediate and saves do nothing
+     */
     @Override
     public
     void putAndSave(final StorageKey key, final Object object) {
         put(key, object);
-        // no-save!
+        // no save because we are in memory!
+    }
+
+    /**
+     * In-memory storage systems do not have a backing file, so there is nothing to close
+     */
+    public
+    void close() {
+        StorageSystem.close(this);
     }
 }

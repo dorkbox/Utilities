@@ -76,7 +76,7 @@ class StorageSystem {
                     final DiskStorage diskStorage = (DiskStorage) storage;
                     boolean isLastOne = diskStorage.decrementReference();
                     if (isLastOne) {
-                        diskStorage.close();
+                        diskStorage.closeFully();
                         storages.remove(file);
                     }
                 }
@@ -108,7 +108,7 @@ class StorageSystem {
                     //noinspection StatementWithEmptyBody
                     while (!diskStorage.decrementReference()) {
                     }
-                    diskStorage.close();
+                    diskStorage.closeFully();
                 }
             }
             storages.clear();
@@ -125,7 +125,7 @@ class StorageSystem {
         synchronized (storages) {
             Storage remove = storages.remove(file);
             if (remove != null && remove instanceof DiskStorage) {
-                ((DiskStorage) remove).close();
+                ((DiskStorage) remove).closeFully();
             }
             //noinspection ResultOfMethodCallIgnored
             file.delete();
@@ -203,7 +203,7 @@ class StorageSystem {
          * suppress serialization errors.
          */
         public
-        DiskMaker nologger() {
+        DiskMaker noLogger() {
             this.logger = NOPLogger.NOP_LOGGER;
             return this;
         }

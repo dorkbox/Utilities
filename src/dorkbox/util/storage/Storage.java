@@ -177,23 +177,28 @@ interface Storage {
     void save();
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then saves the storage immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     void putAndSave(String key, Object object);
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then saves the storage immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     void putAndSave(byte[] key, Object object);
 
     /**
-     * Save the storage to disk, immediately.
+     * Adds a key/value pair to the storage, then saves the storage immediately.
      * <p/>
-     * This will save the ALL of the pending save actions to the file
+     * This will save ALL of the pending save actions to the file
      */
     void putAndSave(StorageKey key, Object object);
+
+    /**
+     * Closes this storage system
+     */
+    void close();
 }
