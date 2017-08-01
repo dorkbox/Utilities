@@ -134,6 +134,7 @@ class StorageTest {
     @Test
     public
     void testCreateDB() throws IOException {
+        TEST_DB.delete();
         Storage storage = StorageSystem.Disk()
                                        .file(TEST_DB)
                                        .serializer(manager)
@@ -142,10 +143,10 @@ class StorageTest {
         int numberOfRecords1 = storage.size();
         long size1 = storage.getFileSize();
 
-        Assert.assertEquals("count is not correct", numberOfRecords1, 0);
-        Assert.assertEquals("size is not correct", size1, initialSize);
+        Assert.assertEquals("count is not correct", 0, numberOfRecords1);
+        Assert.assertEquals("size is not correct", initialSize, size1);
 
-        StorageSystem.close(storage);
+        storage.close();
 
         storage = StorageSystem.Disk()
                                .file(TEST_DB)
