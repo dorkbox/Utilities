@@ -16,7 +16,6 @@
 package dorkbox.util.storage;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -99,7 +98,7 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(T data) throws IOException {
+    <T> T getAndPut(T data) {
         return getAndPut(this.defaultKey, data);
     }
 
@@ -110,7 +109,7 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(String key, T data) throws IOException {
+    <T> T getAndPut(String key, T data) {
         StorageKey wrap = new StorageKey(key);
 
         return getAndPut(wrap, data);
@@ -123,14 +122,14 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(byte[] key, T data) throws IOException {
+    <T> T getAndPut(byte[] key, T data) {
         return getAndPut(new StorageKey(key), data);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public
-    <T> T getAndPut(final StorageKey key, final T data) throws IOException {
+    <T> T getAndPut(final StorageKey key, final T data) {
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);

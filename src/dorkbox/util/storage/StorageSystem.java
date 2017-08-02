@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 
 import dorkbox.util.FileUtil;
+import dorkbox.util.OS;
 import dorkbox.util.SerializationManager;
 
 public
@@ -46,6 +47,7 @@ class StorageSystem {
         Runtime.getRuntime()
                .addShutdownHook(shutdownHook);
     }
+
 
     /**
      * Creates a persistent, on-disk storage system. Writes to disk are queued, so it is recommended to NOT edit/change an object after
@@ -212,13 +214,13 @@ class StorageSystem {
          * Makes the storage system
          */
         public
-        Storage make() {
+        Storage build() {
             if (this.file == null) {
                 throw new IllegalArgumentException("file cannot be null!");
             }
 
             if (this.serializationManager == null) {
-                throw new IllegalArgumentException("serializer cannot be null!");
+                this.serializationManager = createDefaultSerializationManager();
             }
 
             // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
@@ -244,12 +246,23 @@ class StorageSystem {
                         storage = new DiskStorage(this.file, this.serializationManager, this.readOnly, this.logger);
                         storages.put(this.file, storage);
                     } catch (IOException e) {
-                        logger.error("Unable to open storage", e);
+                        String message = e.getMessage().substring(0,e.getMessage().indexOf(OS.LINE_SEPARATOR));
+                        if (logger != null) {
+                            logger.error("Unable to open storage file at {}. {}", this.file, message);
+                        }
+                        else {
+                            System.err.print("Unable to open storage file at " + this.file + ". " + message);
+                        }
                     }
                 }
 
                 return storage;
             }
+        }
+
+        private
+        SerializationManager createDefaultSerializationManager() {
+            return new DefaultStorageSerializationManager();
         }
     }
 
@@ -261,10 +274,10 @@ class StorageSystem {
     class MemoryMaker {
 
         /**
-         * Makes the storage system
+         * Builds the storage system
          */
         public
-        MemoryStorage make() throws IOException {
+        MemoryStorage build() {
             return new MemoryStorage();
         }
     }

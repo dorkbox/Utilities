@@ -122,45 +122,37 @@ class DiskStorage implements Storage {
 
     /**
      * Reads a object using the default (blank) key, and casts it to the expected class
-     *
-     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get() throws IOException {
+    <T> T get() {
         return get0(this.defaultKey);
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
-     *
-     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(String key) throws IOException {
+    <T> T get(String key) {
         return get0(new StorageKey(key));
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
-     *
-     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(byte[] key) throws IOException {
+    <T> T get(byte[] key) {
         return get0(new StorageKey(key));
     }
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
-     *
-     * @throws IOException if there is a problem deserializing data from disk
      */
     @Override
     public final
-    <T> T get(StorageKey key) throws IOException {
+    <T> T get(StorageKey key) {
         return get0(key);
     }
 
@@ -173,7 +165,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(T data) throws IOException {
+    <T> T getAndPut(T data) {
         return getAndPut(this.defaultKey, data);
     }
 
@@ -184,7 +176,7 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(String key, T data) throws IOException {
+    <T> T getAndPut(String key, T data) {
         StorageKey wrap = new StorageKey(key);
 
         return getAndPut(wrap, data);
@@ -197,19 +189,21 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(byte[] key, T data) throws IOException {
+    <T> T getAndPut(byte[] key, T data) {
         return getAndPut(new StorageKey(key), data);
     }
 
     /**
-     * Returns the saved data for the specified key. Also saves the data.
+     * Returns the saved data (or null) for the specified key. Also saves the data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
+     *
+     * @return NULL if the saved data was the wrong type for the specified key.
      */
     @Override
     @SuppressWarnings("unchecked")
     public
-    <T> T getAndPut(StorageKey key, T data) throws IOException {
+    <T> T getAndPut(StorageKey key, T data) {
         Object source = get0(key);
 
         if (source == null) {
@@ -222,7 +216,16 @@ class DiskStorage implements Storage {
             final Class<?> savedCLass = source.getClass();
 
             if (!expectedClass.isAssignableFrom(savedCLass)) {
-                throw new IOException("Saved value type '" + source.getClass() + "' is different that expected value");
+                String message = "Saved value type '" + savedCLass + "' is different than expected value '" + expectedClass + "'";
+
+                if (storage.logger != null) {
+                    storage.logger.error(message);
+                }
+                else {
+                    System.err.print(message);
+                }
+
+                return null;
             }
         }
 
@@ -231,11 +234,9 @@ class DiskStorage implements Storage {
 
     /**
      * Reads a object from pending or from storage
-     *
-     * @throws IOException if there is a problem deserializing data from disk
      */
     private
-    <T> T get0(StorageKey key) throws IOException {
+    <T> T get0(StorageKey key) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }

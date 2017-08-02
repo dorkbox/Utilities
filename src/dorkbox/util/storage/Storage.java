@@ -16,11 +16,11 @@
 package dorkbox.util.storage;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  *
  */
+@SuppressWarnings("unused")
 public
 interface Storage {
     /**
@@ -36,22 +36,22 @@ interface Storage {
     /**
      * Reads a object using the DEFAULT key ("") key, and casts it to the expected class
      */
-    <T> T get() throws IOException;
+    <T> T get();
+
+    /**
+     * Reads a object using the specific key, and casts it to the expected class.
+     */
+    <T> T get(String key);
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(String key) throws IOException;
+    <T> T get(byte[] key);
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
-    <T> T get(byte[] key) throws IOException;
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    <T> T get(StorageKey key) throws IOException;
+    <T> T get(StorageKey key);
 
     /**
      * Uses the DEFAULT key ("") to return saved data.
@@ -60,7 +60,7 @@ interface Storage {
      *
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(T data) throws IOException;
+    <T> T getAndPut(T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -68,7 +68,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(String key, T data) throws IOException;
+    <T> T getAndPut(String key, T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -76,7 +76,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(byte[] key, T data) throws IOException;
+    <T> T getAndPut(byte[] key, T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -84,7 +84,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(StorageKey key, T data) throws IOException;
+    <T> T getAndPut(StorageKey key, T data);
 
     /**
      * Saves the given data to storage with the associated key.

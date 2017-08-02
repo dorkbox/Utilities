@@ -25,16 +25,9 @@ import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 
 import dorkbox.util.storage.Storage;
 import dorkbox.util.storage.StorageSystem;
-import io.netty.buffer.ByteBuf;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public
@@ -48,70 +41,6 @@ class StorageTest {
 
 
     private static final File TEST_DB = new File("sampleFile.records");
-    private static final SerializationManager manager = new SerializationManager() {
-        Kryo kryo = new Kryo();
-
-        @Override
-        public
-        void register(final Class<?> clazz) {
-            kryo.register(clazz);
-        }
-
-        @Override
-        public
-        void register(final Class<?> clazz, final Serializer<?> serializer) {
-            kryo.register(clazz, serializer);
-        }
-
-        @Override
-        public
-        void register(final Class<?> type, final Serializer<?> serializer, final int id) {
-            kryo.register(type, serializer, id);
-        }
-
-        @Override
-        public
-        void write(final ByteBuf buffer, final Object message) {
-            final Output output = new Output();
-            writeFullClassAndObject(null, output, message);
-            buffer.writeBytes(output.getBuffer());
-        }
-
-        @Override
-        public
-        Object read(final ByteBuf buffer, final int length) throws IOException {
-            final Input input = new Input();
-            buffer.readBytes(input.getBuffer());
-
-            final Object o = readFullClassAndObject(null, input);
-            buffer.skipBytes(input.position());
-
-            return o;
-        }
-
-        @Override
-        public
-        void writeFullClassAndObject(final Logger logger, final Output output, final Object value) {
-            kryo.writeClassAndObject(output, value);
-        }
-
-        @Override
-        public
-        Object readFullClassAndObject(final Logger logger, final Input input) throws IOException {
-            return kryo.readClassAndObject(input);
-        }
-
-        @Override
-        public
-        void finishInit() {
-        }
-
-        @Override
-        public
-        boolean initialized() {
-            return false;
-        }
-    };
 
     static
     void log(String s) {
@@ -137,8 +66,7 @@ class StorageTest {
         TEST_DB.delete();
         Storage storage = StorageSystem.Disk()
                                        .file(TEST_DB)
-                                       .serializer(manager)
-                                       .make();
+                                       .build();
 
         int numberOfRecords1 = storage.size();
         long size1 = storage.getFileSize();
@@ -150,8 +78,7 @@ class StorageTest {
 
         storage = StorageSystem.Disk()
                                .file(TEST_DB)
-                               .serializer(manager)
-                               .make();
+                               .build();
 
         int numberOfRecords2 = storage.size();
         long size2 = storage.getFileSize();
@@ -169,8 +96,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 add(storage, i);
@@ -179,8 +105,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             for (int i = 0; i < total; i++) {
                 String record1Data = createData(i);
@@ -207,8 +132,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 log("adding record " + i + "...");
@@ -224,8 +148,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             String dataCheck = createData(total - 1);
             log("reading record " + (total - 1) + "...");
@@ -254,8 +177,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 add(storage, i);
@@ -277,8 +199,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
                 String readRecord = readRecord(storage, i);
@@ -299,8 +220,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 add(storage, i);
@@ -317,8 +237,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
@@ -340,8 +259,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
@@ -353,8 +271,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
@@ -377,8 +294,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             data2 = storage.getAndPut(createKey, new Data());
             Assert.assertEquals("Object is not the same", data, data2);
@@ -401,8 +317,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
@@ -414,8 +329,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             for (int i = 0; i < total; i++) {
                 String dataCheck = createData(i);
@@ -447,8 +361,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             // check 9 again
             readRecord = readRecord(storage, 9);
@@ -472,8 +385,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 String addRecord = add(storage, i);
@@ -485,8 +397,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             String updateRecord = updateRecord(storage, 3, createData(3) + "new");
             String readRecord = readRecord(storage, 3);
@@ -495,8 +406,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             readRecord = readRecord(storage, 3);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
@@ -506,8 +416,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             readRecord = readRecord(storage, 3);
             Assert.assertEquals("Object is not the same", updateRecord, readRecord);
@@ -515,8 +424,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
 
             updateRecord = updateRecord(storage, 0, createData(0) + "new");
             readRecord = readRecord(storage, 0);
@@ -536,8 +444,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
-                                           .serializer(manager)
-                                           .make();
+                                           .build();
 
             for (int i = 0; i < total; i++) {
                 Data data = new Data();
@@ -553,8 +460,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
-                                   .serializer(manager)
-                                   .make();
+                                   .build();
             for (int i = 0; i < total; i++) {
                 String createKey = createKey(i);
 

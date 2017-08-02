@@ -33,7 +33,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 
-import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -46,8 +45,9 @@ import dorkbox.util.SerializationManager;
 // Also, file locks on linux are ADVISORY. if an app doesn't care about locks, then it can do stuff -- even if locked by another app
 
 
+@SuppressWarnings("unused")
 class StorageBase {
-    private final Logger logger;
+    protected final Logger logger;
 
 
     // File pointer to the data start pointer header.
@@ -101,7 +101,7 @@ class StorageBase {
     private final Input input;
 
     // input/output write buffer size before flushing to/from the file
-    public static final int BUFFER_SIZE = 1024;
+    private static final int BUFFER_SIZE = 1024;
 
 
     /**
@@ -249,10 +249,10 @@ class StorageBase {
     }
 
     /**
-     * @return an object for a specified key form referenceCache FIRST, then from DISK
+     * @return an object for a specified key form referenceCache FIRST, then from DISK. NULL if it doesn't exist or there was an error.
      */
     final
-    <T> T get(StorageKey key) throws IOException {
+    <T> T get(StorageKey key) {
         // NOT protected by lock
 
         Metadata meta = this.memoryIndex.get(key);
@@ -299,11 +299,14 @@ class StorageBase {
 
             return readRecordData;
         } catch (Exception e) {
-            if (e instanceof KryoException && e.getMessage().contains("(missing no-arg constructor)")) {
-                throw new IOException("Cannot get data from disk: " + e.getMessage().substring(0, e.getMessage().indexOf(OS.LINE_SEPARATOR)));
-            } else {
-                throw new IOException("Cannot get data from disk", e);
+            String message = e.getMessage().substring(0,e.getMessage().indexOf(OS.LINE_SEPARATOR));
+            if (logger != null) {
+                logger.error("Error reading data from disk: {}", message);
             }
+            else {
+                System.err.print("Error reading data from disk: " + message);
+            }
+            return null;
         }
     }
 
