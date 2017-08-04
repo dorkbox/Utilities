@@ -23,13 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 class MemoryStorage implements Storage {
     private final ConcurrentHashMap<StorageKey, Object> storage;
-    private final StorageKey defaultKey;
     private int version;
 
 
     MemoryStorage() {
         this.storage = new ConcurrentHashMap<StorageKey, Object>();
-        this.defaultKey = new StorageKey("");
     }
 
 
@@ -49,16 +47,6 @@ class MemoryStorage implements Storage {
     public
     boolean contains(final String key) {
         return storage.containsKey(new StorageKey(key));
-    }
-
-    /**
-     * Reads a object using the default (blank) key, and casts it to the expected class
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public
-    <T> T get() {
-        return (T) storage.get(defaultKey);
     }
 
     /**
@@ -90,29 +78,16 @@ class MemoryStorage implements Storage {
     }
 
     /**
-     * Uses the DEFAULT key ("") to return saved data.
-     * <p/>
-     * This will check to see if there is an associated key for that data, if not - it will use data as the default
-     *
-     * @param data The data that will hold the copy of the data from disk
-     */
-    @Override
-    public
-    <T> T getAndPut(T data) {
-        return getAndPut(this.defaultKey, data);
-    }
-
-    /**
      * Returns the saved data for the specified key.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @Override
     public
-    <T> T getAndPut(String key, T data) {
+    <T> T get(String key, T data) {
         StorageKey wrap = new StorageKey(key);
 
-        return getAndPut(wrap, data);
+        return get(wrap, data);
     }
 
     /**
@@ -122,14 +97,14 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(byte[] key, T data) {
-        return getAndPut(new StorageKey(key), data);
+    <T> T get(byte[] key, T data) {
+        return get(new StorageKey(key), data);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public
-    <T> T getAndPut(final StorageKey key, final T data) {
+    <T> T get(final StorageKey key, final T data) {
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);
@@ -172,18 +147,6 @@ class MemoryStorage implements Storage {
     public
     void put(final StorageKey key, final Object object) {
         storage.put(key, object);
-    }
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public
-    void put(final Object data) {
-        put(defaultKey, data);
     }
 
     /**

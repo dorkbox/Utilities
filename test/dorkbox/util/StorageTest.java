@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import dorkbox.util.storage.Storage;
+import dorkbox.util.storage.StorageKey;
 import dorkbox.util.storage.StorageSystem;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -63,7 +64,8 @@ class StorageTest {
     @Test
     public
     void testCreateDB() throws IOException {
-        TEST_DB.delete();
+        StorageSystem.shutdown();
+        StorageSystem.delete(TEST_DB);
         Storage storage = StorageSystem.Disk()
                                        .file(TEST_DB)
                                        .build();
@@ -134,13 +136,15 @@ class StorageTest {
                                            .file(TEST_DB)
                                            .build();
 
+            StorageKey storageKey = new StorageKey("foobar!");
+
             for (int i = 0; i < total; i++) {
                 log("adding record " + i + "...");
                 String addRecord = createData(i);
-                storage.put(addRecord);
+                storage.put(storageKey, addRecord);
 
                 log("reading record " + i + "...");
-                String readData = storage.get();
+                String readData = storage.get(storageKey);
 
                 Assert.assertEquals("Object is not the same", addRecord, readData);
             }
@@ -152,7 +156,7 @@ class StorageTest {
 
             String dataCheck = createData(total - 1);
             log("reading record " + (total - 1) + "...");
-            String readData = storage.get();
+            String readData = storage.get(storageKey);
 
             // the ONLY entry in storage should be the last one that we added
             Assert.assertEquals("Object is not the same", dataCheck, readData);
@@ -288,7 +292,7 @@ class StorageTest {
             storage.put(createKey, data);
 
             Data data2;
-            data2 = storage.getAndPut(createKey, new Data());
+            data2 = storage.get(createKey, new Data());
             Assert.assertEquals("Object is not the same", data, data2);
 
             StorageSystem.close(storage);
@@ -296,7 +300,7 @@ class StorageTest {
                                    .file(TEST_DB)
                                    .build();
 
-            data2 = storage.getAndPut(createKey, new Data());
+            data2 = storage.get(createKey, new Data());
             Assert.assertEquals("Object is not the same", data, data2);
 
             StorageSystem.close(storage);
@@ -465,7 +469,7 @@ class StorageTest {
                 String createKey = createKey(i);
 
                 Data data2;
-                data2 = storage.getAndPut(createKey, new Data());
+                data2 = storage.get(createKey, new Data());
                 Assert.assertEquals("Object is not the same", data, data2);
             }
             StorageSystem.close(storage);

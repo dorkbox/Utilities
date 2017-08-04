@@ -34,11 +34,6 @@ interface Storage {
     boolean contains(String key);
 
     /**
-     * Reads a object using the DEFAULT key ("") key, and casts it to the expected class
-     */
-    <T> T get();
-
-    /**
      * Reads a object using the specific key, and casts it to the expected class.
      */
     <T> T get(String key);
@@ -54,13 +49,12 @@ interface Storage {
     <T> T get(StorageKey key);
 
     /**
-     * Uses the DEFAULT key ("") to return saved data.
-     * <p/>
-     * This will check to see if there is an associated key for that data, if not - it will use data as the default
+     * Returns the saved data for the specified key.
      *
+     * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(T data);
+    <T> T get(String key, T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -68,7 +62,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(String key, T data);
+    <T> T get(byte[] key, T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -76,15 +70,7 @@ interface Storage {
      * @param key The key used to check if data already exists.
      * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
      */
-    <T> T getAndPut(byte[] key, T data);
-
-    /**
-     * Returns the saved data for the specified key.
-     *
-     * @param key The key used to check if data already exists.
-     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
-     */
-    <T> T getAndPut(StorageKey key, T data);
+    <T> T get(StorageKey key, T data);
 
     /**
      * Saves the given data to storage with the associated key.
@@ -109,14 +95,6 @@ interface Storage {
      * deleting the old data and adding the new.
      */
     void put(StorageKey key, Object data);
-
-    /**
-     * Adds the given object to the storage using a default (blank) key, OR -- if it has been registered, using it's registered key
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    void put(Object data);
 
     /**
      * Deletes an object from storage.

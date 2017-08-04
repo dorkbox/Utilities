@@ -37,7 +37,6 @@ import dorkbox.util.SerializationManager;
 @SuppressWarnings({"Convert2Diamond", "Convert2Lambda"})
 class DiskStorage implements Storage {
     private final DelayTimer timer;
-    private final StorageKey defaultKey;
     private final StorageBase storage;
 
     private final AtomicInteger references = new AtomicInteger(1);
@@ -52,7 +51,6 @@ class DiskStorage implements Storage {
      */
     DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly, final Logger logger) throws IOException {
         this.storage = new StorageBase(storageFile, serializationManager, logger);
-        this.defaultKey = new StorageKey("");
 
         if (readOnly) {
             this.timer = null;
@@ -121,15 +119,6 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Reads a object using the default (blank) key, and casts it to the expected class
-     */
-    @Override
-    public final
-    <T> T get() {
-        return get0(this.defaultKey);
-    }
-
-    /**
      * Reads a object using the specific key, and casts it to the expected class
      */
     @Override
@@ -157,29 +146,16 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Uses the DEFAULT key ("") to return saved data. Also saves the data.
-     * <p/>
-     * This will check to see if there is an associated key for that data, if not - it will use data as the default
-     *
-     * @param data The data that will hold the copy of the data from disk
-     */
-    @Override
-    public
-    <T> T getAndPut(T data) {
-        return getAndPut(this.defaultKey, data);
-    }
-
-    /**
      * Returns the saved data for the specified key. Also saves the data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      */
     @Override
     public
-    <T> T getAndPut(String key, T data) {
+    <T> T get(String key, T data) {
         StorageKey wrap = new StorageKey(key);
 
-        return getAndPut(wrap, data);
+        return get(wrap, data);
     }
 
     /**
@@ -189,8 +165,8 @@ class DiskStorage implements Storage {
      */
     @Override
     public
-    <T> T getAndPut(byte[] key, T data) {
-        return getAndPut(new StorageKey(key), data);
+    <T> T get(byte[] key, T data) {
+        return get(new StorageKey(key), data);
     }
 
     /**
@@ -203,7 +179,7 @@ class DiskStorage implements Storage {
     @Override
     @SuppressWarnings("unchecked")
     public
-    <T> T getAndPut(StorageKey key, T data) {
+    <T> T get(StorageKey key, T data) {
         Object source = get0(key);
 
         if (source == null) {
@@ -299,27 +275,6 @@ class DiskStorage implements Storage {
 
         if (timer != null) {
             action(key, object);
-
-            // timer action runs on TIMER thread, not this thread
-            this.timer.delay(this.milliSeconds);
-        }
-    }
-
-    /**
-     * Adds the given object to the storage using a default (blank) key, OR -- if it has been registered, using it's registered key
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public final
-    void put(Object object) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        if (timer != null) {
-            action(this.defaultKey, object);
 
             // timer action runs on TIMER thread, not this thread
             this.timer.delay(this.milliSeconds);
