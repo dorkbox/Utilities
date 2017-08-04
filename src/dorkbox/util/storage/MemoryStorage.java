@@ -16,19 +16,29 @@
 package dorkbox.util.storage;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
  * Storage that is in memory only (and is not persisted to disk)
  */
 class MemoryStorage implements Storage {
-    private final ConcurrentHashMap<StorageKey, Object> storage;
+
+
+    // must be volatile
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private volatile HashMap<StorageKey, Object> storage = new HashMap<StorageKey, Object>();
+
+    private final Object singleWriterLock = new Object[0];
+
+    // Recommended for best performance while adhering to the "single writer principle". Must be static-final
+    private static final AtomicReferenceFieldUpdater<MemoryStorage, HashMap> storageREF =
+            AtomicReferenceFieldUpdater.newUpdater(MemoryStorage.class, HashMap.class, "storage");
+
     private int version;
 
 
-    MemoryStorage() {
-        this.storage = new ConcurrentHashMap<StorageKey, Object>();
-    }
+    MemoryStorage() {}
 
 
     /**
@@ -37,6 +47,8 @@ class MemoryStorage implements Storage {
     @Override
     public
     int size() {
+        // access a snapshot of the storage (single-writer-principle)
+        HashMap storage = storageREF.get(this);
         return storage.size();
     }
 
@@ -46,6 +58,8 @@ class MemoryStorage implements Storage {
     @Override
     public
     boolean contains(final StorageKey key) {
+        // access a snapshot of the storage (single-writer-principle)
+        HashMap storage = storageREF.get(this);
         return storage.containsKey(key);
     }
 
@@ -56,6 +70,8 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T get(final StorageKey key) {
+        // access a snapshot of the storage (single-writer-principle)
+        HashMap storage = storageREF.get(this);
         return (T) storage.get(key);
     }
 
@@ -63,6 +79,9 @@ class MemoryStorage implements Storage {
     @Override
     public
     <T> T get(final StorageKey key, final T data) {
+        // access a snapshot of the storage (single-writer-principle)
+        HashMap storage = storageREF.get(this);
+
         final Object o = storage.get(key);
         if (o == null) {
             storage.put(key, data);
@@ -80,7 +99,11 @@ class MemoryStorage implements Storage {
     @Override
     public
     void put(final StorageKey key, final Object object) {
-        storage.put(key, object);
+        // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+        // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+        synchronized (singleWriterLock) {
+            storage.put(key, object);
+        }
     }
 
     /**
@@ -89,9 +112,14 @@ class MemoryStorage implements Storage {
      * @return true if the delete was successful. False if there were problems deleting the data.
      */
     @Override
-    public
+    public synchronized
     boolean delete(final StorageKey key) {
-        storage.remove(key);
+        // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+        // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+        synchronized (singleWriterLock) {
+            storage.remove(key);
+        }
+
         return true;
     }
 
@@ -173,6 +201,7 @@ class MemoryStorage implements Storage {
     /**
      * In-memory storage systems do not have a backing file, so there is nothing to close
      */
+    @Override
     public
     void close() {
         StorageSystem.close(this);

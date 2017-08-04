@@ -24,11 +24,12 @@ import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.nio.channels.Channels;
 import java.nio.channels.FileLock;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
@@ -63,8 +64,17 @@ class StorageBase {
     static final int FILE_HEADERS_REGION_LENGTH = 16;
 
 
+
+    // must be volatile
     // The in-memory index (for efficiency, all of the record info is cached in memory).
-    private final Map<StorageKey, Metadata> memoryIndex;
+    private volatile HashMap<StorageKey, Metadata> memoryIndex;
+
+    private final Object singleWriterLock = new Object[0];
+
+    // Recommended for best performance while adhering to the "single writer principle". Must be static-final
+    private static final AtomicReferenceFieldUpdater<StorageBase, HashMap> memoryREF =
+            AtomicReferenceFieldUpdater.newUpdater(StorageBase.class, HashMap.class, "memoryIndex");
+
 
     // determines how much the index will grow by
     private final Float weight;
@@ -171,25 +181,29 @@ class StorageBase {
         input = new Input(inputStream, BUFFER_SIZE);
 
 
-        //noinspection AutoBoxing
         this.weight = 0.5F;
-        this.memoryIndex = new ConcurrentHashMap<StorageKey, Metadata>(this.numberOfRecords);
 
-        if (!newStorage) {
-            Metadata meta;
-            for (int index = 0; index < this.numberOfRecords; index++) {
-                meta = Metadata.readHeader(this.randomAccessFile, index);
-                if (meta == null) {
-                    // because we guarantee that empty metadata are ALWAYS at the end of the section, if we get a null one, break!
-                    break;
+        // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+        // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+        synchronized (singleWriterLock) {
+            this.memoryIndex = new HashMap<StorageKey, Metadata>(this.numberOfRecords);
+
+            if (!newStorage) {
+                Metadata meta;
+                for (int index = 0; index < this.numberOfRecords; index++) {
+                    meta = Metadata.readHeader(this.randomAccessFile, index);
+                    if (meta == null) {
+                        // because we guarantee that empty metadata are ALWAYS at the end of the section, if we get a null one, break!
+                        break;
+                    }
+                    this.memoryIndex.put(meta.key, meta);
                 }
-                this.memoryIndex.put(meta.key, meta);
-            }
 
-            if (this.memoryIndex.size() != (this.numberOfRecords)) {
-                setRecordCount(this.randomAccessFile, this.memoryIndex.size());
-                if (logger != null) {
-                   logger.warn("Mismatch record count in storage, auto-correcting size.");
+                if (this.memoryIndex.size() != (this.numberOfRecords)) {
+                    setRecordCount(this.randomAccessFile, this.memoryIndex.size());
+                    if (logger != null) {
+                       logger.warn("Mismatch record count in storage, auto-correcting size.");
+                    }
                 }
             }
         }
@@ -202,7 +216,10 @@ class StorageBase {
     int size() {
         // wrapper flushes first (protected by lock)
         // not protected by lock
-        return this.memoryIndex.size();
+
+        // access a snapshot of the memoryIndex (single-writer-principle)
+        HashMap memoryIndex = memoryREF.get(this);
+        return memoryIndex.size();
     }
 
     /**
@@ -212,8 +229,9 @@ class StorageBase {
     boolean contains(StorageKey key) {
         // protected by lock
 
-        // check to see if it's in the pending ops
-        return this.memoryIndex.containsKey(key);
+        // access a snapshot of the memoryIndex (single-writer-principle)
+        HashMap memoryIndex = memoryREF.get(this);
+        return memoryIndex.containsKey(key);
     }
 
     /**
@@ -223,7 +241,11 @@ class StorageBase {
     <T> T getCached(StorageKey key) {
         // protected by lock
 
-        Metadata meta = this.memoryIndex.get(key);
+
+        // access a snapshot of the memoryIndex (single-writer-principle)
+        HashMap memoryIndex = memoryREF.get(this);
+        Metadata meta = (Metadata) memoryIndex.get(key);
+
         if (meta == null) {
             return null;
         }
@@ -255,7 +277,9 @@ class StorageBase {
     <T> T get(StorageKey key) {
         // NOT protected by lock
 
-        Metadata meta = this.memoryIndex.get(key);
+        // access a snapshot of the memoryIndex (single-writer-principle)
+        HashMap memoryIndex = memoryREF.get(this);
+        Metadata meta = (Metadata) memoryIndex.get(key);
         if (meta == null) {
             return null;
         }
@@ -318,20 +342,37 @@ class StorageBase {
     final
     boolean delete(StorageKey key) {
         // pending ops flushed (protected by lock)
-        // not protected by lock
-        Metadata delRec = this.memoryIndex.get(key);
 
-        try {
-            deleteRecordData(delRec, delRec.dataCapacity);
-            deleteRecordIndex(key, delRec);
-            return true;
-        } catch (IOException e) {
-            if (this.logger != null) {
-                this.logger.error("Error while deleting data from disk", e);
-            } else {
-                e.printStackTrace();
+        // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+        // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+        synchronized (singleWriterLock) {
+            Metadata delRec = this.memoryIndex.get(key);
+
+            try {
+                deleteRecordData(delRec, delRec.dataCapacity);
+
+                // delete the record index
+                int currentNumRecords = this.memoryIndex.size();
+                if (delRec.indexPosition != currentNumRecords - 1) {
+                    Metadata last = Metadata.readHeader(this.randomAccessFile, currentNumRecords - 1);
+                    assert last != null;
+
+                    last.moveRecord(this.randomAccessFile, delRec.indexPosition);
+                }
+                this.memoryIndex.remove(key);
+
+
+                setRecordCount(this.randomAccessFile, currentNumRecords - 1);
+
+                return true;
+            } catch (IOException e) {
+                if (this.logger != null) {
+                    this.logger.error("Error while deleting data from disk", e);
+                } else {
+                    e.printStackTrace();
+                }
+                return false;
             }
-            return false;
         }
     }
 
@@ -352,7 +393,12 @@ class StorageBase {
                                  .sync();
             this.input.close();
             this.randomAccessFile.close();
-            this.memoryIndex.clear();
+
+            // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+            // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+            synchronized (singleWriterLock) {
+                this.memoryIndex.clear();
+            }
 
         } catch (IOException e) {
             if (this.logger != null) {
@@ -401,104 +447,110 @@ class StorageBase {
      */
     private
     void save0(StorageKey key, Object object) {
-        Metadata metaData = this.memoryIndex.get(key);
-        int currentRecordCount = this.numberOfRecords;
+        Metadata metaData;
 
-        if (metaData != null) {
-            // now we have to UPDATE instead of add!
-            try {
-                if (currentRecordCount == 1) {
-                    // if we are the ONLY one, then we can do things differently.
-                    // just dump the data again to disk.
-                    FileLock lock = this.randomAccessFile.getChannel()
-                                                         .lock(this.dataPosition,
-                                                   Long.MAX_VALUE - this.dataPosition,
-                                                   false); // don't know how big it is, so max value it
+        // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+        // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+        synchronized (singleWriterLock) {
+            metaData = this.memoryIndex.get(key);
+            int currentRecordCount = this.numberOfRecords;
 
-                    this.randomAccessFile.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
-                    Metadata.writeData(this.serializationManager, object, this.output);
-                    // have to re-specify the capacity and size
-                    //noinspection NumericCastThatLosesPrecision
-                    int sizeOfWrittenData = (int) (this.randomAccessFile.length() - this.dataPosition);
+            if (metaData != null) {
+                // now we have to UPDATE instead of add!
+                try {
+                    if (currentRecordCount == 1) {
+                        // if we are the ONLY one, then we can do things differently.
+                        // just dump the data again to disk.
+                        FileLock lock = this.randomAccessFile.getChannel()
+                                                             .lock(this.dataPosition,
+                                                       Long.MAX_VALUE - this.dataPosition,
+                                                       false); // don't know how big it is, so max value it
 
-                    metaData.dataCapacity = sizeOfWrittenData;
-                    metaData.dataCount = sizeOfWrittenData;
+                        this.randomAccessFile.seek(this.dataPosition); // this is the end of the file, we know this ahead-of-time
+                        Metadata.writeData(this.serializationManager, object, this.output);
+                        // have to re-specify the capacity and size
+                        //noinspection NumericCastThatLosesPrecision
+                        int sizeOfWrittenData = (int) (this.randomAccessFile.length() - this.dataPosition);
 
-                    lock.release();
-                }
-                else {
-                    // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
-                    ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, this.logger, object);
+                        metaData.dataCapacity = sizeOfWrittenData;
+                        metaData.dataCount = sizeOfWrittenData;
 
-                    int size = dataStream.size();
-                    if (size > metaData.dataCapacity) {
-                        deleteRecordData(metaData, size);
-                        // stuff this record to the end of the file, since it won't fit in it's current location
-                        metaData.dataPointer = this.randomAccessFile.length();
-                        // have to make sure that the CAPACITY of the new one is the SIZE of the new data!
-                        // and since it is going to the END of the file, we do that.
-                        metaData.dataCapacity = size;
-                        metaData.dataCount = 0;
+                        lock.release();
+                    }
+                    else {
+                        // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
+                        ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, this.logger, object);
+
+                        int size = dataStream.size();
+                        if (size > metaData.dataCapacity) {
+                            deleteRecordData(metaData, size);
+                            // stuff this record to the end of the file, since it won't fit in it's current location
+                            metaData.dataPointer = this.randomAccessFile.length();
+                            // have to make sure that the CAPACITY of the new one is the SIZE of the new data!
+                            // and since it is going to the END of the file, we do that.
+                            metaData.dataCapacity = size;
+                            metaData.dataCount = 0;
+                        }
+
+                        // TODO: should check to see if the data is different. IF SO, then we write, otherwise nothing!
+
+                        metaData.writeDataRaw(dataStream, this.randomAccessFile);
                     }
 
-                    // TODO: should check to see if the data is different. IF SO, then we write, otherwise nothing!
-
-                    metaData.writeDataRaw(dataStream, this.randomAccessFile);
-                }
-
-                metaData.writeDataInfo(this.randomAccessFile);
-            } catch (IOException e) {
-                if (this.logger != null) {
-                    this.logger.error("Error while saving data to disk", e);
-                } else {
-                    e.printStackTrace();
+                    metaData.writeDataInfo(this.randomAccessFile);
+                } catch (IOException e) {
+                    if (this.logger != null) {
+                        this.logger.error("Error while saving data to disk", e);
+                    } else {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }
-        else {
-            // metadata == null...
-            try {
-                // set the number of records that this storage has
-                setRecordCount(this.randomAccessFile, currentRecordCount + 1);
+            else {
+                // metadata == null...
+                try {
+                    // set the number of records that this storage has
+                    setRecordCount(this.randomAccessFile, currentRecordCount + 1);
 
-                // This will make sure that there is room to write a new record. This is zero indexed.
-                // this will skip around if moves occur
-                ensureIndexCapacity(this.randomAccessFile);
+                    // This will make sure that there is room to write a new record. This is zero indexed.
+                    // this will skip around if moves occur
+                    ensureIndexCapacity(this.randomAccessFile);
 
-                // append record to end of file
-                long length = this.randomAccessFile.length();
+                    // append record to end of file
+                    long length = this.randomAccessFile.length();
 
-//                System.err.println("--Writing data to: " + length);
+    //                System.err.println("--Writing data to: " + length);
 
-                metaData = new Metadata(key, currentRecordCount, length);
-                metaData.writeMetaDataInfo(this.randomAccessFile);
+                    metaData = new Metadata(key, currentRecordCount, length);
+                    metaData.writeMetaDataInfo(this.randomAccessFile);
 
-                // add new entry to the index
-                this.memoryIndex.put(key, metaData);
+                    // add new entry to the index
+                    this.memoryIndex.put(key, metaData);
 
-                // save out the data. Because we KNOW that we are writing this to the end of the file,
-                // there are some tricks we can use.
+                    // save out the data. Because we KNOW that we are writing this to the end of the file,
+                    // there are some tricks we can use.
 
-                // don't know how big it is, so max value it
-                FileLock lock = this.randomAccessFile.getChannel()
-                                                     .lock(0, Long.MAX_VALUE, false);
+                    // don't know how big it is, so max value it
+                    FileLock lock = this.randomAccessFile.getChannel()
+                                                         .lock(0, Long.MAX_VALUE, false);
 
-                // this is the end of the file, we know this ahead-of-time
-                this.randomAccessFile.seek(length);
+                    // this is the end of the file, we know this ahead-of-time
+                    this.randomAccessFile.seek(length);
 
-                int total = Metadata.writeData(this.serializationManager, object, this.output);
-                lock.release();
+                    int total = Metadata.writeData(this.serializationManager, object, this.output);
+                    lock.release();
 
-                metaData.dataCount = metaData.dataCapacity = total;
-                // have to save it.
-                metaData.writeDataInfo(this.randomAccessFile);
-            } catch (IOException e) {
-                if (this.logger != null) {
-                    this.logger.error("Error while writing data to disk", e);
-                } else {
-                    e.printStackTrace();
+                    metaData.dataCount = metaData.dataCapacity = total;
+                    // have to save it.
+                    metaData.writeDataInfo(this.randomAccessFile);
+                } catch (IOException e) {
+                    if (this.logger != null) {
+                        this.logger.error("Error while writing data to disk", e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                    return;
                 }
-                return;
             }
         }
 
@@ -528,8 +580,8 @@ class StorageBase {
         // items to be "autosaved" are automatically injected into "actions".
         final Set<Entry<StorageKey, Object>> entries = actions.entrySet();
         for (Entry<StorageKey, Object> entry : entries) {
-            Object object = entry.getValue();
             StorageKey key = entry.getKey();
+            Object object = entry.getValue();
 
             // our action list is for explicitly saving objects (but not necessarily "registering" them to be auto-saved
             save0(key, object);
@@ -557,6 +609,7 @@ class StorageBase {
     }
 
 
+    // protected by singleWriterLock
     private
     void deleteRecordData(Metadata deletedRecord, int sizeOfDataToAdd) throws IOException {
         if (this.randomAccessFile.length() == deletedRecord.dataPointer + deletedRecord.dataCapacity) {
@@ -612,23 +665,6 @@ class StorageBase {
             }
         }
     }
-
-    private
-    void deleteRecordIndex(StorageKey key, Metadata deleteRecord) throws IOException {
-        int currentNumRecords = this.memoryIndex.size();
-
-        if (deleteRecord.indexPosition != currentNumRecords - 1) {
-            Metadata last = Metadata.readHeader(this.randomAccessFile, currentNumRecords - 1);
-            assert last != null;
-
-            last.moveRecord(this.randomAccessFile, deleteRecord.indexPosition);
-        }
-
-        this.memoryIndex.remove(key);
-
-        setRecordCount(this.randomAccessFile, currentNumRecords - 1);
-    }
-
 
     /**
      * Writes the number of records header to the file.
@@ -705,12 +741,13 @@ class StorageBase {
      */
     private
     Metadata index_getMetaDataFromData(long targetFp) {
-        Iterator<Metadata> iterator = this.memoryIndex.values()
-                                                      .iterator();
+        // access a snapshot of the memoryIndex (single-writer-principle)
+        HashMap memoryIndex = memoryREF.get(this);
+        Iterator iterator = memoryIndex.values().iterator();
 
         //noinspection WhileLoopReplaceableByForEach
         while (iterator.hasNext()) {
-            Metadata next = iterator.next();
+            Metadata next = (Metadata) iterator.next();
             if (targetFp >= next.dataPointer && targetFp < next.dataPointer + next.dataCapacity) {
                 return next;
             }

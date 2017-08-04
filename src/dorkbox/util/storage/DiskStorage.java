@@ -17,11 +17,11 @@ package dorkbox.util.storage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import org.slf4j.Logger;
 
@@ -38,14 +38,23 @@ import dorkbox.util.SerializationManager;
 class DiskStorage implements Storage {
     // null if we are a read-only storage
     private final DelayTimer timer;
+
+
+    // must be volatile
+    private volatile HashMap<StorageKey, Object> actionMap = new HashMap<StorageKey, Object>();
+
+    private final Object singleWriterLock = new Object[0];
+
+    // Recommended for best performance while adhering to the "single writer principle". Must be static-final
+    private static final AtomicReferenceFieldUpdater<DiskStorage, HashMap> actionMapREF =
+            AtomicReferenceFieldUpdater.newUpdater(DiskStorage.class, HashMap.class, "actionMap");
+
     private final StorageBase storage;
 
     private final AtomicInteger references = new AtomicInteger(1);
-    private final ReentrantLock actionLock = new ReentrantLock();
     private final AtomicBoolean isOpen = new AtomicBoolean(false);
     private volatile long milliSeconds = 3000L;
 
-    private volatile Map<StorageKey, Object> actionMap = new ConcurrentHashMap<StorageKey, Object>();
 
     /**
      * Creates or opens a new database file.
@@ -61,16 +70,14 @@ class DiskStorage implements Storage {
                 @Override
                 public
                 void run() {
-                    ReentrantLock actionLock = DiskStorage.this.actionLock;
-
                     Map<StorageKey, Object> actions;
-                    try {
-                        actionLock.lock();
+
+                    // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+                    // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+                    synchronized (singleWriterLock) {
                         // do a fast swap on the actionMap.
                         actions = DiskStorage.this.actionMap;
-                        DiskStorage.this.actionMap = new ConcurrentHashMap<StorageKey, Object>();
-                    } finally {
-                        actionLock.unlock();
+                        DiskStorage.this.actionMap = new HashMap<StorageKey, Object>();
                     }
 
                     DiskStorage.this.storage.doActionThings(actions);
@@ -114,8 +121,11 @@ class DiskStorage implements Storage {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
+        // access a snapshot of the actionMap (single-writer-principle)
+        final HashMap actionMap = actionMapREF.get(this);
+
         // check if our pending actions has it, or if our storage index has it
-        return this.actionMap.containsKey(key) || this.storage.contains(key);
+        return actionMap.containsKey(key) || this.storage.contains(key);
     }
 
     /**
@@ -175,24 +185,21 @@ class DiskStorage implements Storage {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
+        // access a snapshot of the actionMap (single-writer-principle)
+        final HashMap actionMap = actionMapREF.get(this);
+
         // if the object in is pending, we get it from there
-        try {
-            this.actionLock.lock();
+        Object object = actionMap.get(key);
 
-            Object object = this.actionMap.get(key);
-
-            if (object != null) {
-                @SuppressWarnings("unchecked")
-                T returnObject = (T) object;
-                return returnObject;
-            }
-        } finally {
-            this.actionLock.unlock();
+        if (object != null) {
+            @SuppressWarnings("unchecked")
+            T returnObject = (T) object;
+            return returnObject;
         }
 
         // not found, so we have to go find it on disk
         return this.storage.get(key);
-    }
+}
 
     /**
      * Saves the given data to storage with the associated key.
@@ -208,18 +215,11 @@ class DiskStorage implements Storage {
         }
 
         if (timer != null) {
-            try {
-                this.actionLock.lock();
-
-                if (object != null) {
-                    // push action to map
-                    this.actionMap.put(key, object);
-                }
-                else {
-                    this.actionMap.remove(key);
-                }
-            } finally {
-                this.actionLock.unlock();
+            // synchronized is used here to ensure the "single writer principle", and make sure that ONLY one thread at a time can enter this
+            // section. Because of this, we can have unlimited reader threads all going at the same time, without contention.
+            synchronized (singleWriterLock) {
+                // push action to map
+                actionMap.put(key, object);
             }
 
             // timer action runs on TIMER thread, not this thread
@@ -243,6 +243,7 @@ class DiskStorage implements Storage {
 
         // timer action runs on THIS thread, not timer thread
         if (timer != null) {
+            // flush to storage, so we know if there were errors deleting from disk
             this.timer.delay(0L);
             return this.storage.delete(key);
         }
