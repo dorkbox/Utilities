@@ -30,7 +30,7 @@ public final
 class ScreenUtil {
     public static
     Rectangle getScreenBoundsAt(Point pos) {
-        GraphicsDevice gd = getGraphicsDeviceAt(pos);
+        GraphicsDevice gd = getMonitorAtLocation(pos);
         Rectangle bounds = null;
 
         if (gd != null) {
@@ -42,7 +42,15 @@ class ScreenUtil {
     }
 
     public static
-    GraphicsDevice getGraphicsDeviceAt(Point pos) {
+    GraphicsDevice getMonitorAtMouseLocation() {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
+
+        return getMonitorAtLocation(mouseLocation);
+    }
+
+    public static
+    GraphicsDevice getMonitorAtLocation(Point pos) {
 
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice screenDevices[] = ge.getScreenDevices();
@@ -66,13 +74,41 @@ class ScreenUtil {
     }
 
     public static
+    int getMonitorNumberAtMouseLocation() {
+        Point mouseLocation = MouseInfo.getPointerInfo()
+                                       .getLocation();
+
+        return getMonitorNumberAtLocation(mouseLocation);
+    }
+
+    public static
+    int getMonitorNumberAtLocation(Point pos) {
+
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice screenDevices[] = ge.getScreenDevices();
+
+        for (int i = 0; i < screenDevices.length; i++) {
+            final GraphicsDevice device1 = screenDevices[i];
+            GraphicsConfiguration gc = device1.getDefaultConfiguration();
+            Rectangle screenBounds = gc.getBounds();
+
+            if (screenBounds.contains(pos)) {
+                return i;
+            }
+        }
+
+        // we are the primary monitor, so return 0.
+        return 0;
+    }
+
+    public static
     void showOnSameScreenAsMouse_Center(final Container frame) {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
-        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
-        Rectangle bounds = deviceAtMouse.getDefaultConfiguration()
-                                        .getBounds();
+        GraphicsDevice monitorAtMouse = ScreenUtil.getMonitorAtLocation(mouseLocation);
+        Rectangle bounds = monitorAtMouse.getDefaultConfiguration()
+                                         .getBounds();
         frame.setLocation(bounds.x + bounds.width / 2 - frame.getWidth() / 2, bounds.y + bounds.height / 2 - frame.getHeight() / 2);
     }
 
@@ -81,9 +117,10 @@ class ScreenUtil {
         Point mouseLocation = MouseInfo.getPointerInfo()
                                        .getLocation();
 
-        GraphicsDevice deviceAtMouse = ScreenUtil.getGraphicsDeviceAt(mouseLocation);
-        frame.setLocation(deviceAtMouse.getDefaultConfiguration()
-                                       .getBounds().x, frame.getY());
+        GraphicsDevice monitorAtMouse = ScreenUtil.getMonitorAtLocation(mouseLocation);
+        Rectangle bounds = monitorAtMouse.getDefaultConfiguration()
+                                         .getBounds();
+        frame.setLocation(bounds.x, bounds.y);
     }
 
     private
