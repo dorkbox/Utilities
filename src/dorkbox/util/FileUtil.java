@@ -1287,6 +1287,53 @@ class FileUtil {
         return null;
     }
 
+    /**
+     * Touches a file, so that it's timestamp is right now. If the file is not created, it will be created automatically.
+     *
+     * @return true if the touch succeeded, false otherwise
+     */
+    public static
+    boolean touch(String file) {
+        long timestamp = System.currentTimeMillis();
+        return touch(new File(file).getAbsoluteFile(), timestamp);
+    }
+
+    /**
+     * Touches a file, so that it's timestamp is right now. If the file is not created, it will be created automatically.
+     *
+     * @return true if the touch succeeded, false otherwise
+     */
+    public static
+    boolean touch(File file) {
+        long timestamp = System.currentTimeMillis();
+        return touch(file, timestamp);
+    }
+
+    /**
+     * Touches a file, so that it's timestamp is right now. If the file is not created, it will be created automatically.
+     *
+     * @return true if the touch succeeded, false otherwise
+     */
+    public static
+    boolean touch(File file, long timestamp) {
+        if (!file.exists()) {
+            boolean mkdirs = file.getParentFile()
+                                 .mkdirs();
+            if (!mkdirs) {
+                // error creating the parent directories.
+                return false;
+            }
+
+            try {
+                new FileOutputStream(file).close();
+            } catch (IOException ignored) {
+                return false;
+            }
+        }
+
+        return file.setLastModified(timestamp);
+    }
+
 
     //-----------------------------------------------------------------------
 
