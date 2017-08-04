@@ -84,11 +84,6 @@ interface Storage {
     long getSaveDelay();
 
     /**
-     * @param milliSeconds milliseconds to wait
-     */
-    void setSaveDelay(long milliSeconds);
-
-    /**
      * @return the version of data stored in the database
      */
     int getVersion();

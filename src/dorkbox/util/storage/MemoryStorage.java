@@ -158,18 +158,9 @@ class MemoryStorage implements Storage {
     @Override
     public
     long getSaveDelay() {
-        return 0;
+        return 0L;
     }
 
-
-    /**
-     * There is no file that backs this storage, so saves/writes are immediate
-     */
-    @Override
-    public
-    void setSaveDelay(final long milliSeconds) {
-        // no-op
-    }
 
     /**
      * @return the version of data stored in the database

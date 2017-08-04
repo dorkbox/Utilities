@@ -154,6 +154,7 @@ class StorageSystem {
         private SerializationManager serializationManager;
         private boolean readOnly = false;
         private Logger logger = null;
+        private long saveDelayInMilliseconds = 3000L; // default
 
         /**
          * Specify the file to write to on disk when saving objects
@@ -188,6 +189,15 @@ class StorageSystem {
         public
         DiskMaker readOnly() {
             this.readOnly = true;
+            return this;
+        }
+
+        /**
+         * Mark this storage system as read only
+         */
+        public
+        DiskMaker setSaveDelay(long saveDelayInMilliseconds) {
+            this.saveDelayInMilliseconds = saveDelayInMilliseconds;
             return this;
         }
 
@@ -243,7 +253,7 @@ class StorageSystem {
                 }
                 else {
                     try {
-                        storage = new DiskStorage(this.file, this.serializationManager, this.readOnly, this.logger);
+                        storage = new DiskStorage(this.file, this.serializationManager, this.readOnly, this.saveDelayInMilliseconds, this.logger);
                         storages.put(this.file, storage);
                     } catch (IOException e) {
                         String message = e.getMessage().substring(0,e.getMessage().indexOf(OS.LINE_SEPARATOR));

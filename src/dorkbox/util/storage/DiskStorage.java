@@ -53,14 +53,19 @@ class DiskStorage implements Storage {
 
     private final AtomicInteger references = new AtomicInteger(1);
     private final AtomicBoolean isOpen = new AtomicBoolean(false);
-    private volatile long milliSeconds = 3000L;
+    private final long milliSeconds;
 
 
     /**
      * Creates or opens a new database file.
      */
-    DiskStorage(File storageFile, SerializationManager serializationManager, final boolean readOnly, final Logger logger) throws IOException {
+    DiskStorage(File storageFile,
+                SerializationManager serializationManager,
+                final boolean readOnly,
+                final long saveDelayInMilliseconds,
+                final Logger logger) throws IOException {
         this.storage = new StorageBase(storageFile, serializationManager, logger);
+        this.milliSeconds = saveDelayInMilliseconds;
 
         if (readOnly) {
             this.timer = null;
@@ -326,19 +331,6 @@ class DiskStorage implements Storage {
     public final
     long getSaveDelay() {
         return this.milliSeconds;
-    }
-
-    /**
-     * @param milliSeconds milliseconds to wait
-     */
-    @Override
-    public final
-    void setSaveDelay(long milliSeconds) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        this.milliSeconds = milliSeconds;
     }
 
     /**
