@@ -323,7 +323,11 @@ class StorageBase {
 
             return readRecordData;
         } catch (Exception e) {
-            String message = e.getMessage().substring(0,e.getMessage().indexOf(OS.LINE_SEPARATOR));
+            String message = e.getMessage();
+            int index = message.indexOf(OS.LINE_SEPARATOR);
+            if (index > -1) {
+                message = message.substring(0, index);
+            }
             if (logger != null) {
                 logger.error("Error reading data from disk: {}", message);
             }

@@ -256,7 +256,11 @@ class StorageSystem {
                         storage = new DiskStorage(this.file, this.serializationManager, this.readOnly, this.saveDelayInMilliseconds, this.logger);
                         storages.put(this.file, storage);
                     } catch (IOException e) {
-                        String message = e.getMessage().substring(0,e.getMessage().indexOf(OS.LINE_SEPARATOR));
+                        String message = e.getMessage();
+                        int index = message.indexOf(OS.LINE_SEPARATOR);
+                        if (index > -1) {
+                            message = message.substring(0, index);
+                        }
                         if (logger != null) {
                             logger.error("Unable to open storage file at {}. {}", this.file, message);
                         }
