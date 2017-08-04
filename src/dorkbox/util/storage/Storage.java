@@ -31,38 +31,12 @@ interface Storage {
     /**
      * Checks if there is a object corresponding to the given key.
      */
-    boolean contains(String key);
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class.
-     */
-    <T> T get(String key);
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    <T> T get(byte[] key);
+    boolean contains(StorageKey key);
 
     /**
      * Reads a object using the specific key, and casts it to the expected class
      */
     <T> T get(StorageKey key);
-
-    /**
-     * Returns the saved data for the specified key.
-     *
-     * @param key The key used to check if data already exists.
-     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
-     */
-    <T> T get(String key, T data);
-
-    /**
-     * Returns the saved data for the specified key.
-     *
-     * @param key The key used to check if data already exists.
-     * @param data This is the default value, and if there is no value with the key in the DB this default value will be saved.
-     */
-    <T> T get(byte[] key, T data);
 
     /**
      * Returns the saved data for the specified key.
@@ -78,30 +52,7 @@ interface Storage {
      * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
      * deleting the old data and adding the new.
      */
-    void put(String key, Object data);
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    void put(byte[] key, Object data);
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
     void put(StorageKey key, Object data);
-
-    /**
-     * Deletes an object from storage.
-     *
-     * @return true if the delete was successful. False if there were problems deleting the data.
-     */
-    boolean delete(String key);
 
     /**
      * Deletes an object from storage.
@@ -153,27 +104,6 @@ interface Storage {
      * This will save the ALL of the pending save actions to the file
      */
     void save();
-
-    /**
-     * Adds a key/value pair to the storage, then saves the storage immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    void putAndSave(String key, Object object);
-
-    /**
-     * Adds a key/value pair to the storage, then saves the storage immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    void putAndSave(byte[] key, Object object);
-
-    /**
-     * Adds a key/value pair to the storage, then saves the storage immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    void putAndSave(StorageKey key, Object object);
 
     /**
      * Closes this storage system

@@ -286,7 +286,7 @@ class StorageTest {
 
             // now test loading data
             Data data = new Data();
-            String createKey = createKey(63);
+            StorageKey createKey = createKey(63);
             makeData(data);
 
             storage.put(createKey, data);
@@ -453,7 +453,7 @@ class StorageTest {
             for (int i = 0; i < total; i++) {
                 Data data = new Data();
                 makeData(data);
-                String createKey = createKey(i);
+                StorageKey createKey = createKey(i);
 
                 storage.put(createKey, data);
             }
@@ -466,7 +466,7 @@ class StorageTest {
                                    .file(TEST_DB)
                                    .build();
             for (int i = 0; i < total; i++) {
-                String createKey = createKey(i);
+                StorageKey createKey = createKey(i);
 
                 Data data2;
                 data2 = storage.get(createKey, new Data());
@@ -489,7 +489,7 @@ class StorageTest {
     public static
     String add(Storage storage, int number) throws IOException {
         String record1Data = createData(number);
-        String record1Key = createKey(number);
+        StorageKey record1Key = createKey(number);
 
         log("adding record " + number + "...");
         storage.put(record1Key, record1Data);
@@ -498,7 +498,7 @@ class StorageTest {
 
     public static
     String readRecord(Storage storage, int number) throws ClassNotFoundException, IOException {
-        String record1Key = createKey(number);
+        StorageKey record1Key = createKey(number);
 
         log("reading record " + number + "...");
 
@@ -509,7 +509,7 @@ class StorageTest {
 
     public static
     void deleteRecord(Storage storage, int nNumber) throws ClassNotFoundException, IOException {
-        String record1Key = createKey(nNumber);
+        StorageKey record1Key = createKey(nNumber);
 
         log("deleting record " + nNumber + "...");
         storage.delete(record1Key);
@@ -517,7 +517,7 @@ class StorageTest {
 
     private static
     String updateRecord(Storage storage, int number, String newData) throws IOException {
-        String record1Key = createKey(number);
+        StorageKey record1Key = createKey(number);
 
         log("updating record " + number + "...");
         storage.put(record1Key, newData);
@@ -526,8 +526,8 @@ class StorageTest {
     }
 
     private static
-    String createKey(int number) {
-        return "foo" + number;
+    StorageKey createKey(int number) {
+        return new StorageKey("foo" + number);
     }
 
 

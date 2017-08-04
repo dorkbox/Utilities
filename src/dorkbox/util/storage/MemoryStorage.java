@@ -45,26 +45,8 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    boolean contains(final String key) {
-        return storage.containsKey(new StorageKey(key));
-    }
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    @Override
-    public
-    <T> T get(final String key) {
-        return get(new StorageKey(key));
-    }
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    @Override
-    public
-    <T> T get(final byte[] key) {
-        return get(new StorageKey(key));
+    boolean contains(final StorageKey key) {
+        return storage.containsKey(key);
     }
 
     /**
@@ -75,30 +57,6 @@ class MemoryStorage implements Storage {
     public
     <T> T get(final StorageKey key) {
         return (T) storage.get(key);
-    }
-
-    /**
-     * Returns the saved data for the specified key.
-     *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
-     */
-    @Override
-    public
-    <T> T get(String key, T data) {
-        StorageKey wrap = new StorageKey(key);
-
-        return get(wrap, data);
-    }
-
-    /**
-     * Returns the saved data for the specified key.
-     *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
-     */
-    @Override
-    public
-    <T> T get(byte[] key, T data) {
-        return get(new StorageKey(key), data);
     }
 
     @SuppressWarnings("unchecked")
@@ -121,43 +79,8 @@ class MemoryStorage implements Storage {
      */
     @Override
     public
-    void put(final String key, final Object data) {
-        put(new StorageKey(key), data);
-    }
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public
-    void put(final byte[] key, final Object data) {
-        put(new StorageKey(key), data);
-    }
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public
     void put(final StorageKey key, final Object object) {
         storage.put(key, object);
-    }
-
-    /**
-     * Deletes an object from storage.
-     *
-     * @return true if the delete was successful. False if there were problems deleting the data.
-     */
-    @Override
-    public
-    boolean delete(final String key) {
-        return delete(new StorageKey(key));
     }
 
     /**
@@ -245,43 +168,6 @@ class MemoryStorage implements Storage {
     public
     void save() {
         // no-op
-    }
-
-    /**
-     * Adds a key/value pair to the storage.
-     * <p/>
-     * There is no file that backs this storage, so writes are immediate and saves do nothing
-     */
-    @Override
-    public
-    void putAndSave(final String key, final Object object) {
-        put(key, object);
-        // no-save!
-    }
-
-    /**
-     /**
-     * Adds a key/value pair to the storage.
-     * <p/>
-     * There is no file that backs this storage, so writes are immediate and saves do nothing
-     */
-    @Override
-    public
-    void putAndSave(final byte[] key, final Object object) {
-        put(key, object);
-        // no save because we are in memory!
-    }
-
-    /**
-     * Adds a key/value pair to the storage.
-     * <p/>
-     * There is no file that backs this storage, so writes are immediate and saves do nothing
-     */
-    @Override
-    public
-    void putAndSave(final StorageKey key, final Object object) {
-        put(key, object);
-        // no save because we are in memory!
     }
 
     /**

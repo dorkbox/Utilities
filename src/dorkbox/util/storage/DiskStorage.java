@@ -36,6 +36,7 @@ import dorkbox.util.SerializationManager;
  */
 @SuppressWarnings({"Convert2Diamond", "Convert2Lambda"})
 class DiskStorage implements Storage {
+    // null if we are a read-only storage
     private final DelayTimer timer;
     private final StorageBase storage;
 
@@ -60,16 +61,16 @@ class DiskStorage implements Storage {
                 @Override
                 public
                 void run() {
-                    ReentrantLock actionLock2 = DiskStorage.this.actionLock;
+                    ReentrantLock actionLock = DiskStorage.this.actionLock;
 
                     Map<StorageKey, Object> actions;
                     try {
-                        actionLock2.lock();
+                        actionLock.lock();
                         // do a fast swap on the actionMap.
                         actions = DiskStorage.this.actionMap;
                         DiskStorage.this.actionMap = new ConcurrentHashMap<StorageKey, Object>();
                     } finally {
-                        actionLock2.unlock();
+                        actionLock.unlock();
                     }
 
                     DiskStorage.this.storage.doActionThings(actions);
@@ -108,32 +109,13 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    boolean contains(String key) {
+    boolean contains(StorageKey key) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
-        final StorageKey wrap = new StorageKey(key);
         // check if our pending actions has it, or if our storage index has it
-        return this.actionMap.containsKey(wrap) || this.storage.contains(wrap);
-    }
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    @Override
-    public final
-    <T> T get(String key) {
-        return get0(new StorageKey(key));
-    }
-
-    /**
-     * Reads a object using the specific key, and casts it to the expected class
-     */
-    @Override
-    public final
-    <T> T get(byte[] key) {
-        return get0(new StorageKey(key));
+        return this.actionMap.containsKey(key) || this.storage.contains(key);
     }
 
     /**
@@ -146,31 +128,7 @@ class DiskStorage implements Storage {
     }
 
     /**
-     * Returns the saved data for the specified key. Also saves the data.
-     *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
-     */
-    @Override
-    public
-    <T> T get(String key, T data) {
-        StorageKey wrap = new StorageKey(key);
-
-        return get(wrap, data);
-    }
-
-    /**
-     * Returns the saved data for the specified key. Also saves the data.
-     *
-     * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
-     */
-    @Override
-    public
-    <T> T get(byte[] key, T data) {
-        return get(new StorageKey(key), data);
-    }
-
-    /**
-     * Returns the saved data (or null) for the specified key. Also saves the data.
+     * Returns the saved data (or null) for the specified key. Also saves the data as default data.
      *
      * @param data If there is no object in the DB with the specified key, this value will be the default (and will be saved to the db)
      *
@@ -184,7 +142,7 @@ class DiskStorage implements Storage {
 
         if (source == null) {
             // returned was null, so we should save the default value
-            putAndSave(key, data);
+            put(key, data);
             return data;
         }
         else {
@@ -244,64 +202,30 @@ class DiskStorage implements Storage {
      */
     @Override
     public final
-    void put(String key, Object object) {
-        put(new StorageKey(key), object);
-    }
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public final
-    void put(byte[] key, Object object) {
-        put(new StorageKey(key), object);
-    }
-
-    /**
-     * Saves the given data to storage with the associated key.
-     * <p/>
-     * Also will update existing data. If the new contents do not fit in the original space, then the update is handled by
-     * deleting the old data and adding the new.
-     */
-    @Override
-    public final
     void put(StorageKey key, Object object) {
         if (!this.isOpen.get()) {
             throw new RuntimeException("Unable to act on closed storage");
         }
 
         if (timer != null) {
-            action(key, object);
+            try {
+                this.actionLock.lock();
+
+                if (object != null) {
+                    // push action to map
+                    this.actionMap.put(key, object);
+                }
+                else {
+                    this.actionMap.remove(key);
+                }
+            } finally {
+                this.actionLock.unlock();
+            }
 
             // timer action runs on TIMER thread, not this thread
             this.timer.delay(this.milliSeconds);
-        }
-    }
-
-    /**
-     * Deletes an object from storage.
-     *
-     * @return true if the delete was successful. False if there were problems deleting the data.
-     */
-    @Override
-    public final
-    boolean delete(String key) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        StorageKey wrap = new StorageKey(key);
-
-        // timer action runs on THIS thread, not timer thread
-        if (timer != null) {
-            this.timer.delay(0L);
-            return this.storage.delete(wrap);
-        }
-        else {
-            return false;
+        } else {
+            throw new RuntimeException("Unable to put on a read-only storage");
         }
     }
 
@@ -323,13 +247,14 @@ class DiskStorage implements Storage {
             return this.storage.delete(key);
         }
         else {
-            return false;
+            throw new RuntimeException("Unable to delete on a read-only storage");
         }
     }
 
     /**
      * Closes and removes this storage from the storage system. This is the same as calling {@link StorageSystem#close(Storage)}
      */
+    @Override
     public
     void close() {
         StorageSystem.close(this);
@@ -433,24 +358,6 @@ class DiskStorage implements Storage {
         this.storage.setVersion(version);
     }
 
-    private
-    void action(StorageKey key, Object object) {
-        try {
-            this.actionLock.lock();
-
-            if (object != null) {
-                // push action to map
-                this.actionMap.put(key, object);
-            } else {
-                this.actionMap.remove(key);
-            }
-
-
-        } finally {
-            this.actionLock.unlock();
-        }
-    }
-
     void increaseReference() {
         this.references.incrementAndGet();
     }
@@ -483,66 +390,8 @@ class DiskStorage implements Storage {
         // timer action runs on THIS thread, not timer thread
         if (timer != null) {
             this.timer.delay(0L);
-        }
-    }
-
-    /**
-     * Adds a key/value pair to the storage, then saves the storage to disk, immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    @Override
-    public
-    void putAndSave(final String key, final Object object) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        // timer action runs on THIS thread, not timer thread
-        if (timer != null) {
-            action(new StorageKey(key), object);
-            this.timer.delay(0L);
-        }
-    }
-
-    /**
-     * Adds a key/value pair to the storage, then save the storage to disk, immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    @Override
-    public
-    void putAndSave(final byte[] key, final Object object) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        if (timer != null) {
-            action(new StorageKey(key), object);
-
-            // timer action runs on THIS thread, not timer thread
-            this.timer.delay(0L);
-        }
-
-    }
-
-    /**
-     * Adds a key/value pair to the storage, then save the storage to disk, immediately.
-     * <p/>
-     * This will save ALL of the pending save actions to the file
-     */
-    @Override
-    public
-    void putAndSave(final StorageKey key, final Object object) {
-        if (!this.isOpen.get()) {
-            throw new RuntimeException("Unable to act on closed storage");
-        }
-
-        if (timer != null) {
-            action(key, object);
-
-            // timer action runs on THIS thread, not timer thread
-            this.timer.delay(0L);
+        } else {
+            throw new RuntimeException("Unable to save on a read-only storage");
         }
     }
 }
