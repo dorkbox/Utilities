@@ -98,12 +98,7 @@ class ParallelProcessor<T extends Runnable> {
                                 logger.error("Error during execution of work!", t.getMessage());
                             }
                             else {
-                                String message = t.getMessage();
-                                int index = message.indexOf(OS.LINE_SEPARATOR);
-                                if (index > -1) {
-                                    message = message.substring(0, index);
-                                }
-                                System.err.println("Error during execution of work! " + message);
+                                System.err.println("Error during execution of work! " + OS.getExceptionMessage(t));
                             }
                         } finally {
                             if (taken instanceof Runnable) {
