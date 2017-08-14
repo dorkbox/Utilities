@@ -302,6 +302,21 @@ class OS {
                                .availableProcessors() - 2, 1);
     }
 
+
+    /**
+     * @return the first line of the exception message from 'throwable'
+     */
+    public static
+    String getExceptionMessage(final Throwable throwable) {
+        String message = throwable.getMessage();
+        int index = message.indexOf(OS.LINE_SEPARATOR);
+        if (index > -1) {
+            message = message.substring(0, index);
+        }
+
+        return message;
+    }
+
     @Override
     public final
     Object clone() throws java.lang.CloneNotSupportedException {
