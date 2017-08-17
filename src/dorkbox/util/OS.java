@@ -304,14 +304,19 @@ class OS {
 
 
     /**
-     * @return the first line of the exception message from 'throwable'
+     * @return the first line of the exception message from 'throwable', or the type if there was no message.
      */
     public static
     String getExceptionMessage(final Throwable throwable) {
         String message = throwable.getMessage();
-        int index = message.indexOf(OS.LINE_SEPARATOR);
-        if (index > -1) {
-            message = message.substring(0, index);
+        if (message != null) {
+            int index = message.indexOf(OS.LINE_SEPARATOR);
+            if (index > -1) {
+                message = message.substring(0, index);
+            }
+        } else {
+            message = throwable.getClass()
+                               .getSimpleName();
         }
 
         return message;
