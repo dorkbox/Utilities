@@ -95,10 +95,10 @@ class ParallelProcessor<T extends Runnable> {
                             workComplete(work);
                         } catch (Throwable t) {
                             if (logger != null) {
-                                logger.error("Error during execution of work!", t.getMessage());
+                                logger.error("Error during execution of work!", t);
                             }
                             else {
-                                System.err.println("Error during execution of work! " + OS.getExceptionMessage(t));
+                                t.printStackTrace();
                             }
                         } finally {
                             if (taken instanceof Runnable) {
