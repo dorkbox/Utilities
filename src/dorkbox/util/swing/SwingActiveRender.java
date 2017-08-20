@@ -98,6 +98,40 @@ class SwingActiveRender {
     }
 
     /**
+     * Removes a window from the ActiveRender queue. This should happen when the window is closed.
+     *
+     * @param window the window to remove
+     */
+    public static
+    void removeActiveRender(final Window window) {
+        synchronized (activeRenders) {
+            activeRenders.remove(window);
+
+            final boolean hadActiveRenders = !activeRenders.isEmpty();
+            hasActiveRenders = hadActiveRenders;
+
+            if (!hadActiveRenders) {
+                activeRenderThread = null;
+            }
+        }
+
+        // have to specify ALL children in window to obey EDT paint requests
+        Deque<Component> components = new ArrayDeque<Component>(8);
+        components.add(window);
+
+        Component[] c;
+        Component pop;
+        while ((pop = components.poll()) != null) {
+            pop.setIgnoreRepaint(false);
+
+            if (pop instanceof JComponent) {
+                c = ((JComponent) pop).getComponents();
+                Collections.addAll(components, c);
+            }
+        }
+    }
+
+    /**
      * Specifies an ActionHandler to be called when the ActiveRender thread starts to render at each tick.
      *
      * @param handler the handler to add
@@ -132,41 +166,6 @@ class SwingActiveRender {
     void removeActiveRenderFrameStart(final ActionHandlerLong handler) {
         synchronized (activeRenders) {
             activeRenderEvents.remove(handler);
-        }
-    }
-
-
-    /**
-     * Removes a window from the ActiveRender queue. This should happen when the window is closed.
-     *
-     * @param window the window to remove
-     */
-    public static
-    void removeActiveRender(final Window window) {
-        synchronized (activeRenders) {
-            activeRenders.remove(window);
-
-            final boolean hadActiveRenders = !activeRenders.isEmpty();
-            hasActiveRenders = hadActiveRenders;
-
-            if (!hadActiveRenders) {
-                activeRenderThread = null;
-            }
-        }
-
-        // have to specify ALL children in window to obey EDT paint requests
-        Deque<Component> components = new ArrayDeque<Component>(8);
-        components.add(window);
-
-        Component[] c;
-        Component pop;
-        while ((pop = components.poll()) != null) {
-            pop.setIgnoreRepaint(false);
-
-            if (pop instanceof JComponent) {
-                c = ((JComponent) pop).getComponents();
-                Collections.addAll(components, c);
-            }
         }
     }
 
