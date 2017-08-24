@@ -15,10 +15,11 @@
  */
 package dorkbox.util.swing;
 
+import java.awt.Canvas;
 import java.awt.Graphics;
 import java.awt.Toolkit;
-import java.awt.Window;
 import java.awt.image.BufferStrategy;
+import java.util.List;
 
 import javax.swing.JComponent;
 
@@ -65,28 +66,32 @@ class ActiveRenderLoop implements Runnable {
                 actionHandlerLong.handle(updateDeltaNanos);
             }
 
-            // this needs to be synchronized because we don't want to our frame removed WHILE we are rendering it.
+            // this needs to be synchronized because we don't want to our canvas removed WHILE we are rendering it.
             synchronized (SwingActiveRender.activeRenders) {
-                for (int i = 0; i < SwingActiveRender.activeRenders.size(); i++) {
-                    Window window = SwingActiveRender.activeRenders.get(i);
+                final List<Canvas> activeRenders = SwingActiveRender.activeRenders;
 
-                    final BufferStrategy buffer = window.getBufferStrategy();
+                for (Canvas canvas : activeRenders) {
+                    if (!canvas.isDisplayable()) {
+                        continue;
+                    }
+
+                    BufferStrategy buffer = canvas.getBufferStrategy();
 
                     // maybe the frame was closed
-                    if (buffer != null) {
-                        try {
-                            graphics = buffer.getDrawGraphics();
-                            window.paint(graphics);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        } finally {
-                            if (graphics != null) {
-                                graphics.dispose();
+                    try {
+                        graphics = buffer.getDrawGraphics();
+                        canvas.paint(graphics);
+                    } catch (Exception e) {
+                        // the frame can be close as well. can get a "java.lang.IllegalStateException: Component must have a valid
+                        // peer" if it's already be closed during the getDrawGraphics call.
+                        e.printStackTrace();
+                    } finally {
+                        if (graphics != null) {
+                            graphics.dispose();
 
-                                // blit the back buffer to the screen
-                                if (!buffer.contentsLost()) {
-                                    buffer.show();
-                                }
+                            // blit the back buffer to the screen
+                            if (!buffer.contentsLost()) {
+                                buffer.show();
                             }
                         }
                     }

@@ -24,7 +24,7 @@ class SynchronizedEventQueue extends EventQueue {
     public static final Object MUTEX = new Object();
 
     private static final SynchronizedEventQueue instance = new SynchronizedEventQueue();
-    private static boolean alreadyInUse = false;
+    private static volatile boolean alreadyInUse = false;
 
     public static synchronized
     void install() {
