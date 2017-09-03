@@ -40,6 +40,42 @@ public
 class ImageUtil {
 
     /**
+     * There are issues with scaled images on Windows. This correctly scales the image.
+     */
+    public static
+    BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
+        int originalHeight = originalImage.getHeight();
+        int originalWidth = originalImage.getWidth();
+        double ratio = (double) originalWidth / (double) originalHeight;
+
+        if (width == -1 && height == -1) {
+            // no resizing, so just use the original size.
+            width = originalWidth;
+            height = originalHeight;
+        }
+        else if (width == -1) {
+            width = (int) (originalWidth * ratio);
+
+        }
+        else if (height == -1) {
+            height = (int) (originalHeight / ratio);
+        }
+
+
+        int type = originalImage.getType();
+        if (type == 0) {
+            type = BufferedImage.TYPE_INT_ARGB;
+        }
+
+        BufferedImage resizedImage = new BufferedImage(width, height, type);
+        Graphics2D g = resizedImage.createGraphics();
+        g.drawImage(originalImage, 0, 0, width, height, null);
+        g.dispose();
+
+        return resizedImage;
+    }
+
+    /**
      * Resizes the image, as either a a FILE on disk, or as a RESOURCE name, and saves the new size as a file on disk. This new file will
      * replace any other file with the same name.
      *
@@ -71,33 +107,15 @@ class ImageUtil {
         File iconTest = new File(fileName);
         if (iconTest.isFile() && iconTest.canRead()) {
             final String absolutePath = iconTest.getAbsolutePath();
-
-            // resize the image, keep aspect
             image = new ImageIcon(absolutePath).getImage();
         }
         else {
             // suck it out of a URL/Resource (with debugging if necessary)
             final URL systemResource = LocationResolver.getResource(fileName);
-
-            // resize the image, keep aspect
             image = new ImageIcon(systemResource).getImage();
         }
 
-        // have to do this twice, so that it will finish loading the image (weird callback stuff is required if we don't do this)
-        image = new ImageIcon(image).getImage();
-
-        int height = image.getHeight(null);
-        int width = image.getWidth(null);
-
-        if (width > height) {
-            // fit on the width
-            image = image.getScaledInstance(size, -1, Image.SCALE_SMOOTH);
-        } else {
-            // fit on the height
-            image = image.getScaledInstance(-1, size, Image.SCALE_SMOOTH);
-        }
-
-        image.flush();
+        image = ImageUtil.getImageImmediate(image);
 
         // make whatever dirs we need to.
         boolean mkdirs = newFile.getParentFile()
@@ -113,8 +131,10 @@ class ImageUtil {
             throw new IOException("Temporary file already in use, cannot delete it " + newFile);
         }
 
-        // now write out the new one
+        // the smaller dimension have padding, so the larger dimension is the size of this image.
         BufferedImage bufferedImage = getSquareBufferedImage(image);
+
+        // now write out the new one
         ImageIO.write(bufferedImage, extension, newFile);
 
         return newFile.getAbsolutePath();
@@ -170,7 +190,8 @@ class ImageUtil {
 
 
     /**
-     * This will always return a square image, with whatever value is smaller to have padding (so it will be centered)
+     * This will always return a square image, with whatever value is smaller to have padding (so it will be centered), and the larger
+     * dimension will be the size of the image.
      *
      * @return the image as a SQUARE Buffered Image
      */
