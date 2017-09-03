@@ -86,7 +86,8 @@ class GtkEventDispatch {
                             // don't suppress GTK warnings in debug mode
                             LoggerFactory.getLogger(GtkEventDispatch.class).debug("Running GTK Native Event Loop");
                         } else {
-                            // NOTE: This can output warnings, so we suppress them
+                            // NOTE: This can output warnings, so we suppress them. Additionally, setting System.err to null, or trying
+                            // to filter it, will not suppress these errors/warnings
                             orig = Glib.g_log_set_default_handler(Glib.nullLogFunc, null);
                         }
 
