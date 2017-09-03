@@ -24,12 +24,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import com.sun.jna.Pointer;
+
 import dorkbox.util.jna.linux.Gtk2;
+import dorkbox.util.jna.linux.Gtk3;
 import dorkbox.util.jna.linux.GtkCheck;
 import dorkbox.util.jna.linux.GtkEventDispatch;
 import dorkbox.util.process.ShellExecutor;
 
-@SuppressWarnings({"WeakerAccess", "Convert2Lambda"})
+@SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
 class Desktop {
     /**
@@ -79,7 +82,20 @@ class Desktop {
                 @Override
                 public
                 void run() {
-                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                    // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
+                    // see: https://bugzilla.mozilla.org/show_bug.cgi?id=672671
+                    if (OSUtil.DesktopEnv.isUnity() && OSUtil.Linux.isUbuntu()) {
+                        // use xdg-open, because it launches in a new shell and suppresses these errors/warnings.
+                        // it can be really buggy though, so we only use it for ubuntu...
+                        ShellExecutor.run("xdg-open", uri.toString());
+                    }
+                    else if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
+                        Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
+                        Gtk3.Gtk3.gtk_show_uri_on_window(pointer, uri.toString(), 0, null);
+                    }
+                    else {
+                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                    }
                 }
             });
         }
@@ -138,7 +154,13 @@ class Desktop {
                 @Override
                 public
                 void run() {
-                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                    if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
+                        Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
+                        Gtk3.Gtk3.gtk_show_uri_on_window(pointer, uri.toString(), 0, null);
+                    }
+                    else {
+                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
+                    }
                 }
             });
         }
@@ -193,7 +215,20 @@ class Desktop {
                 @Override
                 public
                 void run() {
-                    Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
+                    // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
+                    // see: https://askubuntu.com/questions/788182/nautilus-not-opening-up-showing-glib-error
+                    if (OSUtil.DesktopEnv.isUnity() && OSUtil.Linux.isUbuntu()) {
+                        // use xdg-open, because it launches in a new shell and suppresses these errors/warnings.
+                        // it can be really buggy though, so we only use it for ubuntu...
+                        ShellExecutor.runShell("xdg-open", finalPath);
+                    }
+                    else if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
+                        Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
+                        Gtk3.Gtk3.gtk_show_uri_on_window(pointer, finalPath, 0, null);
+                    }
+                    else {
+                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
+                    }
                 }
             });
         }
