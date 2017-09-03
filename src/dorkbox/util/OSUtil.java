@@ -400,6 +400,7 @@ class OSUtil {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static
     class DesktopEnv {
         public enum Env {
@@ -468,10 +469,32 @@ class OSUtil {
             return Env.Unknown;
         }
 
+        private static
+        boolean isValidCommand(final String partialExpectationInOutput, final String commandOutput) {
+            return commandOutput.contains(partialExpectationInOutput)
+                   && !commandOutput.contains("not installed")
+                   && !commandOutput.contains ("No such file or directory");
+        }
+
+
 
         private static volatile Boolean isGnome = null;
         private static volatile Boolean isKDE = null;
         private static volatile Boolean isChromeOS = null;
+        private static volatile Boolean isNautilus = null;
+        private static volatile String getPlasmaVersionFull = null;
+
+
+        public static
+        boolean isUnity() {
+            Env env = get();
+            return isUnity(env);
+        }
+
+        public static
+        boolean isUnity(final Env env) {
+            return env == OSUtil.DesktopEnv.Env.Unity || env == OSUtil.DesktopEnv.Env.Unity7;
+        }
 
         public static
         boolean isGnome() {
@@ -569,7 +592,11 @@ class OSUtil {
             return false;
         }
 
-        // cannot represent '5.6.5' as a number, so we return just the first two decimal places instead
+        /**
+         * The first two decimal places of the version number of plasma shell (if running) as a double.
+         *
+         * @return cannot represent '5.6.5' as a number, so we return just the first two decimal places instead
+         */
         public static
         double getPlasmaVersion() {
             String versionAsString = getPlasmaVersionFull();
@@ -586,10 +613,19 @@ class OSUtil {
             }
         }
 
-        // cannot represent '5.6.5' as a number, so we return a String instead
+        /**
+         * The full version number of plasma shell (if running) as a String.
+         *
+         * @return cannot represent '5.6.5' as a number, so we return a String instead
+         */
         public static
         String getPlasmaVersionFull() {
+            if (getPlasmaVersionFull != null) {
+                return getPlasmaVersionFull;
+            }
+
             if (!OS.isLinux() && !OS.isUnix()) {
+                getPlasmaVersionFull = "";
                 return "";
             }
 
@@ -607,15 +643,61 @@ class OSUtil {
                     // DEFAULT icon size is 16. KDE is bananas on what they did with tray icon scale
                     // should be: plasmashell 5.6.5   or something
                     String s = "plasmashell ";
-                    if (output.contains(s) && !output.contains("not installed")) {
-                        return output.substring(output.indexOf(s) + s.length(), output.length());
+                    if (isValidCommand(s, output)) {
+                        String substring = output.substring(output.indexOf(s) + s.length(), output.length());
+                        getPlasmaVersionFull = substring;
+                        return substring;
                     }
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
             }
 
+            getPlasmaVersionFull = "0";
             return "0";
+        }
+
+
+        /**
+         * There are sometimes problems with nautilus (the file browser) and some GTK methods. It is rediculous for me to have to
+         * work around their bugs like this.
+         * <p>
+         * see: https://askubuntu.com/questions/788182/nautilus-not-opening-up-showing-glib-error
+         */
+        public static
+        boolean isNautilus() {
+            if (isNautilus != null) {
+                return isNautilus;
+            }
+
+            if (!OS.isLinux() && !OS.isUnix()) {
+                isNautilus = false;
+                return false;
+            }
+
+            try {
+                // nautilus --version
+                final ShellExecutor shellVersion = new ShellExecutor();
+                shellVersion.setExecutable("nautilus");
+                shellVersion.addArgument("--version");
+                shellVersion.start();
+
+                String output = shellVersion.getOutput();
+
+                if (!output.isEmpty()) {
+                    // should be: GNOME nautilus 3.14.3   or something
+                    String s = "GNOME nautilus ";
+                    if (isValidCommand(s, output)) {
+                        isNautilus = true;
+                        return true;
+                    }
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
+
+            isNautilus = false;
+            return false;
         }
 
 
