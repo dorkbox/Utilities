@@ -198,4 +198,8 @@ class Gtk2 implements Gtk {
     @Override
     public native
     void gtk_widget_set_tooltip_text(final Pointer widget, final String text);
+
+    @Override
+    public native
+    Pointer gdk_display_get_default();
 }

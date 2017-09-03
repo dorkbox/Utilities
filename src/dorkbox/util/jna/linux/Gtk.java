@@ -38,6 +38,7 @@ interface Gtk {
     int FALSE = 0;
     int TRUE = 1;
 
+    // use GtkCheck for a safe accessor of these
     int MAJOR = GtkLoader.MAJOR;
     int MINOR = GtkLoader.MINOR;
     int MICRO = GtkLoader.MICRO;
@@ -47,6 +48,7 @@ interface Gtk {
     Gtk Gtk2 = GtkLoader.isGtk2 ? new Gtk2() : new Gtk3();
     Gtk3 Gtk3 = GtkLoader.isGtk2 ? null : (Gtk3) Gtk2;
 
+    // use GtkCheck for a safe accessor of these
     boolean isGtk2 = GtkLoader.isGtk2;
     boolean isGtk3 = GtkLoader.isGtk3;
     boolean isLoaded = GtkLoader.isLoaded;
@@ -393,5 +395,12 @@ interface Gtk {
      * @since 2.12
      */
     void gtk_widget_set_tooltip_text(Pointer widget, String text);
+
+    /**
+     * Gets the default GdkDisplay. This is a convenience function for gdk_display_manager_get_default_display (gdk_display_manager_get()).
+     *
+     * @since: 2.2
+     */
+    Pointer gdk_display_get_default();
 }
 

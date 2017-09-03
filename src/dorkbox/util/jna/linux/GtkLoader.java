@@ -49,6 +49,7 @@ class GtkLoader {
 
     static Function gtk_status_icon_position_menu = null;
 
+    // use GtkCheck for a safe accessor of these
     static int MAJOR;
     static int MINOR;
     static int MICRO;
@@ -139,10 +140,6 @@ class GtkLoader {
                 library = null;
 
                 library = JnaHelper.register(gtk3LibName, Gtk3.class);
-                if (major >= 3 && minor >= 10) {
-                    // Abusing static fields this way is not proper, but it gets the job done nicely.
-                    Gtk3.gdk_window_get_scale_factor = library.getFunction("gdk_window_get_scale_factor");
-                }
 
                 gtk_status_icon_position_menu = library.getFunction( "gtk_status_icon_position_menu");
                 Function gtk_main_level = library.getFunction("gtk_main_level");
@@ -228,6 +225,16 @@ class GtkLoader {
         GtkCheck.isGtk2 = isGtk2;
         GtkCheck.isGtk3 = isGtk3;
         GtkCheck.isGtkLoaded = isLoaded;
+
+        GtkCheck.MAJOR = MAJOR;
+        GtkCheck.MINOR = MINOR;
+        GtkCheck.MICRO = MICRO;
+
+
+        // load any GTK version specific methods
+        if (isGtk3) {
+            Gtk3.loadMethods(library);
+        }
 
         if (shouldLoadGtk) {
             if (!_isLoaded) {

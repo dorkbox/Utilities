@@ -45,6 +45,47 @@ class GtkCheck {
      */
     public static volatile boolean isGtkLoaded = false;
 
+
+    /** If GTK is loaded, this is the GTK MAJOR version */
+    public static volatile int MAJOR = 0;
+
+    /** If GTK is loaded, this is the GTK MINOR version */
+    public static volatile int MINOR = 0;
+
+    /** If GTK is loaded, this is the GTK MICRO version */
+    public static volatile int MICRO = 0;
+
+
+    /**
+     * @return true if the currently loaded GTK version is greater to or equal to the passed-in major.minor.mico
+     */
+    public static
+    boolean gtkIsGreaterOrEqual(final int major, final int minor, final int micro) {
+        if (MAJOR > major) {
+            return true;
+        }
+        if (MAJOR < major) {
+            return false;
+        }
+
+        if (MINOR > minor) {
+            return true;
+        }
+        if (MINOR < minor) {
+            return false;
+        }
+
+        if (MICRO > micro) {
+            return true;
+        }
+        if (MICRO < micro) {
+            return false;
+        }
+
+        // same exact version
+        return true;
+    }
+
     /**
      * This method is agnostic w.r.t. how GTK is loaded, which can be manually loaded or loaded via JavaFX/SWT/Swing.
      *
@@ -80,4 +121,6 @@ class GtkCheck {
         // now check if swing has loaded GTK from the Look and Feel
         return SwingUtil.getLoadedGtkVersion();
     }
+
+
 }

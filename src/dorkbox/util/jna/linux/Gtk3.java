@@ -16,6 +16,7 @@
 package dorkbox.util.jna.linux;
 
 import com.sun.jna.Function;
+import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 
 import dorkbox.util.jna.linux.structs.GtkStyle;
@@ -25,12 +26,32 @@ import dorkbox.util.jna.linux.structs.GtkStyle;
  * <p>
  * Direct-mapping, See: https://github.com/java-native-access/jna/blob/master/www/DirectMapping.md
  */
+@SuppressWarnings("WeakerAccess")
 public
 class Gtk3 implements Gtk {
-    static Function gdk_window_get_scale_factor = null;
+    private static Function gdk_window_get_scale_factor = null;
+    private static Function gtk_show_uri_on_window = null;
 
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 | grep gtk
     // objdump -T /usr/local/lib/libgtk-3.so.0 | grep gtk
+
+    /**
+     * Loads version specific methods
+     *
+     * @param library
+     */
+    static
+    void loadMethods(final NativeLibrary library) {
+        // Abusing static fields this way is not proper, but it gets the job done nicely.
+
+        if (GtkCheck.gtkIsGreaterOrEqual(3, 10, 0)) {
+            gdk_window_get_scale_factor = library.getFunction("gdk_window_get_scale_factor");
+        }
+
+        if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
+            gtk_show_uri_on_window = library.getFunction("gtk_show_uri_on_window");
+        }
+    }
 
     /**
      * Retrieves the minimum and natural size of a widget, taking into account the widget’s preference for height-for-width management.
@@ -72,6 +93,22 @@ class Gtk3 implements Gtk {
             return 0;
         }
     }
+
+    /**
+     * @return TRUE on success, FALSE on error
+     *
+     * @since: 3.22
+     */
+    public
+    boolean gtk_show_uri_on_window(final Pointer parent, final String uri, final int timestamp, final Pointer error) {
+        if (gtk_show_uri_on_window != null) {
+            return (Boolean) gtk_show_uri_on_window.invoke(Boolean.class, new Object[] {parent, uri, timestamp, error});
+        }
+        else {
+            return false;
+        }
+    }
+
 
     ///////////////////////////
     //// GTK2 methods
@@ -258,4 +295,8 @@ class Gtk3 implements Gtk {
     @Override
     public native
     void gtk_widget_set_tooltip_text(final Pointer widget, final String text);
+
+    @Override
+    public native
+    Pointer gdk_display_get_default();
 }
