@@ -371,7 +371,7 @@ My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 fac
             }
         }
         else {
-            if (OSUtil.Linux.isUbuntu() && env == OSUtil.DesktopEnv.Env.Unity || env == OSUtil.DesktopEnv.Env.Unity7) {
+            if (OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity(env)) {
                 // if we measure on ubuntu unity using a screen shot (using swing, so....) , the max size was 24, HOWEVER this goes from
                 // the top->bottom of the indicator bar -- and since it was swing, it uses a different rendering method and it (honestly)
                 // looks weird, because there is no padding for the icon. The official AppIndicator size is hardcoded...
