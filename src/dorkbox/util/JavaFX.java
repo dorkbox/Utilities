@@ -44,7 +44,7 @@ class JavaFX {
             // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
             java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
             m.setAccessible(true);
-            ClassLoader cl = ClassLoader.getSystemClassLoader();
+            ClassLoader cl = JavaFX.class.getClassLoader();
 
             // JavaFX Java7,8 is GTK2 only. Java9 can have it be GTK3 if -Djdk.gtk.version=3 is specified
             // see http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
