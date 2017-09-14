@@ -31,7 +31,7 @@ public
 class NativeLoader {
 
     public static
-    void loadLibrary(final String sourceFileName, final String destinationPrefix, final Class<?> classLoaderClass, Version version)
+    void loadLibrary(final String sourceFileName, final String destinationPrefix, final Class<?> classLoaderClass, String version)
             throws Exception {
         try {
             String suffix;
