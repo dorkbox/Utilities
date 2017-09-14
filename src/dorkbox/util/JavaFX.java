@@ -44,7 +44,7 @@ class JavaFX {
             // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
             java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
             m.setAccessible(true);
-            ClassLoader cl = ClassLoader.getSystemClassLoader();
+            ClassLoader cl = JavaFX.class.getClassLoader();
 
             // JavaFX Java7,8 is GTK2 only. Java9 can have it be GTK3 if -Djdk.gtk.version=3 is specified
             // see http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
@@ -90,8 +90,7 @@ class JavaFX {
                     _isEventThreadMethod = clazz.getMethod("getToolkit");
 
                     _isEventThreadObject = _isEventThreadMethod.invoke(null);
-                    _isEventThreadMethod = _isEventThreadObject.getClass()
-                                .getMethod("isFxUserThread", (java.lang.Class<?>[])null);
+                    _isEventThreadMethod = _isEventThreadObject.getClass().getMethod("isFxUserThread", (java.lang.Class<?>[])null);
                 }
             } catch (Throwable e) {
                 LoggerFactory.getLogger(JavaFX.class).error("Cannot initialize JavaFX", e);
@@ -149,8 +148,7 @@ class JavaFX {
             Class<?> clazz = Class.forName("com.sun.javafx.tk.Toolkit");
             Method method = clazz.getMethod("getToolkit");
             Object o = method.invoke(null);
-            Method m = o.getClass()
-                               .getMethod("addShutdownHook", Runnable.class);
+            Method m = o.getClass().getMethod("addShutdownHook", Runnable.class);
             m.invoke(o, runnable);
         } catch (Throwable e) {
             LoggerFactory.getLogger(JavaFX.class)
