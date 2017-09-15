@@ -234,7 +234,7 @@ class LocationResolver {
      * 2) Checks the current thread context classloader <br/>
      * 3) Checks the Classloader system resource
      *
-     * @param resourceName the name, including path information (Only valid '\' as the path separator)
+     * @param resourceName the name, including path information (Only '\' is valid as the path separator)
      *
      * @return the resource stream, if it could be found, otherwise null.
      */
@@ -258,16 +258,15 @@ class LocationResolver {
             }
         }
 
-        // 2) is it in the context classloader
+        // 2) maybe it's in the context classloader
         if (resourceAsStream == null) {
             resourceAsStream = Thread.currentThread()
                                      .getContextClassLoader()
                                      .getResourceAsStream(resourceName);
         }
 
-        // 3) is it in the system classloader
+        // 3) maybe it's in the system classloader
         if (resourceAsStream == null) {
-            // maybe it's in the system classloader?
             resourceAsStream = ClassLoader.getSystemResourceAsStream(resourceName);
         }
 
