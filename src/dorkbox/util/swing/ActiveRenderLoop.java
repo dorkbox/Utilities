@@ -90,7 +90,7 @@ class ActiveRenderLoop implements Runnable {
                             graphics.dispose();
 
                             // blit the back buffer to the screen
-                            if (!buffer.contentsLost()) {
+                            if (buffer != null && !buffer.contentsLost()) {
                                 buffer.show();
                             }
                         }
