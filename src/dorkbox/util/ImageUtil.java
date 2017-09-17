@@ -40,6 +40,44 @@ public
 class ImageUtil {
 
     /**
+     * @return returns an image, where the aspect ratio is kept, but the maximum size is maintained.
+     */
+    public static
+    BufferedImage clampMaxImageSize(final BufferedImage image, final int size) {
+        int width = image.getWidth(null);
+        int height = image.getHeight(null);
+
+        if (width <= size && height <= size) {
+            return image;
+        }
+
+        // scale width/height
+        if (width > size) {
+            double scaleRatio = (double) size / (double) width;
+            width = size;
+            height = (int) (height * scaleRatio);
+        }
+
+        if (height > size) {
+            double scaleRatio = (double) size / (double) height;
+            height = size;
+            width = (int) (width * scaleRatio);
+        }
+
+        int type = image.getType();
+        if (type == 0) {
+            type = BufferedImage.TYPE_INT_ARGB;
+        }
+
+        BufferedImage resizedImage = new BufferedImage(width, height, type);
+        Graphics2D g = resizedImage.createGraphics();
+        g.drawImage(image, 0, 0, width, height, null);
+        g.dispose();
+
+        return resizedImage;
+    }
+
+    /**
      * There are issues with scaled images on Windows. This correctly scales the image.
      */
     public static
@@ -196,10 +234,6 @@ class ImageUtil {
      */
     public static
     BufferedImage getSquareBufferedImage(Image image) {
-        if (image instanceof BufferedImage) {
-            return (BufferedImage) image;
-        }
-
         int width = image.getWidth(null);
         int height = image.getHeight(null);
 
