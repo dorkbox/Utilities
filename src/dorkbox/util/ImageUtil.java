@@ -92,10 +92,10 @@ class ImageUtil {
             height = originalHeight;
         }
         else if (width == -1) {
-            width = (int) (originalWidth * ratio);
+            width = (int) (height * ratio);
         }
         else if (height == -1) {
-            height = (int) (originalHeight / ratio);
+            height = (int) (width / ratio);
         }
 
 
