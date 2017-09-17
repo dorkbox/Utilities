@@ -55,7 +55,6 @@ class ImageUtil {
         }
         else if (width == -1) {
             width = (int) (originalWidth * ratio);
-
         }
         else if (height == -1) {
             height = (int) (originalHeight / ratio);
