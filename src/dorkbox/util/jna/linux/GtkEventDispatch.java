@@ -39,8 +39,11 @@ class GtkEventDispatch {
     // have to save these in a field to prevent GC on the objects (since they go out-of-scope from java)
     private static final LinkedList<Object> gtkCallbacks = new LinkedList<Object>();
 
+    // this contains 'runnable's that have tried to be executed while on the dispatch thread. They are now executed on a queue instead.
+    private static final LinkedList<Runnable> eventDispatchQueue = new LinkedList<Runnable>();
+
     // This is required because the EDT needs to have it's own value for this boolean, that is a different value than the main thread
-    private static ThreadLocal<Boolean> isDispatch = new ThreadLocal<Boolean>() {
+    public static ThreadLocal<Boolean> isDispatch = new ThreadLocal<Boolean>() {
         @Override
         protected
         Boolean initialValue() {
@@ -214,10 +217,75 @@ class GtkEventDispatch {
     }
 
     /**
+     * Runs all entries in the dispatch queue, until there are no more.
+     */
+    private static void runDispatchQueue() {
+        while (true) {
+            Runnable remove;
+            synchronized (eventDispatchQueue) {
+                if (eventDispatchQueue.isEmpty()) {
+                    return;
+                }
+                remove = eventDispatchQueue.remove(0);
+            }
+
+            // we are in the dispatch thread - so always run as such
+            dispatchAlways(true, remove);
+        }
+    }
+
+    private static
+    Runnable makeDispatchRunnable(final Runnable runnable) {
+        return new Runnable() {
+            @Override
+            public
+            void run() {
+                isDispatch.set(true);
+                try {
+                    runnable.run();
+                } catch (Throwable t) {
+                    LoggerFactory.getLogger(GtkEventDispatch.class).error("Error during GTK run loop: ", t);
+                }
+
+                runDispatchQueue();
+
+                isDispatch.set(false);
+            }
+        };
+    }
+
+    /**
      * Best practices for GTK, is to call EVERYTHING for it on the GTK THREAD. This accomplishes that.
      */
     public static
     void dispatch(final Runnable runnable) {
+        dispatch(isDispatch.get(), runnable);
+    }
+
+    /**
+     * Best practices for GTK, is to call EVERYTHING for it on the GTK THREAD. This accomplishes that.
+     */
+    private static
+    void dispatch(final boolean isDispatch, final Runnable runnable) {
+        // queue dispatch methods, to make sure that they occur in-order, and prevent items from adding children before they are ready.
+        if (isDispatch) {
+            synchronized (eventDispatchQueue) {
+                eventDispatchQueue.add(runnable);
+            }
+            return;
+        }
+
+        // any events that are dispatched DURING our dispatch method (either GTK/JavaFX/SWT/etc) will be queued in order.
+        final Runnable dispatchRunnable = makeDispatchRunnable(runnable);
+
+        dispatchAlways(false, dispatchRunnable);
+    }
+
+    /**
+     * Always run the dispatch event, even if we are in the dispatch thread. This is to make running the dispatch queue easier.
+     */
+    private static
+    void dispatchAlways(final boolean isDispatch, final Runnable runnable) {
         if (GtkLoader.alreadyRunningGTK) {
             if (JavaFX.isLoaded) {
                 // JavaFX only
@@ -228,7 +296,6 @@ class GtkEventDispatch {
                 else {
                     JavaFX.dispatch(runnable);
                 }
-
                 return;
             }
 
@@ -236,7 +303,6 @@ class GtkEventDispatch {
                 if (Swt.isEventThread()) {
                     // Run directly on the SWT event thread. If it's not on the dispatch thread, we can use raw GTK to put it there
                     runnable.run();
-
                     return;
                 }
             }
@@ -244,80 +310,77 @@ class GtkEventDispatch {
 
         // not javafx
         // gtk/swt are **mostly** the same in how events are dispatched, so we can use "raw" gtk methods for SWT
-        if (isDispatch.get()) {
-            // Run directly on the dispatch thread
+        if (isDispatch) {
+            // Run directly on the dispatch thread. This will be false unless we are running the dispatch queue.
             runnable.run();
+            return;
         }
-        else {
-            final FuncCallback callback = new FuncCallback() {
-                @Override
-                public
-                int callback(final Pointer data) {
-                    synchronized (gtkCallbacks) {
-                        gtkCallbacks.removeFirst(); // now that we've 'handled' it, we can remove it from our callback list
-                    }
 
-                    isDispatch.set(true);
-
-                    try {
-                        runnable.run();
-                    } finally {
-                        isDispatch.set(false);
-                    }
-
-                    return Gtk2.FALSE; // don't want to call this again
+        final FuncCallback callback = new FuncCallback() {
+            @Override
+            public
+            int callback(final Pointer data) {
+                synchronized (gtkCallbacks) {
+                    gtkCallbacks.removeFirst(); // now that we've 'handled' it, we can remove it from our callback list
                 }
-            };
 
-            synchronized (gtkCallbacks) {
-                gtkCallbacks.offer(callback); // prevent GC from collecting this object before it can be called
+                runnable.run();
+
+                return Gtk2.FALSE; // don't want to call this again
             }
+        };
 
-            // the correct way to do it. Add with a slightly higher value
-            Gtk2.gdk_threads_add_idle_full(100, callback, null, null);
+        synchronized (gtkCallbacks) {
+            gtkCallbacks.offer(callback); // prevent GC from collecting this object before it can be called
         }
+
+        // the correct way to do it. Add with a slightly higher value
+        Gtk2.gdk_threads_add_idle_full(100, callback, null, null);
     }
 
     public static
     void dispatchAndWait(final Runnable runnable) {
-        if (isDispatch.get()) {
-            // Run directly on the dispatch thread (should not "redispatch" this again)
-            runnable.run();
+        // if we are on the dispatch queue, do not block
+        Boolean isDispatch = GtkEventDispatch.isDispatch.get();
+        if (isDispatch) {
+            // don't block. The ORIGINAL call (before items were queued) will still be blocking. If the original call was a "normal"
+            // dispatch, then subsequent dispatchAndWait calls are irrelevant (as they happen in the GTK thread, and not the main thread).
+            dispatch(true, runnable);
+            return;
         }
-        else {
-            final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-            dispatch(new Runnable() {
-                @Override
-                public
-                void run() {
-                    try {
-                        runnable.run();
-                    } catch (Exception e) {
-                        LoggerFactory.getLogger(GtkEventDispatch.class).error("Error during GTK run loop: ", e);
-                    } finally {
-                        countDownLatch.countDown();
-                    }
-                }
-            });
 
-            // this is slightly different than how swing does it. We have a timeout here so that we can make sure that updates on the GUI
-            // thread occur in REASONABLE time-frames, and alert the user if not.
-            try {
-                if (!countDownLatch.await(TIMEOUT, TimeUnit.SECONDS)) {
-                    if (DEBUG) {
-                        LoggerFactory.getLogger(GtkEventDispatch.class).error(
-                                        "Something is very wrong. The Event Dispatch Queue took longer than " + TIMEOUT + " seconds " +
-                                        "to complete.", new Exception(""));
-                    }
-                    else {
-                        throw new RuntimeException("Something is very wrong. The Event Dispatch Queue took longer than " + TIMEOUT +
-                                                   " seconds " + "to complete.");
-                    }
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        dispatch(false, new Runnable() {
+            @Override
+            public
+            void run() {
+                try {
+                    runnable.run();
+                } catch (Exception e) {
+                    LoggerFactory.getLogger(GtkEventDispatch.class).error("Error during GTK run loop: ", e);
+                } finally {
+                    countDownLatch.countDown();
                 }
-            } catch (InterruptedException e) {
-                LoggerFactory.getLogger(GtkEventDispatch.class).error("Error waiting for dispatch to complete.", new Exception(""));
             }
+        });
+
+        // this is slightly different than how swing does it. We have a timeout here so that we can make sure that updates on the GUI
+        // thread occur in REASONABLE time-frames, and alert the user if not.
+        try {
+            if (!countDownLatch.await(TIMEOUT, TimeUnit.SECONDS)) {
+                if (DEBUG) {
+                    LoggerFactory.getLogger(GtkEventDispatch.class).error(
+                                    "Something is very wrong. The Event Dispatch Queue took longer than " + TIMEOUT + " seconds " +
+                                    "to complete.", new Exception(""));
+                }
+                else {
+                    throw new RuntimeException("Something is very wrong. The Event Dispatch Queue took longer than " + TIMEOUT +
+                                               " seconds " + "to complete.");
+                }
+            }
+        } catch (InterruptedException e) {
+            LoggerFactory.getLogger(GtkEventDispatch.class).error("Error waiting for dispatch to complete.", new Exception(""));
         }
     }
 
@@ -339,9 +402,14 @@ class GtkEventDispatch {
                 // toggled
                 callback.actionPerformed(null);
             }
-        } finally {
-            isDispatch.set(false);
+        } catch (Throwable t) {
+            LoggerFactory.getLogger(GtkEventDispatch.class)
+                         .error("Error during GTK click callback: ", t);
         }
+
+        runDispatchQueue();
+
+        isDispatch.set(false);
     }
     public static synchronized
     void shutdownGui() {
