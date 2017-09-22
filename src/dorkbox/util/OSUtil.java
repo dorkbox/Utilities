@@ -709,6 +709,7 @@ class OSUtil {
                     return false;
                 }
 
+                isChromeOS = false;
                 try {
                     // ps aux | grep chromeos
                     final ShellExecutor shellVersion = new ShellExecutor();
