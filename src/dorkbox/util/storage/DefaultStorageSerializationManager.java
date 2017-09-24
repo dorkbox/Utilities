@@ -36,20 +36,23 @@ class DefaultStorageSerializationManager implements SerializationManager {
 
     @Override
     public
-    void register(final Class<?> clazz) {
+    SerializationManager register(final Class<?> clazz) {
         kryo.register(clazz);
+        return this;
     }
 
     @Override
     public
-    void register(final Class<?> clazz, final Serializer<?> serializer) {
+    SerializationManager register(final Class<?> clazz, final Serializer<?> serializer) {
         kryo.register(clazz, serializer);
+        return this;
     }
 
     @Override
     public
-    void register(final Class<?> type, final Serializer<?> serializer, final int id) {
+    SerializationManager register(final Class<?> type, final Serializer<?> serializer, final int id) {
         kryo.register(type, serializer, id);
+        return this;
     }
 
     @Override

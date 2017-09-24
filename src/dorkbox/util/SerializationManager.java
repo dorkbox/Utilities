@@ -15,14 +15,16 @@
  */
 package dorkbox.util;
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import io.netty.buffer.ByteBuf;
-import org.slf4j.Logger;
 
-import java.io.IOException;
+import io.netty.buffer.ByteBuf;
 
 public
 interface SerializationManager {
@@ -38,7 +40,7 @@ interface SerializationManager {
      * order classes are registered is important when using this method. The
      * order must be the same at deserialization as it was for serialization.
      */
-    void register(Class<?> clazz);
+    SerializationManager register(Class<?> clazz);
 
     /**
      * Registers the class using the lowest, next available integer ID and the
@@ -50,8 +52,7 @@ interface SerializationManager {
      * order classes are registered is important when using this method. The
      * order must be the same at deserialization as it was for serialization.
      */
-    void register(Class<?> clazz, Serializer<?> serializer);
-
+    SerializationManager register(Class<?> clazz, Serializer<?> serializer);
 
     /**
      * Registers the class using the specified ID and serializer. If the ID is
@@ -65,7 +66,7 @@ interface SerializationManager {
      *           0-8 are used by default for primitive types and String, but
      *           these IDs can be repurposed.
      */
-    void register(Class<?> clazz, Serializer<?> serializer, int id);
+    SerializationManager register(Class<?> clazz, Serializer<?> serializer, int id);
 
     /**
      * Waits until a kryo is available to write, using CAS operations to prevent having to synchronize.
