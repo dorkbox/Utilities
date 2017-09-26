@@ -96,7 +96,17 @@ class IO {
      */
     public static
     <T extends OutputStream> T copyStream(final ImageInputStream inputStream, final T outputStream) throws IOException {
-        byte[] buffer = new byte[4096];
+        return copyStream(4096, inputStream, outputStream);
+    }
+
+    /**
+     * Copy the contents of the input stream to the output stream.
+     * <p>
+     * DOES NOT CLOSE THE STEAMS!
+     */
+    public static
+    <T extends OutputStream> T copyStream(final int bufferSize, final ImageInputStream inputStream, final T outputStream) throws IOException {
+        byte[] buffer = new byte[bufferSize];
         int read;
 
         while ((read = inputStream.read(buffer)) > 0) {
