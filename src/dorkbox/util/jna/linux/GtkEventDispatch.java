@@ -17,7 +17,6 @@ package dorkbox.util.jna.linux;
 
 import static dorkbox.util.jna.linux.Gtk.Gtk2;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedList;
 import java.util.concurrent.CountDownLatch;
@@ -390,18 +389,11 @@ class GtkEventDispatch {
      * @param callback will never be null.
      */
     public static
-    void proxyClick(final Object source, final ActionListener callback) {
+    void proxyClick(final ActionListener callback) {
         isDispatch.set(true);
 
         try {
-            if (source != null) {
-                callback.actionPerformed(new ActionEvent(source, ActionEvent.ACTION_PERFORMED, ""));
-            }
-            else {
-                // checkbox entries will not pass the menuEntry in, because they redispatch the click event so that the checkbox state is
-                // toggled
-                callback.actionPerformed(null);
-            }
+            callback.actionPerformed(null);
         } catch (Throwable t) {
             LoggerFactory.getLogger(GtkEventDispatch.class)
                          .error("Error during GTK click callback: ", t);
