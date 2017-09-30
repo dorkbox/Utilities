@@ -169,7 +169,7 @@ class ParallelProcessor<T extends Runnable> {
     public
     void doneQueueingTasks() throws InterruptedException {
         for (int i = 0; i < threads.size(); i++) {
-            // this tells out threads that we have finished work and can exit
+            // this tells our threads that we have finished work and can exit
             queue.put(SENTINEL);
         }
     }
