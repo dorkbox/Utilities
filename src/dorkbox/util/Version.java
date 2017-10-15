@@ -70,6 +70,11 @@ class Version implements Comparable<Version> {
     protected boolean isBeta;
     protected String build;
 
+    protected
+    Version() {
+        // no-arg for serialization
+    }
+
     /**
      * Creates a comparable version based on only numbers
      *
