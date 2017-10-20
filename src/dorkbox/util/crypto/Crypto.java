@@ -118,7 +118,7 @@ class Crypto {
      */
     public static
     byte[] hashFile(File file, Digest digest, Logger logger) {
-        return hashFile(file, digest, 0L, logger);
+        return hashFile(file, digest, 0L, file.length(), logger);
     }
 
     /**
@@ -128,12 +128,18 @@ class Crypto {
      *                 may be null, if no log output is necessary
      */
     public static
-    byte[] hashFile(File file, Digest digest, long lengthFromEnd, Logger logger) {
+    byte[] hashFile(File file, Digest digest, long startPosition, long endPosition, Logger logger) {
         if (file.isFile() && file.canRead()) {
             InputStream inputStream = null;
             try {
                 inputStream = new FileInputStream(file);
-                long size = file.length();
+                long skip = inputStream.skip(startPosition);
+                if (skip != startPosition) {
+                    throw new RuntimeException("Unable to skip " + startPosition + " bytes. Only skippped " + skip + " instead");
+                }
+
+                long size = file.length() - startPosition;
+                long lengthFromEnd = size - endPosition;
 
                 if (lengthFromEnd > 0 && lengthFromEnd < size) {
                     size -= lengthFromEnd;
