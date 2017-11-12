@@ -205,10 +205,16 @@ class OSUtil {
     @SuppressWarnings("WeakerAccess")
     public static
     class Linux {
+        private static String info = null;
         public static
         String getInfo() {
+            if (info != null) {
+                return info;
+            }
+
             if (!OS.isLinux()) {
-                return "";
+                info = "";
+                return info;
             }
 
             try {
@@ -264,44 +270,24 @@ class OSUtil {
                         }
                     }
 
-                    return fileContents.toString();
+                    info = fileContents.toString();
+                    return info;
                 }
             } catch (Throwable ignored) {
             }
 
-            return "";
-        }
-
-        public static
-        int getFedoraVersion() {
-            try {
-                String output = getInfo();
-
-                // ID=fedora
-                if (output.contains("ID=fedora\n")) {
-                    // should be: VERSION_ID=23\n  or something
-                    int beginIndex = output.indexOf("VERSION_ID=") + 11;
-                    String fedoraVersion_ = output.substring(beginIndex, output.indexOf(OS.LINE_SEPARATOR_UNIX, beginIndex));
-                    return Integer.parseInt(fedoraVersion_);
-                }
-            } catch (Throwable ignored) {
-            }
-
-            return 0;
+            info = "";
+            return info;
         }
 
         /**
          * @param id the info ID to check, ie: ubuntu, arch, debian, etc... This is what the OS vendor uses to ID their OS.
          * @return true if this OS is identified as the specified ID.
          */
-        private static String info = null;
         public static
         boolean getInfo(String id) {
-            if (info == null) {
-                info = getInfo();
-            }
             // ID=linuxmint/fedora/arch/ubuntu/etc
-            return info.contains("ID=" + id +"\n");
+            return getInfo().contains("ID=" + id +"\n");
         }
 
         private static Boolean isArch = null;
@@ -349,6 +335,28 @@ class OSUtil {
             return isFedora;
         }
 
+        public static
+        int getFedoraVersion() {
+            if (!isFedora()) {
+                return 0;
+            }
+
+            try {
+                String output = getInfo();
+
+                // ID=fedora
+                if (output.contains("ID=fedora\n")) {
+                    // should be: VERSION_ID=23\n  or something
+                    int beginIndex = output.indexOf("VERSION_ID=") + 11;
+                    String fedoraVersion_ = output.substring(beginIndex, output.indexOf(OS.LINE_SEPARATOR_UNIX, beginIndex));
+                    return Integer.parseInt(fedoraVersion_);
+                }
+            } catch (Throwable ignored) {
+            }
+
+            return 0;
+        }
+
         private static Boolean isLinuxMint = null;
         public static
         boolean isLinuxMint() {
@@ -366,6 +374,34 @@ class OSUtil {
             }
             return isUbuntu;
         }
+
+        /**
+         * @return the ubuntu version or "" if not found.
+         */
+        public static
+        String getUbuntuVersion() {
+            if (!OS.isLinux()) {
+                return "";
+            }
+
+            if (!isUbuntu()) {
+                return "";
+            }
+
+            String info = getInfo();
+            String releaseString = "DISTRIB_RELEASE=";
+            int index = info.indexOf(releaseString);
+            if (index > -1) {
+                index += releaseString.length();
+                int newLine = info.indexOf(OS.LINE_SEPARATOR_UNIX, index);
+                if (newLine > index) {
+                    return info.substring(index, newLine);
+                }
+            }
+
+            return "";
+        }
+
 
         private static Boolean isKali = null;
         public static
