@@ -31,19 +31,27 @@ class Gtk2 implements Gtk {
 
     @Override
     public native
-    int gdk_threads_add_idle_full(final int priority, final FuncCallback function, final Pointer data, final Pointer notify);
-
-    @Override
-    public native
     boolean gtk_init_check(final int argc);
 
     @Override
     public native
-    void gtk_main();
+    GMainLoop g_main_loop_new(Pointer context, boolean is_running);
 
     @Override
     public native
-    void gtk_main_quit();
+    GMainContext g_main_loop_get_context(GMainLoop loop);
+
+    @Override
+    public native
+    void g_main_loop_run(GMainLoop loop);
+
+    @Override
+    public native
+    void g_main_context_invoke(GMainContext c, FuncCallback func, Pointer data);
+
+    @Override
+    public native
+    void g_main_loop_quit(GMainLoop loop);
 
     @Override
     public native

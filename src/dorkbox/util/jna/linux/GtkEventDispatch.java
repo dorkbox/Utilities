@@ -52,6 +52,9 @@ class GtkEventDispatch {
     @SuppressWarnings("FieldCanBeLocal")
     private static Thread gtkUpdateThread = null;
 
+    private static GMainLoop mainloop;
+    private static GMainContext context;
+
     // when debugging the EDT, we need a longer timeout.
     private static final boolean debugEDT = false;
 
@@ -72,7 +75,6 @@ class GtkEventDispatch {
 
             // startup the GTK GUI event loop. There can be multiple/nested loops.
 
-
             if (!GtkLoader.alreadyRunningGTK) {
                 // If JavaFX/SWT is used, this is UNNECESSARY (we can detect if the GTK main_loop is running)
 
@@ -91,24 +93,22 @@ class GtkEventDispatch {
                         }
 
 
-                        // prep for the event loop.
-                        // GThread.g_thread_init(null);  would be needed for g_idle_add()
-
                         if (!Gtk2.gtk_init_check(0)) {
                             throw new RuntimeException("Error starting GTK");
                         }
 
-                        // gdk_threads_enter();  would be needed for g_idle_add()
+
+                        // create the main-loop
+                        mainloop = Gtk2.g_main_loop_new(null, false);
+                        context = Gtk2.g_main_loop_get_context(mainloop);
+
+                        // blocks until we quit the main loop
+                        Gtk2.g_main_loop_run(mainloop);
+
 
                         if (orig != null) {
                             Glib.g_log_set_default_handler(orig, null);
                         }
-
-                        // blocks unit quit
-                        Gtk2.gtk_main();
-
-                        // clean up threads
-                        // gdk_threads_leave();  would be needed for g_idle_add()
                     }
                 };
                 gtkUpdateThread.setDaemon(false); // explicitly NOT daemon so that this will hold the JVM open as necessary
@@ -302,16 +302,16 @@ class GtkEventDispatch {
             @Override
             public
             int callback(final Pointer data) {
-                synchronized (gtkCallbacks) {
-                    gtkCallbacks.removeFirst(); // now that we've 'handled' it, we can remove it from our callback list
-                }
-
                 isDispatch.set(true);
 
                 try {
                     runnable.run();
                 } finally {
                     isDispatch.set(false);
+                }
+
+                synchronized (gtkCallbacks) {
+                    gtkCallbacks.removeFirst(); // now that we've 'handled' it, we can remove it from our callback list
                 }
 
                 return Gtk2.FALSE; // don't want to call this again
@@ -322,8 +322,8 @@ class GtkEventDispatch {
             gtkCallbacks.offer(callback); // prevent GC from collecting this object before it can be called
         }
 
-        // the correct way to do it. Add with a slightly higher value
-        Gtk2.gdk_threads_add_idle_full(100, callback, null, null);
+        // explicitly invoke on our new GTK main loop context
+        Gtk2.g_main_context_invoke(context, callback, null);
     }
 
     /**
@@ -352,7 +352,8 @@ class GtkEventDispatch {
             void run() {
                 // If JavaFX/SWT is used, this is UNNECESSARY (and will break SWT/JavaFX shutdown)
                 if (!GtkLoader.alreadyRunningGTK) {
-                    Gtk2.gtk_main_quit();
+                    Gtk2.g_main_loop_quit(mainloop);
+                    // Gtk2.gtk_main_quit();
                 }
 
                 started = false;

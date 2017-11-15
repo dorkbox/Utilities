@@ -57,18 +57,6 @@ interface Gtk {
 
     Function gtk_status_icon_position_menu = GtkLoader.gtk_status_icon_position_menu;
 
-
-
-    /**
-     * Adds a function to be called whenever there are no higher priority events pending. If the function returns FALSE it is automatically
-     * removed from the list of event sources and will not be called again.
-     * <p>
-     * This variant of g_idle_add_full() calls function with the GDK lock held. It can be thought of a MT-safe version for GTK+ widgets
-     * for the following use case, where you have to worry about idle_callback() running in thread A and accessing self after it has
-     * been finalized in thread B.
-     */
-    int gdk_threads_add_idle_full(int priority, FuncCallback function, Pointer data, Pointer notify);
-
     /**
      * This would NORMALLY have a 2nd argument that is a String[] -- however JNA direct-mapping DOES NOT support this. We are lucky
      * enough that we just pass 'null' as the second argument, therefore, we don't have to define that parameter here.
@@ -76,18 +64,31 @@ interface Gtk {
     boolean gtk_init_check(int argc);
 
     /**
-     * Runs the main loop until gtk_main_quit() is called. You can nest calls to gtk_main(). In that case gtk_main_quit() will make the
-     * innermost invocation of the main loop return.
+     * Creates a new GMainLoop structure.
      */
-    void gtk_main();
+    GMainLoop g_main_loop_new(Pointer context, boolean is_running);
 
     /**
-     * Makes the innermost invocation of the main loop return when it regains control. ONLY CALL FROM THE GtkSupport class, UNLESS you know
-     * what you're doing!
+     * Runs a main loop until g_main_loop_quit() is called on the loop. If this is called for the thread of the loop's GMainContext,
+     * it will process events from the loop, otherwise it will simply wait.
      */
-    void gtk_main_quit();
+    void g_main_loop_run(GMainLoop loop);
 
+    /**
+     * Stops a GMainLoop from running. Any calls to g_main_loop_run() for the loop will return.
+     * Note that sources that have already been dispatched when g_main_loop_quit() is called will still be executed.
+     */
+    void g_main_loop_quit(GMainLoop loop);
 
+    /**
+     * Returns the GMainContext of loop .
+     */
+    GMainContext g_main_loop_get_context(GMainLoop loop);
+
+    /**
+     * Invokes a function in such a way that context is owned during the invocation of function .
+     */
+    void g_main_context_invoke(GMainContext c, FuncCallback func, Pointer data);
 
     /**
      * Creates a new GtkMenu

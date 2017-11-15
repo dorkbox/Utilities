@@ -44,6 +44,7 @@ class Gobject {
 
     // objdump -T /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0 | grep block
 
+    public static native void g_object_ref(Pointer object);
     public static native void g_object_unref(Pointer object);
 
     public static native void g_object_force_floating(Pointer object);
