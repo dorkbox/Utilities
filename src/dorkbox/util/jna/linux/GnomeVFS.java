@@ -15,8 +15,6 @@
  */
 package dorkbox.util.jna.linux;
 
-import org.slf4j.LoggerFactory;
-
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 
@@ -52,14 +50,16 @@ class GnomeVFS {
 
             if (library == null) {
                 // not loading :/
-                LoggerFactory.getLogger(GnomeVFS.class).error("Error loading GnomeVFS library, it failed to load.");
+                // fail silently, because we only use this for loading URLs, and have fallbacks in place
+                // LoggerFactory.getLogger(GnomeVFS.class).error("Error loading GnomeVFS library, it failed to load.");
             } else {
                 // must call call gnome_vfs_init()
                 GnomeVFS.gnome_vfs_init();
                 init = true;
             }
         } catch (Throwable e) {
-            LoggerFactory.getLogger(GnomeVFS.class).error("Error loading GnomeVFS library, it failed to load {}", e.getMessage());
+            // fail silently, because we only use this for loading URLs, and have fallbacks in place
+            // LoggerFactory.getLogger(GnomeVFS.class).error("Error loading GnomeVFS library, it failed to load {}", e.getMessage());
         }
 
         isInited = init;
