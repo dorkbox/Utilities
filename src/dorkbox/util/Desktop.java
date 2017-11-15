@@ -32,6 +32,9 @@ import dorkbox.util.process.ShellExecutor;
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
 class Desktop {
+    // used only for ubuntu + unity
+    private static final boolean UBUNTU_GVFS_VALID = OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity() && new File("/usr/bin/gvfs-open").canExecute();
+
     /**
      * Launches the default browser to display the specified HTTP address.
      * <p>
@@ -197,7 +200,13 @@ class Desktop {
      */
     private static
     void launch(final String path) {
-        if ((OSUtil.Linux.isUbuntu() || OSUtil.DesktopEnv.isGnome()) && GnomeVFS.isInited) {
+        // ubuntu, once again, takes the cake for stupidity.
+        if (UBUNTU_GVFS_VALID) {
+            // ubuntu has access to gvfs-open. Ubuntu is also VERY buggy with xdg-open!!
+            ShellExecutor.run("gvfs-open", path);
+        }
+
+        else if (OSUtil.DesktopEnv.isGnome() && GnomeVFS.isInited) {
             GtkEventDispatch.dispatch(new Runnable() {
                 @Override
                 public
