@@ -53,7 +53,7 @@ class GtkEventDispatch {
     private static Thread gtkUpdateThread = null;
 
     // when debugging the EDT, we need a longer timeout.
-    private static final boolean debugEDT = true;
+    private static final boolean debugEDT = false;
 
     // timeout is in seconds
     private static final int TIMEOUT = debugEDT ? 10000000 : 2;
