@@ -37,8 +37,6 @@ class Gtk3 implements Gtk {
 
     /**
      * Loads version specific methods
-     *
-     * @param library
      */
     static
     void loadMethods(final NativeLibrary library) {
