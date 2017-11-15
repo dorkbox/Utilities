@@ -24,10 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import com.sun.jna.Pointer;
-
-import dorkbox.util.jna.linux.Gtk2;
-import dorkbox.util.jna.linux.Gtk3;
+import dorkbox.util.jna.linux.GnomeVFS;
 import dorkbox.util.jna.linux.GtkCheck;
 import dorkbox.util.jna.linux.GtkEventDispatch;
 import dorkbox.util.process.ShellExecutor;
@@ -75,31 +72,8 @@ class Desktop {
 
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
         // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        // Additionally, xdg-open  can cause problems in Linux with Chrome installed but not the default browser. It will crash Chrome
-        //      if Chrome was open before this app opened a URL
         if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
-            // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
-            // see: https://bugzilla.mozilla.org/show_bug.cgi?id=672671
-            if (OSUtil.DesktopEnv.isUnity() && OSUtil.Linux.isUbuntu()) {
-                // use xdg-open, because it launches in a new shell and suppresses these errors/warnings.
-                // it can be really buggy though, so we only use it for ubuntu...
-                ShellExecutor.run("xdg-open", uri.toString());
-            }
-            else {
-                GtkEventDispatch.dispatch(new Runnable() {
-                    @Override
-                    public
-                    void run() {
-                        if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
-                            Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
-                            Gtk3.Gtk3.gtk_show_uri_on_window(pointer, uri.toString(), 0, null);
-                        }
-                        else {
-                            Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
-                        }
-                    }
-                });
-            }
+            launch(uri.toString());
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.BROWSE)) {
@@ -151,20 +125,9 @@ class Desktop {
         }
 
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
+        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
         if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
-            GtkEventDispatch.dispatch(new Runnable() {
-                @Override
-                public
-                void run() {
-                    if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
-                        Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
-                        Gtk3.Gtk3.gtk_show_uri_on_window(pointer, uri.toString(), 0, null);
-                    }
-                    else {
-                        Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), uri.toString(), 0, null);
-                    }
-                }
-            });
+            launch(uri.toString());
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.MAIL)) {
@@ -212,29 +175,7 @@ class Desktop {
                 path = "file://" + path;
             }
 
-            final String finalPath = path;
-            // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
-            // see: https://askubuntu.com/questions/788182/nautilus-not-opening-up-showing-glib-error
-            if (OSUtil.DesktopEnv.isUnity() && OSUtil.Linux.isUbuntu()) {
-                // use xdg-open, because it launches in a new shell and suppresses these errors/warnings.
-                // it can be really buggy though, so we only use it for ubuntu...
-                ShellExecutor.runShell("xdg-open", finalPath);
-            }
-            else {
-                GtkEventDispatch.dispatch(new Runnable() {
-                    @Override
-                    public
-                    void run() {
-                        if (GtkCheck.gtkIsGreaterOrEqual(3, 22, 0)) {
-                            Pointer pointer = Gtk2.Gtk2.gdk_display_get_default();
-                            Gtk3.Gtk3.gtk_show_uri_on_window(pointer, finalPath, 0, null);
-                        }
-                        else {
-                            Gtk2.Gtk2.gtk_show_uri(Gtk2.Gtk2.gdk_screen_get_default(), finalPath, 0, null);
-                        }
-                    }
-                });
-            }
+            launch(path);
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.OPEN)) {
@@ -243,6 +184,42 @@ class Desktop {
         }
         else {
             throw new IOException("Current OS and desktop configuration does not support opening a directory to browse");
+        }
+    }
+
+    /**
+     * Only called when (OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded
+     *
+     * Of important note, xdg-open can cause problems in Linux with Chrome installed but not the default browser. It will crash Chrome
+     * if Chrome was open before this app opened a URL
+     *
+     * @param path the path to open
+     */
+    private static
+    void launch(final String path) {
+        if ((OSUtil.Linux.isUbuntu() || OSUtil.DesktopEnv.isGnome()) && GnomeVFS.isInited) {
+            GtkEventDispatch.dispatch(new Runnable() {
+                @Override
+                public
+                void run() {
+                    // try to open the URL via gnome. This is exactly how (ultimately) java natively does this, but we do it via our own
+                    // loaded version of GTK via JNA
+                    int errorCode = GnomeVFS.gnome_vfs_url_show_with_env(path, null);
+                    if (errorCode != 0) {
+                        // if there are problems, use xdg-open
+                        //
+                        // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
+                        // see: https://bugzilla.mozilla.org/show_bug.cgi?id=672671
+                        // this can be really buggy ... you have been warned
+                        ShellExecutor.run("xdg-open", path);
+                    }
+                }
+            });
+        }
+        else {
+            // just use xdg-open, since it's not gnome.
+            // this can be really buggy ... you have been warned
+            ShellExecutor.run("xdg-open", path);
         }
     }
 }
