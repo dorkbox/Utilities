@@ -21,7 +21,7 @@ import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.List;
 
-import dorkbox.util.process.ShellExecutor;
+import dorkbox.executor.ShellExecutor;
 
 /**
  * Container for all OS specific tests and methods. These do not exist in OS.java, because of dependency issues (OS.java should not

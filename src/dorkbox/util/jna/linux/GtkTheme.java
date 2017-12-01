@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.PointerByReference;
 
+import dorkbox.executor.ShellExecutor;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 import dorkbox.util.OS;
@@ -40,7 +41,6 @@ import dorkbox.util.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;
-import dorkbox.util.process.ShellExecutor;
 
 /**
  * Class to contain all of the various methods needed to get information set by a GTK theme.
