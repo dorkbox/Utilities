@@ -13,34 +13,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.process;
+package dorkbox.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 public
-class NullOutputStream extends OutputStream {
+class TeeOutputStream extends OutputStream {
+    private final OutputStream out;
+    private final OutputStream tee;
+
+    public
+    TeeOutputStream(OutputStream out, OutputStream tee) {
+        if (out == null) {
+            throw new NullPointerException();
+        }
+        else if (tee == null) {
+            throw new NullPointerException();
+        }
+        else {
+            this.out = out;
+            this.tee = tee;
+        }
+    }
+
     @Override
     public
-    void write(int i) throws IOException {
-        //do nothing
+    void write(int b) throws IOException {
+        this.out.write(b);
+        this.tee.write(b);
     }
 
     @Override
     public
     void write(byte[] b) throws IOException {
-        //do nothing
+        this.out.write(b);
+        this.tee.write(b);
     }
 
     @Override
     public
     void write(byte[] b, int off, int len) throws IOException {
-        //do nothing
+        this.out.write(b, off, len);
+        this.tee.write(b, off, len);
     }
 
     @Override
     public
     void flush() throws IOException {
-        //do nothing
+        this.out.flush();
+        this.tee.flush();
+    }
+
+    @Override
+    public
+    void close() throws IOException {
+        this.out.close();
+        this.tee.close();
     }
 }
