@@ -24,10 +24,10 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import dorkbox.executor.ShellExecutor;
 import dorkbox.util.jna.linux.GnomeVFS;
 import dorkbox.util.jna.linux.GtkCheck;
 import dorkbox.util.jna.linux.GtkEventDispatch;
-import dorkbox.util.process.ShellExecutor;
 
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
