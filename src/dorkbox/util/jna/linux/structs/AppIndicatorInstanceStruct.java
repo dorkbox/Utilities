@@ -22,6 +22,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 
 import dorkbox.util.Keep;
+import dorkbox.util.jna.linux.AppIndicator;
 
 @Keep
 public
@@ -33,5 +34,25 @@ class AppIndicatorInstanceStruct extends Structure {
     protected
     List<String> getFieldOrder() {
         return Arrays.asList("parent", "priv");
+    }
+
+    public
+    void app_indicator_set_title(String title) {
+        AppIndicator.app_indicator_set_title(getPointer(), title);
+    }
+
+    public
+    void app_indicator_set_status(int status) {
+        AppIndicator.app_indicator_set_status(getPointer(), status);
+    }
+
+    public
+    void app_indicator_set_menu(Pointer menu) {
+        AppIndicator.app_indicator_set_menu(getPointer(), menu);
+    }
+
+    public
+    void app_indicator_set_icon(String icon_name) {
+        AppIndicator.app_indicator_set_icon(getPointer(), icon_name);
     }
 }
