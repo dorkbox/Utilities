@@ -379,27 +379,34 @@ class OSUtil {
          * @return the ubuntu version or "" if not found.
          */
         public static
-        String getUbuntuVersion() {
+        int[] getUbuntuVersion() {
             if (!OS.isLinux()) {
-                return "";
+                return new int[]{0,0};
             }
 
             if (!isUbuntu()) {
-                return "";
+                return new int[] {0, 0};
             }
 
             String info = getInfo();
             String releaseString = "DISTRIB_RELEASE=";
             int index = info.indexOf(releaseString);
-            if (index > -1) {
-                index += releaseString.length();
-                int newLine = info.indexOf(OS.LINE_SEPARATOR_UNIX, index);
-                if (newLine > index) {
-                    return info.substring(index, newLine);
+            try {
+                if (index > -1) {
+                    index += releaseString.length();
+                    int newLine = info.indexOf(OS.LINE_SEPARATOR_UNIX, index);
+                    if (newLine > index) {
+                        String versionInfo = info.substring(index, newLine);
+                        if (versionInfo.indexOf('.') > 0) {
+                            String[] split = versionInfo.split("\\.");
+                            return new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
+                        }
+                    }
                 }
+            } catch (Throwable ignored) {
             }
 
-            return "";
+            return new int[] {0, 0};
         }
 
 
