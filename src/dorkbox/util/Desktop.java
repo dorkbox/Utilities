@@ -80,12 +80,17 @@ class Desktop {
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.BROWSE)) {
-            EventQueue.invokeLater(() -> {
-                try {
-                    java.awt.Desktop.getDesktop()
-                        .browse(uri);
-                } catch (IOException | URISyntaxException e) {
-                    throw new RuntimeException(e);
+            // make sure this doesn't block the current UI
+            SwingUtil.invokeLater(new Runnable() {
+                @Override
+                public
+                void run() {
+                    try {
+                        java.awt.Desktop.getDesktop()
+                                        .browse(uri);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             });
         }
@@ -140,8 +145,19 @@ class Desktop {
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.MAIL)) {
-            java.awt.Desktop.getDesktop()
-                            .mail(uri);
+            // make sure this doesn't block the current UI
+            SwingUtil.invokeLater(new Runnable() {
+                @Override
+                public
+                void run() {
+                    try {
+                        java.awt.Desktop.getDesktop()
+                                        .mail(uri);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
         else {
             throw new IOException("Current OS and desktop configuration does not support launching an email client");
@@ -188,8 +204,21 @@ class Desktop {
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.OPEN)) {
-            java.awt.Desktop.getDesktop()
-                            .open(new File(path));
+            final String finalPath = path;
+
+            // make sure this doesn't block the current UI
+            SwingUtil.invokeLater(new Runnable() {
+                @Override
+                public
+                void run() {
+                    try {
+                        java.awt.Desktop.getDesktop()
+                                        .open(new File(finalPath));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
         else {
             throw new IOException("Current OS and desktop configuration does not support opening a directory to browse");
