@@ -12,7 +12,7 @@
     <orderEntry type="library" name="jna" level="application" />
     <orderEntry type="library" name="jna platform" level="application" />
     <orderEntry type="library" scope="TEST" name="junit-4.12" level="application" />
-    <orderEntry type="library" name="netty-all" level="application" />
+    <orderEntry type="library" name="netty" level="application" />
     <orderEntry type="library" name="logging slf4j-api" level="application" />
     <orderEntry type="library" name="logging logback" level="application" />
     <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
@@ -29,5 +29,6 @@
     <orderEntry type="library" name="javassist" level="application" />
     <orderEntry type="library" name="objenesis" level="application" />
     <orderEntry type="library" name="swt" level="application" />
+    <orderEntry type="library" name="java_uuid_generator" level="application" />
   </component>
 </module>
