@@ -80,8 +80,14 @@ class Desktop {
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.BROWSE)) {
-            java.awt.Desktop.getDesktop()
-                            .browse(uri);
+            EventQueue.invokeLater(() -> {
+                try {
+                    java.awt.Desktop.getDesktop()
+                        .browse(uri);
+                } catch (IOException | URISyntaxException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
         else {
             throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
