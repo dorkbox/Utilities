@@ -48,6 +48,7 @@ class GnomeVFS {
                 library = JnaHelper.register("libgnomevfs-3", GnomeVFS.class);
             }
 
+            //noinspection StatementWithEmptyBody
             if (library == null) {
                 // not loading :/
                 // fail silently, because we only use this for loading URLs, and have fallbacks in place

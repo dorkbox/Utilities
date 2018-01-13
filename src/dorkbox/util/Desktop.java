@@ -32,8 +32,9 @@ import dorkbox.util.jna.linux.GtkEventDispatch;
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
 class Desktop {
-    // used only for ubuntu + unity
-    private static final boolean UBUNTU_GVFS_VALID = OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity() && new File("/usr/bin/gvfs-open").canExecute();
+    // used for any linux system that has it...
+    private static final String GVFS = "/usr/bin/gvfs-open";
+    private static final boolean GVFS_VALID = new File(GVFS).canExecute();
 
     /**
      * Launches the default browser to display the specified HTTP address.
@@ -76,7 +77,7 @@ class Desktop {
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
         // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
         if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
-            launch(uri.toString());
+            launchNix(uri.toString());
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.BROWSE)) {
@@ -141,7 +142,7 @@ class Desktop {
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
         // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
         if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
-            launch(uri.toString());
+            launchNix(uri.toString());
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.MAIL)) {
@@ -200,7 +201,7 @@ class Desktop {
                 path = "file://" + path;
             }
 
-            launch(path);
+            launchNix(path);
         }
         else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
                                                                           .isSupported(java.awt.Desktop.Action.OPEN)) {
@@ -231,16 +232,16 @@ class Desktop {
      * Of important note, xdg-open can cause problems in Linux with Chrome installed but not the default browser. It will crash Chrome
      * if Chrome was open before this app opened a URL
      *
+     * There are a number of strange bugs with `xdg-open` and `gnome_vfs_url_show_with_env`, ubuntu, once again takes the cake for stupidity.
+     *
      * @param path the path to open
      */
     private static
-    void launch(final String path) {
-        // ubuntu, once again, takes the cake for stupidity.
-        if (UBUNTU_GVFS_VALID) {
-            // ubuntu has access to gvfs-open. Ubuntu is also VERY buggy with xdg-open!!
-            ShellExecutor.run("gvfs-open", path);
+    void launchNix(final String path) {
+        if (GVFS_VALID) {
+            // ubuntu, fedora, etc MIGHT have access to gvfs-open. Ubuntu is also VERY buggy with xdg-open!!
+            ShellExecutor.run(GVFS, path);
         }
-
         else if (OSUtil.DesktopEnv.isGnome() && GnomeVFS.isInited) {
             GtkEventDispatch.dispatch(new Runnable() {
                 @Override
