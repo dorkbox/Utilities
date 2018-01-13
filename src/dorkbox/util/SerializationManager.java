@@ -43,6 +43,20 @@ interface SerializationManager {
     SerializationManager register(Class<?> clazz);
 
     /**
+     * Registers the class using the specified ID. If the ID is
+     * already in use by the same type, the old entry is overwritten. If the ID
+     * is already in use by a different type, a {@link KryoException} is thrown.
+     * Registering a primitive also affects the corresponding primitive wrapper.
+     * <p/>
+     * IDs must be the same at deserialization as they were for serialization.
+     *
+     * @param id Must be >= 0. Smaller IDs are serialized more efficiently. IDs
+     *         0-8 are used by default for primitive types and String, but
+     *         these IDs can be repurposed.
+     */
+    SerializationManager register(Class<?> clazz, int id);
+
+    /**
      * Registers the class using the lowest, next available integer ID and the
      * specified serializer. If the class is already registered, the existing
      * entry is updated with the new serializer. Registering a primitive also
