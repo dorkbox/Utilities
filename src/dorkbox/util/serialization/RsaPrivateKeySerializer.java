@@ -15,41 +15,38 @@
  */
 package dorkbox.util.serialization;
 
+import java.math.BigInteger;
+
+import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
-
-import java.math.BigInteger;
 
 /**
- *  Only public keys are ever sent across the wire.
+ * Only public keys are ever sent across the wire.
  */
-public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParameters> {
+public
+class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParameters> {
 
     @Override
-    public void write(Kryo kryo, Output output, RSAPrivateCrtKeyParameters key) {
+    public
+    void write(Kryo kryo, Output output, RSAPrivateCrtKeyParameters key) {
         byte[] bytes;
         int length;
 
         /////////////
-        bytes = key.getDP().toByteArray();
+        bytes = key.getDP()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
         output.writeBytes(bytes, 0, length);
 
         /////////////
-        bytes = key.getDQ().toByteArray();
-        length = bytes.length;
-
-        output.writeInt(length, true);
-        output.writeBytes(bytes, 0, length);
-
-
-        /////////////
-        bytes = key.getExponent().toByteArray();
+        bytes = key.getDQ()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -57,7 +54,8 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
 
         /////////////
-        bytes = key.getModulus().toByteArray();
+        bytes = key.getExponent()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -65,7 +63,8 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
 
         /////////////
-        bytes = key.getP().toByteArray();
+        bytes = key.getModulus()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -73,7 +72,8 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
 
         /////////////
-        bytes = key.getPublicExponent().toByteArray();
+        bytes = key.getP()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -81,7 +81,8 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
 
         /////////////
-        bytes = key.getQ().toByteArray();
+        bytes = key.getPublicExponent()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -89,7 +90,17 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
 
         /////////////
-        bytes = key.getQInv().toByteArray();
+        bytes = key.getQ()
+                   .toByteArray();
+        length = bytes.length;
+
+        output.writeInt(length, true);
+        output.writeBytes(bytes, 0, length);
+
+
+        /////////////
+        bytes = key.getQInv()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -98,8 +109,8 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
 
     @SuppressWarnings("rawtypes")
     @Override
-    public RSAPrivateCrtKeyParameters read (Kryo kryo, Input input, Class type) {
-
+    public
+    RSAPrivateCrtKeyParameters read(Kryo kryo, Input input, Class type) {
         byte[] bytes;
         int length;
 
@@ -152,5 +163,5 @@ public class RsaPrivateKeySerializer extends Serializer<RSAPrivateCrtKeyParamete
         BigInteger qInv = new BigInteger(bytes);
 
         return new RSAPrivateCrtKeyParameters(modulus, publicExponent, exponent, P, q, DP, DQ, qInv);
-     }
+    }
 }

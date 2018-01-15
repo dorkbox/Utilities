@@ -16,16 +16,16 @@
  */
 package dorkbox.util.serialization;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.factories.SerializerFactory;
-import com.esotericsoftware.kryo.serializers.FieldSerializer;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.factories.SerializerFactory;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 
 /**
  * A kryo {@link FieldSerializer} that allows to exclusively include or exclude fields that
@@ -51,12 +51,14 @@ import java.util.Set;
  * @author <a href="mailto:rafael.wth@web.de">Rafael Winterhalter</a>
  * @author <a href="mailto:martin.grotzke@javakaffee.de">Martin Grotzke</a>
  */
-public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
+public
+class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
 
     /**
      * A factory for creating instances of {@link FieldAnnotationAwareSerializer}.
      */
-    public static class Factory implements SerializerFactory {
+    public static
+    class Factory implements SerializerFactory {
 
         private final Collection<Class<? extends Annotation>> marked;
         private final boolean disregarding;
@@ -66,20 +68,23 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
          *com.esotericsoftware.kryo.Kryo, Class, java.util.Collection, boolean)}
          * for additional information on the constructor parameters.
          *
-         * @param marked       The annotations that will be considered of the resulting converter.
+         * @param marked The annotations that will be considered of the resulting converter.
          * @param disregarding If {@code true}, the serializer will ignore all annotated fields,
-         *                     if set to {@code false} it will exclusively look at annotated fields.
+         *         if set to {@code false} it will exclusively look at annotated fields.
          */
-        public Factory(final Collection<Class<? extends Annotation>> marked, final boolean disregarding) {
+        public
+        Factory(final Collection<Class<? extends Annotation>> marked, final boolean disregarding) {
             this.marked = marked;
             this.disregarding = disregarding;
         }
 
         @Override
-        public Serializer<?> makeSerializer(final Kryo kryo, final Class<?> type) {
+        public
+        Serializer<?> makeSerializer(final Kryo kryo, final Class<?> type) {
             return new FieldAnnotationAwareSerializer<Object>(kryo, type, this.marked, this.disregarding);
         }
     }
+
 
     private final Set<Class<? extends Annotation>> marked;
 
@@ -94,21 +99,22 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
     /**
      * Creates a new field annotation aware serializer.
      *
-     * @param kryo         The {@link Kryo} instace.
-     * @param type         The type of the class being serialized.
-     * @param marked       The annotations this serializer considers for its serialization process. Be aware tha
-     *                     a serializer with {@code disregarding} set to {@code false} will never be able to
-     *                     serialize fields that are not annotated with any of these annotations since it is not
-     *                     possible to add fields to a {@link FieldSerializer} once it is created. See the
-     *                     documentation to {@link FieldAnnotationAwareSerializer#addAnnotation(Class)} and
-     *                     {@link FieldAnnotationAwareSerializer#removeAnnotation(Class)} for further information.
+     * @param kryo The {@link Kryo} instace.
+     * @param type The type of the class being serialized.
+     * @param marked The annotations this serializer considers for its serialization process. Be aware tha
+     *         a serializer with {@code disregarding} set to {@code false} will never be able to
+     *         serialize fields that are not annotated with any of these annotations since it is not
+     *         possible to add fields to a {@link FieldSerializer} once it is created. See the
+     *         documentation to {@link FieldAnnotationAwareSerializer#addAnnotation(Class)} and
+     *         {@link FieldAnnotationAwareSerializer#removeAnnotation(Class)} for further information.
      * @param disregarding If {@code true}, the serializer will ignore all annotated fields,
-     *                     if set to {@code false} it will exclusively look at annotated fields.
+     *         if set to {@code false} it will exclusively look at annotated fields.
      */
-    public FieldAnnotationAwareSerializer(final Kryo kryo,
-                                          final Class<?> type,
-                                          final Collection<Class<? extends Annotation>> marked,
-                                          final boolean disregarding) {
+    public
+    FieldAnnotationAwareSerializer(final Kryo kryo,
+                                   final Class<?> type,
+                                   final Collection<Class<? extends Annotation>> marked,
+                                   final boolean disregarding) {
         super(kryo, type);
         this.disregarding = disregarding;
         this.marked = new HashSet<Class<? extends Annotation>>(marked);
@@ -116,7 +122,8 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
     }
 
     @Override
-    protected void rebuildCachedFields() {
+    protected
+    void rebuildCachedFields() {
         // In order to avoid rebuilding the cached fields twice, the super constructor's call
         // to this method will be suppressed. This can be done by a simple check of the initialization
         // state of a property of this subclass.
@@ -127,7 +134,8 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
         removeFields();
     }
 
-    private void removeFields() {
+    private
+    void removeFields() {
         final CachedField<?>[] cachedFields = getFields();
         for (final CachedField<?> cachedField : cachedFields) {
             final Field field = cachedField.getField();
@@ -140,11 +148,13 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
         }
     }
 
-    private boolean isRemove(final Field field) {
+    private
+    boolean isRemove(final Field field) {
         return !isMarked(field) ^ this.disregarding;
     }
 
-    private boolean isMarked(final Field field) {
+    private
+    boolean isMarked(final Field field) {
         for (final Annotation annotation : field.getAnnotations()) {
             final Class<? extends Annotation> annotationType = annotation.annotationType();
             if (this.marked.contains(annotationType)) {
@@ -167,9 +177,11 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
      * include new fields to a serializer that exclusively serializes annotated fields.
      *
      * @param clazz The annotation class to be added.
+     *
      * @return {@code true} if the method call had an effect.
      */
-    public boolean addAnnotation(final Class<? extends Annotation> clazz) {
+    public
+    boolean addAnnotation(final Class<? extends Annotation> clazz) {
         if (this.disregarding && this.marked.add(clazz)) {
             initializeCachedFields();
             return true;
@@ -190,9 +202,11 @@ public class FieldAnnotationAwareSerializer<T> extends FieldSerializer<T> {
      * include new fields to a serializer that ignores annotated fields for serialization.
      *
      * @param clazz The annotation class to be removed.
+     *
      * @return {@code true} if the method call had an effect.
      */
-    public boolean removeAnnotation(final Class<? extends Annotation> clazz) {
+    public
+    boolean removeAnnotation(final Class<? extends Annotation> clazz) {
         if (!this.disregarding && this.marked.remove(clazz)) {
             initializeCachedFields();
             return true;

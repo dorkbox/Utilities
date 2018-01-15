@@ -15,33 +15,38 @@
  */
 package dorkbox.util.serialization;
 
+import java.math.BigInteger;
+
+import org.bouncycastle.crypto.params.RSAKeyParameters;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
-
-import java.math.BigInteger;
 
 /**
- *  Only public keys are ever sent across the wire.
+ * Only public keys are ever sent across the wire.
  */
-public class RsaPublicKeySerializer extends Serializer<RSAKeyParameters> {
+public
+class RsaPublicKeySerializer extends Serializer<RSAKeyParameters> {
 
     @Override
-    public void write(Kryo kryo, Output output, RSAKeyParameters key) {
+    public
+    void write(Kryo kryo, Output output, RSAKeyParameters key) {
         byte[] bytes;
         int length;
 
         ///////////
-        bytes = key.getModulus().toByteArray();
+        bytes = key.getModulus()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
         output.writeBytes(bytes, 0, length);
 
         /////////////
-        bytes = key.getExponent().toByteArray();
+        bytes = key.getExponent()
+                   .toByteArray();
         length = bytes.length;
 
         output.writeInt(length, true);
@@ -50,8 +55,8 @@ public class RsaPublicKeySerializer extends Serializer<RSAKeyParameters> {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public RSAKeyParameters read (Kryo kryo, Input input, Class type) {
-
+    public
+    RSAKeyParameters read(Kryo kryo, Input input, Class type) {
         byte[] bytes;
         int length;
 
@@ -68,5 +73,5 @@ public class RsaPublicKeySerializer extends Serializer<RSAKeyParameters> {
         BigInteger exponent = new BigInteger(bytes);
 
         return new RSAKeyParameters(false, modulus, exponent);
-     }
+    }
 }

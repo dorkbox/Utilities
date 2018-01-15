@@ -14,13 +14,15 @@ public
 class FileSerializer extends Serializer<File> {
 
     @Override
-    public void write(Kryo kryo, Output output, File file) {
+    public
+    void write(Kryo kryo, Output output, File file) {
         output.writeString(file.getPath());
     }
 
     @Override
-    public File read(Kryo kryo, Input input, Class<File> type) {
-        String path  = input.readString();
+    public
+    File read(Kryo kryo, Input input, Class<File> type) {
+        String path = input.readString();
         return new File(path);
     }
 }

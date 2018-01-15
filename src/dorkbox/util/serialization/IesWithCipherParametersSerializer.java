@@ -15,19 +15,22 @@
  */
 package dorkbox.util.serialization;
 
+import org.bouncycastle.crypto.params.IESWithCipherParameters;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import org.bouncycastle.crypto.params.IESWithCipherParameters;
 
 /**
- *  Only public keys are ever sent across the wire.
+ * Only public keys are ever sent across the wire.
  */
-public class IesWithCipherParametersSerializer extends Serializer<IESWithCipherParameters> {
+public
+class IesWithCipherParametersSerializer extends Serializer<IESWithCipherParameters> {
 
     @Override
-    public void write(Kryo kryo, Output output, IESWithCipherParameters key) {
+    public
+    void write(Kryo kryo, Output output, IESWithCipherParameters key) {
         byte[] bytes;
         int length;
 
@@ -55,8 +58,8 @@ public class IesWithCipherParametersSerializer extends Serializer<IESWithCipherP
 
     @SuppressWarnings("rawtypes")
     @Override
-    public IESWithCipherParameters read (Kryo kryo, Input input, Class type) {
-
+    public
+    IESWithCipherParameters read(Kryo kryo, Input input, Class type) {
         int length;
 
         /////////////
@@ -76,5 +79,5 @@ public class IesWithCipherParametersSerializer extends Serializer<IESWithCipherP
         int cipherKeySize = input.readInt(true);
 
         return new IESWithCipherParameters(derivation, encoding, macKeySize, cipherKeySize);
-     }
+    }
 }
