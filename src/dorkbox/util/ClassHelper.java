@@ -15,39 +15,42 @@
  */
 package dorkbox.util;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Type;
 
 public final
 class ClassHelper {
 
     /**
-     * Retrieves the generic type parameter for the PARENT (super) class of the specified class. This ONLY works
-     * on parent classes because of how type erasure works in java!
+     * Retrieves the generic type parameter for the PARENT (super) class of the specified class or lambda expression.
      *
-     * @param clazz                 class to get the parameter from
+     * Because of how type erasure works in java, this will work on lambda expressions and ONLY parent/super classes.
+     *
+     * @param clazz                 class that defines what the parameters can be
+     * @param subClazz              class to actually get the parameter from
      * @param genericParameterToGet 0-based index of parameter as class to get
+     *
+     * @return null if the generic type could not be found.
      */
     @SuppressWarnings({"StatementWithEmptyBody", "UnnecessaryLocalVariable"})
     public static
-    Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, int genericParameterToGet) {
-        Class<?> classToCheck = clazz;
+    Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, Class<?> subClazz, int genericParameterToGet) {
+        Class<?> classToCheck = subClazz;
+
+        // this will ALWAYS return something, if it is unknown, it will return TypeResolver.Unknown.class
+        Class<?>[] classes = TypeResolver.resolveRawArguments(clazz, classToCheck);
+        if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
+            return classes[genericParameterToGet];
+        }
 
         // case of multiple inheritance, we are trying to get the first available generic info
         // don't check for Object.class (this is where superclass is null)
         while (classToCheck != Object.class) {
             // check to see if we have what we are looking for on our CURRENT class
             Type superClassGeneric = classToCheck.getGenericSuperclass();
-            if (superClassGeneric instanceof ParameterizedType) {
-                Type[] actualTypeArguments = ((ParameterizedType) superClassGeneric).getActualTypeArguments();
-                // is it possible?
-                if (actualTypeArguments.length > genericParameterToGet) {
-                    Class<?> rawTypeAsClass = getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
-                    return rawTypeAsClass;
-                }
-                else {
-                    // record the parameters.
 
-                }
+            classes = TypeResolver.resolveRawArguments(superClassGeneric, classToCheck);
+            if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
+                return classes[genericParameterToGet];
             }
 
             // NO MATCH, so walk up.
@@ -55,21 +58,15 @@ class ClassHelper {
         }
 
         // NOTHING! now check interfaces!
-        classToCheck = clazz;
+        classToCheck = subClazz;
         while (classToCheck != Object.class) {
             // check to see if we have what we are looking for on our CURRENT class interfaces
             Type[] genericInterfaces = classToCheck.getGenericInterfaces();
             for (Type genericInterface : genericInterfaces) {
-                if (genericInterface instanceof ParameterizedType) {
-                    Type[] actualTypeArguments = ((ParameterizedType) genericInterface).getActualTypeArguments();
-                    // is it possible?
-                    if (actualTypeArguments.length > genericParameterToGet) {
-                        Class<?> rawTypeAsClass = ClassHelper.getRawTypeAsClass(actualTypeArguments[genericParameterToGet]);
-                        return rawTypeAsClass;
-                    }
-                    else {
-                        // record the parameters.
-                    }
+
+                classes = TypeResolver.resolveRawArguments(genericInterface, classToCheck);
+                if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
+                    return classes[genericParameterToGet];
                 }
             }
 
@@ -78,76 +75,30 @@ class ClassHelper {
             classToCheck = classToCheck.getSuperclass();
         }
 
-
         // couldn't find it.
         return null;
     }
 
     /**
-     * Return the class that is this type.
-     */
-    @SuppressWarnings("UnnecessaryLocalVariable")
-    public static
-    Class<?> getRawTypeAsClass(Type type) {
-        if (type instanceof Class) {
-            Class<?> class1 = (Class<?>) type;
-
-//            if (class1.isArray()) {
-//                System.err.println("CLASS IS ARRAY TYPE: SHOULD WE DO ANYTHING WITH IT? " + class1.getSimpleName());
-//                return class1.getComponentType();
-//            } else {
-            return class1;
-//            }
-        }
-        else if (type instanceof GenericArrayType) {
-            // note: cannot have primitive types here, only objects that are arrays (byte[], Integer[], etc)
-            Type type2 = ((GenericArrayType) type).getGenericComponentType();
-            Class<?> rawType = getRawTypeAsClass(type2);
-
-            return Array.newInstance(rawType, 0)
-                        .getClass();
-        }
-        else if (type instanceof ParameterizedType) {
-            // we cannot use parameterized types, because java can't go between classes and ptypes - and this
-            // going "in-between" is the magic -- and value -- of this entire infrastructure.
-            // return the type.
-
-            return (Class<?>) ((ParameterizedType) type).getRawType();
-
-//            Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
-//            return (Class<?>) actualTypeArguments[0];
-        }
-        else if (type instanceof TypeVariable) {
-            // we have a COMPLEX type parameter
-            Type[] bounds = ((TypeVariable<?>) type).getBounds();
-            if (bounds.length > 0) {
-                return getRawTypeAsClass(bounds[0]);
-            }
-        }
-
-        throw new RuntimeException("Unknown/messed up type parameter . Can't figure it out... Quit being complex!");
-    }
-
-    /**
-     * Check to see if clazz or interface directly has one of the interfaces defined by clazzItMustHave
+     * Check to see if clazz or interface directly has one of the interfaces defined by requiredClass
      * <p/>
      * If the class DOES NOT directly have the interface it will fail.
      */
     public static
-    boolean hasInterface(Class<?> clazzItMustHave, Class<?> clazz) {
-        if (clazzItMustHave == clazz) {
+    boolean hasInterface(Class<?> requiredClass, Class<?> clazz) {
+        if (requiredClass == clazz) {
             return true;
         }
 
         Class<?>[] interfaces = clazz.getInterfaces();
         for (Class<?> iface : interfaces) {
-            if (iface == clazzItMustHave) {
+            if (iface == requiredClass) {
                 return true;
             }
         }
         // now walk up to see if we can find it.
         for (Class<?> iface : interfaces) {
-            boolean b = hasInterface(clazzItMustHave, iface);
+            boolean b = hasInterface(requiredClass, iface);
             if (b) {
                 return b;
             }
@@ -160,7 +111,7 @@ class ClassHelper {
         // don't check for Object.class (this is where superclass is null)
         while (superClass != null && superClass != Object.class) {
             // check to see if we have what we are looking for on our CURRENT class
-            if (hasInterface(clazzItMustHave, superClass)) {
+            if (hasInterface(requiredClass, superClass)) {
                 return true;
             }
 
