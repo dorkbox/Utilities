@@ -38,7 +38,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
 import dorkbox.util.OS;
-import dorkbox.util.SerializationManager;
+import dorkbox.util.serialization.SerializationManager;
 
 
 // a note on file locking between c and java

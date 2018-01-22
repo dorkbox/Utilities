@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import org.slf4j.Logger;
 
 import dorkbox.util.DelayTimer;
-import dorkbox.util.SerializationManager;
+import dorkbox.util.serialization.SerializationManager;
 
 
 /**

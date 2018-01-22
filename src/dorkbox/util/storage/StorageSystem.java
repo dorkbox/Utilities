@@ -26,7 +26,7 @@ import org.slf4j.helpers.NOPLogger;
 
 import dorkbox.util.FileUtil;
 import dorkbox.util.OS;
-import dorkbox.util.SerializationManager;
+import dorkbox.util.serialization.SerializationManager;
 
 public
 class StorageSystem {

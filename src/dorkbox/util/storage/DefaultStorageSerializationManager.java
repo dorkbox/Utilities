@@ -25,7 +25,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.minlog.Log;
 
-import dorkbox.util.SerializationManager;
+import dorkbox.util.serialization.SerializationManager;
 import io.netty.buffer.ByteBuf;
 
 class DefaultStorageSerializationManager implements SerializationManager {
@@ -38,6 +38,13 @@ class DefaultStorageSerializationManager implements SerializationManager {
     public
     SerializationManager register(final Class<?> clazz) {
         kryo.register(clazz);
+        return this;
+    }
+
+    @Override
+    public
+    SerializationManager register(final Class<?> clazz, final int id) {
+        kryo.register(clazz, id);
         return this;
     }
 

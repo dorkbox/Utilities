@@ -37,8 +37,6 @@ import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.util.SerializationManager;
-
 /**
  * A kryo {@link Serializer} for unmodifiable {@link Collection}s and {@link Map}s
  * created via {@link Collections}.

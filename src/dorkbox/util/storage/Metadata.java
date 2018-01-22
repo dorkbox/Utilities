@@ -25,7 +25,7 @@ import java.nio.channels.FileLock;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.util.SerializationManager;
+import dorkbox.util.serialization.SerializationManager;
 
 public
 class Metadata {
