@@ -23,6 +23,7 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -34,7 +35,7 @@ public
 class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
 
     public static
-    void write(Output output, ECPublicKeyParameters key) {
+    void write(Output output, ECPublicKeyParameters key) throws KryoException {
         byte[] bytes;
         int length;
 
@@ -60,7 +61,7 @@ class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
     }
 
     public static
-    ECPublicKeyParameters read(Input input) {
+    ECPublicKeyParameters read(Input input) throws KryoException {
         byte[] bytes;
         int length;
 
@@ -85,7 +86,6 @@ class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
 
         ECDomainParameters ecDomainParameters = new ECDomainParameters(curve, g, n);
 
-
         // Q
         /////////////
         length = input.readInt(true);
@@ -98,14 +98,14 @@ class EccPublicKeySerializer extends Serializer<ECPublicKeyParameters> {
 
     @Override
     public
-    void write(Kryo kryo, Output output, ECPublicKeyParameters key) {
+    void write(Kryo kryo, Output output, ECPublicKeyParameters key) throws KryoException {
         write(output, key);
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public
-    ECPublicKeyParameters read(Kryo kryo, Input input, Class type) {
+    ECPublicKeyParameters read(Kryo kryo, Input input, Class type) throws KryoException {
         return read(input);
     }
 }

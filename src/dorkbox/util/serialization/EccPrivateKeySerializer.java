@@ -26,6 +26,7 @@ import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -46,7 +47,7 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
     private static final byte usesOid = (byte) 2;
 
     public static
-    void write(Output output, ECPrivateKeyParameters key) {
+    void write(Output output, ECPrivateKeyParameters key) throws KryoException {
         byte[] bytes;
         int length;
 
@@ -78,7 +79,7 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
     }
 
     public static
-    ECPrivateKeyParameters read(Input input) {
+    ECPrivateKeyParameters read(Input input) throws KryoException {
         byte[] bytes;
         int length;
 
@@ -114,7 +115,7 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
     }
 
     static
-    void serializeCurve(Output output, ECCurve curve) {
+    void serializeCurve(Output output, ECCurve curve) throws KryoException {
         byte[] bytes;
         int length;
         // save out if it's a NAMED curve, or a UN-NAMED curve. If it is named, we can do less work.
@@ -193,22 +194,23 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
     }
 
     static
-    ECCurve deserializeCurve(Input input) {
+    ECCurve deserializeCurve(Input input) throws KryoException {
         byte[] bytes;
         int length;
 
         ECCurve curve;
-        int serializatioType = input.readInt(true);
+
+        int serializationType = input.readInt(true);
 
         // lookup via name
-        if (serializatioType == usesName) {
+        if (serializationType == usesName) {
             String curveName = input.readString();
             X9ECParameters x9Curve = CustomNamedCurves.getByName(curveName);
             curve = x9Curve.getCurve();
         }
 
         // this means we just lookup the curve via the OID
-        else if (serializatioType == usesOid) {
+        else if (serializationType == usesOid) {
             String oid = input.readString();
             X9ECParameters x9Curve = CustomNamedCurves.getByOID(new ASN1ObjectIdentifier(oid));
             curve = x9Curve.getCurve();
@@ -257,7 +259,7 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
     }
 
     static
-    void serializeECPoint(ECPoint point, Output output) {
+    void serializeECPoint(ECPoint point, Output output) throws KryoException {
         if (point.isInfinity()) {
             return;
         }
@@ -279,14 +281,14 @@ class EccPrivateKeySerializer extends Serializer<ECPrivateKeyParameters> {
 
     @Override
     public
-    void write(Kryo kryo, Output output, ECPrivateKeyParameters key) {
+    void write(Kryo kryo, Output output, ECPrivateKeyParameters key) throws KryoException {
         write(output, key);
     }
 
     @SuppressWarnings("rawtypes")
     @Override
     public
-    ECPrivateKeyParameters read(Kryo kryo, Input input, Class type) {
+    ECPrivateKeyParameters read(Kryo kryo, Input input, Class type) throws KryoException {
         return read(input);
     }
 }
