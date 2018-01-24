@@ -47,3 +47,4 @@ public abstract class ClassResolver {
         return CALLER_RESOLVER.getClassContext()[CALL_CONTEXT_OFFSET + callerOffset];
     }
 }
+

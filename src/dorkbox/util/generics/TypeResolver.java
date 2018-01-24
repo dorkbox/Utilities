@@ -1,21 +1,19 @@
 /*
- * Copyright 2002-2017 Jonathan Halterman
+ * Copyright 2018 dorkbox, llc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * From: https://github.com/jhalterman/typetools
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util.generics;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
@@ -43,6 +41,7 @@ import sun.misc.Unsafe;
 /**
  * Enhanced type resolution utilities.
  *
+ * From: https://github.com/jhalterman/typetools
  * @author Jonathan Halterman
  */
 @SuppressWarnings("restriction")
@@ -544,7 +543,7 @@ class TypeResolver {
 
     private static
     boolean isDefaultMethod(Method m) {
-        return JAVA_VERSION >= 1.8 && m.isDefault();
+        return JAVA_VERSION >= 1.8 && DefaultMethodHelper.isDefaultMethod(m);
     }
 
     private static
