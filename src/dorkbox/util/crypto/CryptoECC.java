@@ -15,6 +15,10 @@
  */
 package dorkbox.util.crypto;
 
+import java.math.BigInteger;
+import java.security.SecureRandom;
+import java.util.Arrays;
+
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.Digest;
@@ -41,10 +45,6 @@ import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
-import java.util.Arrays;
-
 /**
  * ECC crypto functions
  */
@@ -55,7 +55,14 @@ class CryptoECC {
     public static final String default_curve = curve25519;
 
     public static final int macSize = 512;
-    // more info about ECC from: http://www.johannes-bauer.com/compsci/ecc/?menuid=4
+    // on NIST vs 25519 vs Brainpool, see:
+    //  - http://ogryb.blogspot.de/2014/11/why-i-dont-trust-nist-p-256.html
+    //  - http://credelius.com/credelius/?p=97
+    //  - http://safecurves.cr.yp.to/
+    // we should be using 25519, because NIST and brainpool are "unsafe". Brainpool is "more random" than 25519, but is still not considered safe.
+
+    // more info about ECC from:
+    // http://www.johannes-bauer.com/compsci/ecc/?menuid=4
     // http://stackoverflow.com/questions/7419183/problems-implementing-ecdh-on-android-using-bouncycastle
     // http://tools.ietf.org/html/draft-jivsov-openpgp-ecc-06#page-4
     // http://www.nsa.gov/ia/programs/suiteb_cryptography/
