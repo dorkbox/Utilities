@@ -48,7 +48,7 @@ class CryptoSCrypt {
      */
     public static
     String encrypt(char[] password, byte[] salt) {
-        return encrypt(password, salt, 16384, 32, 1, 64);
+        return encrypt(password, salt, 16384, 128, 1, 64);
     }
 
     /**
