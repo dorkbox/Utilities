@@ -16,11 +16,7 @@
 package dorkbox.util.collections;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -102,20 +98,9 @@ class LockFreeHashMap<K, V> implements Map<K, V>, Cloneable, Serializable {
         this.hashMap = new HashMap<K, V>(initialCapacity, loadFactor);
     }
 
-
-    public synchronized
-    void replaceAll(final Map<K, V> hashMap) {
-        if (hashMap == null) {
-            throw new NullPointerException("hashMap");
-        }
-
-        this.hashMap.clear();
-        this.hashMap.putAll(hashMap);
-    }
-
     @SuppressWarnings("unchecked")
     public
-    Map<K, V> elements() {
+    Map<K, V> getMap() {
         // use the SWP to get a lock-free get of the map. It's values are only valid at the moment this method is called.
         return Collections.unmodifiableMap(deviceREF.get(this));
     }
@@ -187,18 +172,18 @@ class LockFreeHashMap<K, V> implements Map<K, V>, Cloneable, Serializable {
     @Override
     public
     Set<K> keySet() {
-        return elements().keySet();
+        return getMap().keySet();
     }
 
     @Override
     public
     Collection<V> values() {
-        return elements().values();
+        return getMap().values();
     }
 
     @Override
     public
     Set<Entry<K, V>> entrySet() {
-        return elements().entrySet();
+        return getMap().entrySet();
     }
 }
