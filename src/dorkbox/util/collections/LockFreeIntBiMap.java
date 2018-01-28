@@ -259,15 +259,10 @@ class LockFreeIntBiMap<V> {
             throw e;
         }
 
-        // only if there are no problems with the creation of the new bimap AND the uniqueness constrain is guaranteed
-        this.forwardHashMap.putAll(biMap.forwardHashMap);
 
-        // there is no putAll() method for ObjectIntMap
-        this.reverseHashMap.size = biMap.reverseHashMap.size;
-        this.reverseHashMap.keyTable = biMap.reverseHashMap.keyTable;
-        this.reverseHashMap.valueTable = biMap.reverseHashMap.valueTable;
-        this.reverseHashMap.capacity = biMap.reverseHashMap.capacity;
-        this.reverseHashMap.stashSize = biMap.reverseHashMap.stashSize;
+        // we have checked to make sure that the bimap is unique, AND have checked that we don't already have any of the key/values in ourselves
+        this.forwardHashMap.putAll(biMap.forwardHashMap);
+        this.reverseHashMap.putAll(biMap.reverseHashMap);
     }
 
     /**
