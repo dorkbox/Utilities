@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -80,7 +82,21 @@ class OS {
                 // best way to determine if it's android or not
                 boolean isAndroid;
                 try {
-                    Class.forName("android.app.Activity");
+                    ClassLoader systemClassLoader;
+                    if (System.getSecurityManager() == null) {
+                        systemClassLoader = ClassLoader.getSystemClassLoader();
+                    }
+                    else {
+                        systemClassLoader = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
+                            @Override
+                            public
+                            ClassLoader run() {
+                                return ClassLoader.getSystemClassLoader();
+                            }
+                        });
+                    }
+
+                    Class.forName("android.app.Application", false, systemClassLoader);
                     isAndroid = true;
                 } catch (ClassNotFoundException e) { isAndroid = false; }
 
