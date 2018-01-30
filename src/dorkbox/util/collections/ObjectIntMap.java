@@ -43,30 +43,30 @@ public class ObjectIntMap<K> {
     private int stashCapacity;
     private int pushIterations;
 
-    public static
-    void main(String[] args) {
-        ObjectIntMap<String> test = new ObjectIntMap<>(4);
-        String one = "One";
-        String four = "Four";
-
-        test.put(one, 1);
-        test.put("Two", 2);
-        test.put("Three", 3);
-        test.put(four, 4);
-        test.put(four, 1);
-        test.put(one, 13);
-
-        ObjectIntMap<String> test2 = new ObjectIntMap<>(2);
-        test2.put(one, 11);
-        test2.put(four, 44);
-        test2.put("Five", 55);
-
-        test2.putAll(test);
-
-
-        System.out.println(test.toString());
-        System.out.println(test2.toString());
-    }
+    // public static
+    // void main(String[] args) {
+    //     ObjectIntMap<String> test = new ObjectIntMap<String>(4);
+    //     String one = "One";
+    //     String four = "Four";
+    //
+    //     test.put(one, 1);
+    //     test.put("Two", 2);
+    //     test.put("Three", 3);
+    //     test.put(four, 4);
+    //     test.put(four, 1);
+    //     test.put(one, 13);
+    //
+    //     ObjectIntMap<String> test2 = new ObjectIntMap<String>(2);
+    //     test2.put(one, 11);
+    //     test2.put(four, 44);
+    //     test2.put("Five", 55);
+    //
+    //     test2.putAll(test);
+    //
+    //
+    //     System.out.println(test.toString());
+    //     System.out.println(test2.toString());
+    // }
 
     /** Creates a new map with an initial capacity of 32 and a load factor of 0.8. This map will hold 25 items before growing the
     * backing table. */

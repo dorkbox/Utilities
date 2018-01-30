@@ -62,28 +62,28 @@ class LockFreeIntBiMap<V> {
     // section. Because of this, we can have unlimited reader threads all going at the same time, without contention (which is our
     // use-case 99% of the time)
 
-    public static
-    void main(String[] args) {
-        LockFreeIntBiMap<String> test = new LockFreeIntBiMap<>();
-        String one = "One";
-        String four = "Four";
-
-        test.put(1, one);
-        test.put(2, "Two");
-        test.put(3, "Three");
-        test.put(4, four);
-        // try {
-        //     test.put(1, four);
-        // } catch (IllegalArgumentException e) {
-        // }
-        test.putForce(1, four);
-        test.put(5, one);
-
-        System.out.println(test.toString());
-
-        System.out.println("Reverse");
-        System.out.println(test.inverse().toString());
-    }
+    // public static
+    // void main(String[] args) {
+    //     LockFreeIntBiMap<String> test = new LockFreeIntBiMap<String>();
+    //     String one = "One";
+    //     String four = "Four";
+    //
+    //     test.put(1, one);
+    //     test.put(2, "Two");
+    //     test.put(3, "Three");
+    //     test.put(4, four);
+    //     // try {
+    //     //     test.put(1, four);
+    //     // } catch (IllegalArgumentException e) {
+    //     // }
+    //     test.putForce(1, four);
+    //     test.put(5, one);
+    //
+    //     System.out.println(test.toString());
+    //
+    //     System.out.println("Reverse");
+    //     System.out.println(test.inverse().toString());
+    // }
 
     /**
      * Creates a new bimap using @{link Integer#MIN_VALUE}.
