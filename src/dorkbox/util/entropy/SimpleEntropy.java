@@ -28,7 +28,6 @@ class SimpleEntropy implements EntropyProvider {
     @Override
     public
     byte[] get(String ignored) throws Exception {
-        System.err.println("Using simple entropy (SecureRandom) without input mixing.");
         SecureRandom secureRandom = new SecureRandom();
         byte[] rand = new byte[256];
         secureRandom.nextBytes(rand);
