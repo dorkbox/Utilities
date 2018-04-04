@@ -42,15 +42,15 @@ import dorkbox.util.collections.IntMap.Keys;
 public
 class LockFreeObjectIntBiMap<V> {
     // Recommended for best performance while adhering to the "single writer principle". Must be static-final
-    private static final AtomicReferenceFieldUpdater<LockFreeObjectIntBiMap, ObjectIntMap> forwardREF =
-                    AtomicReferenceFieldUpdater.newUpdater(LockFreeObjectIntBiMap.class,
-                                                           ObjectIntMap.class,
-                                                           "forwardHashMap");
+    private static final AtomicReferenceFieldUpdater<LockFreeObjectIntBiMap, ObjectIntMap> forwardREF = AtomicReferenceFieldUpdater.newUpdater(
+            LockFreeObjectIntBiMap.class,
+            ObjectIntMap.class,
+            "forwardHashMap");
 
-    private static final AtomicReferenceFieldUpdater<LockFreeObjectIntBiMap, IntMap> reverseREF =
-                    AtomicReferenceFieldUpdater.newUpdater(LockFreeObjectIntBiMap.class,
-                                                           IntMap.class,
-                                                           "reverseHashMap");
+    private static final AtomicReferenceFieldUpdater<LockFreeObjectIntBiMap, IntMap> reverseREF = AtomicReferenceFieldUpdater.newUpdater(
+            LockFreeObjectIntBiMap.class,
+            IntMap.class,
+            "reverseHashMap");
 
     private volatile ObjectIntMap<V> forwardHashMap;
     private volatile IntMap<V> reverseHashMap;
@@ -353,32 +353,20 @@ class LockFreeObjectIntBiMap<V> {
                          .size;
     }
 
+    /**
+     * Identity equals only!
+     */
     @Override
     public
     boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final LockFreeObjectIntBiMap<?> that = (LockFreeObjectIntBiMap<?>) o;
-
-        if (defaultReturnValue != that.defaultReturnValue) {
-            return false;
-        }
-        if (!forwardHashMap.equals(that.forwardHashMap)) {
-            return false;
-        }
-        return reverseHashMap.equals(that.reverseHashMap);
+        return this == o;
     }
 
     @Override
     public
     int hashCode() {
-        int result = forwardHashMap.hashCode();
-        result = 31 * result + reverseHashMap.hashCode();
+        int result = forwardREF.get(this).hashCode();
+        result = 31 * result + reverseREF.get(this).hashCode();
         result = 31 * result + defaultReturnValue;
         return result;
     }
@@ -388,7 +376,7 @@ class LockFreeObjectIntBiMap<V> {
     String toString() {
         StringBuilder builder = new StringBuilder("LockFreeObjectIntBiMap {");
 
-        Iterator<V>  keys = keys();
+        Iterator<V> keys = keys();
         Keys values = values();
 
         while (keys.hasNext()) {

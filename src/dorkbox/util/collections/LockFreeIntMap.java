@@ -46,7 +46,7 @@ import dorkbox.util.collections.IntMap.Values;
 public final
 class LockFreeIntMap<V> implements Cloneable, Serializable {
     // Recommended for best performance while adhering to the "single writer principle". Must be static-final
-    private static final AtomicReferenceFieldUpdater<LockFreeIntMap, IntMap> deviceREF = AtomicReferenceFieldUpdater.newUpdater(
+    private static final AtomicReferenceFieldUpdater<LockFreeIntMap, IntMap> mapREF = AtomicReferenceFieldUpdater.newUpdater(
             LockFreeIntMap.class,
             IntMap.class,
             "map");
@@ -98,22 +98,22 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
     public
     int size() {
         // use the SWP to get a lock-free get of the value
-        return deviceREF.get(this)
+        return mapREF.get(this)
                         .size;
     }
 
     public
     boolean isEmpty() {
         // use the SWP to get a lock-free get of the value
-        return deviceREF.get(this)
+        return mapREF.get(this)
                         .size == 0;
     }
 
     public
     boolean containsKey(final int key) {
         // use the SWP to get a lock-free get of the value
-        return deviceREF.get(this)
-                        .containsKey(key);
+        return mapREF.get(this)
+                     .containsKey(key);
     }
 
     /**
@@ -126,15 +126,15 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
     public
     boolean containsValue(final Object value, boolean identity) {
         // use the SWP to get a lock-free get of the value
-        return deviceREF.get(this)
-                        .containsValue(value, identity);
+        return mapREF.get(this)
+                     .containsValue(value, identity);
     }
 
     public
     V get(final int key) {
         // use the SWP to get a lock-free get of the value
-        return (V) deviceREF.get(this)
-                            .get(key);
+        return (V) mapREF.get(this)
+                         .get(key);
     }
 
     public synchronized
@@ -158,12 +158,35 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
     }
 
     /**
+     * Identity equals only!
+     */
+    @Override
+    public
+    boolean equals(final Object o) {
+        return this == o;
+    }
+
+    @Override
+    public
+    int hashCode() {
+        return mapREF.get(this)
+                     .hashCode();
+    }
+
+    @Override
+    public
+    String toString() {
+        return mapREF.get(this)
+                     .toString();
+    }
+
+    /**
      * DO NOT MODIFY THE MAP VIA THIS! It will result in unknown object visibility!
      */
     public
     Keys keySet() {
-        return deviceREF.get(this)
-                        .keys();
+        return mapREF.get(this)
+                     .keys();
     }
 
     /**
@@ -171,7 +194,7 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
      */
     public
     Values<V> values() {
-        return deviceREF.get(this)
-                        .values();
+        return mapREF.get(this)
+                     .values();
     }
 }

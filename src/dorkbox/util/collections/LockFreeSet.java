@@ -15,11 +15,7 @@
  */
 package dorkbox.util.collections;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -195,5 +191,25 @@ class LockFreeSet<E> implements Set<E>, Cloneable, java.io.Serializable {
     public synchronized
     void clear() {
         hashSet.clear();
+    }
+
+    @Override
+    public
+    boolean equals(final Object o) {
+        return setREF.get(this).equals(o);
+    }
+
+    @Override
+    public
+    int hashCode() {
+        return setREF.get(this)
+                     .hashCode();
+    }
+
+    @Override
+    public
+    String toString() {
+        return setREF.get(this)
+                     .toString();
     }
 }

@@ -16,11 +16,12 @@
 package dorkbox.util.collections;
 
 
-import com.esotericsoftware.kryo.util.IdentityMap;
-import dorkbox.util.Property;
-
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
+
+import com.esotericsoftware.kryo.util.IdentityMap;
+
+import dorkbox.util.Property;
 
 /**
  * @author dorkbox, llc
@@ -37,7 +38,7 @@ class ConcurrentIterator<T> {
     private final int ID = ID_COUNTER.getAndIncrement();
 
     // This is only touched by a single thread, maintains a map of entries for FAST lookup during remove.
-    private final IdentityMap<Object, ConcurrentEntry> entries = new IdentityMap<Object, ConcurrentEntry>(32, LOAD_FACTOR);
+    private final IdentityMap<T, ConcurrentEntry> entries = new IdentityMap<T, ConcurrentEntry>(32, LOAD_FACTOR);
 
     // this is still inside the single-writer, and can use the same techniques as subscription manager (for thread safe publication)
     @SuppressWarnings("FieldCanBeLocal")
@@ -53,7 +54,10 @@ class ConcurrentIterator<T> {
     ConcurrentIterator() {
     }
 
-    // called on shutdown for GC purposes
+    /**
+     * single writer principle!
+     * called from within SYNCHRONIZE
+     */
     public final
     void clear() {
         this.entries.clear();
@@ -66,12 +70,12 @@ class ConcurrentIterator<T> {
      *
      * @param listener the object that will receive messages during publication
      */
-    public
-    void add(final Object listener) {
-        ConcurrentEntry head = headREF.get(this);
+    public synchronized
+    void add(final T listener) {
+        ConcurrentEntry<T> head = headREF.get(this);
 
         if (!entries.containsKey(listener)) {
-            head = new ConcurrentEntry<Object>(listener, head);
+            head = new ConcurrentEntry<T>(listener, head);
 
             entries.put(listener, head);
             headREF.lazySet(this, head);
@@ -84,12 +88,12 @@ class ConcurrentIterator<T> {
      *
      * @param listener the object that will NO LONGER receive messages during publication
      */
-    public
-    void remove(final Object listener) {
-        ConcurrentEntry concurrentEntry = entries.get(listener);
+    public synchronized
+    boolean remove(final T listener) {
+        ConcurrentEntry<T> concurrentEntry = entries.get(listener);
 
         if (concurrentEntry != null) {
-            ConcurrentEntry head = headREF.get(this);
+            ConcurrentEntry<T> head = headREF.get(this);
 
             if (concurrentEntry == head) {
                 // if it was second, now it's first
@@ -102,7 +106,19 @@ class ConcurrentIterator<T> {
 
             headREF.lazySet(this, head);
             this.entries.remove(listener);
+            return true;
         }
+
+        return false;
+    }
+
+    /**
+     * single writer principle!
+     * called from within SYNCHRONIZE
+     */
+    public synchronized
+    int size() {
+        return entries.size;
     }
 
     @Override

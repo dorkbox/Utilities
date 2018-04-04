@@ -42,15 +42,15 @@ import dorkbox.util.collections.IntMap.Keys;
 public
 class LockFreeIntBiMap<V> {
     // Recommended for best performance while adhering to the "single writer principle". Must be static-final
-    private static final AtomicReferenceFieldUpdater<LockFreeIntBiMap, IntMap> forwardREF =
-                    AtomicReferenceFieldUpdater.newUpdater(LockFreeIntBiMap.class,
-                                                           IntMap.class,
-                                                           "forwardHashMap");
+    private static final AtomicReferenceFieldUpdater<LockFreeIntBiMap, IntMap> forwardREF = AtomicReferenceFieldUpdater.newUpdater(
+            LockFreeIntBiMap.class,
+            IntMap.class,
+            "forwardHashMap");
 
-    private static final AtomicReferenceFieldUpdater<LockFreeIntBiMap, ObjectIntMap> reverseREF =
-                    AtomicReferenceFieldUpdater.newUpdater(LockFreeIntBiMap.class,
-                                                           ObjectIntMap.class,
-                                                           "reverseHashMap");
+    private static final AtomicReferenceFieldUpdater<LockFreeIntBiMap, ObjectIntMap> reverseREF = AtomicReferenceFieldUpdater.newUpdater(
+            LockFreeIntBiMap.class,
+            ObjectIntMap.class,
+            "reverseHashMap");
 
     private volatile IntMap<V> forwardHashMap;
     private volatile ObjectIntMap<V> reverseHashMap;
@@ -377,32 +377,20 @@ class LockFreeIntBiMap<V> {
                          .size;
     }
 
+    /**
+     * Identity equals only!
+     */
     @Override
     public
     boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        final LockFreeIntBiMap<?> that = (LockFreeIntBiMap<?>) o;
-
-        if (defaultReturnValue != that.defaultReturnValue) {
-            return false;
-        }
-        if (!forwardHashMap.equals(that.forwardHashMap)) {
-            return false;
-        }
-        return reverseHashMap.equals(that.reverseHashMap);
+        return this == o;
     }
 
     @Override
     public
     int hashCode() {
-        int result = forwardHashMap.hashCode();
-        result = 31 * result + reverseHashMap.hashCode();
+        int result = forwardREF.get(this).hashCode();
+        result = 31 * result + reverseREF.get(this).hashCode();
         result = 31 * result + defaultReturnValue;
         return result;
     }
