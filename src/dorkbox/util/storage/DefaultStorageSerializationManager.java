@@ -66,7 +66,7 @@ class DefaultStorageSerializationManager implements SerializationManager {
     public
     void write(final ByteBuf buffer, final Object message) {
         final Output output = new Output();
-        writeFullClassAndObject(null, output, message);
+        writeFullClassAndObject(output, message);
         buffer.writeBytes(output.getBuffer());
     }
 
@@ -76,7 +76,7 @@ class DefaultStorageSerializationManager implements SerializationManager {
         final Input input = new Input();
         buffer.readBytes(input.getBuffer());
 
-        final Object o = readFullClassAndObject(null, input);
+        final Object o = readFullClassAndObject(input);
         buffer.skipBytes(input.position());
 
         return o;
@@ -84,19 +84,19 @@ class DefaultStorageSerializationManager implements SerializationManager {
 
     @Override
     public
-    void writeFullClassAndObject(final Logger logger, final Output output, final Object value) {
+    void writeFullClassAndObject(final Output output, final Object value) {
         kryo.writeClassAndObject(output, value);
     }
 
     @Override
     public
-    Object readFullClassAndObject(final Logger logger, final Input input) throws IOException {
+    Object readFullClassAndObject(final Input input) throws IOException {
         return kryo.readClassAndObject(input);
     }
 
     @Override
     public
-    void finishInit() {
+    void finishInit(final Logger logger, final Logger writeLogger) {
     }
 
     @Override

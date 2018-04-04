@@ -483,7 +483,7 @@ class StorageBase {
                     }
                     else {
                         // this is comparatively slow, since we serialize it first to get the size, then we put it in the file.
-                        ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, this.logger, object);
+                        ByteArrayOutputStream dataStream = getDataAsByteArray(this.serializationManager, object);
 
                         int size = dataStream.size();
                         if (size > metaData.dataCapacity) {
@@ -564,11 +564,11 @@ class StorageBase {
 
 
     private static
-    ByteArrayOutputStream getDataAsByteArray(SerializationManager serializationManager, Logger logger, Object data) throws IOException {
+    ByteArrayOutputStream getDataAsByteArray(SerializationManager serializationManager, Object data) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Output output = new Output(outputStream, 1024); // write 1024 at a time
 
-        serializationManager.writeFullClassAndObject(logger, output, data);
+        serializationManager.writeFullClassAndObject(output, data);
         output.flush();
 
         outputStream.flush();

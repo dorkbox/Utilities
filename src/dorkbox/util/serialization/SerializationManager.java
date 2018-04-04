@@ -98,17 +98,19 @@ interface SerializationManager {
     /**
      * Writes the class and object using an available kryo instance
      */
-    void writeFullClassAndObject(final Logger logger, Output output, Object value) throws IOException;
+    void writeFullClassAndObject(Output output, Object value) throws IOException;
 
     /**
      * Returns a class read from the input
      */
-    Object readFullClassAndObject(final Logger logger, final Input input) throws IOException;
+    Object readFullClassAndObject(final Input input) throws IOException;
 
     /**
      * Called when initialization is complete. This is to prevent (and recognize) out-of-order class/serializer registration.
+     *
+     * The loggers are for trace debug output for the wire data
      */
-    void finishInit();
+    void finishInit(final Logger wireReadLogger, final Logger wireWriteLogger);
 
     /**
      * @return true if our initialization is complete. Some registrations (in the property store, for example) always register for client

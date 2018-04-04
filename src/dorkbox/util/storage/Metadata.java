@@ -275,7 +275,7 @@ class Metadata {
         input.setInputStream(input.getInputStream());
 
         @SuppressWarnings("unchecked")
-        T readObject = (T) serializationManager.readFullClassAndObject(null, input);
+        T readObject = (T) serializationManager.readFullClassAndObject(input);
         return readObject;
     }
 
@@ -289,7 +289,7 @@ class Metadata {
 
         output.clear();
 
-        serializationManager.writeFullClassAndObject(null, output, data);
+        serializationManager.writeFullClassAndObject(output, data);
         output.flush();
 
         return (int) output.total();
