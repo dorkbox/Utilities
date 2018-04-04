@@ -19,10 +19,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.rmi.server.ExportException;
-
-import io.netty.util.internal.PlatformDependent;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
  * Loads the specified library, extracting it from the jar, if necessary
@@ -31,7 +30,7 @@ public
 class NativeLoader {
 
     public static
-    void loadLibrary(final String sourceFileName, final String destinationPrefix, final Class<?> classLoaderClass, String version)
+    File extractLibrary(final String sourceFileName, final String destinationDirectory, final String destinationName, String version)
             throws Exception {
         try {
             String suffix;
@@ -45,15 +44,18 @@ class NativeLoader {
                 suffix = ".dylib";
             }
 
-            final String outputFileName = destinationPrefix + "." + version + suffix;
+            final String outputFileName;
+            if (version == null) {
+                outputFileName = destinationName + suffix;
+            }
+            else {
+                outputFileName = destinationName + "." + version + suffix;
+            }
 
-            final File file = new File(OS.TEMP_DIR, outputFileName);
-            if (!file.canRead()) {
-                ClassLoader loader = PlatformDependent.getClassLoader(classLoaderClass);
-                URL url = loader.getResource(sourceFileName);
-
+            final File file = new File(destinationDirectory, outputFileName);
+            if (!file.canRead() || file.length() == 0 || !file.canExecute()) {
                 // now we copy it out
-                final InputStream inputStream = url.openStream();
+                final InputStream inputStream = LocationResolver.getResourceAsStream(sourceFileName);
 
                 OutputStream outStream = null;
                 try {
@@ -82,10 +84,23 @@ class NativeLoader {
                 }
             }
 
-            System.load(file.getAbsolutePath());
+            return file;
         } catch (Exception e) {
             throw new ExportException("Error extracting library: " + sourceFileName, e);
         }
+    }
+
+    public static
+    void loadLibrary(final File file) {
+        // inject into the correct classloader
+        AccessController.doPrivileged(new PrivilegedAction<Object>() {
+            @Override
+            public
+            Object run() {
+                System.load(file.getAbsolutePath());
+                return null;
+            }
+        });
     }
 
     private
