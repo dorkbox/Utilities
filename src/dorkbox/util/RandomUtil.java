@@ -16,6 +16,9 @@
 package dorkbox.util;
 
 
+/**
+ * This class uses the MersenneTwisterFast, which is MOSTLY random.
+ */
 public
 class RandomUtil {
 
@@ -44,7 +47,7 @@ class RandomUtil {
     }
 
     /**
-     * Returns a get number between 0 (inclusive) and the specified value (inclusive).
+     * Returns a number between 0 (inclusive) and the specified value (inclusive).
      */
     public static
     int int_(int range) {
@@ -52,7 +55,7 @@ class RandomUtil {
     }
 
     /**
-     * Returns a get number between start (inclusive) and end (inclusive).
+     * Returns a number between start (inclusive) and end (inclusive).
      */
     public static
     int int_(int start, int end) {
@@ -60,7 +63,7 @@ class RandomUtil {
     }
 
     /**
-     * Returns a get boolean value.
+     * Returns a boolean value.
      */
     public static
     boolean bool() {
@@ -68,7 +71,7 @@ class RandomUtil {
     }
 
     /**
-     * Returns get number between 0.0 (inclusive) and 1.0 (exclusive).
+     * Returns number between 0.0 (inclusive) and 1.0 (exclusive).
      */
     public static
     float float_() {
@@ -76,7 +79,7 @@ class RandomUtil {
     }
 
     /**
-     * Returns a get number between 0 (inclusive) and the specified value (exclusive).
+     * Returns a number between 0 (inclusive) and the specified value (exclusive).
      */
     public static
     float float_(float range) {
@@ -84,10 +87,19 @@ class RandomUtil {
     }
 
     /**
-     * Returns a get number between start (inclusive) and end (exclusive).
+     * Returns a number between start (inclusive) and end (exclusive).
      */
     public static
     float float_(float start, float end) {
         return start + get().nextFloat() * (end - start);
+    }
+
+
+    /**
+     * Places random bytes in the specified byte array
+     */
+    public static
+    void bytes_(byte[] bytes) {
+        get().nextBytes(bytes);
     }
 }
