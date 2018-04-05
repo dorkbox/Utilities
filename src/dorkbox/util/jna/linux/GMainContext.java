@@ -18,7 +18,7 @@ package dorkbox.util.jna.linux;
 import com.sun.jna.Pointer;
 
 public
-class GMainContext extends GObject {
+class GMainContext extends GObjectType {
     public
     GMainContext() {
     }

@@ -19,13 +19,13 @@ import com.sun.jna.Pointer;
 import com.sun.jna.PointerType;
 
 public
-class GObject extends PointerType {
+class GObjectType extends PointerType {
     public
-    GObject() {
+    GObjectType() {
     }
 
     public
-    GObject(Pointer p) {
+    GObjectType(Pointer p) {
         super(p);
     }
 

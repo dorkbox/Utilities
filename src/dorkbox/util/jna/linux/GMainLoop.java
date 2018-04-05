@@ -18,7 +18,7 @@ package dorkbox.util.jna.linux;
 import com.sun.jna.Pointer;
 
 public
-class GMainLoop extends GObject {
+class GMainLoop extends GObjectType {
     public
     GMainLoop() {
     }
