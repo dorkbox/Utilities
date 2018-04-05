@@ -37,11 +37,11 @@ class GObjectType extends PointerType {
 
     public
     void ref() {
-        Gobject.g_object_ref(getPointer());
+        GObject.g_object_ref(getPointer());
     }
 
     public
     void unref() {
-        Gobject.g_object_unref(getPointer());
+        GObject.g_object_unref(getPointer());
     }
 }

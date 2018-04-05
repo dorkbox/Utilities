@@ -29,16 +29,16 @@ import dorkbox.util.jna.JnaHelper;
  * Direct-mapping, See: https://github.com/java-native-access/jna/blob/master/www/DirectMapping.md
  */
 public
-class Gobject {
+class GObject {
 
     static {
         try {
-            NativeLibrary library = JnaHelper.register("gobject-2.0", Gobject.class);
+            NativeLibrary library = JnaHelper.register("gobject-2.0", GObject.class);
             if (library == null) {
-                LoggerFactory.getLogger(Gobject.class).error("Error loading GObject library, it failed to load.");
+                LoggerFactory.getLogger(GObject.class).error("Error loading GObject library, it failed to load.");
             }
         } catch (Throwable e) {
-            LoggerFactory.getLogger(Gobject.class).error("Error loading GObject library, it failed to load {}", e.getMessage());
+            LoggerFactory.getLogger(GObject.class).error("Error loading GObject library, it failed to load {}", e.getMessage());
         }
     }
 

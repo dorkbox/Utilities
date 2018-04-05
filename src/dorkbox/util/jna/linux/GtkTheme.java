@@ -101,7 +101,7 @@ class GtkTheme {
                 Gtk2.gtk_container_add(offscreen, item);
 
                 PointerByReference r = new PointerByReference();
-                Gobject.g_object_get(item, "image", r.getPointer(), null);
+                GObject.g_object_get(item, "image", r.getPointer(), null);
 
                 Pointer imageWidget = r.getValue();
                 GtkRequisition gtkRequisition = new GtkRequisition();
@@ -432,7 +432,7 @@ My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 fac
                                 // NOTE: gtk-icon-sizes is deprecated and ignored since GTK+ 3.10.
 
                                 // A list of icon sizes. The list is separated by colons, and item has the form: size-name = width , height
-                                Gobject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
+                                GObject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
 
                                 Pointer value = pointer.getValue();
                                 if (value != null) {
