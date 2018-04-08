@@ -161,8 +161,9 @@ class GtkTheme {
             }
         });
 
+
         // fallback
-        if (screenDPI.get() == 0) {
+        if (screenDPI.get() <= 0) {
             // GET THE DPI IN LINUX
             // https://wiki.archlinux.org/index.php/Talk:GNOME
             Object detectedValue = Toolkit.getDefaultToolkit().getDesktopProperty("gnome.Xft/DPI");
@@ -171,11 +172,12 @@ class GtkTheme {
                 if (dpi == -1) {
                     screenDPI.set((int) defaultDPI);
                 }
-                if (dpi < 50) {
-                    // 50 dpi is the minimum value gnome allows
-                    screenDPI.set(50);
-                }
             }
+        }
+
+        // 50 dpi is the minimum value gnome allows, and assume something screwed up. We apply this for ALL environments!
+        if (screenDPI.get() < 50) {
+            screenDPI.set((int) defaultDPI);
         }
 
 
