@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Arrays;
@@ -36,12 +37,12 @@ import org.bouncycastle.crypto.digests.SHA512Digest;
 import org.bouncycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.lwjgl.util.xxhash.XXH32State;
+import org.lwjgl.util.xxhash.XXHash;
 import org.slf4j.Logger;
 
 import dorkbox.util.OS;
 import dorkbox.util.bytes.LittleEndian;
-import net.jpountz.xxhash.StreamingXXHash32;
-import net.jpountz.xxhash.XXHashFactory;
 
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B http://www.nsa.gov/ia/programs/suiteb_cryptography/
@@ -205,8 +206,9 @@ class Crypto {
             // used to initialize the hash value, use whatever value you want, but always the same
             int seed = 0x9747b28c;  // must match number in C (in Auth::xxHash32())
 
-            XXHashFactory hashFactory = XXHashFactory.fastestInstance();
-            StreamingXXHash32 hash32 = hashFactory.newStreamingHash32(seed);
+
+            XXH32State state = XXHash.XXH32_createState();
+            XXHash.XXH32_reset(state, seed);
 
             try {
                 inputStream = new FileInputStream(file);
@@ -218,6 +220,8 @@ class Crypto {
 
                 int bufferSize = 4096;
                 byte[] buffer = new byte[bufferSize];
+                ByteBuffer bbuffer = ByteBuffer.wrap(buffer);
+
 
                 int readBytes;
 
@@ -232,7 +236,8 @@ class Crypto {
                         return 0;
                     }
 
-                    hash32.update(buffer, 0, readBytes);
+                    bbuffer.limit(readBytes);
+                    XXHash.XXH32_update(state, bbuffer);
                 }
             } catch (Exception e) {
                 if (logger != null) {
@@ -250,9 +255,7 @@ class Crypto {
                 }
             }
 
-            int value = hash32.getValue();
-            hash32.reset();
-            return value;
+            return XXHash.XXH32_digest(state);
         }
         else {
             return 0;
