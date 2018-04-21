@@ -36,7 +36,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.spec.DSAPublicKeySpec;
+import java.security.interfaces.DSAParams;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
@@ -91,14 +91,11 @@ import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.bouncycastle.jcajce.provider.asymmetric.dsa.BCDSAPublicKey;
-import org.bouncycastle.jcajce.provider.asymmetric.dsa.BCDSAPublicKeyAccessor;
 import org.bouncycastle.jcajce.provider.asymmetric.dsa.DSAUtil;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey;
-import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKeyAccessor;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.RSAUtil;
 import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
-import org.bouncycastle.jcajce.provider.asymmetric.x509.X509Accessor;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -445,15 +442,18 @@ public class CryptoX509 {
                 }
 
 
-                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
+                CertificateFactory certificateFactory = new CertificateFactory();
                 java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(new ByteArrayInputStream(x509CertificateHolder.getEncoded()));
                 // Note: this requires the BC provider to be loaded!
                 if (certificate == null || certificate.getPublicKey() == null) {
                     return false;
                 }
 
+                // TODO: when validating the certificate, it is important to use a date from somewhere other than the host computer! (maybe use google? or something...)
+                // this will validate the DATES of the certificate, to make sure the cert is valid during the correct time period.
+
                 // Verify the TIME/DATE of the certificate
-                X509Accessor.verifyDate(certificate);
+                ((X509Certificate) certificate).checkValidity(new Date());
 
                 // if we get here, it means that our cert is LEGIT and VALID.
                 return true;
@@ -493,22 +493,19 @@ public class CryptoX509 {
                     org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
                     java.security.cert.Certificate engineGenerateCert = certificateFactory.engineGenerateCertificate(newSigIn);
 
-                    PublicKey publicKey2 = engineGenerateCert.getPublicKey();
+                    BCDSAPublicKey publicKey2 = (BCDSAPublicKey) engineGenerateCert.getPublicKey();
 
                     if (optionalOriginalPublicKey != null) {
-                        // absolutely RETARDED that we have package private constructors .. but fortunately, we can get around that
+                        DSAParams params = publicKey2.getParams();
                         DSAParameters parameters = optionalOriginalPublicKey.getParameters();
-                        DSAPublicKeySpec dsaPublicKeySpec = new DSAPublicKeySpec(optionalOriginalPublicKey.getY(),
-                                                                                 parameters.getP(),
-                                                                                 parameters.getQ(),
-                                                                                 parameters.getG());
 
-                        BCDSAPublicKey origPublicKey = BCDSAPublicKeyAccessor.newInstance(dsaPublicKeySpec);
-                        boolean equals = origPublicKey.equals(publicKey2);
-                        if (!equals) {
+                        if (!publicKey2.getY().equals(optionalOriginalPublicKey.getY()) ||
+                            !params.getP().equals(parameters.getP()) ||
+                            !params.getQ().equals(parameters.getQ()) ||
+                            !params.getG().equals(parameters.getG())) {
+
                             return false;
                         }
-                        publicKey2 = origPublicKey;
                     }
 
                     engineGenerateCert.verify(publicKey2);
@@ -987,15 +984,23 @@ public class CryptoX509 {
                     return false;
                 }
 
-                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(new ByteArrayInputStream(x509CertificateHolder.getEncoded()));
+                java.security.cert.Certificate certificate = new CertificateFactory().engineGenerateCertificate(
+                        new ByteArrayInputStream(x509CertificateHolder.getEncoded()));
+
                 // Note: this requires the BC provider to be loaded!
                 if (certificate == null || certificate.getPublicKey() == null) {
                     return false;
                 }
 
+                if (!(certificate instanceof X509Certificate)) {
+                    return false;
+                }
+
+                // TODO: when validating the certificate, it is important to use a date from somewhere other than the host computer! (maybe use google? or something...)
+                // this will validate the DATES of the certificate, to make sure the cert is valid during the correct time period.
+
                 // Verify the TIME/DATE of the certificate
-                X509Accessor.verifyDate(certificate);
+                ((X509Certificate) certificate).checkValidity(new Date());
 
                 // if we get here, it means that our cert is LEGIT and VALID.
                 return true;
@@ -1034,18 +1039,17 @@ public class CryptoX509 {
                     DERSequence newSigDERElement = (DERSequence) newSigElement;
                     InputStream newSigIn = new ByteArrayInputStream(newSigDERElement.getEncoded());
 
-                    org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                    java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(newSigIn);
+                    org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
+                    java.security.cert.Certificate certificate = certFactory.engineGenerateCertificate(newSigIn);
 
-                    PublicKey publicKey2 = certificate.getPublicKey();
+                    BCRSAPublicKey publicKey2 = (BCRSAPublicKey) certificate.getPublicKey();
 
                     if (publicKey != null) {
-                        BCRSAPublicKey origPublicKey = BCRSAPublicKeyAccessor.newInstance(publicKey);
-                        boolean equals = origPublicKey.equals(publicKey2);
-                        if (!equals) {
+                        if (!publicKey.getModulus().equals(publicKey2.getModulus()) ||
+                            !publicKey.getExponent().equals(publicKey2.getPublicExponent())) {
+
                             return false;
                         }
-                        publicKey2 = origPublicKey;
                     }
 
                     certificate.verify(publicKey2);
@@ -1143,15 +1147,19 @@ public class CryptoX509 {
                     return false;
                 }
 
-                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(new ByteArrayInputStream(x509CertificateHolder.getEncoded()));
+                CertificateFactory certFactory = new CertificateFactory();
+                java.security.cert.Certificate certificate = certFactory.engineGenerateCertificate(new ByteArrayInputStream(x509CertificateHolder.getEncoded()));
+
                 // Note: this requires the BC provider to be loaded!
                 if (certificate == null || certificate.getPublicKey() == null) {
                     return false;
                 }
 
+                // TODO: when validating the certificate, it is important to use a date from somewhere other than the host computer! (maybe use google? or something...)
+                // this will validate the DATES of the certificate, to make sure the cert is valid during the correct time period.
+
                 // Verify the TIME/DATE of the certificate
-                X509Accessor.verifyDate(certificate);
+                ((X509Certificate) certificate).checkValidity(new Date());
 
                 // if we get here, it means that our cert is LEGIT and VALID.
                 return true;
