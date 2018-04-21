@@ -69,7 +69,6 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
-import org.bouncycastle.asn1.x509.Certificate;
 import org.bouncycastle.asn1.x509.DSAParameter;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
@@ -98,12 +97,12 @@ import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.BCRSAPublicKeyAccessor;
 import org.bouncycastle.jcajce.provider.asymmetric.rsa.RSAUtil;
+import org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory;
 import org.bouncycastle.jcajce.provider.asymmetric.x509.X509Accessor;
 import org.bouncycastle.jce.PrincipalUtil;
 import org.bouncycastle.jce.interfaces.PKCS12BagAttributeCarrier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.provider.JCEECPublicKey;
-import org.bouncycastle.jce.provider.X509CertificateObject;
 import org.bouncycastle.jce.spec.ECParameterSpec;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.ContentVerifierProvider;
@@ -400,7 +399,7 @@ public class CryptoX509 {
                                                           new ASN1Integer(publicKey.getY())).getEncoded(ASN1Encoding.DER);
 
                 ASN1Sequence seq = (ASN1Sequence)ASN1Primitive.fromByteArray(encoded);
-                subjectPublicKeyInfo = new SubjectPublicKeyInfo(seq);
+                subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(seq);
             } catch (IOException e) {
                 logger.error("Error during DSA.", e);
                 return null;
@@ -608,21 +607,30 @@ public class CryptoX509 {
 
                     ContentSigner hashSigner = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(privateKey);
                     X509CertificateHolder certHolder = certBuilder.build(hashSigner);
-                    X509CertificateObject certificate = new X509CertificateObject(Certificate.getInstance(certHolder.getEncoded()));
+
+                    java.security.cert.Certificate certificate = new CertificateFactory().engineGenerateCertificate(
+                            new ByteArrayInputStream(certHolder.getEncoded()));
+
+                    if (!(certificate instanceof X509Certificate)) {
+                        logger.error("Error generating certificate, it's the wrong type.");
+                        return null;
+                    }
 
                     certificate.verify(jcePublicKey);
 
 
-                    PKCS12BagAttributeCarrier bagAttr = certificate;
+                    if (certificate instanceof PKCS12BagAttributeCarrier) {
+                        PKCS12BagAttributeCarrier bagAttr = (PKCS12BagAttributeCarrier) certificate;
 
-                    //
-                    // this is actually optional - but if you want to have control
-                    // over setting the friendly name this is the way to do it...
-                    //
-                    bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
-                                            new DERBMPString(friendlyName));
+                        //
+                        // this is actually optional - but if you want to have control
+                        // over setting the friendly name this is the way to do it...
+                        //
+                        bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
+                                                new DERBMPString(friendlyName));
+                    }
 
-                    return certificate;
+                    return (X509Certificate) certificate;
                 } catch (Exception e) {
                     logger.error("Error generating certificate.", e);
                     return null;
@@ -667,21 +675,30 @@ public class CryptoX509 {
 
                     ContentSigner hashSigner = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(privateKey);
                     X509CertificateHolder certHolder = certBuilder.build(hashSigner);
-                    X509CertificateObject certificate = new X509CertificateObject(Certificate.getInstance(certHolder.getEncoded()));
+
+                    java.security.cert.Certificate certificate = new CertificateFactory().engineGenerateCertificate(new ByteArrayInputStream(
+                            certHolder.getEncoded()));
+
+                    if (!(certificate instanceof X509Certificate)) {
+                        logger.error("Error generating certificate, it's the wrong type.");
+                        return null;
+                    }
 
                     certificate.verify(jcePublicKey);
 
 
-                    PKCS12BagAttributeCarrier bagAttr = certificate;
+                    if (certificate instanceof PKCS12BagAttributeCarrier) {
+                        PKCS12BagAttributeCarrier bagAttr = (PKCS12BagAttributeCarrier) certificate;
 
-                    //
-                    // this is actually optional - but if you want to have control
-                    // over setting the friendly name this is the way to do it...
-                    //
-                    bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
-                                            new DERBMPString(friendlyName));
+                        //
+                        // this is actually optional - but if you want to have control
+                        // over setting the friendly name this is the way to do it...
+                        //
+                        bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName, new DERBMPString(friendlyName));
+                    }
 
-                    return certificate;
+
+                    return (X509Certificate) certificate;
                 } catch (Exception e) {
                     logger.error("Error generating certificate.", e);
                     return null;
@@ -797,7 +814,14 @@ public class CryptoX509 {
 
             ContentSigner signer = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(signingPrivateKey);
             X509CertificateHolder certHolder = certBuilder.build(signer);
-            X509CertificateObject certificate = new X509CertificateObject(Certificate.getInstance(certHolder.getEncoded()));
+
+            java.security.cert.Certificate certificate = new CertificateFactory().engineGenerateCertificate(new ByteArrayInputStream(
+                    certHolder.getEncoded()));
+
+            if (!(certificate instanceof X509Certificate)) {
+                logger.error("Error generating certificate, it's the wrong type.");
+                return null;
+            }
 
             if (signingCertificate != null) {
                 certificate.verify(signingCertificate.getPublicKey());
@@ -805,22 +829,21 @@ public class CryptoX509 {
                 certificate.verify(jcePublicKey);
             }
 
-            PKCS12BagAttributeCarrier bagAttr = certificate;
+            if (certificate instanceof PKCS12BagAttributeCarrier) {
+                PKCS12BagAttributeCarrier bagAttr = (PKCS12BagAttributeCarrier) certificate;
 
-            //
-            // this is actually optional - but if you want to have control
-            // over setting the friendly name this is the way to do it...
-            //
-            bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName,
-                                    new DERBMPString(friendlyName));
+                //
+                // this is actually optional - but if you want to have control
+                // over setting the friendly name this is the way to do it...
+                //
+                bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_friendlyName, new DERBMPString(friendlyName));
 
-            if (signingCertificate != null) {
-                bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId,
-                                        subjectPublicKeyInfo);
+                if (signingCertificate != null) {
+                    bagAttr.setBagAttribute(PKCSObjectIdentifiers.pkcs_9_at_localKeyId, subjectPublicKeyInfo);
+                }
             }
 
-
-            return certificate;
+            return (X509Certificate) certificate;
 
 
 //            //// subject name table.
@@ -851,8 +874,7 @@ public class CryptoX509 {
             ASN1InputStream asn1InputStream = null;
             try {
                 asn1InputStream = new ASN1InputStream(new ByteArrayInputStream(jcePublicKey.getEncoded()));
-                SubjectPublicKeyInfo subjectPublicKeyInfo1 = new SubjectPublicKeyInfo((ASN1Sequence) asn1InputStream.readObject());
-                return subjectPublicKeyInfo1;
+                return SubjectPublicKeyInfo.getInstance(asn1InputStream.readObject());
             } finally {
                 if (asn1InputStream != null) {
                     asn1InputStream.close();
@@ -1077,7 +1099,7 @@ public class CryptoX509 {
             try {
                 byte[] encoded = pubKey.getEncoded();
                 ASN1Sequence seq = (ASN1Sequence)ASN1Primitive.fromByteArray(encoded);
-                subjectPublicKeyInfo = new SubjectPublicKeyInfo(seq);
+                subjectPublicKeyInfo = SubjectPublicKeyInfo.getInstance(seq);
             } catch (IOException e) {
                 logger.error("Unable to perform DSA.", e);
                 return null;
