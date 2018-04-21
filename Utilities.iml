@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_6" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
@@ -9,14 +9,14 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="bouncyCastle bcprov-jdk15on" level="application" />
+    <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
+    <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
     <orderEntry type="library" name="jna" level="application" />
     <orderEntry type="library" name="jna platform" level="application" />
     <orderEntry type="library" scope="TEST" name="junit-4.12" level="application" />
     <orderEntry type="library" name="netty" level="application" />
     <orderEntry type="library" name="logging slf4j-api" level="application" />
     <orderEntry type="library" name="logging logback" level="application" />
-    <orderEntry type="library" name="bouncyCastle bcpg-jdk15on" level="application" />
-    <orderEntry type="library" name="bouncyCastle bcpkix-jdk15on" level="application" />
     <orderEntry type="library" name="kryo" level="application" />
     <orderEntry type="library" name="dorkbox minlog_slf4j" level="application" />
     <orderEntry type="library" name="lz4_xxhash" level="application" />
