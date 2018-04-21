@@ -63,6 +63,8 @@ import dorkbox.util.bytes.UShort;
  */
 public class UNumberTest {
 
+    public static final float DELTA = 0.00001f;
+
     @Test
     public void testRange0() {
         testCastable((short) 0, ubyte("0"));
@@ -245,45 +247,45 @@ public class UNumberTest {
 
     @SuppressWarnings("deprecation")
     private void testCastable(short value, UByte u) {
-        assertEquals((byte) value, u.byteValue());
-        assertEquals(value, u.shortValue());
-        assertEquals(value, u.intValue());
-        assertEquals(value, u.longValue());
-        assertEquals((double) value, u.doubleValue());
-        assertEquals((float) value, u.floatValue());
-        assertEquals(new BigInteger("" + value), u.toBigInteger());
+        assertEquals("Byte failed", (byte) value, u.byteValue());
+        assertEquals("Short failed", value, u.shortValue());
+        assertEquals("Int failed", value, u.intValue());
+        assertEquals("Long failed", value, u.longValue());
+        assertEquals("Double failed", (double) value, u.doubleValue(), DELTA);
+        assertEquals("Float failed", (float) value, u.floatValue(), DELTA);
+        assertEquals("BigInteger failed", new BigInteger("" + value), u.toBigInteger());
     }
 
     @SuppressWarnings("deprecation")
     private void testCastable(int value, UShort u) {
-        assertEquals((byte) value, u.byteValue());
-        assertEquals((short) value, u.shortValue());
-        assertEquals(value, u.intValue());
-        assertEquals(value, u.longValue());
-        assertEquals((double) value, u.doubleValue());
-        assertEquals((float) value, u.floatValue());
-        assertEquals(new BigInteger("" + value), u.toBigInteger());
+        assertEquals("Byte failed", (byte) value, u.byteValue());
+        assertEquals("Short failed", (short) value, u.shortValue());
+        assertEquals("Int failed", value, u.intValue());
+        assertEquals("Long failed", value, u.longValue());
+        assertEquals("Double failed", (double) value, u.doubleValue(), DELTA);
+        assertEquals("Float failed", (float) value, u.floatValue(), DELTA);
+        assertEquals("BigInteger failed", new BigInteger("" + value), u.toBigInteger());
     }
 
     @SuppressWarnings("deprecation")
     private void testCastable(long value, UInteger u) {
-        assertEquals((byte) value, u.byteValue());
-        assertEquals((short) value, u.shortValue());
-        assertEquals((int) value, u.intValue());
-        assertEquals(value, u.longValue());
-        assertEquals((double) value, u.doubleValue());
-        assertEquals((float) value, u.floatValue());
-        assertEquals(new BigInteger("" + value), u.toBigInteger());
+        assertEquals("Byte failed", (byte) value, u.byteValue());
+        assertEquals("Short failed", (short) value, u.shortValue());
+        assertEquals("Int failed", (int) value, u.intValue());
+        assertEquals("Long failed", value, u.longValue());
+        assertEquals("Double failed", (double) value, u.doubleValue(), DELTA);
+        assertEquals("Float failed", (float) value, u.floatValue(), DELTA);
+        assertEquals("BigInteger failed", new BigInteger("" + value), u.toBigInteger());
     }
 
     @SuppressWarnings("deprecation")
     private void testCastable(BigInteger value, ULong u) {
-        assertEquals(value.byteValue(), u.byteValue());
-        assertEquals(value.shortValue(), u.shortValue());
-        assertEquals(value.intValue(), u.intValue());
-        assertEquals(value.longValue(), u.longValue());
-        assertEquals(value.doubleValue(), u.doubleValue());
-        assertEquals(value.floatValue(), u.floatValue());
-        assertEquals(new BigInteger("" + value), u.toBigInteger());
+        assertEquals("Byte failed", value.byteValue(), u.byteValue());
+        assertEquals("Short failed", value.shortValue(), u.shortValue());
+        assertEquals("Int failed", value.intValue(), u.intValue());
+        assertEquals("Long failed", value.longValue(), u.longValue());
+        assertEquals("Double failed", value.doubleValue(), u.doubleValue(), DELTA);
+        assertEquals("Float failed", value.floatValue(), u.floatValue(), DELTA);
+        assertEquals("BigInteger failed", new BigInteger("" + value), u.toBigInteger());
     }
 }
