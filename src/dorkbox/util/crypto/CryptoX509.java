@@ -126,7 +126,7 @@ public class CryptoX509 {
 
     private static final Logger logger = LoggerFactory.getLogger(CryptoX509.class);
 
-    public static final void addProvider() {
+    public static void addProvider() {
         // make sure we only add it once (in case it's added elsewhere...)
         Provider provider = Security.getProvider("BC");
         if (provider == null) {
@@ -207,10 +207,6 @@ public class CryptoX509 {
             sb.append(cert_begin);
             sb.append(lineSeparator);
             for (int i=64;i<length;i+=64) {
-                if (i > length) {
-                    i = length;
-                }
-
                 sb.append(encodeToChar, lastIndex, i);
                 sb.append(lineSeparator);
                 lastIndex = i;
@@ -229,7 +225,8 @@ public class CryptoX509 {
             try {
                 // have to use reflection in order to access the DIGEST method used by the key.
                 DefaultCMSSignatureAlgorithmNameGenerator defaultCMSSignatureAlgorithmNameGenerator = new DefaultCMSSignatureAlgorithmNameGenerator();
-                Method declaredMethod = DefaultCMSSignatureAlgorithmNameGenerator.class.getDeclaredMethod("getDigestAlgName", new Class<?>[] {ASN1ObjectIdentifier.class});
+                Method declaredMethod = DefaultCMSSignatureAlgorithmNameGenerator.class.getDeclaredMethod("getDigestAlgName",
+                                                                                                          ASN1ObjectIdentifier.class);
                 declaredMethod.setAccessible(true);
                 digest = (String) declaredMethod.invoke(defaultCMSSignatureAlgorithmNameGenerator, algorithm);
             } catch (Throwable t) {
