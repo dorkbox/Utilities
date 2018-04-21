@@ -15,10 +15,48 @@
  */
 package dorkbox.util.crypto;
 
-import dorkbox.util.Base64Fast;
-import dorkbox.util.crypto.signers.BcECDSAContentSignerBuilder;
-import dorkbox.util.crypto.signers.BcECDSAContentVerifierProviderBuilder;
-import org.bouncycastle.asn1.*;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.SignatureException;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.spec.DSAPublicKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.RSAPrivateCrtKeySpec;
+import java.security.spec.RSAPublicKeySpec;
+import java.util.Date;
+import java.util.Enumeration;
+
+import org.bouncycastle.asn1.ASN1EncodableVector;
+import org.bouncycastle.asn1.ASN1Encoding;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1Set;
+import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.BERSet;
+import org.bouncycastle.asn1.DERBMPString;
+import org.bouncycastle.asn1.DEROctetString;
+import org.bouncycastle.asn1.DERSequence;
+import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
 import org.bouncycastle.asn1.cms.ContentInfo;
 import org.bouncycastle.asn1.cms.IssuerAndSerialNumber;
@@ -80,33 +118,9 @@ import org.bouncycastle.operator.bc.BcRSAContentVerifierProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.PublicKey;
-import java.security.Security;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.spec.DSAParameterSpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPrivateCrtKeySpec;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.Date;
-import java.util.Enumeration;
+import dorkbox.util.Base64Fast;
+import dorkbox.util.crypto.signers.BcECDSAContentSignerBuilder;
+import dorkbox.util.crypto.signers.BcECDSAContentVerifierProviderBuilder;
 
 public class CryptoX509 {
 
@@ -488,10 +502,12 @@ public class CryptoX509 {
                     if (optionalOriginalPublicKey != null) {
                         // absolutely RETARDED that we have package private constructors .. but fortunately, we can get around that
                         DSAParameters parameters = optionalOriginalPublicKey.getParameters();
-                        BCDSAPublicKey origPublicKey = BCDSAPublicKeyAccessor.newInstance(optionalOriginalPublicKey.getY(),
-                                                                           new DSAParameterSpec(parameters.getP(),
-                                                                                                parameters.getQ(),
-                                                                                                parameters.getG()));
+                        DSAPublicKeySpec dsaPublicKeySpec = new DSAPublicKeySpec(optionalOriginalPublicKey.getY(),
+                                                                                 parameters.getP(),
+                                                                                 parameters.getQ(),
+                                                                                 parameters.getG());
+
+                        BCDSAPublicKey origPublicKey = BCDSAPublicKeyAccessor.newInstance(dsaPublicKeySpec);
                         boolean equals = origPublicKey.equals(publicKey2);
                         if (!equals) {
                             return false;

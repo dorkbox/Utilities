@@ -15,11 +15,10 @@
  */
 package org.bouncycastle.jcajce.provider.asymmetric.dsa;
 
-import java.math.BigInteger;
-import java.security.spec.DSAParameterSpec;
+import java.security.spec.DSAPublicKeySpec;
 
 public class BCDSAPublicKeyAccessor {
-    public static BCDSAPublicKey newInstance(BigInteger bigInteger, DSAParameterSpec dsaParameterSpec) {
-        return new BCDSAPublicKey(bigInteger, dsaParameterSpec);
+    public static BCDSAPublicKey newInstance(DSAPublicKeySpec dsaPublicKeySpec) {
+        return new BCDSAPublicKey(dsaPublicKeySpec);
     }
 }
