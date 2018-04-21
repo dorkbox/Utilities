@@ -625,7 +625,7 @@ class SwingUtil {
 
         pane.selectInitialValue();
         ScreenUtil.showOnSameScreenAsMouse_Center(dialog);
-        dialog.show();
+        dialog.setVisible(true);
         dialog.dispose();
 
         Object selectedValue = pane.getValue();
