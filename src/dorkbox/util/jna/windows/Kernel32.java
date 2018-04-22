@@ -84,7 +84,7 @@ class Kernel32 {
             FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, null, errorCode, 0, reference, (int) memory.size(), null);
 
             String memoryMessage = reference.getPointer()
-                                            .getString(0, true);
+                                            .getWideString(0);
             memoryMessage = memoryMessage.trim();
 
             return String.format("ErrorCode: 0x%08x [%s]", errorCode, memoryMessage);
