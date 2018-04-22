@@ -3,11 +3,15 @@ import org.gradle.internal.impldep.org.apache.http.client.methods.RequestBuilder
 import org.jetbrains.kotlin.gradle.dsl.Coroutines
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.android.AndroidGradleWrapper.srcDir
+import java.io.File
 
 plugins {
     java
     maven
-    kotlin("jvm")
+     kotlin("jvm")
+
+    // the version is defined in the parent project. Uncomment this if you are working DIRECTLY with Utilities
+    // kotlin("jvm") version "1.2.40"
 }
 
 apply {
@@ -84,10 +88,15 @@ dependencies {
     testCompile(group = "junit", name = "junit", version = "4.12")
 }
 
-// setup compile options. we specifically want to suppress usage of "Unsafe"
-val compileJava: JavaCompile by tasks
-compileJava.options.isIncremental = true
-compileJava.options.isFork = true
-compileJava.options.forkOptions.executable = "javac"
-compileJava.options.compilerArgs = listOf("-XDignore.symbol.file",
-                                          "-Xlint:deprecation")
+tasks.withType<JavaCompile> {
+    println("Configuring $name in project ${project.name}...")
+    options.encoding = "UTF-8"
+    options.isIncremental = true
+    options.isFork = true
+    options.forkOptions.executable = "javac"
+
+    // setup compile options. we specifically want to suppress usage of "Unsafe"
+    options.compilerArgs = listOf("-XDignore.symbol.file", "-Xlint:deprecation")
+}
+
+
