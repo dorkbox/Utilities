@@ -30,5 +30,6 @@
     <orderEntry type="library" name="objenesis" level="application" />
     <orderEntry type="library" name="swt" level="application" />
     <orderEntry type="library" name="java_uuid_generator" level="application" />
+    <orderEntry type="library" name="lwjgl-3" level="application" />
   </component>
 </module>
