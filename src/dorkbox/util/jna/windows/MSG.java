@@ -33,7 +33,7 @@ class MSG extends Structure {
 
     @Override
     protected
-    List getFieldOrder() {
+    List<String> getFieldOrder() {
         return Arrays.asList("hWnd", "message", "wParam", "lParam", "time", "x", "y");
     }
 }
