@@ -5,17 +5,23 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import org.jetbrains.kotlin.gradle.plugin.android.AndroidGradleWrapper.srcDir
 import java.io.File
 
+buildscript {
+    dependencies {
+//        classpath("com.bmuschko:gradle-docker-plugin:${property("gradle_docker_plugin.version")}")
+    }
+}
+
 plugins {
     java
     maven
-     kotlin("jvm")
-
-    // the version is defined in the parent project. Uncomment this if you are working DIRECTLY with Utilities
-    // kotlin("jvm") version "1.2.40"
+    // the version is defined in the parent project. Change this if you are working DIRECTLY with Utilities
+//     kotlin("jvm") version "1.2.40"
+    kotlin("jvm")
 }
 
 apply {
     plugin("java")
+    plugin("kotlin")
 }
 
 kotlin.experimental.coroutines = Coroutines.ENABLE
@@ -57,7 +63,7 @@ sourceSets {
 
 repositories {
     mavenLocal()
-    maven { setUrl("http://repo.maven.apache.org/maven2") }
+    mavenCentral()
 }
 
 dependencies {
@@ -89,7 +95,6 @@ dependencies {
 }
 
 tasks.withType<JavaCompile> {
-    println("Configuring $name in project ${project.name}...")
     options.encoding = "UTF-8"
     options.isIncremental = true
     options.isFork = true
