@@ -42,13 +42,13 @@ class Swt {
 
     // Methods are cached for performance
     private static final Method syncExecMethod;
+    private static final int version;
 
     static {
         boolean isSwtLoaded_ = false;
         boolean isSwtGtk3_ = false;
 
         try {
-            // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
             java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
             m.setAccessible(true);
             ClassLoader cl = ClassLoader.getSystemClassLoader();
@@ -82,14 +82,23 @@ class Swt {
         // currentDisplay = org.eclipse.swt.widgets.Display.getCurrent();
         // currentDisplayThread = currentDisplay.getThread();
 
+        // also save the SWT version
+
         Object _currentDisplay = null;
         Thread _currentDisplayThread = null;
 
         Method _syncExecMethod = null;
+        int _version = 0;
 
         if (isSwtLoaded_) {
             try {
-                Class<?> clazz = Class.forName("org.eclipse.swt.widgets.Display");
+                // SWT.getVersion()
+                Class<?> clazz = Class.forName("org.eclipse.swt.SWT");
+                Method getVersionMethod = clazz.getMethod("getVersion");
+                _version = (Integer) getVersionMethod.invoke(null);
+
+
+                clazz = Class.forName("org.eclipse.swt.widgets.Display");
                 Method getCurrentMethod = clazz.getMethod("getCurrent");
                 Method getThreadMethod = clazz.getMethod("getThread");
                 _syncExecMethod = clazz.getDeclaredMethod("syncExec", Runnable.class);
@@ -150,6 +159,7 @@ class Swt {
         currentDisplay = _currentDisplay;
         currentDisplayThread = _currentDisplayThread;
         syncExecMethod = _syncExecMethod;
+        version = _version;
      }
 
 
@@ -204,5 +214,10 @@ class Swt {
                  }
              });
          }
+    }
+
+    public static
+    int getVersion() {
+        return version;
     }
 }
