@@ -1,0 +1,43 @@
+String getSWTWindowingLibrary() {
+    String platform = System.properties['os.name']
+
+    switch (platform.replaceAll(' ', '').toLowerCase()) {
+        case ~/.*linux.*/: return 'gtk'
+        case ~/.*darwin.*/: return 'cocoa'
+        case ~/.*osx.*/: return 'cocoa'
+        case ~/.*win.*/: return 'win32'
+        default: return null
+    }
+}
+
+String getSWTArch() {
+    String arch = System.properties['os.arch']
+
+    switch (arch) {
+        case ~/.*64.*/: return 'x86_64'
+        default: return 'x86'
+    }
+}
+
+String getSWTPlatform() {
+    String platform = System.properties['os.name']
+
+    switch (platform.replaceAll(' ', '').toLowerCase()) {
+        case ~/.*linux.*/: return 'linux'
+        case ~/.*darwin.*/: return 'macosx'
+        case ~/.*osx.*/: return 'macosx'
+        case ~/.*win.*/: return 'win32'
+        default: return platform
+    }
+}
+
+ext {
+    //  because the eclipse release of SWT is abandoned on maven, this MAVEN repo has newer version of SWT,
+    //  https://github.com/maven-eclipse/maven-eclipse.github.io   (for the website about it)
+    //  http://maven-eclipse.github.io/maven  (for the maven repo)
+
+    swtWindowingLibrary = getSWTWindowingLibrary()
+    swtArch = getSWTArch()
+    swtPlatform = getSWTPlatform()
+}
+
