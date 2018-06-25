@@ -15,31 +15,30 @@
  */
 package dorkbox.util.swing;
 
-import java.awt.Canvas;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import dorkbox.util.ActionHandlerLong;
 
 /**
- * Contains all of the appropriate logic to setup and render via "Active" rendering (instead of "Passive" rendering). This permits us to
- * render Windows (and their contents), OFF of the EDT - even though there are other frames/components that are ON the EDT. <br> Because we
- * still want to react to mouse events, etc on the EDT, we do not completely remove the EDT -- we merely allow us to "synchronize" the EDT
- * object to our thread. It's a little bit hacky, but it works beautifully, and permits MUCH nicer animations. <br>
- * <p/>
- * <b>It is also important to REMEMBER -- if you add a component to an actively managed Window, YOU MUST make sure to call {@link
- * JComponent#setIgnoreRepaint(boolean)} otherwise this component will "fight" on the EDT for updates. </b>
+ * Contains all of the appropriate logic to setup and render via "Active" rendering (instead of "Passive" rendering).
+ *
+ * This permits us to render components OFF of the EDT - even though there are other frames/components that are ON the EDT.
+ * <br>
+ * Because we still want to react to mouse events, etc on the EDT, we do not completely remove the EDT -- we merely allow us
+ * to "synchronize" the EDT object to our thread. It's a little bit hacky, but it works beautifully, and permits MUCH nicer animations.
+ * <br>
  */
 public final
 class SwingActiveRender {
     private static Thread activeRenderThread = null;
 
-    static final List<Canvas> activeRenders = new ArrayList<Canvas>();
+    static final List<Component> activeRenders = new ArrayList<Component>();
     static final List<ActionHandlerLong> activeRenderEvents = new CopyOnWriteArrayList<ActionHandlerLong>();
 
     // volatile, so that access triggers thread synchrony, since 1.6. See the Java Language Spec, Chapter 17
@@ -53,45 +52,30 @@ class SwingActiveRender {
 
 
     /**
-     * Enables the canvas to to added to an "Active Render" thread, at a target "Frames-per-second". This is to support smooth, swing-based
+     * Enables the component to to added to an "Active Render" thread, at a target "Frames-per-second". This is to support smooth, swing-based
      * animations.
      * <p>
-     * This works by removing this object from EDT updates, and instead manually calls paint(g) on the canvas, updating it on our own thread.
+     * This works by removing this object from EDT updates and manually calls paint on the component, updating it on our own thread, but
+     * still remaining synchronized with the EDT.
      *
-     * @param canvas the canvas to add to the ActiveRender thread.
+     * @param component the component to add to the ActiveRender thread.
      */
     @SuppressWarnings("Duplicates")
     public static
-    void addActiveRender(final Canvas canvas) {
+    void addActiveRender(final Component component) {
         // this should be on the EDT
         if (!EventQueue.isDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public
                 void run() {
-                    addActiveRender(canvas);
+                    addActiveRender(component);
                 }
             });
             return;
         }
 
-        // setup double-buffering, so we can properly use Active-Rendering, so the animations will be smooth
-        try {
-            canvas.createBufferStrategy(2);
-        } catch (Exception e) {
-            // sometimes it's added too early. Postpone the event until later
-            // note: this is different than SwingUtil, because we MUST invoke it later (and not in the current thread)
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public
-                void run() {
-                    addActiveRender(canvas);
-                }
-            });
-            return;
-        }
-
-        canvas.setIgnoreRepaint(true);
+        component.setIgnoreRepaint(true);
 
         synchronized (activeRenders) {
             if (!hasActiveRenders) {
@@ -99,31 +83,31 @@ class SwingActiveRender {
             }
 
             hasActiveRenders = true;
-            activeRenders.add(canvas);
+            activeRenders.add(component);
         }
     }
 
     /**
-     * Removes a canvas from the ActiveRender queue. This should happen when the canvas is closed.
+     * Removes a component from the ActiveRender queue. This should happen when the component is closed.
      *
-     * @param canvas the canvas to remove
+     * @param component the component to remove
      */
     public static
-    void removeActiveRender(final Canvas canvas) {
+    void removeActiveRender(final Component component) {
         // this should be on the EDT
         if (!EventQueue.isDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public
                 void run() {
-                    removeActiveRender(canvas);
+                    removeActiveRender(component);
                 }
             });
             return;
         }
 
         synchronized (activeRenders) {
-            activeRenders.remove(canvas);
+            activeRenders.remove(component);
 
             final boolean hadActiveRenders = !activeRenders.isEmpty();
             hasActiveRenders = hadActiveRenders;
@@ -133,7 +117,7 @@ class SwingActiveRender {
             }
         }
 
-        canvas.setIgnoreRepaint(false);
+        component.setIgnoreRepaint(false);
     }
 
     /**

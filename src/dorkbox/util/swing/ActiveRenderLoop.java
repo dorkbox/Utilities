@@ -15,10 +15,9 @@
  */
 package dorkbox.util.swing;
 
-import java.awt.Canvas;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Toolkit;
-import java.awt.image.BufferStrategy;
 import java.util.List;
 
 import javax.swing.JComponent;
@@ -68,31 +67,24 @@ class ActiveRenderLoop implements Runnable {
 
             // this needs to be synchronized because we don't want to our canvas removed WHILE we are rendering it.
             synchronized (SwingActiveRender.activeRenders) {
-                final List<Canvas> activeRenders = SwingActiveRender.activeRenders;
+                final List<Component> activeRenders = SwingActiveRender.activeRenders;
 
-                for (Canvas canvas : activeRenders) {
-                    if (!canvas.isDisplayable()) {
+                for (Component component : activeRenders) {
+                    if (!component.isDisplayable()) {
                         continue;
                     }
 
-                    BufferStrategy buffer = canvas.getBufferStrategy();
-
-                    // maybe the frame was closed
+                    // maybe the frame was closed, so we must be in a try/catch issue #11
                     try {
-                        graphics = buffer.getDrawGraphics();
-                        canvas.paint(graphics);
+                        graphics = component.getGraphics();
+                        component.paint(graphics);
                     } catch (Exception e) {
-                        // the frame can be close as well. can get a "java.lang.IllegalStateException: Component must have a valid
-                        // peer" if it's already be closed during the getDrawGraphics call.
+                        // the canvas can be closed as well. can get a "java.lang.IllegalStateException: Component must have a valid peer" if
+                        // it's already be closed during the getDrawGraphics call.
                         e.printStackTrace();
                     } finally {
                         if (graphics != null) {
                             graphics.dispose();
-
-                            // blit the back buffer to the screen
-                            if (buffer != null && !buffer.contentsLost()) {
-                                buffer.show();
-                            }
                         }
                     }
                 }
