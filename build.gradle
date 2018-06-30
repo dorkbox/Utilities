@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 plugins {
     id 'java'
     id 'maven'
@@ -27,33 +42,33 @@ sourceSets {
 
 repositories {
     mavenLocal()
-    mavenCentral()
+    jcenter()
 }
 
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
 
-    compile group: 'com.github.jponge', name: 'lzma-java', version: '1.3'
-    compile group: 'com.fasterxml.uuid', name: 'java-uuid-generator', version: '3.1.5'
+    implementation group: 'com.github.jponge', name: 'lzma-java', version: '1.3'
+    implementation group: 'com.fasterxml.uuid', name: 'java-uuid-generator', version: '3.1.5'
 
-    compile group: 'com.esotericsoftware', name: 'kryo', version: '4.0.2'
-    compile group: 'io.netty', name: 'netty-all', version: '4.1.24.Final'
+    implementation group: 'com.esotericsoftware', name: 'kryo', version: '4.0.2'
+    implementation group: 'io.netty', name: 'netty-all', version: '4.1.24.Final'
 
-    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: bcVersion
-    compile group: 'org.bouncycastle', name: 'bcpg-jdk15on', version: bcVersion
-    compile group: 'org.bouncycastle', name: 'bcmail-jdk15on', version: bcVersion
-//    compile group: 'org.bouncycastle', name: 'bctls-jdk15on', version: bcVersion
+    implementation group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: bcVersion
+    implementation group: 'org.bouncycastle', name: 'bcpg-jdk15on', version: bcVersion
+    implementation group: 'org.bouncycastle', name: 'bcmail-jdk15on', version: bcVersion
+//    implementation group: 'org.bouncycastle', name: 'bctls-jdk15on', version: bcVersion
 
-    compile group: 'org.lwjgl', name: 'lwjgl-xxhash', version: '3.1.6'
-    compile group: 'org.javassist', name: 'javassist', version: '3.21.0-GA'
+    implementation group: 'org.lwjgl', name: 'lwjgl-xxhash', version: '3.1.6'
+    implementation group: 'org.javassist', name: 'javassist', version: '3.21.0-GA'
     
-    compile group: 'com.dorkbox', name: 'ShellExecutor', version: '1.1+'
+    implementation group: 'com.dorkbox', name: 'ShellExecutor', version: '1.1+'
 
-    compile group: 'net.java.dev.jna', name: 'jna', version: jnaVersion
-    compile group: 'net.java.dev.jna', name: 'jna-platform', version: jnaVersion
+    implementation group: 'net.java.dev.jna', name: 'jna', version: jnaVersion
+    implementation group: 'net.java.dev.jna', name: 'jna-platform', version: jnaVersion
 
     // unit testing
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
     testRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.6'
 }
 
