@@ -60,7 +60,7 @@ dependencies {
 //    implementation group: 'org.bouncycastle', name: 'bctls-jdk15on', version: bcVersion
 
     implementation group: 'org.lwjgl', name: 'lwjgl-xxhash', version: '3.1.6'
-    implementation group: 'org.javassist', name: 'javassist', version: '3.21.0-GA'
+    implementation group: 'org.javassist', name: 'javassist', version: '3.23.0-GA'
     
     implementation group: 'com.dorkbox', name: 'ShellExecutor', version: '1.1+'
 
