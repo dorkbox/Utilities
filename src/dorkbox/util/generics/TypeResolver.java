@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import dorkbox.util.OS;
 import sun.misc.Unsafe;
 
 /**
@@ -62,11 +63,7 @@ class TypeResolver {
     private static final Map<String, Method> OBJECT_METHODS = new HashMap<String, Method>();
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPERS;
 
-    private static final Double JAVA_VERSION;
-
     static {
-        JAVA_VERSION = Double.parseDouble(System.getProperty("java.specification.version", "0"));
-
         try {
             Unsafe unsafe = AccessController.doPrivileged(new PrivilegedExceptionAction<Unsafe>() {
                 @Override
@@ -80,7 +77,7 @@ class TypeResolver {
             });
 
             GET_CONSTANT_POOL = Class.class.getDeclaredMethod("getConstantPool");
-            String constantPoolName = JAVA_VERSION < 9 ? "sun.reflect.ConstantPool" : "jdk.internal.reflect.ConstantPool";
+            String constantPoolName = OS.javaVersion < 9 ? "sun.reflect.ConstantPool" : "jdk.internal.reflect.ConstantPool";
             Class<?> constantPoolClass = Class.forName(constantPoolName);
             GET_CONSTANT_POOL_SIZE = constantPoolClass.getDeclaredMethod("getSize");
             GET_CONSTANT_POOL_METHOD_AT = constantPoolClass.getDeclaredMethod("getMethodAt", int.class);
@@ -543,7 +540,7 @@ class TypeResolver {
 
     private static
     boolean isDefaultMethod(Method m) {
-        return JAVA_VERSION >= 1.8 && DefaultMethodHelper.isDefaultMethod(m);
+        return OS.javaVersion >= 8 && DefaultMethodHelper.isDefaultMethod(m);
     }
 
     private static
