@@ -25,7 +25,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 
-@SuppressWarnings({"unused", "WeakerAccess"})
 public
 class OS {
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
@@ -39,14 +38,13 @@ class OS {
     public static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
 
     /**
-     * The currently running java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7
+     * The currently running MAJOR java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7, uses JEP 223 for java > 9
      */
     public static final int javaVersion = _getJavaVersion();
 
 
     private static final OSType osType;
-    private static final String originalTimeZone = TimeZone.getDefault()
-                                                           .getID();
+    private static final String originalTimeZone = TimeZone.getDefault().getID();
 
     static {
         /**
@@ -259,36 +257,42 @@ class OS {
 
 
     /**
-     * Gets the currently running java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7
+     * Gets the currently running MAJOR java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7, uses JEP 223 for java > 9
      */
     private static
     int _getJavaVersion() {
         String fullJavaVersion = System.getProperty("java.version");
 
-        char versionChar;
+
         if (fullJavaVersion.startsWith("1.")) {
-            versionChar = fullJavaVersion.charAt(2);
+            switch (fullJavaVersion.charAt(2)) {
+                case '4':
+                    return 4;
+                case '5':
+                    return 5;
+                case '6':
+                    return 6;
+                case '7':
+                    return 7;
+                case '8':
+                    return 8;
+                case '9':
+                    return 9;
+            }
         }
         else {
-            versionChar = fullJavaVersion.charAt(0);
+            // We are >= java 10, use JEP 223 to get the version (early releases of 9 might not have JEP 223, so 10 is guaranteed to have it)
+            fullJavaVersion = System.getProperty("java.specification.version", "10");
+
+            try {
+                // it will ALWAYS be the major release version as an integer. See http://openjdk.java.net/jeps/223
+                return Integer.parseInt(fullJavaVersion);
+            } catch (Exception ignored) {
+            }
         }
 
-        switch (versionChar) {
-            case '4':
-                return 4;
-            case '5':
-                return 5;
-            case '6':
-                return 6;
-            case '7':
-                return 7;
-            case '8':
-                return 8;
-            case '9':
-                return 9;
-            default:
-                return -1;
-        }
+        // the last valid guess we have, since the current Java implementation, whatever it is, decided not to cooperate with JEP 223.
+        return 10;
     }
 
     /**
