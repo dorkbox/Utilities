@@ -33,9 +33,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * File related utilities.
  * <p/>
@@ -50,7 +47,8 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings({"WeakerAccess", "Duplicates", "unused"})
 public
 class FileUtil {
-    private static final Logger logger = LoggerFactory.getLogger(FileUtil.class);
+    private static final boolean DEBUG = false;
+
     /**
      * The Unix separator character.
      */
@@ -213,14 +211,19 @@ class FileUtil {
             File temp = new File(dest.getPath() + "_old");
             if (temp.exists()) {
                 if (!temp.delete()) {
-                    logger.warn("Failed to delete old intermediate file {}.", temp);
+                    if (DEBUG) {
+                        System.err.println("Failed to delete old intermediate file: " + temp);
+                    }
+
                     // the subsequent code will probably fail
                 }
             }
             if (dest.renameTo(temp)) {
                 if (source.renameTo(dest)) {
                     if (temp.delete()) {
-                        logger.warn("Failed to delete intermediate file {}.", temp);
+                        if (DEBUG) {
+                            System.err.println("Failed to delete intermediate file: " + temp);
+                        }
                     }
                     return true;
                 }
@@ -237,12 +240,18 @@ class FileUtil {
 
             IO.close(fin);
             if (!source.delete()) {
-                logger.warn("Failed to delete {} after brute force copy to {}.", source, dest);
+                if (DEBUG) {
+                    System.err.println("Failed to delete '" + source + "' after brute force copy to '" + dest + "'.");
+                }
             }
             return true;
 
         } catch (IOException ioe) {
-            logger.warn("Failed to copy {} to {}.", source, dest, ioe);
+            if (DEBUG) {
+                System.err.println("Failed to copy '" + source + "' to '" + dest + "'.");
+                ioe.printStackTrace();
+            }
+
             return false;
 
         } finally {
@@ -321,7 +330,9 @@ class FileUtil {
         String normalizedout = normalize(out).getAbsolutePath();
 
         if (normalizedIn.equalsIgnoreCase(normalizedout)) {
-            logger.warn("Source equals destination! " + normalizedIn);
+            if (DEBUG) {
+                System.err.println("Source equals destination! " + normalizedIn);
+            }
             return out;
         }
 
@@ -333,9 +344,8 @@ class FileUtil {
             parentOut.mkdirs();
         }
 
-        Logger logger2 = logger;
-        if (logger2.isTraceEnabled()) {
-            logger2.trace("Copying file: {}  -->  {}", in, out);
+        if (DEBUG) {
+            System.err.println("Copying file: '" + in + "'  -->  '" + out + "'");
         }
 
         FileChannel sourceChannel = null;
@@ -345,7 +355,7 @@ class FileUtil {
             destinationChannel = new FileOutputStream(normalizedout).getChannel();
 
             if (sourceChannel.size() == 0) {
-                logger2.warn("Source size is ZERO: " + normalizedIn);
+                System.err.println("Source size is ZERO: " + normalizedIn);
             }
 
             sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel);
@@ -385,9 +395,8 @@ class FileUtil {
         String normalizedOne = normalize(one).getAbsolutePath();
         String normalizedTwo = normalize(two).getAbsolutePath();
 
-        Logger logger2 = logger;
-        if (logger2.isTraceEnabled()) {
-            logger2.trace("Cocating file: {}  -->  {}", one, two);
+        if (DEBUG) {
+            System.err.println("Concat'ing file: '" + one + "'  -->  '" + two + "'");
         }
 
         FileChannel channelOne = null;
@@ -505,9 +514,8 @@ class FileUtil {
             if (!dest.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 dest.mkdir();
-                Logger logger2 = logger;
-                if (logger2.isTraceEnabled()) {
-                    logger2.trace("Directory copied from  {}  -->  {}", src, dest);
+                if (DEBUG) {
+                    System.err.println("Directory copied from  '" + src + "'  -->  '" + dest + "'");
                 }
             }
 
@@ -559,9 +567,8 @@ class FileUtil {
             if (!dest.exists()) {
                 //noinspection ResultOfMethodCallIgnored
                 dest.mkdir();
-                Logger logger2 = logger;
-                if (logger2.isTraceEnabled()) {
-                    logger2.trace("Directory copied from  {}  -->  {}", src, dest);
+                if (DEBUG) {
+                    System.err.println("Directory copied from  '" + src + "'  -->  '" + dest + "'");
                 }
             }
 
@@ -616,7 +623,7 @@ class FileUtil {
 
         boolean thingsDeleted = false;
         boolean ignored = false;
-        Logger logger2 = logger;
+
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
@@ -631,8 +638,8 @@ class FileUtil {
                         for (String name : namesToIgnore) {
                             if (name.charAt(0) == UNIX_SEPARATOR && name.equals(name2)) {
                                 // only name match if our name To Ignore starts with a / or \
-                                if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete dir: {}", file2);
+                                if (DEBUG) {
+                                    System.err.println("Skipping delete dir: " + file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -640,8 +647,8 @@ class FileUtil {
                             }
                             else if (name.equals(name2Full)) {
                                 // full path match
-                                if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete dir: {}", file2);
+                                if (DEBUG) {
+                                    System.err.println("Skipping delete dir: " + file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -650,8 +657,8 @@ class FileUtil {
                         }
 
                         if (delete) {
-                            if (logger2.isTraceEnabled()) {
-                                logger2.trace("Deleting dir: {}", file2);
+                            if (DEBUG) {
+                                System.err.println("Deleting dir: " + file2);
                             }
                             delete(file2, namesToIgnore);
                         }
@@ -660,8 +667,8 @@ class FileUtil {
                         for (String name : namesToIgnore) {
                             if (name.charAt(0) != UNIX_SEPARATOR && name.equals(name2)) {
                                 // only name match
-                                if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete file: {}", file2);
+                                if (DEBUG) {
+                                    System.err.println("Skipping delete file: " + file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -669,8 +676,8 @@ class FileUtil {
                             }
                             else if (name.equals(name2Full)) {
                                 // full path match
-                                if (logger2.isTraceEnabled()) {
-                                    logger2.trace("Skipping delete file: {}", file2);
+                                if (DEBUG) {
+                                    System.err.println("Skipping delete file: " + file2);
                                 }
                                 ignored = true;
                                 delete = false;
@@ -679,8 +686,8 @@ class FileUtil {
                         }
 
                         if (delete) {
-                            if (logger2.isTraceEnabled()) {
-                                logger2.trace("Deleting file: {}", file2);
+                            if (DEBUG) {
+                                System.err.println("Deleting file: " + file2);
                             }
                             thingsDeleted |= file2.delete();
                         }
@@ -691,14 +698,14 @@ class FileUtil {
 
         // don't try to delete the dir if there was an ignored file in it
         if (ignored) {
-            if (logger2.isTraceEnabled()) {
-                logger2.trace("Skipping deleting file: {}", file);
+            if (DEBUG) {
+                System.err.println("Skipping deleting file: " + file);
             }
             return false;
         }
 
-        if (logger2.isTraceEnabled()) {
-            logger2.trace("Deleting file: {}", file);
+        if (DEBUG) {
+            System.err.println("Deleting file: " + file);
         }
 
         thingsDeleted |= file.delete();
@@ -717,9 +724,8 @@ class FileUtil {
 
         String path = normalize(location).getAbsolutePath();
         if (location.mkdirs()) {
-            Logger logger2 = logger;
-            if (logger2.isTraceEnabled()) {
-                logger2.trace("Created directory: {}", path);
+            if (DEBUG) {
+                System.err.println("Created directory: " + path);
             }
         }
 
