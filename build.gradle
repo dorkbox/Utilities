@@ -16,11 +16,15 @@
 plugins {
     id 'java'
     id 'maven'
+
+//    // setup checking for the latest version of a plugin or dependency (and updating the gradle build)
+//    id "se.patrikerdes.use-latest-versions" version "0.2.3"
+//    id 'com.github.ben-manes.versions' version '0.16.0'
 }
 
 ext {
-    bcVersion = '1.59'
-    jnaVersion = '4.5.1'
+    bcVersion = '1.60'
+    jnaVersion = '4.5.2'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -59,7 +63,7 @@ dependencies {
     implementation group: 'org.bouncycastle', name: 'bcmail-jdk15on', version: bcVersion
 //    implementation group: 'org.bouncycastle', name: 'bctls-jdk15on', version: bcVersion
 
-    implementation group: 'org.lwjgl', name: 'lwjgl-xxhash', version: '3.1.6'
+    implementation group: 'org.lwjgl', name: 'lwjgl-xxhash', version: '3.2.0'
     implementation group: 'org.javassist', name: 'javassist', version: '3.23.0-GA'
     
     implementation group: 'com.dorkbox', name: 'ShellExecutor', version: '1.1+'
