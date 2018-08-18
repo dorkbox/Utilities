@@ -1,4 +1,13 @@
 String getSWTWindowingLibrary() {
+    if (ext.has('swt')) {
+        switch (ext.swt) {
+            case ~/.*linux.*/: return 'gtk'
+            case ~/.*mac.*/: return 'cocoa'
+            case ~/.*win.*/: return 'win32'
+            default: return null
+        }
+    }
+
     String platform = System.properties['os.name']
 
     switch (platform.replaceAll(' ', '').toLowerCase()) {
@@ -13,6 +22,10 @@ String getSWTWindowingLibrary() {
 String getSWTArch() {
     String arch = System.properties['os.arch']
 
+    if (ext.has('swt')) {
+        arch = ext.swt
+    }
+
     switch (arch) {
         case ~/.*64.*/: return 'x86_64'
         default: return 'x86'
@@ -20,6 +33,15 @@ String getSWTArch() {
 }
 
 String getSWTPlatform() {
+    if (ext.has('swt')) {
+        switch (ext.swt) {
+            case ~/.*linux.*/: return 'linux'
+            case ~/.*mac.*/: return 'macosx'
+            case ~/.*win.*/: return 'win32'
+            default: return null
+        }
+    }
+
     String platform = System.properties['os.name']
 
     switch (platform.replaceAll(' ', '').toLowerCase()) {
@@ -30,6 +52,9 @@ String getSWTPlatform() {
         default: return platform
     }
 }
+
+// optionally let us specify which SWT to use. options are win32/mac32/linux32 and win64/mac64/linux64
+// include this in your build.gradle file, before dependencies are determined.    ext.swt = 'win64'
 
 ext {
     //  because the eclipse release of SWT is abandoned on maven, this MAVEN repo has newer version of SWT,

@@ -15,7 +15,10 @@
  */
 package dorkbox.util;
 
+import java.io.IOException;
 import java.util.Arrays;
+
+import javax.xml.bind.DatatypeConverter;
 
 /** A very fast and memory efficient class to encode and decode to and from BASE64 in full accordance
  * with RFC 2045.<br><br>
@@ -25,7 +28,7 @@ import java.util.Arrays;
  *
  * On byte arrays the encoder is about 20% faster than Jakarta Commons Base64 Codec for encode and
  * about 50% faster for decoding large arrays. This implementation is about twice as fast on very small
- * arrays (&lt 30 bytes). If source/destination is a <code>String</code> this
+ * arrays (< 30 bytes). If source/destination is a <code>String</code> this
  * version is about three times as fast due to the fact that the Commons Codec result has to be recoded
  * to a <code>String</code> from <code>byte[]</code>, which is very expensive.<br><br>
  *
@@ -96,6 +99,50 @@ public class Base64Fast
         }
 		IA['='] = 0;
 	}
+
+    /**
+     * Formats data into a nicely formatted base64 encoded String
+     *
+     * @param s A string containing the base64 encoded data
+     * @param lineLength The number of characters per line
+     * @param prefix A string prefixing the characters on each line
+     * @param addClose Whether to add a close parenthesis or not
+     *
+     * @return A String representing the formatted output
+     */
+    public static
+    String formatString(String s, int lineLength, String prefix, boolean addClose) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < s.length(); i += lineLength) {
+            sb.append(prefix);
+            if (i + lineLength >= s.length()) {
+                sb.append(s.substring(i));
+                if (addClose) {
+                    sb.append(" )");
+                }
+            }
+            else {
+                sb.append(s.substring(i, i + lineLength));
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    public static
+    String encode2(byte[] data) {
+        // will skip/ignore invalid chars!
+        return DatatypeConverter.printBase64Binary(data);
+    }
+
+    public static
+    byte[] decode2(String base64) throws IOException {
+        // this is the fastest way to do string->byte conversion
+        // http://java-performance.info/base64-encoding-and-decoding-performance/
+        // will skip/ignore invalid chars!
+        return DatatypeConverter.parseBase64Binary(base64);
+    }
+
 
 	// ****************************************************************************************
 	// *  char[] version
