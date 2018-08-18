@@ -24,6 +24,9 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 
+import org.slf4j.LoggerFactory;
+
+import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinGDI;
 import com.sun.jna.ptr.PointerByReference;
@@ -53,24 +56,32 @@ public class HBITMAPWrap extends HBITMAP {
             bmi.bmiHeader.biCompression = WinGDI.BI_RGB;
             bmi.bmiHeader.biSizeImage = w * h * 4;
 
-            PointerByReference ppbits = new PointerByReference();
-            hBitmap = GDI32.CreateDIBSection(memDC, bmi, WinGDI.DIB_RGB_COLORS, ppbits, null, 0);
-            Pointer pbits = ppbits.getValue();
+            Memory memory = new Memory(w*h*32*4);
+            PointerByReference pointerRef = new PointerByReference(memory);
+            hBitmap = GDI32.CreateDIBSection(memDC, bmi, WinGDI.DIB_RGB_COLORS, pointerRef, null, 0);
+            Pointer pointerToBits = pointerRef.getValue();
 
-            Raster raster = buf.getData();
-            int[] pixel = new int[4];
-            int[] bits = new int[w * h];
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) {
-                    raster.getPixel(x, h - y - 1, pixel);
-                    int red = (pixel[2] & 0xFF) << 0;
-                    int green = (pixel[1] & 0xFF) << 8;
-                    int blue = (pixel[0] & 0xFF) << 16;
-                    int alpha = (pixel[3] & 0xFF) << 24;
-                    bits[x + y * w] = alpha | red | green | blue;
-                }
+            if (pointerToBits == null) {
+                // the bitmap was invalid
+                LoggerFactory.getLogger(HBITMAPWrap.class).error("The image was invalid", Kernel32.getLastErrorMessage());
             }
-            pbits.write(0, bits, 0, bits.length);
+            else {
+                Raster raster = buf.getData();
+                int[] pixel = new int[4];
+                int[] bits = new int[w * h];
+                for (int y = 0; y < h; y++) {
+                    for (int x = 0; x < w; x++) {
+                        raster.getPixel(x, h - y - 1, pixel);
+                        int red = (pixel[2] & 0xFF) << 0;
+                        int green = (pixel[1] & 0xFF) << 8;
+                        int blue = (pixel[0] & 0xFF) << 16;
+                        int alpha = (pixel[3] & 0xFF) << 24;
+                        bits[x + y * w] = alpha | red | green | blue;
+                    }
+                }
+                pointerToBits.write(0, bits, 0, bits.length);
+            }
+
             return hBitmap;
         } finally {
             User32.ReleaseDC(null, screenDC);
@@ -81,7 +92,8 @@ public class HBITMAPWrap extends HBITMAP {
     BufferedImage img;
 
     public HBITMAPWrap(BufferedImage img) {
-        setPointer(createBitmap(img).getPointer());
+        HBITMAP bitmap = createBitmap(img);
+        setPointer(bitmap.getPointer());
 
         this.img = img;
     }
