@@ -25,19 +25,6 @@ public
 class NamedThreadFactory implements ThreadFactory {
     private final AtomicInteger poolId = new AtomicInteger();
 
-    // permit this to be changed!
-    /**
-     * The stack size is arbitrary based on JVM implementation. Default is 0
-     * 8k is the size of the android stack. Depending on the version of android, this can either change, or will always be 8k
-     * <p/>
-     * To be honest, 8k is pretty reasonable for an asynchronous/event based system (32bit) or 16k (64bit)
-     * Setting the size MAY or MAY NOT have any effect!!!
-     * <p/>
-     * Stack size must be specified in bytes. Default is 8k
-     */
-    @Property
-    public static int stackSizeForThreads = 8192;
-
     private final ThreadGroup group;
     private final String namePrefix;
     private final int threadPriority;
@@ -94,7 +81,7 @@ class NamedThreadFactory implements ThreadFactory {
     /**
      * @param poolNamePrefix what you want the subsequent threads to be named.
      * @param group          the group this thread will belong to. If NULL, it will belong to the current thread group.
-     * @param threadPriority Thread.MIN_PRIORITY, Thread.NORM_PRIORITY, Thread.MAX_PRIORITY
+     * @param threadPriority 1-10, with 5 being normal and 10 being max
      */
     public
     NamedThreadFactory(String poolNamePrefix, ThreadGroup group, int threadPriority, boolean isDaemon) {
@@ -108,9 +95,15 @@ class NamedThreadFactory implements ThreadFactory {
             this.group = group;
         }
 
-        if (threadPriority != Thread.MAX_PRIORITY && threadPriority != Thread.NORM_PRIORITY && threadPriority != Thread.MIN_PRIORITY) {
-            throw new IllegalArgumentException("Thread priority must be valid!");
+
+        if (threadPriority < Thread.MIN_PRIORITY) {
+            throw new IllegalArgumentException(String.format("Thread priority (%s) must be >= %s", threadPriority, Thread.MIN_PRIORITY));
         }
+        if (threadPriority > Thread.MAX_PRIORITY) {
+            throw new IllegalArgumentException(String.format("Thread priority (%s) must be <= %s", threadPriority, Thread.MAX_PRIORITY));
+        }
+
+
         this.threadPriority = threadPriority;
     }
 
@@ -121,7 +114,7 @@ class NamedThreadFactory implements ThreadFactory {
         // 8k is the size of the android stack. Depending on the version of android, this can either change, or will always be 8k
         // To be honest, 8k is pretty reasonable for an asynchronous/event based system (32bit) or 16k (64bit)
         // Setting the size MAY or MAY NOT have any effect!!!
-        Thread t = new Thread(this.group, r, this.namePrefix + '-' + this.poolId.incrementAndGet(), stackSizeForThreads);
+        Thread t = new Thread(this.group, r, this.namePrefix + '-' + this.poolId.incrementAndGet());
         t.setDaemon(this.daemon);
         if (t.getPriority() != this.threadPriority) {
             t.setPriority(this.threadPriority);
