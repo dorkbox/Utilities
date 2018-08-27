@@ -1,8 +1,8 @@
 ext {
-    bcVersion = '1.60'
-    jnaVersion = '4.5.2'
+    def bcVersion = '1.60'
+    def jnaVersion = '4.5.2'
 
-   utilitiesDeps = [
+    utilities = [
        'org.slf4j:slf4j-api:1.7.25',
 
        'com.github.jponge:lzma-java:1.3',
