@@ -17,9 +17,9 @@ package dorkbox.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.server.ExportException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
@@ -30,8 +30,7 @@ public
 class NativeLoader {
 
     public static
-    File extractLibrary(final String sourceFileName, final String destinationDirectory, final String destinationName, String version)
-            throws Exception {
+    File extractLibrary(final String sourceFileName, final String destinationDirectory, final String destinationName, String version) throws IOException {
         try {
             String suffix;
             if (OS.isLinux()) {
@@ -86,7 +85,7 @@ class NativeLoader {
 
             return file;
         } catch (Exception e) {
-            throw new ExportException("Error extracting library: " + sourceFileName, e);
+            throw new IOException("Error extracting library: " + sourceFileName, e);
         }
     }
 
