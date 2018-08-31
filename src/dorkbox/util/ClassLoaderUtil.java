@@ -47,13 +47,15 @@ public class ClassLoaderUtil {
 
     @SuppressWarnings({"unchecked", "unused"})
     public static class Bootstrap {
-        private static final int JNI_VERSION_1_1 = 0x00010001;
-        private static final int JNI_VERSION_1_2 = 0x00010002;
-        private static final int JNI_VERSION_1_4 = 0x00010004;
-        private static final int JNI_VERSION_1_6 = 0x00010006;
+        public static final int JNI_VERSION_1_1 = 0x00010001;
+        public static final int JNI_VERSION_1_2 = 0x00010002;
+        public static final int JNI_VERSION_1_4 = 0x00010004;
+        public static final int JNI_VERSION_1_6 = 0x00010006;
+        public static final int JNI_VERSION_1_7 = 0x00010007;
+        public static final int JNI_VERSION_1_8 = 0x00010008;
 
         // if we want to change the JNI version, this is how we do it.
-        private static int JNI_VERSION = JNI_VERSION_1_4;
+        public static int JNI_VERSION = JNI_VERSION_1_4;
 
         private static JVM libjvm;
 
