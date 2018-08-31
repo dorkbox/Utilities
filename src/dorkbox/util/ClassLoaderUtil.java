@@ -29,6 +29,8 @@ import com.sun.jna.Structure;
 import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.win32.StdCallFunctionMapper;
 
+// http://hg.openjdk.java.net/jdk10/jdk10/jdk/file/777356696811/src/java.base/share/native/libjava/ClassLoader.c
+// http://hg.openjdk.java.net/jdk9/jdk9/jdk/file/65464a307408/src/java.base/share/native/libjava/ClassLoader.c
 // http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/be698ac28848/src/share/native/java/lang/ClassLoader.c
 // http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/tip/src/share/vm/prims/jvm.cpp
 
