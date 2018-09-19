@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
  */
 public
 class DefaultMethodHelper {
+    @SuppressWarnings("Since15")
     static
     boolean isDefaultMethod(Method m) {
         return m.isDefault();
