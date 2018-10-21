@@ -210,9 +210,6 @@ public class ClassLoaderUtil {
      */
     public static
     void defineClass(final byte[] bytes) throws Exception {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
-        defineClass.setAccessible(true);
-        defineClass.invoke(classLoader, bytes, 0, bytes.length);
+        ClassLoaderReflectionUtil.defineClass(bytes);
     }
 }
