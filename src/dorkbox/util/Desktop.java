@@ -36,6 +36,60 @@ class Desktop {
     private static final String GVFS = "/usr/bin/gvfs-open";
     private static final boolean GVFS_VALID = new File(GVFS).canExecute();
 
+
+    /**
+     * Launches the associated application to open the file.
+     * <p>
+     * If the specified file is a directory, the file manager of the current platform is launched to open it.
+     * <p>
+     * Important Note:
+     *   Apple tries to launch <code>.app</code> bundle directories as applications rather than browsing contents.
+     *   If this is the case, use `browseDirectory()` instead.
+     *
+     *
+     * @param file the file to open
+     */
+    public static
+    void open(File file) throws IOException {
+        if (file == null) {
+            throw new IOException("File must not be null.");
+        }
+
+        // Apple tries to launch <code>.app</code> bundle directories as applications rather than browsing contents
+        // WE DO NOTHING HERE TO PREVENT THAT.
+
+
+        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
+        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
+        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
+            launchNix(file.toString());
+        }
+        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
+                                                                          .isSupported(java.awt.Desktop.Action.OPEN)) {
+            // make sure this doesn't block the current UI
+            SwingUtil.invokeLater(new Runnable() {
+                @Override
+                public
+                void run() {
+                    try {
+                        java.awt.Desktop.getDesktop()
+                                        .open(file);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        }
+        else {
+            throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
+        }
+    }
+
+
+
+
+
+
     /**
      * Launches the default browser to display the specified HTTP address.
      * <p>
