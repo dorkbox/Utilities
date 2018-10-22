@@ -33,6 +33,9 @@ import com.sun.jna.ptr.PointerByReference;
 
 public class HBITMAPWrap extends HBITMAP {
 
+    // NOTE: This is a field (instead of private) so that GC does not try to collect this object
+    private HBITMAP bitmap;
+
     // https://github.com/twall/jna/blob/master/contrib/alphamaskdemo/com/sun/jna/contrib/demo/AlphaMaskDemo.java
     private static
     HBITMAP createBitmap(BufferedImage image) {
@@ -92,7 +95,7 @@ public class HBITMAPWrap extends HBITMAP {
     BufferedImage img;
 
     public HBITMAPWrap(BufferedImage img) {
-        HBITMAP bitmap = createBitmap(img);
+        bitmap = createBitmap(img);
         setPointer(bitmap.getPointer());
 
         this.img = img;
@@ -108,6 +111,7 @@ public class HBITMAPWrap extends HBITMAP {
         if (Pointer.nativeValue(getPointer()) != 0) {
             GDI32.DeleteObject(this);
             setPointer(new Pointer(0));
+            bitmap = null;
         }
     }
 
