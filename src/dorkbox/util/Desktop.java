@@ -50,7 +50,7 @@ class Desktop {
      * @param file the file to open
      */
     public static
-    void open(File file) throws IOException {
+    void open(final File file) throws IOException {
         if (file == null) {
             throw new IOException("File must not be null.");
         }
