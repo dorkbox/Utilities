@@ -19,15 +19,14 @@ import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import io.netty.util.internal.SystemPropertyUtil;
-
-
 public
 class OS {
-    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    public static final String LINE_SEPARATOR = getProperty("line.separator", "\n"); // make the default unix
     public static final String LINE_SEPARATOR_UNIX = "\n";
     public static final String LINE_SEPARATOR_WINDOWS = "\r\n";
 
@@ -35,7 +34,7 @@ class OS {
     public static final Charset UTF_8 = Charset.forName("UTF-8");
     public static final Charset UTF_16LE = Charset.forName("UTF-16LE");
 
-    public static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+    public static final File TEMP_DIR = new File(getProperty("java.io.tmpdir", "temp"));
 
     /**
      * The currently running MAJOR java version as a NUMBER. For example, "Java version 1.7u45", and converts it into 7, uses JEP 223 for java > 9
@@ -47,6 +46,11 @@ class OS {
     private static final String originalTimeZone = TimeZone.getDefault().getID();
 
     static {
+        if (!TEMP_DIR.isDirectory()) {
+            // create the temp dir if necessary because the TEMP dir doesn't exist.
+            TEMP_DIR.mkdirs();
+        }
+
         /**
          * By default, the timer resolution in some operating systems are not particularly high-resolution (ie: 'Thread.sleep(1)' will not
          * really sleep for 1ms, but will really sleep for 16ms). This forces the JVM to use high resolution timers. This is USUALLY
@@ -69,8 +73,8 @@ class OS {
         timerAccuracyThread.start();
 
 
-        String osName = System.getProperty("os.name");
-        String osArch = System.getProperty("os.arch");
+        String osName = getProperty("os.name", "");
+        String osArch = getProperty("os.arch", "");
 
         if (osName != null && osArch != null) {
             osName = osName.toLowerCase(Locale.US);
@@ -80,9 +84,9 @@ class OS {
                 // best way to determine if it's android.
                 // Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android, so we check the VM
 
-                String vmName = SystemPropertyUtil.get("java.vm.name");
-                boolean isAndroid = "Dalvik".equals(vmName);
 
+                String value = getProperty("java.vm.name", "");
+                boolean isAndroid = "Dalvik".equals(value);
                 if (isAndroid) {
                     // android check from https://stackoverflow.com/questions/14859954/android-os-arch-output-for-arm-mips-x86
                     if (osArch.equals("armeabi")) {
@@ -176,6 +180,35 @@ class OS {
         }
     }
 
+    /**
+     * @return the System Property in a safe way for a given key, or null if it does not exist.
+     */
+    public static
+    String getProperty(final String key) {
+        return getProperty(key, null);
+    }
+
+    /**
+     * @return the System Property in a safe way for a given key, and if null - returns the specified default value.
+     */
+    public static
+    String getProperty(final String key, final String defaultValue) {
+        try {
+            if (System.getSecurityManager() == null) {
+                return System.getProperty(key, defaultValue);
+            } else {
+                return AccessController.doPrivileged(new PrivilegedAction<String>() {
+                    @Override
+                    public String run() {
+                        return System.getProperty(key, defaultValue);
+                    }
+                });
+            }
+        } catch (Exception ignored) {
+            return defaultValue;
+        }
+    }
+
     public static
     OSType get() {
         return osType;
@@ -245,7 +278,8 @@ class OS {
      */
     private static
     int _getJavaVersion() {
-        String fullJavaVersion = System.getProperty("java.version");
+        // this should never be a problem, but just in case
+        String fullJavaVersion = getProperty("java.version", "");
 
 
         if (fullJavaVersion.startsWith("1.")) {
@@ -266,7 +300,7 @@ class OS {
         }
         else {
             // We are >= java 10, use JEP 223 to get the version (early releases of 9 might not have JEP 223, so 10 is guaranteed to have it)
-            fullJavaVersion = System.getProperty("java.specification.version", "10");
+            fullJavaVersion = getProperty("java.specification.version", "10");
 
             try {
                 // it will ALWAYS be the major release version as an integer. See http://openjdk.java.net/jeps/223
