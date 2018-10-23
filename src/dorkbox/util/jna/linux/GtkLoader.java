@@ -58,7 +58,7 @@ class GtkLoader {
      * We can have GTK v3 or v2.
      *
      * Observations:
-     * JavaFX uses GTK2, and we can't load GTK3 if GTK2 symbols are loaded
+     * JavaFX (java8) uses GTK2, and we can't load GTK3 if GTK2 symbols are loaded
      * SWT uses GTK2 or GTK3. We do not work with the GTK3 version of SWT.
      */
     static {
@@ -114,7 +114,7 @@ class GtkLoader {
                 }
 
                 if (GtkEventDispatch.DEBUG) {
-                    LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
+                    LoggerFactory.getLogger(GtkLoader.class).debug("Error loading library", e);
                 }
             }
 
@@ -158,7 +158,7 @@ class GtkLoader {
                 }
 
                 if (GtkEventDispatch.DEBUG) {
-                    LoggerFactory.getLogger(GtkLoader.class).error("Error loading library.", e);
+                    LoggerFactory.getLogger(GtkLoader.class).debug("Error loading library.", e);
                 }
             }
         }
@@ -189,7 +189,7 @@ class GtkLoader {
                 }
 
                 if (GtkEventDispatch.DEBUG) {
-                    LoggerFactory.getLogger(GtkLoader.class).error("Error loading library", e);
+                    LoggerFactory.getLogger(GtkLoader.class).debug("Error loading library", e);
                 }
             }
         }
