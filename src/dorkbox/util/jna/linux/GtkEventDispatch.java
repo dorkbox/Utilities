@@ -36,7 +36,7 @@ class GtkEventDispatch {
     static boolean DEBUG = false;
 
     // have to save these in a field to prevent GC on the objects (since they go out-of-scope from java)
-    private static final LinkedList<Object> gtkCallbacks = new LinkedList<Object>();
+    private static final LinkedList<FuncCallback> gtkCallbacks = new LinkedList<FuncCallback>();
 
     // This is required because the EDT needs to have it's own value for this boolean, that is a different value than the main thread
     private static ThreadLocal<Boolean> isDispatch = new ThreadLocal<Boolean>() {
