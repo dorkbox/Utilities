@@ -458,6 +458,12 @@ class OSUtil {
             Unknown,
         }
 
+        public enum EnvType {
+            X11,
+            WAYLAND,
+            Unknown,
+        }
+
         public static
         Env get() {
             // if we are running as ROOT, we *** WILL NOT *** have access to  'XDG_CURRENT_DESKTOP'
@@ -469,10 +475,12 @@ class OSUtil {
                 XDG = "unknown"; // try to autodetect if we should use app indicator or gtkstatusicon
             }
 
+            // Ubuntu 17.10+ is special ... this is ubuntu:GNOME (it now uses wayland instead of x11, so many things have changed...)
+            // So it's gnome, and gnome-shell, but with some caveats
+            // see: https://bugs.launchpad.net/ubuntu/+source/gnome-shell/+bug/1700465
 
             // BLEH. if gnome-shell is running, IT'S REALLY GNOME!
             // we must ALWAYS do this check!!
-            // Ubuntu 17.10 is special ... this is ubuntu:GNOME
             if (OSUtil.DesktopEnv.isGnome()) {
                 XDG = "gnome";
             }
@@ -521,6 +529,24 @@ class OSUtil {
         }
 
 
+        public static EnvType getType() {
+            String XDG = System.getenv("XDG_SESSION_TYPE");
+            if (XDG == null) {
+                XDG = "unknown"; // have no idea how this can happen....
+            }
+
+            if ("x11".equals(XDG)) {
+                return EnvType.X11;
+            }
+
+            if ("wayland".equals(XDG)) {
+                return EnvType.WAYLAND;
+            }
+
+            return EnvType.Unknown;
+        }
+
+
 
         private static volatile Boolean isGnome = null;
         private static volatile Boolean isKDE = null;
@@ -528,6 +554,18 @@ class OSUtil {
         private static volatile Boolean isNautilus = null;
         private static volatile String getPlasmaVersionFull = null;
 
+
+        public static
+        boolean isX11() {
+            EnvType env = getType();
+            return env == EnvType.X11;
+        }
+
+        public static
+        boolean isWayland() {
+            EnvType env = getType();
+            return env == EnvType.WAYLAND;
+        }
 
         public static
         boolean isUnity() {
