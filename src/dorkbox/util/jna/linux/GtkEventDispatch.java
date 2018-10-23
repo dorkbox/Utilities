@@ -62,7 +62,9 @@ class GtkEventDispatch {
     private static final int TIMEOUT = debugEDT ? 10000000 : 2;
 
 
-
+    /**
+     * This will load and start GTK
+     */
     public static synchronized
     void startGui(final boolean forceGtk2, final boolean preferGkt3, final boolean debug) {
         // only permit one startup per JVM instance
@@ -74,7 +76,6 @@ class GtkEventDispatch {
             GtkEventDispatch.DEBUG = debug;
 
             // startup the GTK GUI event loop. There can be multiple/nested loops.
-
             if (!GtkLoader.alreadyRunningGTK) {
                 // If JavaFX/SWT is used, this is UNNECESSARY (we can detect if the GTK main_loop is running)
 
