@@ -472,6 +472,7 @@ class OSUtil {
 
             // BLEH. if gnome-shell is running, IT'S REALLY GNOME!
             // we must ALWAYS do this check!!
+            // Ubuntu 17.10 is special ... this is ubuntu:GNOME
             if (OSUtil.DesktopEnv.isGnome()) {
                 XDG = "gnome";
             }
