@@ -335,10 +335,16 @@ class OSUtil {
             return isFedora;
         }
 
+        private static Integer fedoraVersion = null;
         public static
         int getFedoraVersion() {
+            if (fedoraVersion != null) {
+                return fedoraVersion;
+            }
+
             if (!isFedora()) {
-                return 0;
+                fedoraVersion = 0;
+                return fedoraVersion;
             }
 
             try {
@@ -349,12 +355,15 @@ class OSUtil {
                     // should be: VERSION_ID=23\n  or something
                     int beginIndex = output.indexOf("VERSION_ID=") + 11;
                     String fedoraVersion_ = output.substring(beginIndex, output.indexOf(OS.LINE_SEPARATOR_UNIX, beginIndex));
-                    return Integer.parseInt(fedoraVersion_);
+
+                    fedoraVersion = Integer.parseInt(fedoraVersion_);
+                    return fedoraVersion;
                 }
             } catch (Throwable ignored) {
             }
 
-            return 0;
+            fedoraVersion = 0;
+            return fedoraVersion;
         }
 
         private static Boolean isLinuxMint = null;
@@ -375,17 +384,16 @@ class OSUtil {
             return isUbuntu;
         }
 
-        /**
-         * @return the ubuntu version or "" if not found.
-         */
+        private static int[] ubuntuVersion = null;
         public static
         int[] getUbuntuVersion() {
-            if (!OS.isLinux()) {
-                return new int[]{0,0};
+            if (ubuntuVersion != null) {
+                return ubuntuVersion;
             }
 
             if (!isUbuntu()) {
-                return new int[] {0, 0};
+                ubuntuVersion = new int[]{0,0};
+                return ubuntuVersion;
             }
 
             String info = getInfo();
@@ -399,14 +407,17 @@ class OSUtil {
                         String versionInfo = info.substring(index, newLine);
                         if (versionInfo.indexOf('.') > 0) {
                             String[] split = versionInfo.split("\\.");
-                            return new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
+
+                            ubuntuVersion = new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
+                            return ubuntuVersion;
                         }
                     }
                 }
             } catch (Throwable ignored) {
             }
 
-            return new int[] {0, 0};
+            ubuntuVersion = new int[]{0,0};
+            return ubuntuVersion;
         }
 
 
