@@ -290,7 +290,7 @@ class OSUtil {
             return getInfo().contains("ID=" + id +"\n");
         }
 
-        private static Boolean isArch = null;
+        private static volatile Boolean isArch = null;
         public static
         boolean isArch() {
             if (isArch == null) {
@@ -299,7 +299,7 @@ class OSUtil {
             return isArch;
         }
 
-        private static Boolean isDebian = null;
+        private static volatile Boolean isDebian = null;
         public static
         boolean isDebian() {
             if (isDebian == null) {
@@ -308,7 +308,7 @@ class OSUtil {
             return isDebian;
         }
 
-        private static Boolean isElementaryOS = null;
+        private static volatile Boolean isElementaryOS = null;
         public static
         boolean isElementaryOS() {
             if (isElementaryOS == null) {
@@ -326,7 +326,7 @@ class OSUtil {
             return isElementaryOS;
         }
 
-        private static Boolean isFedora = null;
+        private static volatile Boolean isFedora = null;
         public static
         boolean isFedora() {
             if (isFedora == null) {
@@ -335,7 +335,7 @@ class OSUtil {
             return isFedora;
         }
 
-        private static Integer fedoraVersion = null;
+        private static volatile Integer fedoraVersion = null;
         public static
         int getFedoraVersion() {
             if (fedoraVersion != null) {
@@ -366,7 +366,7 @@ class OSUtil {
             return fedoraVersion;
         }
 
-        private static Boolean isLinuxMint = null;
+        private static volatile Boolean isLinuxMint = null;
         public static
         boolean isLinuxMint() {
             if (isLinuxMint == null) {
@@ -375,7 +375,7 @@ class OSUtil {
             return isLinuxMint;
         }
 
-        private static Boolean isUbuntu = null;
+        private static volatile Boolean isUbuntu = null;
         public static
         boolean isUbuntu() {
             if (isUbuntu == null) {
@@ -384,7 +384,7 @@ class OSUtil {
             return isUbuntu;
         }
 
-        private static int[] ubuntuVersion = null;
+        private static volatile int[] ubuntuVersion = null;
         public static
         int[] getUbuntuVersion() {
             if (ubuntuVersion != null) {
@@ -557,15 +557,6 @@ class OSUtil {
             return EnvType.Unknown;
         }
 
-
-
-        private static volatile Boolean isGnome = null;
-        private static volatile Boolean isKDE = null;
-        private static volatile Boolean isChromeOS = null;
-        private static volatile Boolean isNautilus = null;
-        private static volatile String getPlasmaVersionFull = null;
-
-
         public static
         boolean isX11() {
             EnvType env = getType();
@@ -589,6 +580,8 @@ class OSUtil {
             return env == OSUtil.DesktopEnv.Env.Unity || env == OSUtil.DesktopEnv.Env.Unity7;
         }
 
+
+        private static volatile Boolean isGnome = null;
         public static
         boolean isGnome() {
             if (!OS.isLinux() && !OS.isUnix()) {
@@ -626,19 +619,30 @@ class OSUtil {
                 }
 
                 isGnome = contains;
-                return contains;
+                return isGnome;
             } catch (Throwable ignored) {
             }
 
             isGnome = false;
-            return false;
+            return isGnome;
         }
 
+        private static volatile boolean hasGnomeVersion = false;
+        private static volatile String gnomeVersion = null;
+        /**
+         * @return a string representing the current gnome-shell version, or NULL if it could not be found
+         */
         public static
         String getGnomeVersion() {
-            if (!OS.isLinux() && !OS.isUnix()) {
-                return "";
+            if (hasGnomeVersion) {
+                return gnomeVersion;
             }
+
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return null;
+            }
+
+            hasGnomeVersion = true;
 
             try {
                 // gnome-shell --version
@@ -654,15 +658,18 @@ class OSUtil {
                     String version = versionString.replaceAll("[^\\d.]", "");
                     if (version.length() > 0 && version.indexOf('.') > 0) {
                         // should just be 3.14.1 or 3.20 or similar
-                        return version;
+                        gnomeVersion = version;
+                        return gnomeVersion;
                     }
                 }
             } catch (Throwable ignored) {
             }
 
-            return null;
+            gnomeVersion = null;
+            return gnomeVersion;
         }
 
+        private static volatile Boolean isKDE = null;
         public static
         boolean isKDE() {
             if (isKDE != null) {
@@ -693,6 +700,11 @@ class OSUtil {
         public static
         double getPlasmaVersion() {
             String versionAsString = getPlasmaVersionFull();
+
+            if (versionAsString == null) {
+                return 0;
+            }
+
             if (versionAsString.startsWith("0")) {
                 return 0;
             }
@@ -706,21 +718,25 @@ class OSUtil {
             }
         }
 
+
+        private static volatile boolean hasPlasmaVersion = false;
+        private static volatile String getPlasmaVersionFull = null;
         /**
          * The full version number of plasma shell (if running) as a String.
          *
-         * @return cannot represent '5.6.5' as a number, so we return a String instead
+         * @return cannot represent '5.6.5' as a number, so we return a String instead or NULL if unknown
          */
         public static
         String getPlasmaVersionFull() {
-            if (getPlasmaVersionFull != null) {
+            if (hasPlasmaVersion) {
                 return getPlasmaVersionFull;
             }
 
             if (!OS.isLinux() && !OS.isUnix()) {
-                getPlasmaVersionFull = "";
-                return "";
+                return null;
             }
+
+            hasPlasmaVersion = true;
 
             try {
                 // plasma-desktop -v
@@ -739,20 +755,20 @@ class OSUtil {
                     if (isValidCommand(s, output)) {
                         String substring = output.substring(output.indexOf(s) + s.length(), output.length());
                         getPlasmaVersionFull = substring;
-                        return substring;
+                        return getPlasmaVersionFull;
                     }
                 }
             } catch (Throwable e) {
                 e.printStackTrace();
             }
 
-            getPlasmaVersionFull = "0";
-            return "0";
+            return null;
         }
 
 
+        private static volatile Boolean isNautilus = null;
         /**
-         * There are sometimes problems with nautilus (the file browser) and some GTK methods. It is rediculous for me to have to
+         * There are sometimes problems with nautilus (the file browser) and some GTK methods. It is ridiculous for me to have to
          * work around their bugs like this.
          * <p>
          * see: https://askubuntu.com/questions/788182/nautilus-not-opening-up-showing-glib-error
@@ -794,6 +810,7 @@ class OSUtil {
         }
 
 
+        private static volatile Boolean isChromeOS = null;
         public static
         boolean isChromeOS() {
             if (isChromeOS == null) {
