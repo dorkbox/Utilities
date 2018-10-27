@@ -60,13 +60,6 @@ class AppIndicator {
         //     appindiactor1 is GKT2 only (can't use GTK3 bindings with it)
         //     appindicator3 doesn't support menu icons via GTK2!!
 
-//        if (!_isLoaded && SystemTray.FORCE_TRAY_TYPE == SystemTray.TrayType.GtkStatusIcon) {
-//            // if we force GTK type system tray, don't attempt to load AppIndicator libs
-//            if (GtkEventDispatch.DEBUG) {
-//                LoggerFactory.getLogger(AppIndicator.class).debug("Forced GtkStatusIcon tray type, not using AppIndicator");
-//            }
-//            _isLoaded = true;
-//        }
 
         if (!_isLoaded && GtkEventDispatch.FORCE_GTK2) {
             // if specified, try loading appindicator1 first, maybe it's there?
