@@ -452,6 +452,62 @@ class OSUtil {
 
             return isSudoOrRoot;
         }
+
+
+        /**
+         * @return true if the package is installed
+         */
+        public static
+        boolean isPackageInstalled(final String packageName) {
+            // dpkg
+            // dpkg -L libappindicator3
+            // dpkg-query: package 'libappindicator3' is not installed
+            boolean is_dpkg = new File("/usr/bin/dpkg").canExecute();
+            if (is_dpkg) {
+                final ShellExecutor shell = new ShellExecutor();
+                shell.setExecutable("dpkg");
+                shell.addArgument("-L");
+                shell.addArgument(packageName);
+                shell.start();
+
+                String output = shell.getOutput();
+                return !output.contains("is not installed");
+            }
+
+            // rpm
+            // rpm -q libappindicator234
+            // package libappindicator234 is not installed
+            boolean is_rpm = new File("/usr/bin/rpm").canExecute();
+            if (is_rpm) {
+                final ShellExecutor shell = new ShellExecutor();
+                shell.setExecutable("rpm");
+                shell.addArgument("-q");
+                shell.addArgument(packageName);
+                shell.start();
+
+                String output = shell.getOutput();
+                return !output.contains("is not installed");
+            }
+
+
+            // pacman
+            // pacman -Qi <packageName>
+            // use the exit code to determine if the packages existes on the system or not (0 the package exists, 1 it doesn't)
+            boolean is_pacmac = new File("/usr/bin/pacman").canExecute();
+            if (is_rpm) {
+                final ShellExecutor shell = new ShellExecutor();
+                shell.setExecutable("pacman");
+                shell.addArgument("-Qi");
+                shell.addArgument(packageName);
+                int start = shell.start();
+
+                // 0 the package exists, 1 it doesn't
+                return start == 0;
+            }
+
+            return false;
+        }
+
     }
 
     @SuppressWarnings("WeakerAccess")
