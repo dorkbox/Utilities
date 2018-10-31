@@ -454,60 +454,107 @@ class OSUtil {
         }
 
 
-        /**
-         * @return true if the package is installed
-         */
+
+
+
         public static
-        boolean isPackageInstalled(final String packageName) {
-            // dpkg
-            // dpkg -L libappindicator3
-            // dpkg-query: package 'libappindicator3' is not installed
-            boolean is_dpkg = new File("/usr/bin/dpkg").canExecute();
-            if (is_dpkg) {
-                final ShellExecutor shell = new ShellExecutor();
-                shell.setExecutable("dpkg");
-                shell.addArgument("-L");
-                shell.addArgument(packageName);
-                shell.start();
+        class PackageManager {
+            public enum Type {
+                APT("apt install"),
+                APTGET("apt-get install"),
+                YUM("yum install"),
+                PACMAN("pacman -S "),
+                ;
 
-                String output = shell.getOutput();
-                return !output.contains("is not installed");
+                private final String installString;
+
+                Type(final String installString) {
+                    this.installString = installString;
+                }
+
+                public
+                String installString() {
+                    return installString;
+                }
             }
 
-            // rpm
-            // rpm -q libappindicator234
-            // package libappindicator234 is not installed
-            boolean is_rpm = new File("/usr/bin/rpm").canExecute();
-            if (is_rpm) {
-                final ShellExecutor shell = new ShellExecutor();
-                shell.setExecutable("rpm");
-                shell.addArgument("-q");
-                shell.addArgument(packageName);
-                shell.start();
+            public static
+            Type get() {
+                if (new File("/usr/bin/apt").canExecute()) {
+                    return Type.APT;
+                }
 
-                String output = shell.getOutput();
-                return !output.contains("is not installed");
+                if (new File("/usr/bin/apt-get").canExecute()) {
+                    return Type.APTGET;
+                }
+
+                if (new File("/usr/bin/yum").canExecute()) {
+                    return Type.YUM;
+                }
+
+                if (new File("/usr/bin/pacman").canExecute()) {
+                    return Type.PACMAN;
+                }
+
+                // default is apt-get, even if it isn't correct
+                return Type.APTGET;
             }
 
 
-            // pacman
-            // pacman -Qi <packageName>
-            // use the exit code to determine if the packages existes on the system or not (0 the package exists, 1 it doesn't)
-            boolean is_pacmac = new File("/usr/bin/pacman").canExecute();
-            if (is_rpm) {
-                final ShellExecutor shell = new ShellExecutor();
-                shell.setExecutable("pacman");
-                shell.addArgument("-Qi");
-                shell.addArgument(packageName);
-                int start = shell.start();
+            /**
+             * @return true if the package is installed
+             */
+            public static
+            boolean isPackageInstalled(final String packageName) {
+                // dpkg
+                // dpkg -L libappindicator3
+                // dpkg-query: package 'libappindicator3' is not installed
+                boolean is_dpkg = new File("/usr/bin/dpkg").canExecute();
+                if (is_dpkg) {
+                    final ShellExecutor shell = new ShellExecutor();
+                    shell.setExecutable("dpkg");
+                    shell.addArgument("-L");
+                    shell.addArgument(packageName);
+                    shell.start();
 
-                // 0 the package exists, 1 it doesn't
-                return start == 0;
+                    String output = shell.getOutput();
+                    return !output.contains("is not installed");
+                }
+
+                // rpm
+                // rpm -q libappindicator234
+                // package libappindicator234 is not installed
+                boolean is_rpm = new File("/usr/bin/rpm").canExecute();
+                if (is_rpm) {
+                    final ShellExecutor shell = new ShellExecutor();
+                    shell.setExecutable("rpm");
+                    shell.addArgument("-q");
+                    shell.addArgument(packageName);
+                    shell.start();
+
+                    String output = shell.getOutput();
+                    return !output.contains("is not installed");
+                }
+
+
+                // pacman
+                // pacman -Qi <packageName>
+                // use the exit code to determine if the packages existes on the system or not (0 the package exists, 1 it doesn't)
+                boolean is_pacmac = new File("/usr/bin/pacman").canExecute();
+                if (is_rpm) {
+                    final ShellExecutor shell = new ShellExecutor();
+                    shell.setExecutable("pacman");
+                    shell.addArgument("-Qi");
+                    shell.addArgument(packageName);
+                    int start = shell.start();
+
+                    // 0 the package exists, 1 it doesn't
+                    return start == 0;
+                }
+
+                return false;
             }
-
-            return false;
         }
-
     }
 
     @SuppressWarnings("WeakerAccess")
