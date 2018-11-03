@@ -227,10 +227,8 @@ class OSUtil {
                     File[] list = file.listFiles();
                     if (list != null) {
                         for (File f : list) {
-                            if (f.getName()
-                                 .contains("release")) {
+                            if (f.isFile() && f.getName().contains("release")) {
                                 // this is likely a file we are interested in.
-
                                 releaseFiles.add(f);
                                 totalLength += (int) file.length();
                             }
