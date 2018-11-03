@@ -206,6 +206,10 @@ class OSUtil {
     public static
     class Linux {
         private static String info = null;
+
+        /**
+         * @return os release info or ""
+         */
         public static
         String getInfo() {
             if (info != null) {
@@ -394,28 +398,47 @@ class OSUtil {
                 return ubuntuVersion;
             }
 
-            String info = getInfo();
-            String releaseString = "DISTRIB_RELEASE=";
-            int index = info.indexOf(releaseString);
-            try {
-                if (index > -1) {
-                    index += releaseString.length();
-                    int newLine = info.indexOf(OS.LINE_SEPARATOR_UNIX, index);
-                    if (newLine > index) {
-                        String versionInfo = info.substring(index, newLine);
-                        if (versionInfo.indexOf('.') > 0) {
-                            String[] split = versionInfo.split("\\.");
+            String distribReleaseInfo = getDistribReleaseInfo();
+            if (distribReleaseInfo != null) {
+                String[] split = distribReleaseInfo.split("\\.");
 
-                            ubuntuVersion = new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
-                            return ubuntuVersion;
-                        }
-                    }
-                }
-            } catch (Throwable ignored) {
+                ubuntuVersion = new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
+                return ubuntuVersion;
             }
+
 
             ubuntuVersion = new int[]{0,0};
             return ubuntuVersion;
+        }
+
+        private static volatile int[] elementaryOSVersion = null;
+        public static
+        int[] getElementaryOSVersion() {
+            // 0.1 Jupiter. The first stable version of elementary OS was Jupiter, published on 31 March 2011 and based on Ubuntu 10.10. ...
+            // 0.2 Luna. elementary OS 0.2 "Luna" ...
+            // 0.3 Freya. elementary OS 0.3 "Freya" ...
+            // 0.4 Loki. elementary OS 0.4, known by its codename, "Loki", was released on 9 September 2016. ...
+            // 5.0 Juno
+
+            if (elementaryOSVersion != null) {
+                return elementaryOSVersion;
+            }
+
+            if (!isElementaryOS()) {
+                elementaryOSVersion = new int[]{0,0};
+                return elementaryOSVersion;
+            }
+
+            String distribReleaseInfo = getDistribReleaseInfo();
+            if (distribReleaseInfo != null) {
+                String[] split = distribReleaseInfo.split("\\.");
+
+                elementaryOSVersion = new int[] {Integer.parseInt(split[0]), Integer.parseInt(split[1])};
+                return elementaryOSVersion;
+            }
+
+            elementaryOSVersion = new int[]{0,0};
+            return elementaryOSVersion;
         }
 
 
@@ -426,6 +449,28 @@ class OSUtil {
                 isKali = getInfo("kali");
             }
             return isKali;
+        }
+
+        /**
+         * @return the `DISTRIB_RELEASE` info as a String, if possible. Otherwise NULL
+         */
+        public static
+        String getDistribReleaseInfo() {
+            String info = getInfo();
+            String releaseString = "DISTRIB_RELEASE=";
+            int index = info.indexOf(releaseString);
+            try {
+                if (index > -1) {
+                    index += releaseString.length();
+                    int newLine = info.indexOf(OS.LINE_SEPARATOR_UNIX, index);
+                    if (newLine > index) {
+                        return info.substring(index, newLine);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
+            return null;
         }
 
         public static
