@@ -118,7 +118,8 @@ class GtkTheme {
             return height;
         }
         else {
-            return 16; // who knows?
+            LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray menu image size. Using default.");
+            return 16;
         }
     }
 
@@ -295,26 +296,25 @@ class GtkTheme {
             /*
              *
              * Looking in  plasma-framework/src/declarativeimports/core/units.cpp:
-    // Scale the icon sizes up using the devicePixelRatio
-    // This function returns the next stepping icon size
-    // and multiplies the global settings with the dpi ratio.
-    const qreal ratio = devicePixelRatio();
+                // Scale the icon sizes up using the devicePixelRatio
+                // This function returns the next stepping icon size
+                // and multiplies the global settings with the dpi ratio.
+                const qreal ratio = devicePixelRatio();
 
-    if (ratio < 1.5) {
-        return size;
-    } else if (ratio < 2.0) {
-        return size * 1.5;
-    } else if (ratio < 2.5) {
-        return size * 2.0;
-    } else if (ratio < 3.0) {
-        return size * 2.5;
-    } else if (ratio < 3.5) {
-        return size * 3.0;
-    } else {
-        return size * ratio;
-    }
-My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 factor existing. Is it reasonable? Wouldn't it make more sense to use the factor the closest to the ratio rather than  what is done here?
-
+                if (ratio < 1.5) {
+                    return size;
+                } else if (ratio < 2.0) {
+                    return size * 1.5;
+                } else if (ratio < 2.5) {
+                    return size * 2.0;
+                } else if (ratio < 3.0) {
+                    return size * 2.5;
+                } else if (ratio < 3.5) {
+                    return size * 3.0;
+                } else {
+                    return size * ratio;
+                }
+                My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 factor existing. Is it reasonable? Wouldn't it make more sense to use the factor the closest to the ratio rather than  what is done here?
              */
 
             File mainFile = new File("/usr/share/plasma/plasmoids/org.kde.plasma.private.systemtray/contents/config/main.xml");
@@ -465,7 +465,9 @@ My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 fac
         }
 
         // sane default
-        return 22;
+        LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray image size. Using default.");
+
+        return 24;
     }
 
     /**
