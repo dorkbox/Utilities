@@ -567,6 +567,7 @@ class OSUtil {
             Unity7,
             XFCE,
             LXDE,
+            MATE,
             Pantheon,
             ChromeOS,
             Unknown,
@@ -632,6 +633,10 @@ class OSUtil {
                 return Env.ChromeOS;
             }
 
+            if (isMATE()) {
+                return Env.MATE;
+            }
+
             return Env.Unknown;
         }
 
@@ -683,6 +688,27 @@ class OSUtil {
             return env == OSUtil.DesktopEnv.Env.Unity || env == OSUtil.DesktopEnv.Env.Unity7;
         }
 
+
+        private static volatile Boolean isMATE = null;
+        public static
+        boolean isMATE() {
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return false;
+            }
+
+            if (isMATE != null) {
+                return isMATE;
+            }
+
+            try {
+                isMATE = new File("/usr/bin/mate-about").exists();
+                return isMATE;
+            } catch (Throwable ignored) {
+            }
+
+            isMATE = false;
+            return isMATE;
+        }
 
         private static volatile Boolean isGnome = null;
         public static
