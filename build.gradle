@@ -52,6 +52,9 @@ dependencies {
     // utilities dependencies compile only (this is so the IDE can compile the util source)
     compileOnly utilDependencies
 
+    // ALSO so tests can run
+    testImplementation utilDependencies
+
 //    api 'com.koloboke:koloboke-api-jdk8:1.0.0'
 //    runtime 'com.koloboke:koloboke-impl-jdk8:1.0.0'
 
