@@ -72,6 +72,9 @@ class ImageUtil {
 
         BufferedImage resizedImage = new BufferedImage(width, height, type);
         Graphics2D g = resizedImage.createGraphics();
+        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
         g.drawImage(image, 0, 0, width, height, null);
         g.dispose();
 
@@ -107,6 +110,9 @@ class ImageUtil {
 
         BufferedImage resizedImage = new BufferedImage(width, height, type);
         Graphics2D g = resizedImage.createGraphics();
+        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+
         g.drawImage(originalImage, 0, 0, width, height, null);
         g.dispose();
 
