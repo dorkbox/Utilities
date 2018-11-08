@@ -22,6 +22,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -303,6 +304,18 @@ class ImageUtil {
         g.dispose();
 
         return bimage;
+    }
+
+    /**
+     * Converts an image to a byte array
+     *
+     * @return the PNG File output the created buffered image, as a byte array
+     */
+    public static
+    byte[] toBytes(final BufferedImage image) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "PNG", byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
     }
 
     /**
