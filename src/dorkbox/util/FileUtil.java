@@ -17,6 +17,7 @@ package dorkbox.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -712,6 +713,25 @@ class FileUtil {
         return thingsDeleted;
     }
 
+    /**
+     * @return the contents of the file as a byte array
+     */
+    public static
+    byte[] toBytes(final File file) {
+        FileInputStream fileInputStream = null;
+        try {
+            fileInputStream = new FileInputStream(file.getAbsolutePath());
+            ByteArrayOutputStream byteArrayOutputStream = IO.copyStream(fileInputStream);
+            return byteArrayOutputStream.toByteArray();
+        } catch (IOException ignored) {
+        } finally {
+            if (fileInputStream != null) {
+                IO.close(fileInputStream);
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Creates the directories in the specified location.
