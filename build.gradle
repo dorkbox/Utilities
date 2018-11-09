@@ -55,9 +55,6 @@ dependencies {
     // ALSO so tests can run
     testImplementation utilDependencies
 
-//    api 'com.koloboke:koloboke-api-jdk8:1.0.0'
-//    runtime 'com.koloboke:koloboke-impl-jdk8:1.0.0'
-
     // unit testing
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     testRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.1.6'
