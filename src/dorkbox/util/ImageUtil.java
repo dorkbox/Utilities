@@ -219,19 +219,33 @@ class ImageUtil {
     @SuppressWarnings("WeakerAccess")
     public static
     BufferedImage createImageAsBufferedImage(final int size, final Color color) {
-        final BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        return createImageAsBufferedImage(size, size, color);
+    }
+
+    /**
+     * Creates an image of the specified size.
+     *
+     * @param width the width of the image to create
+     * @param height the height of the image to create
+     * @param color the color to use. NULL to create a transparent image
+     *
+     * @return a BufferedImage of the size + color specified.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static
+    BufferedImage createImageAsBufferedImage(final int width, final int height, final Color color) {
+        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
         if (color == null) {
             g2d.setColor(new Color(0, 0, 0, 0));
         } else {
             g2d.setColor(color);
         }
-        g2d.fillRect(0, 0, size, size);
+        g2d.fillRect(0, 0, width, height);
         g2d.dispose();
 
         return image;
     }
-
 
     /**
      * This will always return a square image, with whatever value is smaller to have padding (so it will be centered), and the larger
