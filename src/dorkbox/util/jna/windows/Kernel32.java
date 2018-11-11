@@ -17,9 +17,8 @@ package dorkbox.util.jna.windows;
 
 import static com.sun.jna.platform.win32.WinNT.HANDLE;
 
-import com.sun.jna.Memory;
-import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.PointerByReference;
 
@@ -69,26 +68,7 @@ class Kernel32 {
 
     public static void ASSERT(final int returnValue, final String message) {
         // if returnValue == 0, throw assertion error
-        assert returnValue != 0 : message + " : " + getLastErrorMessage();
-    }
-
-    public static
-    String getLastErrorMessage() {
-        int errorCode = Native.getLastError();
-        if (errorCode == 0) {
-            return "ErrorCode: 0x0 [No Error]";
-        } else {
-            Memory memory = new Memory(1024);
-            PointerByReference reference = new PointerByReference(memory);
-
-            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, null, errorCode, 0, reference, (int) memory.size(), null);
-
-            String memoryMessage = reference.getPointer()
-                                            .getWideString(0);
-            memoryMessage = memoryMessage.trim();
-
-            return String.format("ErrorCode: 0x%08x [%s]", errorCode, memoryMessage);
-        }
+        assert returnValue != 0 : message + " : " + Kernel32Util.getLastErrorMessage();
     }
 
     /**

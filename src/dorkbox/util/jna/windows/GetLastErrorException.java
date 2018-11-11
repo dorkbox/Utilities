@@ -15,6 +15,8 @@
  */
 package dorkbox.util.jna.windows;
 
+import com.sun.jna.platform.win32.Kernel32Util;
+
 public
 class GetLastErrorException extends RuntimeException {
     private static final long serialVersionUID = 3980497906900380359L;
@@ -23,7 +25,7 @@ class GetLastErrorException extends RuntimeException {
 
     public
     GetLastErrorException() {
-        message = Kernel32.getLastErrorMessage();
+        message = Kernel32Util.getLastErrorMessage();
     }
 
     public

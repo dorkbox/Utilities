@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Memory;
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinGDI;
 import com.sun.jna.ptr.PointerByReference;
 
@@ -66,7 +67,7 @@ public class HBITMAPWrap extends HBITMAP {
 
             if (pointerToBits == null) {
                 // the bitmap was invalid
-                LoggerFactory.getLogger(HBITMAPWrap.class).error("The image was invalid", Kernel32.getLastErrorMessage());
+                LoggerFactory.getLogger(HBITMAPWrap.class).error("The image was invalid", Kernel32Util.getLastErrorMessage());
             }
             else {
                 Raster raster = buf.getData();
