@@ -17,10 +17,8 @@ package dorkbox.util.jna.windows;
 
 import static com.sun.jna.platform.win32.WinNT.HANDLE;
 
-import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.ptr.IntByReference;
-import com.sun.jna.ptr.PointerByReference;
 
 import dorkbox.util.jna.JnaHelper;
 import dorkbox.util.jna.windows.structs.CONSOLE_SCREEN_BUFFER_INFO;
@@ -88,12 +86,6 @@ class Kernel32 {
      */
     public static native
     int SetConsoleTextAttribute(HANDLE consoleOutput, short attributes);
-
-    /**
-     * https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx
-     */
-    public static native
-    int FormatMessage(int flags, Pointer source, int messageId, int languageId, PointerByReference buffer, int size, long[] args);
 
     /**
      * https://msdn.microsoft.com/en-us/library/ms683171%28VS.85%29.aspx
