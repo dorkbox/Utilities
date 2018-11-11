@@ -357,7 +357,7 @@ class SwingUtil {
     }
 
     /**
-     * Converts a key character into it's corresponding VK entry
+     * Converts a key character into it's corresponding VK entry, or 0 if it's 0
      */
     public static
     int getVirtualKey(final char key) {
