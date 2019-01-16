@@ -237,6 +237,15 @@ class NetworkUtil {
         return null;
     }
 
+    /**
+     * @return the String representation of the given IPv4 address
+     */
+    public static
+    String ipv4ToString(byte[] address) {
+        return (address[0] & 0xFF) + "." + (address[1] & 0xFF) + "." + (address[2] & 0xFF) + "." + (address[3] & 0xFF);
+    }
+
+
     private
     NetworkUtil() {
     }
