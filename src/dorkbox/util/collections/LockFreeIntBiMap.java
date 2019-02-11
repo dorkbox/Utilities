@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import dorkbox.util.collections.IntMap.Entries;
 import dorkbox.util.collections.IntMap.Keys;
+import dorkbox.util.collections.IntMap.Values;
 
 /**
  * A bimap (or "bidirectional map") is a map that preserves the uniqueness of its values as well as that of its keys. This constraint
@@ -329,29 +330,6 @@ class LockFreeIntBiMap<V> {
     }
 
     /**
-     * Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
-     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
-     */
-    @SuppressWarnings("unchecked")
-    public
-    Keys keys() {
-        // use the SWP to get a lock-free get of the value
-        return forwardREF.get(this)
-                         .keys();
-    }
-
-    /**
-     * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
-     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
-     */
-    @SuppressWarnings("unchecked")
-    public
-    Iterator<V> values() {
-        // use the SWP to get a lock-free get of the value
-        return forwardREF.get(this).values();
-    }
-
-    /**
      * Returns <tt>true</tt> if this bimap contains no key-value mappings.
      *
      * @return <tt>true</tt> if this bimap contains no key-value mappings
@@ -375,6 +353,42 @@ class LockFreeIntBiMap<V> {
         // use the SWP to get a lock-free get of the value
         return forwardREF.get(this)
                          .size;
+    }
+
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Keys keys() {
+        return forwardREF.get(this)
+                     .keys();
+    }
+
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Values<V> values() {
+        return forwardREF.get(this)
+                     .values();
+    }
+
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the entries in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Entries entries() {
+        return forwardREF.get(this)
+                     .entries();
     }
 
     /**

@@ -18,6 +18,7 @@ package dorkbox.util.collections;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import dorkbox.util.collections.IntMap.Entries;
 import dorkbox.util.collections.IntMap.Keys;
 import dorkbox.util.collections.IntMap.Values;
 
@@ -152,6 +153,42 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
         this.map.putAll(map);
     }
 
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Keys keys() {
+        return mapREF.get(this)
+                         .keys();
+    }
+
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Values<V> values() {
+        return mapREF.get(this)
+                         .values();
+    }
+
+    /**
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the entries in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
+     */
+    public
+    Entries entries() {
+        return mapREF.get(this)
+                         .entries();
+    }
+
     public synchronized
     void clear() {
         map.clear();
@@ -178,23 +215,5 @@ class LockFreeIntMap<V> implements Cloneable, Serializable {
     String toString() {
         return mapREF.get(this)
                      .toString();
-    }
-
-    /**
-     * DO NOT MODIFY THE MAP VIA THIS! It will result in unknown object visibility!
-     */
-    public
-    Keys keySet() {
-        return mapREF.get(this)
-                     .keys();
-    }
-
-    /**
-     * DO NOT MODIFY THE MAP VIA THIS!  It will result in unknown object visibility!
-     */
-    public
-    Values<V> values() {
-        return mapREF.get(this)
-                     .values();
     }
 }

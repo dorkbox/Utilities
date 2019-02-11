@@ -23,6 +23,7 @@ import com.esotericsoftware.kryo.util.ObjectMap.Entries;
 import com.esotericsoftware.kryo.util.ObjectMap.Keys;
 import com.esotericsoftware.kryo.util.ObjectMap.Values;
 
+
 /**
  * This class uses the "single-writer-principle" for lock-free publication.
  * <p>
@@ -144,27 +145,39 @@ class LockFreeObjectMap<K, V> implements Cloneable, Serializable {
     }
 
     /**
-     * DO NOT MODIFY THE MAP VIA THIS! It will result in unknown object visibility!
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
      */
     public
-    Keys<K> keySet() {
-        return mapREF.get(this).keys();
+    Keys keys() {
+        return mapREF.get(this)
+                         .keys();
     }
 
     /**
-     * DO NOT MODIFY THE MAP VIA THIS! It will result in unknown object visibility!
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
      */
     public
-    Values<V> values() {
-        return mapREF.get(this).values();
+    Values values() {
+        return mapREF.get(this)
+                         .values();
     }
 
     /**
-     * DO NOT MODIFY THE MAP VIA THIS! It will result in unknown object visibility!
+     * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
+     *
+     * Returns an iterator for the entries in the map. Remove is supported. Note that the same iterator instance is returned each
+     * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
      */
     public
-    Entries<K, V> entrySet() {
-        return mapREF.get(this).entries();
+    Entries entries() {
+        return mapREF.get(this)
+                         .entries();
     }
 
     /**
