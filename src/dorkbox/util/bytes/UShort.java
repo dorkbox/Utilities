@@ -168,6 +168,11 @@ public final class UShort extends UNumber implements Comparable<UShort> {
     }
 
     @Override
+    public String toHexString() {
+        return Integer.toHexString(this.value);
+    }
+
+    @Override
     public int compareTo(UShort o) {
         return (value < o.value ? -1 : (value == o.value ? 0 : 1));
     }

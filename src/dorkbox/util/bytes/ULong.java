@@ -206,6 +206,10 @@ public final class ULong extends UNumber implements Comparable<ULong> {
         else
             return BigInteger.valueOf(value & Long.MAX_VALUE).add(MAX_VALUE_LONG).toString();
     }
+    @Override
+    public String toHexString() {
+        return Long.toHexString(this.value);
+    }
 
     @Override
     public int compareTo(ULong o) {

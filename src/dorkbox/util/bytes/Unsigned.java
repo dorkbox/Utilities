@@ -33,7 +33,7 @@ public final class Unsigned {
      *
      * @throws NumberFormatException If <code>value</code> does not contain a
      *             parsable <code>unsigned byte</code>.
-     * @see UByte#valueOf(String)
+     * @see UByte.valueOf(String)
      */
     public static
     UByte ubyte(String value) throws NumberFormatException {

@@ -279,6 +279,11 @@ public final class UByte extends UNumber implements Comparable<UByte> {
     }
 
     @Override
+    public String toHexString() {
+        return Integer.toHexString(this.value);
+    }
+
+    @Override
     public int compareTo(UByte o) {
         return (value < o.value ? -1 : (value == o.value ? 0 : 1));
     }

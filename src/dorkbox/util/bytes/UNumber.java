@@ -36,4 +36,9 @@ public abstract class UNumber extends Number {
     public BigInteger toBigInteger() {
         return new BigInteger(toString());
     }
+
+    /**
+     * Converts this number to a hex string representation
+     */
+    public abstract String toHexString();
 }

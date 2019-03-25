@@ -322,6 +322,11 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
     }
 
     @Override
+    public String toHexString() {
+        return Long.toHexString(this.value);
+    }
+
+    @Override
     public int compareTo(UInteger o) {
         return (value < o.value ? -1 : (value == o.value ? 0 : 1));
     }
