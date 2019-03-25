@@ -287,7 +287,7 @@ class Metadata {
                   final Object data,
                   final Output output) throws IOException {
 
-        output.clear();
+        output.reset();
 
         serializationManager.writeFullClassAndObject(output, data);
         output.flush();
