@@ -1,0 +1,98 @@
+ - Utilities - 
+   https://git.dorkbox.com/dorkbox/Utilities
+   Copyright 2019 - The Apache Software License, Version 2.0
+     Dorkbox LLC
+   Various utilties for easy of use within Java projects
+
+
+ - Base64Fast - 
+   http://migbase64.sourceforge.net/
+   Copyright 2004 - BSD 3-Clause License
+     Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)
+
+
+ - BCrypt - 
+   http://www.mindrot.org/projects/jBCrypt
+   Copyright 2006 - BSD 2-Clause "Simplified" or "FreeBSD" license
+     Damien Miller (djm@mindrot.org)
+   GWT modified version
+
+
+ - Bias, BinarySearch - 
+   https://github.com/timboudreau/util
+   Copyright 2013 - MIT License
+     Tim Boudreau
+
+
+ - Byte Utils (UByte, UInteger, ULong, Unsigned, UNumber, UShort) - 
+   https://github.com/jOOQ/jOOQ/tree/master/jOOQ/src/main/java/org/jooq/types
+   Copyright 2017 - The Apache Software License, Version 2.0
+     Data Geekery GmbH (http://www.datageekery.com)
+     Lukas Eder
+     Ed Schaller
+     Jens Nerche
+     Ivan Sokolov
+
+
+ - Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet) - 
+   https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils
+   Copyright 2011 - The Apache Software License, Version 2.0
+     LibGDX
+     Nathan Sweet (admin@esotericsoftware.com)
+
+
+ - ConcurrentEntry - 
+   Copyright 2016 - The Apache Software License, Version 2.0
+     bennidi
+     dorkbox
+
+
+ - FastThreadLocal - 
+   https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java
+   https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java
+   Copyright 2014 - BSD 3-Clause License
+     Lightweight Java Game Library Project
+     Riven
+
+
+ - FileUtil (code from FilenameUtils.java for normalize + dependencies) - 
+   http://commons.apache.org/proper/commons-io/
+   Copyright 2013 - The Apache Software License, Version 2.0
+     The Apache Software Foundation
+     Kevin A. Burton
+     Scott Sanders
+     Daniel Rall
+     Christoph.Reck
+     Peter Donald
+     Jeff Turner
+     Matthew Hawthorne
+     Martin Cooper
+     Jeremias Maerki
+     Stephen Colebourne
+
+
+ - MersenneTwisterFast - 
+   https://git.dorkbox.com/dorkbox/Utilities
+   Copyright 2003 - BSD 3-Clause License
+     Sean Luke
+     Michael Lecuyer (portions Copyright 1993
+
+
+ - Predicate - 
+   https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils
+   Copyright 2011 - The Apache Software License, Version 2.0
+     LibGDX
+     xoppa
+
+
+ - Select, QuickSelect - 
+   https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils
+   Copyright 2011 - The Apache Software License, Version 2.0
+     LibGDX
+     Jon Renner
+
+
+ - TimSort, ComparableTimSort - 
+   https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils
+   Copyright 2008 - The Apache Software License, Version 2.0
+     The Android Open Source Project

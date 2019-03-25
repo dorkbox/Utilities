@@ -43,9 +43,9 @@ plugins {
 
 object Extras {
     // set for the project
-    const val description = "Linux, MacOS, or Windows (notification/growl/toast/) popups for the desktop for Java 6+"
+    const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "3.7"
+    const val version = "1.0"
 
     // set as project.ext
     const val name = "Utilities"
@@ -93,6 +93,99 @@ licensing {
         author(Extras.vendor)
         url(Extras.url)
         note(Extras.description)
+    }
+
+    license("MersenneTwisterFast", License.BSD_3) {
+        copyright(2003)
+        author("Sean Luke")
+        author("Michael Lecuyer (portions Copyright 1993")
+        url(Extras.url)
+    }
+
+    license("FileUtil (code from FilenameUtils.java for normalize + dependencies)", License.APACHE_2) {
+        copyright(2013)
+        author("The Apache Software Foundation")
+        author("Kevin A. Burton")
+        author("Scott Sanders")
+        author("Daniel Rall")
+        author("Christoph.Reck")
+        author("Peter Donald")
+        author("Jeff Turner")
+        author("Matthew Hawthorne")
+        author("Martin Cooper")
+        author("Jeremias Maerki")
+        author("Stephen Colebourne")
+        url("http://commons.apache.org/proper/commons-io/")
+    }
+
+    license("FastThreadLocal", License.BSD_3) {
+        copyright(2014)
+        author("Lightweight Java Game Library Project")
+        author("Riven")
+        url("https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java")
+        url("https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java")
+    }
+
+    license("Base64Fast", License.BSD_3) {
+        copyright(2004)
+        author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
+        url("http://migbase64.sourceforge.net/")
+    }
+
+    license("BCrypt", License.BSD_2) {
+        copyright(2006)
+        author("Damien Miller (djm@mindrot.org)")
+        url("http://www.mindrot.org/projects/jBCrypt")
+        note("GWT modified version")
+    }
+
+    license("Bias, BinarySearch", License.MIT) {
+        copyright(2013)
+        author("Tim Boudreau")
+        url("https://github.com/timboudreau/util")
+    }
+
+    license("ConcurrentEntry", License.APACHE_2) {
+        copyright(2016)
+        author("bennidi")
+        author("dorkbox")
+    }
+
+    license("Byte Utils (UByte, UInteger, ULong, Unsigned, UNumber, UShort)", License.APACHE_2) {
+        copyright(2017)
+        author("Data Geekery GmbH (http://www.datageekery.com)")
+        author("Lukas Eder")
+        author("Ed Schaller")
+        author("Jens Nerche")
+        author("Ivan Sokolov")
+        url("https://github.com/jOOQ/jOOQ/tree/master/jOOQ/src/main/java/org/jooq/types")
+    }
+
+    license("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
+        copyright(2011)
+        author("LibGDX")
+        author("Nathan Sweet (admin@esotericsoftware.com)")
+        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+    }
+
+    license("Predicate", License.APACHE_2) {
+        copyright(2011)
+        author("LibGDX")
+        author("xoppa")
+        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+    }
+
+    license("TimSort, ComparableTimSort", License.APACHE_2) {
+        copyright(2008)
+        author("The Android Open Source Project")
+        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+    }
+
+    license("Select, QuickSelect", License.APACHE_2) {
+        copyright(2011)
+        author("LibGDX")
+        author("Jon Renner")
+        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
     }
 }
 
@@ -168,7 +261,10 @@ dependencies {
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-    api("com.esotericsoftware:kryo:4.0.2")
+    api("com.esotericsoftware:kryo:5.0.0-RC2")
+//    api("com.esotericsoftware:kryo:4.0.2")
+//    api("de.javakaffee:kryo-serializers:0.45")
+
     api("io.netty:netty-all:4.1.24.Final")
 
     api("org.bouncycastle:bcprov-jdk15on:$bcVersion")
@@ -180,9 +276,13 @@ dependencies {
     api("org.javassist:javassist:3.23.0-GA")
     api("com.dorkbox:ShellExecutor:1.1+")
 
+    compile("net.jodah:typetools:0.6.1")
+
 
     api("net.java.dev.jna:jna:$jnaVersion")
     api("net.java.dev.jna:jna-platform:$jnaVersion")
+
+
 
     // unit testing
     testCompile("junit:junit:4.12")
