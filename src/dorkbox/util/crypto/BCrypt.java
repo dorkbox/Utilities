@@ -1,18 +1,4 @@
 /*
- * Copyright 2010 dorkbox, llc
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
  * Copyright (c) 2006 Damien Miller <djm@mindrot.org>
  *
  *   GWT modified version.
@@ -631,13 +617,12 @@ public class BCrypt {
 	 * @param log_rounds	the binary logarithm of the number of rounds of hashing to apply
 	 * @return	an array containing the binary hashed password
 	 */
-	private byte[] crypt_raw(byte password[], byte salt[], int log_rounds) {
+	private byte[] crypt_raw(byte password[], byte salt[], int log_rounds, int cdata[]) {
 		int rounds, i, j;
-		int cdata[] = Arrays.copyOf(bf_crypt_ciphertext, bf_crypt_ciphertext.length);
 		int clen = cdata.length;
 		byte ret[];
 
-		if (log_rounds < 4 || log_rounds > 31) {
+		if (log_rounds < 4 || log_rounds > 30) {
             throw new IllegalArgumentException ("Bad number of rounds");
         }
 		rounds = 1 << log_rounds;
@@ -647,7 +632,7 @@ public class BCrypt {
 
 		init_key();
 		ekskey(salt, password);
-		for (i = 0; i < rounds; i++) {
+		for (i = 0; i != rounds; i++) {
 			key(password);
 			key(salt);
 		}
@@ -722,7 +707,7 @@ public class BCrypt {
 		saltb = decode_base64(real_salt, BCRYPT_SALT_LEN);
 
 		B = new BCrypt();
-		hashed = B.crypt_raw(passwordb, saltb, rounds);
+		hashed = B.crypt_raw(passwordb, saltb, rounds, Arrays.copyOf(bf_crypt_ciphertext, bf_crypt_ciphertext.length));
 
 		rs.append("$2");
 		if (minor >= 'a') {
@@ -732,7 +717,11 @@ public class BCrypt {
 		if (rounds < 10) {
             rs.append("0");
         }
-		rs.append(String.valueOf(rounds));
+        if (rounds > 30) {
+            throw new IllegalArgumentException("rounds exceeds maximum (30)");
+        }
+
+		rs.append(rounds);
 		rs.append("$");
 		rs.append(encode_base64(saltb, saltb.length));
 		rs.append(encode_base64(hashed, bf_crypt_ciphertext.length * 4 - 1));
@@ -792,6 +781,21 @@ public class BCrypt {
 	 * @return	true if the passwords match, false otherwise
 	 */
 	public static boolean checkpw(String plaintext, String hashed) {
-		return hashed.compareTo(hashpw(plaintext, hashed)) == 0;
+        byte hashed_bytes[];
+        byte try_bytes[];
+        try {
+            String try_pw = hashpw(plaintext, hashed);
+            hashed_bytes = hashed.getBytes("UTF-8");
+            try_bytes = try_pw.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException uee) {
+            return false;
+        }
+        if (hashed_bytes.length != try_bytes.length)
+            return false;
+        byte ret = 0;
+        for (int i = 0; i < try_bytes.length; i++)
+            ret |= hashed_bytes[i] ^ try_bytes[i];
+
+        return ret == 0;
 	}
 }
