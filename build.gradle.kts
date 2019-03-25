@@ -282,34 +282,34 @@ tasks.compileJava.get().apply {
 dependencies {
     val bcVersion = "1.60"
     val jnaVersion = "4.5.2"
-    api("org.slf4j:slf4j-api:1.7.25")
+    implementation("org.slf4j:slf4j-api:1.7.25")
 
-    api("com.github.jponge:lzma-java:1.3")
-    api("com.fasterxml.uuid:java-uuid-generator:3.1.5")
+    implementation("com.github.jponge:lzma-java:1.3")
+    implementation("com.fasterxml.uuid:java-uuid-generator:3.1.5")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-    api("com.esotericsoftware:kryo:5.0.0-RC2")
+    implementation("com.esotericsoftware:kryo:5.0.0-RC2")
 //    api("com.esotericsoftware:kryo:4.0.2")
 //    api("de.javakaffee:kryo-serializers:0.45")
 
-    api("io.netty:netty-all:4.1.24.Final")
+    implementation("io.netty:netty-all:4.1.24.Final")
 
-    api("org.bouncycastle:bcprov-jdk15on:$bcVersion")
-    api("org.bouncycastle:bcpg-jdk15on:$bcVersion")
-    api("org.bouncycastle:bcmail-jdk15on:$bcVersion")
-    api("org.bouncycastle:bctls-jdk15on:$bcVersion")
+    implementation("org.bouncycastle:bcprov-jdk15on:$bcVersion")
+    implementation("org.bouncycastle:bcpg-jdk15on:$bcVersion")
+    implementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
+    implementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    api("org.lwjgl:lwjgl-xxhash:3.2.0")
-    api("org.javassist:javassist:3.23.0-GA")
-    api("com.dorkbox:ShellExecutor:1.1")
+    implementation("org.lwjgl:lwjgl-xxhash:3.2.0")
+    implementation("org.javassist:javassist:3.23.0-GA")
+    implementation("com.dorkbox:ShellExecutor:1.1")
 
-    compile("net.jodah:typetools:0.6.1")
+    implementation("net.jodah:typetools:0.6.1")
 
 
-    api("net.java.dev.jna:jna:$jnaVersion")
-    api("net.java.dev.jna:jna-platform:$jnaVersion")
+    implementation("net.java.dev.jna:jna:$jnaVersion")
+    implementation("net.java.dev.jna:jna-platform:$jnaVersion")
 
 
 
