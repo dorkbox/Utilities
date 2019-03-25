@@ -21,7 +21,7 @@ class FileSerializer extends Serializer<File> {
 
     @Override
     public
-    File read(Kryo kryo, Input input, Class<File> type) {
+    File read(final Kryo kryo, final Input input, final Class<? extends File> type) {
         String path = input.readString();
         return new File(path);
     }

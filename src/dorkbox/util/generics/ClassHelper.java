@@ -17,6 +17,8 @@ package dorkbox.util.generics;
 
 import java.lang.reflect.Type;
 
+import net.jodah.typetools.TypeResolver;
+
 public final
 class ClassHelper {
 
