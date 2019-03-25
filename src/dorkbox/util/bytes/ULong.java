@@ -1,37 +1,17 @@
 /*
- * Copyright (c) 2011-2013, Lukas Eder, lukas.eder@gmail.com
- * All rights reserved.
+ * Copyright (c) 2011-2017, Data Geekery GmbH (http://www.datageekery.com)
  *
- * This software is licensed to you under the Apache License, Version 2.0
- * (the "License"); You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * . Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * . Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * . Neither the name "jOOU" nor the names of its contributors may be
- *   used to endorse or promote products derived from this software without
- *   specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package dorkbox.util.bytes;
 
@@ -41,6 +21,8 @@ import java.math.BigInteger;
  * The <code>unsigned long</code> type
  *
  * @author Lukas Eder
+ * @author Jens Nerche
+ * @author Ivan Sokolov
  */
 public final class ULong extends UNumber implements Comparable<ULong> {
 
@@ -68,9 +50,21 @@ public final class ULong extends UNumber implements Comparable<ULong> {
     public static final BigInteger MAX_VALUE_LONG   = new BigInteger("9223372036854775808");
 
     /**
+     * A constant holding the minimum value an <code>unsigned long</code> can
+     * have as ULong, 0.
+     */
+    public static final ULong      MIN              = valueOf(MIN_VALUE.longValue());
+
+    /**
+     * A constant holding the maximum value + 1 an <code>signed long</code> can
+     * have as ULong, 2<sup>63</sup>.
+     */
+    public static final ULong      MAX              = valueOf(MAX_VALUE);
+
+    /**
      * The value modelling the content of this <code>unsigned long</code>
      */
-    private final BigInteger       value;
+    private final long             value;
 
     /**
      * Create an <code>unsigned long</code>
@@ -101,6 +95,12 @@ public final class ULong extends UNumber implements Comparable<ULong> {
         return new ULong(value);
     }
 
+    public static int compare(long x, long y) {
+        x += Long.MIN_VALUE;
+        y += Long.MIN_VALUE;
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
     /**
      * Create an <code>unsigned long</code>
      *
@@ -108,8 +108,10 @@ public final class ULong extends UNumber implements Comparable<ULong> {
      *             of an <code>unsigned long</code>
      */
     private ULong(BigInteger value) throws NumberFormatException {
-        this.value = value;
-        rangeCheck();
+        if (value.compareTo(MIN_VALUE) < 0 || value.compareTo(MAX_VALUE) > 0)
+            throw new NumberFormatException();
+        else
+            this.value = value.longValue();
     }
 
     /**
@@ -118,12 +120,7 @@ public final class ULong extends UNumber implements Comparable<ULong> {
      * <code>(uint) 18446744073709551615</code>
      */
     private ULong(long value) {
-        if (value >= 0) {
-            this.value = BigInteger.valueOf(value);
-        }
-        else {
-            this.value = BigInteger.valueOf(value & Long.MAX_VALUE).add(MAX_VALUE_LONG);
-        }
+        this.value = value;
     }
 
     /**
@@ -133,71 +130,140 @@ public final class ULong extends UNumber implements Comparable<ULong> {
      *             parsable <code>unsigned long</code>.
      */
     private ULong(String value) throws NumberFormatException {
-        this.value = new BigInteger(value);
-        rangeCheck();
-    }
+        if (value == null)
+            throw new NumberFormatException("null");
 
-    private void rangeCheck() throws NumberFormatException {
-        if (this.value.compareTo(MIN_VALUE) < 0 || this.value.compareTo(MAX_VALUE) > 0) {
-            throw new NumberFormatException("Value is out of range : " + this.value);
+        int length = value.length();
+
+        if (length == 0)
+            throw new NumberFormatException("Empty input string");
+
+        if (value.charAt(0) == '-')
+            throw new NumberFormatException(
+                    String.format("Illegal leading minus sign on unsigned string %s", value));
+
+        if (length <= 18) {
+            this.value = Long.parseLong(value, 10);
+            return;
         }
+
+        final long first = Long.parseLong(value.substring(0, length - 1), 10);
+        final int second = Character.digit(value.charAt(length - 1), 10);
+        if (second < 0)
+            throw new NumberFormatException("Bad digit at end of " + value);
+
+        long result = first * 10 + second;
+        if (compare(result, first) < 0)
+            throw new NumberFormatException(
+                    String.format("String value %s exceeds range of unsigned long", value));
+
+        this.value = result;
     }
 
     @Override
     public int intValue() {
-        return this.value.intValue();
+        return (int) value;
     }
 
     @Override
     public long longValue() {
-        return this.value.longValue();
+        return value;
     }
 
     @Override
     public float floatValue() {
-        return this.value.floatValue();
+        if (value < 0)
+            return ((float) (value & Long.MAX_VALUE)) + Long.MAX_VALUE;
+        else
+            return value;
     }
 
     @Override
     public double doubleValue() {
-        return this.value.doubleValue();
+        if (value < 0)
+            return ((double) (value & Long.MAX_VALUE)) + Long.MAX_VALUE;
+        else
+            return value;
     }
 
     @Override
     public int hashCode() {
-        return this.value.hashCode();
+        return Long.valueOf(value).hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ULong) {
-            return this.value.equals(((ULong) obj).value);
-        }
+        if (obj instanceof ULong)
+            return value == ((ULong) obj).value;
 
         return false;
     }
 
-    /**
-     * Get this number as a {@link BigInteger}. This is a convenience method for
-     * calling <code>new BigInteger(toString())</code>
-     */
-    @Override
-    public BigInteger toBigInteger() {
-        return this.value;
-    }
-
     @Override
     public String toString() {
-        return this.value.toString();
-    }
-
-    @Override
-    public String toHexString() {
-        return this.value.toString(16);
+        if (value >= 0)
+            return Long.toString(value);
+        else
+            return BigInteger.valueOf(value & Long.MAX_VALUE).add(MAX_VALUE_LONG).toString();
     }
 
     @Override
     public int compareTo(ULong o) {
-        return this.value.compareTo(o.value);
+        return compare(value, o.value);
+    }
+
+    public ULong add(ULong val) throws NumberFormatException {
+        if (value < 0 && val.value < 0)
+            throw new NumberFormatException();
+
+        final long result = value + val.value;
+        if ((value < 0 || val.value < 0) && result >= 0)
+            throw new NumberFormatException();
+
+        return valueOf(result);
+    }
+
+    public ULong add(int val) throws NumberFormatException {
+        return add((long) val);
+    }
+
+    public ULong add(long val) throws NumberFormatException {
+        if (val < 0)
+            return subtract(Math.abs(val));
+
+        final long result = value + val;
+        if (value < 0 && result >= 0)
+            throw new NumberFormatException();
+
+        return valueOf(result);
+    }
+
+    public ULong subtract(final ULong val) {
+        if (this.compareTo(val) < 0)
+            throw new NumberFormatException();
+
+        final long result = value - val.value;
+        if (value < 0 && result >= 0)
+            throw new NumberFormatException();
+
+        return valueOf(result);
+    }
+
+    public ULong subtract(final int val) {
+        return subtract((long) val);
+    }
+
+    public ULong subtract(final long val) {
+        if (val < 0)
+            return add(-val);
+
+        if (compare(value, val) < 0)
+            throw new NumberFormatException();
+
+        final long result = value - val;
+        if (value < 0 && result >= 0)
+            throw new NumberFormatException();
+
+        return valueOf(result);
     }
 }

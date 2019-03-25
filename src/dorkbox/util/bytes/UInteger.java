@@ -1,49 +1,32 @@
 /*
- * Copyright (c) 2011-2013, Lukas Eder, lukas.eder@gmail.com
- * All rights reserved.
+ * Copyright (c) 2011-2017, Data Geekery GmbH (http://www.datageekery.com)
  *
- * This software is licensed to you under the Apache License, Version 2.0
- * (the "License"); You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * . Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * . Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * . Neither the name "jOOU" nor the names of its contributors may be
- *   used to endorse or promote products derived from this software without
- *   specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package dorkbox.util.bytes;
 
 import java.io.ObjectStreamException;
+import java.math.BigInteger;
 
 /**
  * The <code>unsigned int</code> type
  *
  * @author Lukas Eder
  * @author Ed Schaller
+ * @author Jens Nerche
  */
 public final class UInteger extends UNumber implements Comparable<UInteger> {
+
     private static final Class<UInteger> CLASS                 = UInteger.class;
     private static final String          CLASS_NAME            = CLASS.getName();
 
@@ -77,7 +60,19 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
      * A constant holding the maximum value an <code>unsigned int</code> can
      * have, 2<sup>32</sup>-1.
      */
-    public static final long             MAX_VALUE             = 0xFFFFFFFFL;
+    public static final long             MAX_VALUE             = 0xffffffffL;
+
+    /**
+     * A constant holding the minimum value an <code>unsigned int</code> can
+     * have as UInteger, 0.
+     */
+    public static final UInteger         MIN                   = valueOf(MIN_VALUE);
+
+    /**
+     * A constant holding the maximum value an <code>unsigned int</code> can
+     * have as UInteger, 2<sup>32</sup>-1.
+     */
+    public static final UInteger         MAX                   = valueOf(MAX_VALUE);
 
     /**
      * The value modelling the content of this <code>unsigned int</code>
@@ -106,14 +101,14 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
             // FIXME: should we log this somewhere?
             return DEFAULT_PRECACHE_SIZE;
         }
-        if (prop == null) {
+        if (prop == null)
             return DEFAULT_PRECACHE_SIZE;
-        }
-        if (prop.length() <= 0) {
-            // empty value
-            // FIXME: should we log this somewhere?
+
+        // empty value
+        // FIXME: should we log this somewhere?
+        if (prop.length() <= 0)
             return DEFAULT_PRECACHE_SIZE;
-        }
+
         try {
             propParsed = Long.parseLong(prop);
         }
@@ -122,14 +117,15 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
             // FIXME: should we log this somewhere?
             return DEFAULT_PRECACHE_SIZE;
         }
+
         // treat negative value as no cache...
-        if (propParsed < 0) {
+        if (propParsed < 0)
             return 0;
-        }
-        if (propParsed > Integer.MAX_VALUE) {
-            // FIXME: should we log this somewhere
+
+        // FIXME: should we log this somewhere?
+        if (propParsed > Integer.MAX_VALUE)
             return Integer.MAX_VALUE;
-        }
+
         return (int) propParsed;
     }
 
@@ -142,13 +138,13 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
         int precacheSize = getPrecacheSize();
         UInteger[] ret;
 
-        if (precacheSize <= 0) {
+        if (precacheSize <= 0)
             return null;
-        }
+
         ret = new UInteger[precacheSize];
-        for (int i = 0; i < precacheSize; i++) {
+        for (int i = 0; i < precacheSize; i++)
             ret[i] = new UInteger(i);
-        }
+
         return ret;
     }
 
@@ -158,7 +154,7 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
      * constructor without unnecessary value checks.
      *
      * @param value The value to wrap
-     * @param unused Unused paramater to distinguish between this and the
+     * @param unused Unused parameter to distinguish between this and the
      *            deprecated public constructor.
      */
     private UInteger(long value, boolean unused) {
@@ -172,9 +168,9 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
      * @return Cached value if one exists. Null otherwise.
      */
     private static UInteger getCached(long value) {
-        if (VALUES != null && value < VALUES.length) {
+        if (VALUES != null && value < VALUES.length)
             return VALUES[(int) value];
-        }
+
         return null;
     }
 
@@ -184,9 +180,9 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
     private static UInteger valueOfUnchecked(long value) {
         UInteger cached;
 
-        if ((cached = getCached(value)) != null) {
+        if ((cached = getCached(value)) != null)
             return cached;
-        }
+
         return new UInteger(value, true);
     }
 
@@ -256,9 +252,9 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
      * @throws NumberFormatException if value is out of range
      */
     private static long rangeCheck(long value) throws NumberFormatException {
-        if (value < MIN_VALUE || value > MAX_VALUE) {
+        if (value < MIN_VALUE || value > MAX_VALUE)
             throw new NumberFormatException("Value is out of range : " + value);
-        }
+
         return value;
     }
 
@@ -273,62 +269,76 @@ public final class UInteger extends UNumber implements Comparable<UInteger> {
         UInteger cached;
 
         // the value read could be invalid so check it
-        rangeCheck(this.value);
-        if ((cached = getCached(this.value)) != null) {
+        rangeCheck(value);
+        if ((cached = getCached(value)) != null)
             return cached;
-        }
+
         return this;
     }
 
     @Override
     public int intValue() {
-        return (int) this.value;
+        return (int) value;
     }
 
     @Override
     public long longValue() {
-        return this.value;
+        return value;
     }
 
     @Override
     public float floatValue() {
-        return this.value;
+        return value;
     }
 
     @Override
     public double doubleValue() {
-        return this.value;
+        return value;
+    }
+
+    @Override
+    public BigInteger toBigInteger() {
+        return BigInteger.valueOf(value);
     }
 
     @Override
     public int hashCode() {
-        return Long.valueOf(this.value).hashCode();
+        return Long.valueOf(value).hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
+        if (this == obj)
             return true;
-        }
-        if (obj instanceof UInteger) {
-            return this.value == ((UInteger) obj).value;
-        }
+        if (obj instanceof UInteger)
+            return value == ((UInteger) obj).value;
 
         return false;
     }
 
     @Override
     public String toString() {
-        return Long.valueOf(this.value).toString();
-    }
-
-    @Override
-    public String toHexString() {
-        return Long.toHexString(this.value);
+        return Long.valueOf(value).toString();
     }
 
     @Override
     public int compareTo(UInteger o) {
-        return this.value < o.value ? -1 : this.value == o.value ? 0 : 1;
+        return (value < o.value ? -1 : (value == o.value ? 0 : 1));
+    }
+
+    public UInteger add(final UInteger val) {
+        return valueOf(value + val.value);
+    }
+
+    public UInteger add(final int val) {
+        return valueOf(value + val);
+    }
+
+    public UInteger subtract(final UInteger val) {
+        return valueOf(value - val.value);
+    }
+
+    public UInteger subtract(final int val) {
+        return valueOf(value - val);
     }
 }
