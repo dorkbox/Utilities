@@ -23,10 +23,20 @@ import kotlin.collections.set
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.declaredMemberProperties
 
+///////////////////////////////
+//////    PUBLISH TO SONATYPE / MAVEN CENTRAL
+//////
+////// TESTING : local maven repo <PUBLISHING - publishToMavenLocal>
+//////
+////// RELEASE : sonatype / maven central, <PUBLISHING - publish> then <RELEASE - closeAndReleaseRepository>
+///////////////////////////////
+
 println("\tGradle ${project.gradle.gradleVersion} on Java ${JavaVersion.current()}")
 
 plugins {
     java
+    signing
+    `maven-publish`
 
     // close and release on sonatype
     id("io.codearte.nexus-staging") version "0.20.0"
@@ -55,6 +65,9 @@ object Extras {
     val buildDate = Instant.now().toString()
 
     val JAVA_VERSION = JavaVersion.VERSION_1_6.toString()
+
+    var sonatypeUserName = ""
+    var sonatypePassword = ""
 }
 
 ///////////////////////////////
@@ -115,6 +128,7 @@ licensing {
         author("Martin Cooper")
         author("Jeremias Maerki")
         author("Stephen Colebourne")
+        url(Extras.url)
         url("http://commons.apache.org/proper/commons-io/")
     }
 
@@ -122,6 +136,7 @@ licensing {
         copyright(2014)
         author("Lightweight Java Game Library Project")
         author("Riven")
+        url(Extras.url)
         url("https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java")
         url("https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java")
     }
@@ -129,19 +144,22 @@ licensing {
     license("Base64Fast", License.BSD_3) {
         copyright(2004)
         author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
+        url(Extras.url)
         url("http://migbase64.sourceforge.net/")
     }
 
     license("BCrypt", License.BSD_2) {
         copyright(2006)
         author("Damien Miller (djm@mindrot.org)")
-        url("http://www.mindrot.org/projects/jBCrypt")
         note("GWT modified version")
+        url(Extras.url)
+        url("http://www.mindrot.org/projects/jBCrypt")
     }
 
     license("Bias, BinarySearch", License.MIT) {
         copyright(2013)
         author("Tim Boudreau")
+        url(Extras.url)
         url("https://github.com/timboudreau/util")
     }
 
@@ -149,6 +167,7 @@ licensing {
         copyright(2016)
         author("bennidi")
         author("dorkbox")
+        url(Extras.url)
     }
 
     license("Byte Utils (UByte, UInteger, ULong, Unsigned, UNumber, UShort)", License.APACHE_2) {
@@ -158,33 +177,43 @@ licensing {
         author("Ed Schaller")
         author("Jens Nerche")
         author("Ivan Sokolov")
+        url(Extras.url)
         url("https://github.com/jOOQ/jOOQ/tree/master/jOOQ/src/main/java/org/jooq/types")
     }
 
-    license("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
+    license("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntArray, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
         copyright(2011)
         author("LibGDX")
-        author("Nathan Sweet (admin@esotericsoftware.com)")
+        author("Mario Zechner (badlogicgames@gmail.com)")
+        author("Nathan Sweet (nathan.sweet@gmail.com)")
+        url(Extras.url)
         url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
     }
 
     license("Predicate", License.APACHE_2) {
         copyright(2011)
         author("LibGDX")
+        author("Mario Zechner (badlogicgames@gmail.com)")
+        author("Nathan Sweet (nathan.sweet@gmail.com)")
         author("xoppa")
-        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-    }
-
-    license("TimSort, ComparableTimSort", License.APACHE_2) {
-        copyright(2008)
-        author("The Android Open Source Project")
+        url(Extras.url)
         url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
     }
 
     license("Select, QuickSelect", License.APACHE_2) {
         copyright(2011)
         author("LibGDX")
+        author("Mario Zechner (badlogicgames@gmail.com)")
+        author("Nathan Sweet (nathan.sweet@gmail.com)")
         author("Jon Renner")
+        url(Extras.url)
+        url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+    }
+
+    license("TimSort, ComparableTimSort", License.APACHE_2) {
+        copyright(2008)
+        author("The Android Open Source Project")
+        url(Extras.url)
         url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
     }
 }
@@ -274,7 +303,7 @@ dependencies {
 
     api("org.lwjgl:lwjgl-xxhash:3.2.0")
     api("org.javassist:javassist:3.23.0-GA")
-    api("com.dorkbox:ShellExecutor:1.1+")
+    api("com.dorkbox:ShellExecutor:1.1")
 
     compile("net.jodah:typetools:0.6.1")
 
@@ -287,6 +316,113 @@ dependencies {
     // unit testing
     testCompile("junit:junit:4.12")
     testRuntime("ch.qos.logback:logback-classic:1.1.6")
+}
+
+
+///////////////////////////////
+//////    PUBLISH TO SONATYPE / MAVEN CENTRAL
+//////
+////// TESTING : local maven repo <PUBLISHING - publishToMavenLocal>
+//////
+////// RELEASE : sonatype / maven central, <PUBLISHING - publish> then <RELEASE - closeAndReleaseRepository>
+///////////////////////////////
+val sourceJar = task<Jar>("sourceJar") {
+    description = "Creates a JAR that contains the source code."
+
+    from(sourceSets["main"].java)
+
+    archiveClassifier.set("sources")
+}
+
+val javaDocJar = task<Jar>("javaDocJar") {
+    description = "Creates a JAR that contains the javadocs."
+
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = Extras.group
+            artifactId = Extras.id
+            version = Extras.version
+
+            from(components["java"])
+
+            artifact(sourceJar)
+            artifact(javaDocJar)
+
+            pom {
+                name.set(Extras.name)
+                description.set(Extras.description)
+                url.set(Extras.url)
+
+                issueManagement {
+                    url.set("${Extras.url}/issues")
+                    system.set("Gitea Issues")
+                }
+                organization {
+                    name.set(Extras.vendor)
+                    url.set("https://dorkbox.com")
+                }
+                developers {
+                    developer {
+                        id.set("dorkbox")
+                        name.set(Extras.vendor)
+                        email.set("email@dorkbox.com")
+                    }
+                }
+                scm {
+                    url.set(Extras.url)
+                    connection.set("scm:${Extras.url}.git")
+                }
+            }
+
+        }
+    }
+
+
+    repositories {
+        maven {
+            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            credentials {
+                username = Extras.sonatypeUserName
+                password = Extras.sonatypePassword
+            }
+        }
+    }
+
+
+    tasks.withType<PublishToMavenRepository> {
+        onlyIf {
+            publication == publishing.publications["maven"] && repository == publishing.repositories["maven"]
+        }
+    }
+
+    tasks.withType<PublishToMavenLocal> {
+        onlyIf {
+            publication == publishing.publications["maven"]
+        }
+    }
+
+    // output the release URL in the console
+    tasks["releaseRepository"].doLast {
+        val url = "https://oss.sonatype.org/content/repositories/releases/"
+        val projectName = Extras.group.replace('.', '/')
+        val name = Extras.name
+        val version = Extras.version
+
+        println("Maven URL: $url$projectName/$name/$version/")
+    }
+}
+
+nexusStaging {
+    username = Extras.sonatypeUserName
+    password = Extras.sonatypePassword
+}
+
+signing {
+    sign(publishing.publications["maven"])
 }
 
 ///////////////////////////////
