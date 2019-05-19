@@ -1,7 +1,7 @@
 package dorkbox.util.jna.windows;
 
 import com.sun.jna.IntegerType;
-import com.sun.jna.Pointer;
+import com.sun.jna.Native;
 
 public
 class Parameter extends IntegerType {
@@ -12,6 +12,6 @@ class Parameter extends IntegerType {
 
     public
     Parameter(long value) {
-        super(Pointer.SIZE, value);
+        super(Native.POINTER_SIZE, value);
     }
 }
