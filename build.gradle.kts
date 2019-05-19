@@ -279,7 +279,7 @@ tasks.compileJava.get().apply {
 
 dependencies {
     val bcVersion = "1.60"
-    val jnaVersion = "4.5.2"
+    val jnaVersion = "5.3.1"
     implementation("org.slf4j:slf4j-api:1.7.25")
 
     implementation("com.github.jponge:lzma-java:1.3")
