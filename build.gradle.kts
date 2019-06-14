@@ -53,7 +53,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.1"
+    const val version = "1.2"
 
     // set as project.ext
     const val name = "Utilities"
@@ -238,6 +238,7 @@ sourceSets {
 
 repositories {
     mavenLocal() // this must be first!
+
     jcenter()
 }
 
@@ -277,6 +278,28 @@ tasks.compileJava.get().apply {
 }
 
 
+fun getSwtMavenName(): String {
+    val currentOS = org.gradle.internal.os.OperatingSystem.current()
+    val platform = when {
+        currentOS.isWindows -> "win32"
+        currentOS.isMacOsX  -> "macosx"
+        else                -> "linux"
+    }
+
+
+    var arch = System.getProperty("os.arch")
+    arch = when {
+        arch.matches(".*64.*".toRegex()) -> "x86_64"
+        else                             -> "x86"
+    }
+
+    //  because the eclipse release of SWT is abandoned on maven, this MAVEN repo has newer version of SWT,
+    //  https://github.com/maven-eclipse/maven-eclipse.github.io   for the website about it
+    //  http://maven-eclipse.github.io/maven  for the maven repo
+    return "org.eclipse.swt.gtk.$platform.$arch"
+}
+
+
 dependencies {
     val bcVersion = "1.60"
     val jnaVersion = "5.3.1"
@@ -306,10 +329,18 @@ dependencies {
     implementation("net.jodah:typetools:0.6.1")
 
 
-    implementation("net.java.dev.jna:jna:$jnaVersion")
-    implementation("net.java.dev.jna:jna-platform:$jnaVersion")
+    compile("net.java.dev.jna:jna:$jnaVersion")
+    compile("net.java.dev.jna:jna-platform:$jnaVersion")
 
     runtime("com.koloboke:koloboke-impl-jdk8:1.0.0")
+
+    //  because the eclipse release of SWT is abandoned on maven, this repo has a newer version of SWT,
+    //  http://maven-eclipse.github.io/maven
+    // 4.4 is the oldest version that works with us. We use reflection to access SWT, so we can compile the project without needing SWT
+//    compileOnly("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.110.0")!!
+    compileOnly("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.110.0") {
+        isTransitive = false
+    }
 
     // unit testing
     testCompile("junit:junit:4.12")
