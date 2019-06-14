@@ -128,12 +128,13 @@ class SwtDispatch {
             return false;
         }
 
+        final Class<?> clazz = osClass;
         Method method = AccessController.doPrivileged(new PrivilegedAction<Method>() {
             @Override
             public
             Method run() {
                 try {
-                    return osClass.getMethod("gtk_major_version");
+                    return clazz.getMethod("gtk_major_version");
                 } catch (Exception e) {
                     return null;
                 }

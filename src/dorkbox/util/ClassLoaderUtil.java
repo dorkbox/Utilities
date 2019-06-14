@@ -131,7 +131,7 @@ public class ClassLoaderUtil {
      * @param className the name to check
      */
     public static
-    boolean isClassLoaded(ClassLoader classLoader, String className) {
+    boolean isClassLoaded(final ClassLoader classLoader, final String className) {
         // Pointer javaEnv = getJavaEnv();
         //
         // NativeLibrary library = ((Library.Handler) libjvm).getNativeLibrary();
