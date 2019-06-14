@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
-import dorkbox.util.JavaFX;
-import dorkbox.util.Swt;
+import dorkbox.util.javaFx.JavaFX;
+import dorkbox.util.swt.Swt;
 
 public
 class GtkEventDispatch {
@@ -282,12 +282,10 @@ class GtkEventDispatch {
                 return;
             }
 
-            if (Swt.isLoaded) {
-                if (Swt.isEventThread()) {
-                    // Run directly on the SWT event thread. If it's not on the dispatch thread, we can use raw GTK to put it there
-                    runnable.run();
-                    return;
-                }
+            if (Swt.isLoaded && Swt.isEventThread()) {
+                // Run directly on the SWT event thread. If it's not on the dispatch thread, we will use GTK to put it there
+                runnable.run();
+                return;
             }
         }
 

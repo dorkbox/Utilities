@@ -16,19 +16,18 @@
 package dorkbox.util;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import com.sun.jna.JNIEnv;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
-import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
-import com.sun.jna.ptr.PointerByReference;
 import com.sun.jna.win32.StdCallFunctionMapper;
 
+// http://hg.openjdk.java.net/jdk/jdk10/file/b09e56145e11/src/java.base/share/native/libjava/ClassLoader.c
 // http://hg.openjdk.java.net/jdk10/jdk10/jdk/file/777356696811/src/java.base/share/native/libjava/ClassLoader.c
 // http://hg.openjdk.java.net/jdk9/jdk9/jdk/file/65464a307408/src/java.base/share/native/libjava/ClassLoader.c
 // http://hg.openjdk.java.net/jdk8u/jdk8u/jdk/file/be698ac28848/src/share/native/java/lang/ClassLoader.c
@@ -44,175 +43,185 @@ import com.sun.jna.win32.StdCallFunctionMapper;
  */
 @SuppressWarnings("WeakerAccess")
 public class ClassLoaderUtil {
+    private static JVM libjvm;
 
-    @SuppressWarnings({"unchecked", "unused"})
-    public static class Bootstrap {
-        public static final int JNI_VERSION_1_1 = 0x00010001;
-        public static final int JNI_VERSION_1_2 = 0x00010002;
-        public static final int JNI_VERSION_1_4 = 0x00010004;
-        public static final int JNI_VERSION_1_6 = 0x00010006;
-        public static final int JNI_VERSION_1_7 = 0x00010007;
-        public static final int JNI_VERSION_1_8 = 0x00010008;
+    // Note: this does not work in java8 x86 *on windows XP windows7, etc. It only works on x64
+    @SuppressWarnings("UnusedReturnValue")
+    public
+    interface JVM extends com.sun.jna.Library {
+        void JVM_DefineClass(JNIEnv env, String name, Object classLoader, byte[] buffer, int length, Object protectionDomain);
+        Class JVM_FindLoadedClass(JNIEnv env, Object classLoader, String name);
+    }
 
-        // if we want to change the JNI version, this is how we do it.
-        public static int JNI_VERSION = JNI_VERSION_1_4;
-
-        private static JVM libjvm;
-
-        public static
-        class JavaVM extends Structure {
-            public static
-            class ByReference extends JavaVM implements Structure.ByReference {}
-
-            public volatile JNIInvokeInterface.ByReference functions;
-
-            JavaVM() {
-            }
-
-            @Override
-            protected
-            List<String> getFieldOrder() {
-                //noinspection ArraysAsListWithZeroOrOneArgument
-                return Arrays.asList("functions");
-            }
-        }
-
-        // Note: this does not work in java8 x86 *on windows XP windows7, etc. It only works on x64
-        @SuppressWarnings("UnusedReturnValue")
-        public
-        interface JVM extends com.sun.jna.Library {
-            void JVM_DefineClass(Pointer env, String name, Object loader, byte[] buffer, int length, Object protectionDomain);
-            int JNI_GetCreatedJavaVMs(JavaVM.ByReference[] vmArray, int bufsize, int[] vmCount);
-        }
-
-        @SuppressWarnings("unused")
-        public static
-        class JNIInvokeInterface extends Structure {
-            public static
-            class ByReference extends JNIInvokeInterface implements Structure.ByReference {}
-
-            public volatile Pointer reserved0;
-            public volatile Pointer reserved1;
-            public volatile Pointer reserved2;
-
-            public volatile Pointer DestroyJavaVM;
-            public volatile Pointer AttachCurrentThread;
-            public volatile Pointer DetachCurrentThread;
-
-            public volatile GetEnv GetEnv;
-            public volatile Pointer AttachCurrentThreadAsDaemon;
-
-            @Override
-            protected
-            List getFieldOrder() {
-                return Arrays.asList("reserved0",
-                                     "reserved1",
-                                     "reserved2",
-                                     "DestroyJavaVM",
-                                     "AttachCurrentThread",
-                                     "DetachCurrentThread",
-                                     "GetEnv",
-                                     "AttachCurrentThreadAsDaemon");
-            }
-
-            public
-            interface GetEnv extends com.sun.jna.Callback {
-                int callback(JavaVM.ByReference vm, PointerByReference penv, int version);
-            }
-        }
-
-        static {
-            String libName;
-            if (OS.isMacOsX()) {
-                if (OS.javaVersion < 7) {
-                    libName = "JavaVM";
-                } else {
-                    String javaLocation = System.getProperty("java.home");
-
-                    // have to explicitly specify the JVM library via full path
-                    // this is OK, because for java on MacOSX, this is the only location it can exist
-                    libName = javaLocation + "/lib/server/libjvm.dylib";
-                }
-            }
-            else {
-                libName = "jvm";
-            }
-
-            // function name is SLIGHTLY different on windows x32 java builds.
-            // For actual name use: http://www.nirsoft.net/utils/dll_export_viewer.html
-            if (OS.isWindows() && OS.is32bit()) {
-                Map options = new HashMap();
-                options.put(Library.OPTION_FUNCTION_MAPPER, new StdCallFunctionMapper() {
-                    @Override
-                    public
-                    String getFunctionName(NativeLibrary library, Method method) {
-                        String methodName = method.getName();
-                        if (methodName.equals("JVM_DefineClass")) {
-                            // specifically Oracle Java 32bit builds. Tested on XP and Win7
-                            return "_JVM_DefineClass@24";
-                        }
-                        return methodName;
-                    }
-                });
-                libjvm = Native.loadLibrary(libName, JVM.class, options);
+    private static final String libName;
+    static {
+        if (OS.isMacOsX()) {
+            if (OS.javaVersion < 7) {
+                libName = "JavaVM";
             } else {
-                libjvm = Native.loadLibrary(libName, JVM.class);
+                String javaLocation = System.getProperty("java.home");
+
+                // have to explicitly specify the JVM library via full path
+                // this is OK, because for java on MacOSX, this is the only location it can exist
+                libName = javaLocation + "/lib/server/libjvm.dylib";
             }
         }
+        else {
+            libName = "jvm";
+        }
 
-        /**
-         * Inject class bytes directly into the bootstrap classloader.
-         * <p>
-         * This is a VERY DANGEROUS method to use!
-         *
-         * @param classBytes
-         *                 the bytes to inject
-         */
-        public static
-        void defineClass(byte[] classBytes) throws Exception {
-            // get the number of JVM's running
-            int[] jvmCount = {100};
-            libjvm.JNI_GetCreatedJavaVMs(null, 0, jvmCount);
 
-            // actually get the JVM's
-            JavaVM.ByReference[] vms = new JavaVM.ByReference[jvmCount[0]];
-            for (int i = 0, vmsLength = vms.length; i < vmsLength; i++) {
-                vms[i] = new JavaVM.ByReference();
-            }
+        // function name is SLIGHTLY different on windows x32 java builds.
+        // For actual name use: http://www.nirsoft.net/utils/dll_export_viewer.html
+        Map options = new HashMap();
+        options.put(Library.OPTION_ALLOW_OBJECTS, Boolean.TRUE);
 
-            // now get the JVM's
-            libjvm.JNI_GetCreatedJavaVMs(vms, vms.length, jvmCount);
-
-            Exception exception = null;
-            for (int i = 0; i < jvmCount[0]; ++i) {
-                JavaVM.ByReference vm = vms[i];
-                PointerByReference penv = new PointerByReference();
-                vm.functions.GetEnv.callback(vm, penv, ClassLoaderUtil.Bootstrap.JNI_VERSION);
-
-                // inject into all JVM's that are started by us (is USUALLY 1, but not always)
-                try {
-                    libjvm.JVM_DefineClass(penv.getValue(), null, null, classBytes, classBytes.length, null);
-                } catch (Exception e) {
-                    exception = e;
+        if (OS.isWindows() && OS.is32bit()) {
+            options.put(Library.OPTION_FUNCTION_MAPPER, new StdCallFunctionMapper() {
+                @Override
+                public
+                String getFunctionName(NativeLibrary library, Method method) {
+                    String methodName = method.getName();
+                    if (methodName.equals("JVM_DefineClass")) {
+                        // specifically Oracle Java 32bit builds. Tested on XP and Win7
+                        return "_JVM_DefineClass@24";
+                    }
+                    return methodName;
                 }
-            }
-
-            // something failed, just show us THE LAST of the failures
-            if (exception != null) {
-                throw exception;
-            }
+            });
+            libjvm = Native.load(libName, JVM.class, options);
+        } else {
+            libjvm = Native.load(libName, JVM.class, options);
         }
     }
 
+
     /**
      * Defines a class in the current threads class-loader
-     * @param bytes the bytes of the class to define
+     *
+     * @param classBytes the bytes of the class to define
      */
     public static
-    void defineClass(final byte[] bytes) throws Exception {
+    void defineClass(final byte[] classBytes) throws Exception {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        Method defineClass = ClassLoader.class.getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
-        defineClass.setAccessible(true);
-        defineClass.invoke(classLoader, bytes, 0, bytes.length);
+
+        defineClass(classLoader, classBytes);
+    }
+
+    /**
+     * Inject class bytes directly into the bootstrap classloader.
+     * <p>
+     * This is a VERY DANGEROUS method to use!
+     *
+     * @param classLoader the classLoader to use. null will use the BOOTSTRAP classloader
+     * @param classBytes the bytes to inject
+     */
+    public static
+    void defineClass(ClassLoader classLoader, byte[] classBytes) throws Exception {
+        // inject into the FIRST JVM that are started by us (is USUALLY 1, but not always)
+        libjvm.JVM_DefineClass(JNIEnv.CURRENT, null, classLoader, classBytes, classBytes.length, null);
+    }
+
+    /**
+     * Check to see if a class is already loaded or not, WITHOUT linking/loading the class!
+     *
+     * You should check all accessible classLoaders!
+     *
+     * @param classLoader the classLoader to use. null will use the BOOTSTRAP classloader
+     * @param className the name to check
+     */
+    public static
+    boolean isClassLoaded(ClassLoader classLoader, String className) {
+        // Pointer javaEnv = getJavaEnv();
+        //
+        // NativeLibrary library = ((Library.Handler) libjvm).getNativeLibrary();
+        // Function jvm_findLoadedClass = library.getFunction("JVM_FindLoadedClass");
+        // jvm_findLoadedClass.invokeObject()
+
+        // this.peer = library.getSymbolAddress(functionName);
+
+
+        // result = Native.invokeObject(this, this.peer, callFlags, args);
+        // jstring NewStringUTF(JNIEnv *env, const char *bytes);
+        // libjvm.JVM_FindLoadedClass(JNIEnv.CURRENT, classLoader, new JString(className));
+
+        // try {
+        //     if (OS.javaVersion < 9) {
+        //         // so we can use reflection to check, but only if we are < java9
+        //
+        //     } else {
+        //         // if we are java9+, we are "screwed" in that we cannot use reflection to tell if any of the SWT classes are ALREADY loaded.
+        //
+        //         // // there are problems
+        //         //
+        //         // Class c = new ClassLoader() {
+        //         //     Class c = findLoadedClass("org.eclipse.swt.widgets.Display");
+        //         //
+        //         // }.c;
+        //         //
+        //         // // isSwtLoaded_ = SWT.isLoadable() && c != null;
+        //         // isSwtLoaded_= null != Class.forName("org.eclipse.swt.SWTError", false, Swt.class.getClassLoader());
+        //     }
+        //     // isSwtLoaded_= null != Class.forName("org.eclipse.swt.widgets.Display", false, Swt.class.getClassLoader());
+        //
+        //     // final String SWT_INTERNAL_CLASS = "org.eclipse.swt.internal.gtk.OS";
+        //
+        //     // FindClassLoader cl = (FindClassLoader) FindClassLoader.class.getClassLoader();
+        //     // isSwtLoaded_= null != FindClassLoader.find(cl, "org.eclipse.swt.widgets.Display");
+        // } catch (Throwable e) {
+        //     LoggerFactory.getLogger(Swt.class).debug("Error detecting if SWT is loaded", e);
+        // }
+
+        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
+            @Override
+            public
+            Boolean run() {
+                try {
+                    Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+                    m.setAccessible(true);
+
+                    return null != m.invoke(classLoader, className);
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }
+        });
+    }
+
+    /**
+     * Check to see if a class is already loaded or not.
+     */
+    public static
+    boolean isLibraryLoaded(String libraryName) {
+        // JVM_FindLoadedClass
+
+        // JVM_FindLibraryEntry
+
+        // /*
+        //  * Class:     java_lang_ClassLoader_NativeLibrary
+        //  * Method:    find
+        //  * Signature: (Ljava/lang/String;)J
+        //  */
+        // JNIEXPORT jlong JNICALL
+        // Java_java_lang_ClassLoader_00024NativeLibrary_find
+        //   (JNIEnv *env, jobject this, jstring name)
+        // {
+        //     jlong handle;
+        //     const char *cname;
+        //     jlong res;
+        //
+        //     if (!initIDs(env))
+        //         return jlong_zero;
+        //
+        //     handle = (*env)->GetLongField(env, this, handleID);
+        //     cname = (*env)->GetStringUTFChars(env, name, 0);
+        //     if (cname == 0)
+        //         return jlong_zero;
+        //     res = ptr_to_jlong(JVM_FindLibraryEntry(jlong_to_ptr(handle), cname));
+        //     (*env)->ReleaseStringUTFChars(env, name, cname);
+        //     return res;
+        // }
+
+        return false;
     }
 }

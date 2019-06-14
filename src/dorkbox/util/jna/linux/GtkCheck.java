@@ -15,9 +15,9 @@
  */
 package dorkbox.util.jna.linux;
 
-import dorkbox.util.JavaFX;
+import dorkbox.util.javaFx.JavaFX;
 import dorkbox.util.SwingUtil;
-import dorkbox.util.Swt;
+import dorkbox.util.swt.Swt;
 
 /**
  * Accessor methods/logic for determining if GTK is already loaded by the Swing/JavaFX/SWT, or if GTK has been manually loaded via

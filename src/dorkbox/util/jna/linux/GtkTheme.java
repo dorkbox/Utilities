@@ -37,7 +37,7 @@ import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 import dorkbox.util.OS;
 import dorkbox.util.OSUtil;
-import dorkbox.util.Swt;
+import dorkbox.util.swt.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;

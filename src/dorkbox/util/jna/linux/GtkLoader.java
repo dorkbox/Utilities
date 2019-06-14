@@ -21,7 +21,7 @@ import com.sun.jna.Function;
 import com.sun.jna.NativeLibrary;
 
 import dorkbox.util.OS;
-import dorkbox.util.Swt;
+import dorkbox.util.swt.Swt;
 import dorkbox.util.jna.JnaHelper;
 
 /**
