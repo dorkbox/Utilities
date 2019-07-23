@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,10 +36,10 @@ import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 import dorkbox.util.OS;
 import dorkbox.util.OSUtil;
-import dorkbox.util.swt.Swt;
 import dorkbox.util.jna.linux.structs.GtkRequisition;
 import dorkbox.util.jna.linux.structs.GtkStyle;
 import dorkbox.util.jna.linux.structs.PangoRectangle;
+import dorkbox.util.swt.Swt;
 
 /**
  * Class to contain all of the various methods needed to get information set by a GTK theme.
@@ -169,9 +168,11 @@ class GtkTheme {
             // https://wiki.archlinux.org/index.php/Talk:GNOME
             Object detectedValue = Toolkit.getDefaultToolkit().getDesktopProperty("gnome.Xft/DPI");
             if (detectedValue instanceof Integer) {
-                int dpi = ((Integer) detectedValue) / 1024;
-                if (dpi == -1) {
-                    screenDPI.set((int) defaultDPI);
+                Integer asInteger = (Integer) detectedValue;
+                // reasonably safe check
+                if (asInteger > 1024) {
+                    int dpi = asInteger / 1024;
+                    screenDPI.set(dpi);
                 }
             }
         }
@@ -245,7 +246,7 @@ class GtkTheme {
                 // DEFAULT icon size is 16. HiDpi changes this scale, so we should use it as well.
                 // should be: uint32 0  or something
                 if (output.contains("uint32")) {
-                    String value = output.substring(output.indexOf("uint") + 7, output.length());
+                    String value = output.substring(output.indexOf("uint") + 7);
 
                     // 0 is disabled (no scaling)
                     // 1 is enabled (default scale)
@@ -385,7 +386,7 @@ class GtkTheme {
                 // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
                 if (env == OSUtil.DesktopEnv.Env.XFCE) {
                     String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
-                    List<String> propertiesAsList = Arrays.asList(properties.split(OS.LINE_SEPARATOR));
+                    String[] propertiesAsList = properties.split(OS.LINE_SEPARATOR);
                     for (String prop : propertiesAsList) {
                         if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
                             // this is the property we are looking for (we just don't know which panel it's on)
