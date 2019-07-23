@@ -288,85 +288,86 @@ class GtkTheme {
                 }
             } catch (Exception ignored) {
             }
-        }
+
 
 //        System.err.println("screen scale: " + screenScale.get());
 //        System.err.println("screen DPI: " + screenDPI.get());
 
-        if (OSUtil.DesktopEnv.isKDE()) {
-            /*
-             *
-             * Looking in  plasma-framework/src/declarativeimports/core/units.cpp:
-                // Scale the icon sizes up using the devicePixelRatio
-                // This function returns the next stepping icon size
-                // and multiplies the global settings with the dpi ratio.
-                const qreal ratio = devicePixelRatio();
+            if (screenScale.get() == 0) {
+                /*
+                 *
+                 * Looking in  plasma-framework/src/declarativeimports/core/units.cpp:
+                    // Scale the icon sizes up using the devicePixelRatio
+                    // This function returns the next stepping icon size
+                    // and multiplies the global settings with the dpi ratio.
+                    const qreal ratio = devicePixelRatio();
 
-                if (ratio < 1.5) {
-                    return size;
-                } else if (ratio < 2.0) {
-                    return size * 1.5;
-                } else if (ratio < 2.5) {
-                    return size * 2.0;
-                } else if (ratio < 3.0) {
-                    return size * 2.5;
-                } else if (ratio < 3.5) {
-                    return size * 3.0;
-                } else {
-                    return size * ratio;
-                }
-                My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 factor existing. Is it reasonable? Wouldn't it make more sense to use the factor the closest to the ratio rather than  what is done here?
-             */
-
-            File mainFile = new File("/usr/share/plasma/plasmoids/org.kde.plasma.private.systemtray/contents/config/main.xml");
-            if (mainFile.canRead()) {
-                List<String> lines = FileUtil.readLines(mainFile);
-                boolean found = false;
-                int index;
-                for (final String line : lines) {
-                    if (line.contains("<entry name=\"iconSize\" type=\"Int\">")) {
-                        found = true;
-                        // have to get the "default" line value
+                    if (ratio < 1.5) {
+                        return size;
+                    } else if (ratio < 2.0) {
+                        return size * 1.5;
+                    } else if (ratio < 2.5) {
+                        return size * 2.0;
+                    } else if (ratio < 3.0) {
+                        return size * 2.5;
+                    } else if (ratio < 3.5) {
+                        return size * 3.0;
+                    } else {
+                        return size * ratio;
                     }
+                    My ratio is 1.47674, that means I have no scaling at all when there is a 1.5 factor existing. Is it reasonable? Wouldn't it make more sense to use the factor the closest to the ratio rather than  what is done here?
+                 */
 
-                    String str = "<default>";
-                    if (found && (index = line.indexOf(str)) > -1) {
-                        // this is our line. now get the value.
-                        String substring = line.substring(index + str.length(), line.indexOf("</default>", index));
+                File mainFile = new File("/usr/share/plasma/plasmoids/org.kde.plasma.private.systemtray/contents/config/main.xml");
+                if (mainFile.canRead()) {
+                    List<String> lines = FileUtil.readLines(mainFile);
+                    boolean found = false;
+                    int index;
+                    for (final String line : lines) {
+                        if (line.contains("<entry name=\"iconSize\" type=\"Int\">")) {
+                            found = true;
+                            // have to get the "default" line value
+                        }
 
-                        if (MathUtil.isInteger(substring)) {
-                            // Default icon size for the systray icons, it's an enum which values mean,
-                            // Small, SmallMedium, Medium, Large, Huge, Enormous respectively.
-                            // On low DPI systems they correspond to :
-                            //    16, 22, 32, 48, 64, 128 pixels.
-                            // On high DPI systems those values would be scaled up, depending on the DPI.
-                            int imageSize = 0;
-                            int imageSizeEnum = Integer.parseInt(substring);
-                            switch (imageSizeEnum) {
-                                case 0:
-                                    imageSize = 16;
-                                    break;
-                                case 1:
-                                    imageSize = 22;
-                                    break;
-                                case 2:
-                                    imageSize = 32;
-                                    break;
-                                case 3:
-                                    imageSize = 48;
-                                    break;
-                                case 4:
-                                    imageSize = 64;
-                                    break;
-                                case 5:
-                                    imageSize = 128;
-                                    break;
-                            }
+                        String str = "<default>";
+                        if (found && (index = line.indexOf(str)) > -1) {
+                            // this is our line. now get the value.
+                            String substring = line.substring(index + str.length(), line.indexOf("</default>", index));
 
-                            if (imageSize > 0) {
-                                double scaleRatio = screenDPI.get() / defaultDPI;
+                            if (MathUtil.isInteger(substring)) {
+                                // Default icon size for the systray icons, it's an enum which values mean,
+                                // Small, SmallMedium, Medium, Large, Huge, Enormous respectively.
+                                // On low DPI systems they correspond to :
+                                //    16, 22, 32, 48, 64, 128 pixels.
+                                // On high DPI systems those values would be scaled up, depending on the DPI.
+                                int imageSize = 0;
+                                int imageSizeEnum = Integer.parseInt(substring);
+                                switch (imageSizeEnum) {
+                                    case 0:
+                                        imageSize = 16;
+                                        break;
+                                    case 1:
+                                        imageSize = 22;
+                                        break;
+                                    case 2:
+                                        imageSize = 32;
+                                        break;
+                                    case 3:
+                                        imageSize = 48;
+                                        break;
+                                    case 4:
+                                        imageSize = 64;
+                                        break;
+                                    case 5:
+                                        imageSize = 128;
+                                        break;
+                                }
 
-                                return (int) (scaleRatio * imageSize);
+                                if (imageSize > 0) {
+                                    double scaleRatio = screenDPI.get() / defaultDPI;
+
+                                    return (int) (scaleRatio * imageSize);
+                                }
                             }
                         }
                     }
