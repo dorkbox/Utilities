@@ -857,7 +857,7 @@ class OSUtil {
                 return isKDE;
             } else if ("kde".equalsIgnoreCase(XDG)) {
                 isKDE = true;
-                return false;
+                return isKDE;
             }
 
             isKDE = false;
