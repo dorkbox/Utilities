@@ -16,8 +16,6 @@
 package dorkbox.util;
 
 import java.lang.reflect.Method;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,7 +48,7 @@ public class ClassLoaderUtil {
     public
     interface JVM extends com.sun.jna.Library {
         void JVM_DefineClass(JNIEnv env, String name, Object classLoader, byte[] buffer, int length, Object protectionDomain);
-        Class JVM_FindLoadedClass(JNIEnv env, Object classLoader, String name);
+        // Class JVM_FindLoadedClass(JNIEnv env, Object classLoader, JString name);
     }
 
     private static final String libName;
@@ -104,7 +102,6 @@ public class ClassLoaderUtil {
     public static
     void defineClass(final byte[] classBytes) throws Exception {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
         defineClass(classLoader, classBytes);
     }
 
@@ -120,108 +117,5 @@ public class ClassLoaderUtil {
     void defineClass(ClassLoader classLoader, byte[] classBytes) throws Exception {
         // inject into the FIRST JVM that are started by us (is USUALLY 1, but not always)
         libjvm.JVM_DefineClass(JNIEnv.CURRENT, null, classLoader, classBytes, classBytes.length, null);
-    }
-
-    /**
-     * Check to see if a class is already loaded or not, WITHOUT linking/loading the class!
-     *
-     * You should check all accessible classLoaders!
-     *
-     * @param classLoader the classLoader to use. null will use the BOOTSTRAP classloader
-     * @param className the name to check
-     */
-    public static
-    boolean isClassLoaded(final ClassLoader classLoader, final String className) {
-        // Pointer javaEnv = getJavaEnv();
-        //
-        // NativeLibrary library = ((Library.Handler) libjvm).getNativeLibrary();
-        // Function jvm_findLoadedClass = library.getFunction("JVM_FindLoadedClass");
-        // jvm_findLoadedClass.invokeObject()
-
-        // this.peer = library.getSymbolAddress(functionName);
-
-
-        // result = Native.invokeObject(this, this.peer, callFlags, args);
-        // jstring NewStringUTF(JNIEnv *env, const char *bytes);
-        // libjvm.JVM_FindLoadedClass(JNIEnv.CURRENT, classLoader, new JString(className));
-
-        // try {
-        //     if (OS.javaVersion < 9) {
-        //         // so we can use reflection to check, but only if we are < java9
-        //
-        //     } else {
-        //         // if we are java9+, we are "screwed" in that we cannot use reflection to tell if any of the SWT classes are ALREADY loaded.
-        //
-        //         // // there are problems
-        //         //
-        //         // Class c = new ClassLoader() {
-        //         //     Class c = findLoadedClass("org.eclipse.swt.widgets.Display");
-        //         //
-        //         // }.c;
-        //         //
-        //         // // isSwtLoaded_ = SWT.isLoadable() && c != null;
-        //         // isSwtLoaded_= null != Class.forName("org.eclipse.swt.SWTError", false, Swt.class.getClassLoader());
-        //     }
-        //     // isSwtLoaded_= null != Class.forName("org.eclipse.swt.widgets.Display", false, Swt.class.getClassLoader());
-        //
-        //     // final String SWT_INTERNAL_CLASS = "org.eclipse.swt.internal.gtk.OS";
-        //
-        //     // FindClassLoader cl = (FindClassLoader) FindClassLoader.class.getClassLoader();
-        //     // isSwtLoaded_= null != FindClassLoader.find(cl, "org.eclipse.swt.widgets.Display");
-        // } catch (Throwable e) {
-        //     LoggerFactory.getLogger(Swt.class).debug("Error detecting if SWT is loaded", e);
-        // }
-
-        return AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            @Override
-            public
-            Boolean run() {
-                try {
-                    Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-                    m.setAccessible(true);
-
-                    return null != m.invoke(classLoader, className);
-                } catch (Exception ignored) {
-                    return false;
-                }
-            }
-        });
-    }
-
-    /**
-     * Check to see if a class is already loaded or not.
-     */
-    public static
-    boolean isLibraryLoaded(String libraryName) {
-        // JVM_FindLoadedClass
-
-        // JVM_FindLibraryEntry
-
-        // /*
-        //  * Class:     java_lang_ClassLoader_NativeLibrary
-        //  * Method:    find
-        //  * Signature: (Ljava/lang/String;)J
-        //  */
-        // JNIEXPORT jlong JNICALL
-        // Java_java_lang_ClassLoader_00024NativeLibrary_find
-        //   (JNIEnv *env, jobject this, jstring name)
-        // {
-        //     jlong handle;
-        //     const char *cname;
-        //     jlong res;
-        //
-        //     if (!initIDs(env))
-        //         return jlong_zero;
-        //
-        //     handle = (*env)->GetLongField(env, this, handleID);
-        //     cname = (*env)->GetStringUTFChars(env, name, 0);
-        //     if (cname == 0)
-        //         return jlong_zero;
-        //     res = ptr_to_jlong(JVM_FindLibraryEntry(jlong_to_ptr(handle), cname));
-        //     (*env)->ReleaseStringUTFChars(env, name, cname);
-        //     return res;
-        // }
-
-        return false;
     }
 }
