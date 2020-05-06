@@ -54,6 +54,9 @@ class GtkLoader {
     static int MINOR;
     static int MICRO;
 
+
+    private static final NativeLibrary libraryReference;
+
     /*
      * We can have GTK v3 or v2.
      *
@@ -136,6 +139,7 @@ class GtkLoader {
                 major = version.gtk_get_major_version();
                 minor = version.gtk_get_minor_version();
                 micro = version.gtk_get_micro_version();
+
                 library.dispose();
                 library = null;
 
@@ -235,6 +239,8 @@ class GtkLoader {
         if (isGtk3) {
             Gtk3.loadMethods(library);
         }
+
+        libraryReference = library;
 
         if (shouldLoadGtk) {
             if (!_isLoaded) {
