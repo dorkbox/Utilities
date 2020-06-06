@@ -291,7 +291,7 @@ class StorageSystem {
          * Builds the storage system
          */
         public
-        MemoryStorage build() {
+        Storage build() {
             return new MemoryStorage();
         }
     }
