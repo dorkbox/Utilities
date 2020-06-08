@@ -22,7 +22,6 @@ import java.security.PrivilegedAction;
 
 import org.slf4j.LoggerFactory;
 
-import dorkbox.util.ClassLoaderUtil;
 import dorkbox.util.OS;
 import dorkbox.util.swt.Swt;
 

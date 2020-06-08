@@ -21,7 +21,7 @@ import java.security.PrivilegedAction;
 
 import org.slf4j.LoggerFactory;
 
-import dorkbox.util.ClassLoaderUtil;
+import dorkbox.jna.JnaClassUtils;
 import dorkbox.util.OS;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -118,7 +118,7 @@ class Swt {
                                               "}", listener);
                     listener.addMethod(method);
                     bytes = listener.toBytecode();
-                    ClassLoaderUtil.defineClass(bytes);
+                    JnaClassUtils.defineClass(bytes);
                 }
 
                 method = swtOverriedClass.getDeclaredMethod("onShutdown");
@@ -136,7 +136,7 @@ class Swt {
                 bytes = swtOverriedClass.toBytecode();
 
                 // define this new class in our current classloader
-                ClassLoaderUtil.defineClass(bytes);
+                JnaClassUtils.defineClass(bytes);
             } catch (Throwable e) {
                 LoggerFactory.getLogger(Swt.class).error("Cannot initialize SWT", e);
             }

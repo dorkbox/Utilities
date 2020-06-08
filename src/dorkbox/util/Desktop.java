@@ -25,9 +25,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import dorkbox.executor.ShellExecutor;
-import dorkbox.util.jna.linux.GnomeVFS;
-import dorkbox.util.jna.linux.GtkCheck;
-import dorkbox.util.jna.linux.GtkEventDispatch;
+import dorkbox.jna.linux.GnomeVFS;
+import dorkbox.jna.linux.GtkCheck;
+import dorkbox.jna.linux.GtkEventDispatch;
 
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public

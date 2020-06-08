@@ -58,8 +58,6 @@ public class FastThreadLocal<T> {
 
 	/**
 	 * Returns the current thread's "initial value" for this thread-local variable.
-	 *
-	 * @see ThreadLocal#initialValue()
 	 */
 	public T initialValue() {
 		return null;
