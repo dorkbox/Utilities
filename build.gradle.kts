@@ -15,89 +15,48 @@
  */
 
 import java.time.Instant
-import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.collections.set
-import kotlin.reflect.KMutableProperty
-import kotlin.reflect.full.declaredMemberProperties
 
 ///////////////////////////////
 //////    PUBLISH TO SONATYPE / MAVEN CENTRAL
-//////
-////// TESTING : local maven repo <PUBLISHING - publishToMavenLocal>
-//////
-////// RELEASE : sonatype / maven central, <PUBLISHING - publish> then <RELEASE - closeAndReleaseRepository>
+////// TESTING : (to local maven repo) <'publish and release' - 'publishToMavenLocal'>
+////// RELEASE : (to sonatype/maven central), <'publish and release' - 'publishToSonatypeAndRelease'>
 ///////////////////////////////
-
-println("\tGradle ${project.gradle.gradleVersion} on Java ${JavaVersion.current()}")
 
 plugins {
     java
-    signing
-    `maven-publish`
 
-    // close and release on sonatype
-    id("de.marcphilipp.nexus-publish") version "0.2.0"
-    id("io.codearte.nexus-staging") version "0.20.0"
-
+    id("com.dorkbox.GradleUtils") version "1.8"
     id("com.dorkbox.CrossCompile") version "1.0.1"
     id("com.dorkbox.Licensing") version "1.4"
     id("com.dorkbox.VersionUpdate") version "1.4.1"
-    id("com.dorkbox.GradleUtils") version "1.0"
+    id("com.dorkbox.GradlePublish") version "1.2"
 
-    kotlin("jvm") version "1.3.11"
+    kotlin("jvm") version "1.3.72"
 }
 
 object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.2"
+    const val version = "1.3"
 
     // set as project.ext
     const val name = "Utilities"
     const val id = "Utilities"
     const val vendor = "Dorkbox LLC"
+    const val vendorUrl = "https://dorkbox.com"
     const val url = "https://git.dorkbox.com/dorkbox/Utilities"
     val buildDate = Instant.now().toString()
 
     val JAVA_VERSION = JavaVersion.VERSION_1_6.toString()
-
-    var sonatypeUserName = ""
-    var sonatypePassword = ""
 }
 
 ///////////////////////////////
 /////  assign 'Extras'
-///////////////////////////////z
-description = Extras.description
-group = Extras.group
-version = Extras.version
-
-val propsFile = File("$projectDir/../../gradle.properties").normalize()
-if (propsFile.canRead()) {
-    println("\tLoading custom property data from: [$propsFile]")
-
-    val props = Properties()
-    propsFile.inputStream().use {
-        props.load(it)
-    }
-
-    val extraProperties = Extras::class.declaredMemberProperties.filterIsInstance<KMutableProperty<String>>()
-    props.forEach { (k, v) -> run {
-        val key = k as String
-        val value = v as String
-
-        val member = extraProperties.find { it.name == key }
-        if (member != null) {
-            member.setter.call(Extras::class.objectInstance, value)
-        }
-        else {
-            project.extra.set(k, v)
-        }
-    }}
-}
+///////////////////////////////
+GradleUtils.load("$projectDir/../../gradle.properties", Extras)
+GradleUtils.fixIntellijPaths()
 
 licensing {
     license(License.APACHE_2) {
@@ -238,7 +197,6 @@ sourceSets {
 
 repositories {
     mavenLocal() // this must be first!
-
     jcenter()
 }
 
@@ -301,12 +259,17 @@ fun getSwtMavenName(): String {
 
 
 dependencies {
-    val bcVersion = "1.60"
-    val jnaVersion = "5.3.1"
-    implementation("org.slf4j:slf4j-api:1.7.25")
+    api("com.dorkbox:JnaUtilities:1.1")
+
+    val jnaVersion = "5.5.0"
+    api("net.java.dev.jna:jna:$jnaVersion")
+    api("net.java.dev.jna:jna-platform:$jnaVersion")
+
+
+    implementation("org.slf4j:slf4j-api:1.7.30")
 
     implementation("com.github.jponge:lzma-java:1.3")
-    implementation("com.fasterxml.uuid:java-uuid-generator:3.1.5")
+    implementation("com.fasterxml.uuid:java-uuid-generator:3.3.0")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
@@ -315,152 +278,59 @@ dependencies {
 //    api("com.esotericsoftware:kryo:4.0.2")
 //    api("de.javakaffee:kryo-serializers:0.45")
 
-    implementation("io.netty:netty-all:4.1.24.Final")
+    implementation("io.netty:netty-all:4.1.49.Final")
 
+    val bcVersion = "1.64"
     implementation("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     implementation("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     implementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     implementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    implementation("org.lwjgl:lwjgl-xxhash:3.2.0")
-    implementation("org.javassist:javassist:3.23.0-GA")
+    implementation("org.lwjgl:lwjgl-xxhash:3.2.3")
+    implementation("org.javassist:javassist:3.26.0-GA")
     implementation("com.dorkbox:ShellExecutor:1.1")
 
     implementation("net.jodah:typetools:0.6.1")
 
 
-    compile("net.java.dev.jna:jna:$jnaVersion")
-    compile("net.java.dev.jna:jna-platform:$jnaVersion")
-
-    runtime("com.koloboke:koloboke-impl-jdk8:1.0.0")
+    implementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
 
     //  because the eclipse release of SWT is abandoned on maven, this repo has a newer version of SWT,
     //  http://maven-eclipse.github.io/maven
     // 4.4 is the oldest version that works with us. We use reflection to access SWT, so we can compile the project without needing SWT
-//    compileOnly("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.110.0")!!
-    compileOnly("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.110.0") {
-        isTransitive = false
-    }
+//    compileOnly("org.eclipse.platform:${getSwtMavenName()}:3.113.0") {
+////    compileOnly("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.113.0") {
+//        isTransitive = false
+//    }
+
+//    compileOnly(group = "org.openjfx", name = "javafx", version = "12", ext = "javafx-base")
+//    compileOnly(group = "org.openjfx", name = "javafx", version = "12", ext = "pom")
 
     // unit testing
-    testCompile("junit:junit:4.12")
-    testRuntime("ch.qos.logback:logback-classic:1.1.6")
+    testImplementation("junit:junit:4.13")
+    testImplementation("ch.qos.logback:logback-classic:1.2.3")
 }
 
+publishToSonatype {
+    groupId = Extras.group
+    artifactId = Extras.id
+    version = Extras.version
 
-///////////////////////////////
-//////    PUBLISH TO SONATYPE / MAVEN CENTRAL
-//////
-////// TESTING : local maven repo <PUBLISHING - publishToMavenLocal>
-//////
-////// RELEASE : sonatype / maven central, <PUBLISHING - publish> then <RELEASE - closeAndReleaseRepository>
-///////////////////////////////
-val sourceJar = task<Jar>("sourceJar") {
-    description = "Creates a JAR that contains the source code."
+    name = Extras.name
+    description = Extras.description
+    url = Extras.url
 
-    from(sourceSets["main"].java)
+    vendor = Extras.vendor
+    vendorUrl = Extras.vendorUrl
 
-    archiveClassifier.set("sources")
-}
-
-val javaDocJar = task<Jar>("javaDocJar") {
-    description = "Creates a JAR that contains the javadocs."
-
-    archiveClassifier.set("javadoc")
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = Extras.group
-            artifactId = Extras.id
-            version = Extras.version
-
-            from(components["java"])
-
-            artifact(sourceJar)
-            artifact(javaDocJar)
-
-            pom {
-                name.set(Extras.name)
-                description.set(Extras.description)
-                url.set(Extras.url)
-
-                issueManagement {
-                    url.set("${Extras.url}/issues")
-                    system.set("Gitea Issues")
-                }
-                organization {
-                    name.set(Extras.vendor)
-                    url.set("https://dorkbox.com")
-                }
-                developers {
-                    developer {
-                        id.set("dorkbox")
-                        name.set(Extras.vendor)
-                        email.set("email@dorkbox.com")
-                    }
-                }
-                scm {
-                    url.set(Extras.url)
-                    connection.set("scm:${Extras.url}.git")
-                }
-            }
-
-        }
+    issueManagement {
+        url = "${Extras.url}/issues"
+        nickname = "Gitea Issues"
     }
 
-
-    repositories {
-        maven {
-            setUrl("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            credentials {
-                username = Extras.sonatypeUserName
-                password = Extras.sonatypePassword
-            }
-        }
+    developer {
+        id = "dorkbox"
+        name = Extras.vendor
+        email = "email@dorkbox.com"
     }
-
-
-    tasks.withType<PublishToMavenRepository> {
-        onlyIf {
-            publication == publishing.publications["maven"] && repository == publishing.repositories["maven"]
-        }
-    }
-
-    tasks.withType<PublishToMavenLocal> {
-        onlyIf {
-            publication == publishing.publications["maven"]
-        }
-    }
-
-    // output the release URL in the console
-    tasks["releaseRepository"].doLast {
-        val url = "https://oss.sonatype.org/content/repositories/releases/"
-        val projectName = Extras.group.replace('.', '/')
-        val name = Extras.name
-        val version = Extras.version
-
-        println("Maven URL: $url$projectName/$name/$version/")
-    }
-}
-
-nexusPublishing {
-    packageGroup.set("com.dorkbox")
-    username.set(Extras.sonatypeUserName)
-    password.set(Extras.sonatypePassword)
-}
-
-nexusStaging {
-    username = Extras.sonatypeUserName
-    password = Extras.sonatypePassword
-}
-
-signing {
-    sign(publishing.publications["maven"])
-}
-
-task<Task>("publishAndRelease") {
-    group = "publish and release"
-    dependsOn(tasks["publishToNexus"], tasks["closeAndReleaseRepository"])
 }
