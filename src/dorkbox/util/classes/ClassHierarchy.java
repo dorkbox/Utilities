@@ -48,7 +48,7 @@ class ClassHierarchy {
      * principle" for storing data, EVEN THOUGH it's not accessed by a single writer. This DOES NOT MATTER because duplicates DO NOT matter
      */
     public
-    ClassHierarchy(int loadFactor) {
+    ClassHierarchy(float loadFactor) {
         this.arrayCache = new IdentityMap<Class<?>, Class<?>>(32, loadFactor);
         this.superClassesCache = new IdentityMap<Class<?>, Class<?>[]>(32, loadFactor);
     }
