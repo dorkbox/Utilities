@@ -63,13 +63,14 @@ class ReflectionUtils {
     /**
      * Get methods annotated with the specified annotation.
      *
-     * @param target
-     * @param annotationClass
-     * @param <A>
-     * @return
+     * @param target the class that you are looking for the methods on
+     * @param annotationClass the annotations that define the method you are looking for
+     * @param <A> the annotation type
+     *
+     * @return the array of methods that match the target + annotation
      */
     public static
-    <A extends Annotation> Method[] getMethods(Class<?> target,  Class<A> annotationClass) {
+    <A extends Annotation> Method[] getMethods(Class<?> target, Class<A> annotationClass) {
         ArrayList<Method> methods = new ArrayList<Method>();
 
         getMethods(target, annotationClass, methods);
