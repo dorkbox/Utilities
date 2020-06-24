@@ -17,8 +17,6 @@ package dorkbox.util.serialization;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
@@ -104,17 +102,4 @@ interface SerializationManager {
      * Returns a class read from the input
      */
     Object readFullClassAndObject(final Input input) throws IOException;
-
-    /**
-     * Called when initialization is complete. This is to prevent (and recognize) out-of-order class/serializer registration.
-     *
-     * The loggers are for trace debug output for the wire data
-     */
-    void finishInit(final Logger wireReadLogger, final Logger wireWriteLogger);
-
-    /**
-     * @return true if our initialization is complete. Some registrations (in the property store, for example) always register for client
-     *              and server, even if in the same JVM. This only attempts to register once.
-     */
-    boolean initialized();
 }

@@ -17,8 +17,6 @@ package dorkbox.util.storage;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
@@ -92,16 +90,5 @@ class DefaultStorageSerializationManager implements SerializationManager {
     public
     Object readFullClassAndObject(final Input input) throws IOException {
         return kryo.readClassAndObject(input);
-    }
-
-    @Override
-    public
-    void finishInit(final Logger logger, final Logger writeLogger) {
-    }
-
-    @Override
-    public
-    boolean initialized() {
-        return false;
     }
 }
