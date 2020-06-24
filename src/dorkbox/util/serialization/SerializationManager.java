@@ -38,7 +38,7 @@ interface SerializationManager {
      * Because the ID assigned is affected by the IDs registered before it, the order classes are registered is important when using this
      * method. The order must be the same at deserialization as it was for serialization.
      */
-    SerializationManager register(Class<?> clazz);
+    <T> SerializationManager register(Class<T> clazz);
 
     /**
      * Registers the class using the specified ID. If the ID is already in use by the same type, the old entry is overwritten. If the ID
@@ -51,7 +51,7 @@ interface SerializationManager {
      * @param id Must be >= 0. Smaller IDs are serialized more efficiently. IDs 0-8 are used by default for primitive types and String, but
      *         these IDs can be repurposed.
      */
-    SerializationManager register(Class<?> clazz, int id);
+    <T> SerializationManager register(Class<T> clazz, int id);
 
     /**
      * Registers the class using the lowest, next available integer ID and the specified serializer. If the class is already registered,
@@ -62,7 +62,7 @@ interface SerializationManager {
      * Because the ID assigned is affected by the IDs registered before it, the order classes are registered is important when using this
      * method. The order must be the same at deserialization as it was for serialization.
      */
-    SerializationManager register(Class<?> clazz, Serializer<?> serializer);
+    <T> SerializationManager register(Class<T> clazz, Serializer<T> serializer);
 
     /**
      * Registers the class using the specified ID and serializer. If the ID is already in use by the same type, the old entry is
@@ -75,7 +75,7 @@ interface SerializationManager {
      * @param id Must be >= 0. Smaller IDs are serialized more efficiently. IDs 0-8 are used by default for primitive types and String, but
      *         these IDs can be repurposed.
      */
-    SerializationManager register(Class<?> clazz, Serializer<?> serializer, int id);
+    <T> SerializationManager register(Class<T> clazz, Serializer<T> serializer, int id);
 
     /**
      * Waits until a kryo is available to write, using CAS operations to prevent having to synchronize.
