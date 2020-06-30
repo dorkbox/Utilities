@@ -34,7 +34,7 @@ class StorageSystem {
     private static final Map<File, Storage> storages = new HashMap<File, Storage>(1);
 
     // Make sure that the timer is run on shutdown. A HARD shutdown will just POW! kill it, a "nice" shutdown will run the hook
-    private static Thread shutdownHook = new Thread(new Runnable() {
+    private static final Thread shutdownHook = new Thread(new Runnable() {
         @Override
         public
         void run() {
@@ -54,16 +54,16 @@ class StorageSystem {
      * it has been put into storage, or whenever it does changes, make sure to put it back into storage (to update the saved record)
      */
     public static
-    DiskMaker Disk() {
-        return new DiskMaker();
+    DiskBuilder Disk() {
+        return new DiskBuilder();
     }
 
     /**
      * Creates an in-memory only storage system
      */
     public static
-    MemoryMaker Memory() {
-        return new MemoryMaker();
+    MemoryBuilder Memory() {
+        return new MemoryBuilder();
     }
 
     /**
@@ -126,7 +126,7 @@ class StorageSystem {
     void delete(File file) {
         synchronized (storages) {
             Storage remove = storages.remove(file);
-            if (remove != null && remove instanceof DiskStorage) {
+            if (remove instanceof DiskStorage) {
                 ((DiskStorage) remove).closeFully();
             }
             //noinspection ResultOfMethodCallIgnored
@@ -149,7 +149,7 @@ class StorageSystem {
      */
     @SuppressWarnings("unused")
     public static
-    class DiskMaker {
+    class DiskBuilder implements StorageBuilder {
         private File file;
         private SerializationManager serializationManager;
         private boolean readOnly = false;
@@ -160,7 +160,7 @@ class StorageSystem {
          * Specify the file to write to on disk when saving objects
          */
         public
-        DiskMaker file(File file) {
+        DiskBuilder file(File file) {
             this.file = FileUtil.normalize(file);
             return this;
         }
@@ -169,7 +169,7 @@ class StorageSystem {
          * Specify the file to write to on disk when saving objects
          */
         public
-        DiskMaker file(String file) {
+        DiskBuilder file(String file) {
             this.file = FileUtil.normalize(file);
             return this;
         }
@@ -178,7 +178,7 @@ class StorageSystem {
          * Specify the serialization manager to use. This is what serializes the files (which are then saved to disk)
          */
         public
-        DiskMaker serializer(SerializationManager serializationManager) {
+        DiskBuilder serializer(SerializationManager serializationManager) {
             this.serializationManager = serializationManager;
             return this;
         }
@@ -187,7 +187,7 @@ class StorageSystem {
          * Mark this storage system as read only
          */
         public
-        DiskMaker readOnly() {
+        DiskBuilder readOnly() {
             this.readOnly = true;
             return this;
         }
@@ -196,7 +196,7 @@ class StorageSystem {
          * Mark this storage system as read only
          */
         public
-        DiskMaker setSaveDelay(long saveDelayInMilliseconds) {
+        DiskBuilder setSaveDelay(long saveDelayInMilliseconds) {
             this.saveDelayInMilliseconds = saveDelayInMilliseconds;
             return this;
         }
@@ -205,7 +205,7 @@ class StorageSystem {
          * Assigns a logger to use for the storage system. If null, then only errors will be logged to the error console.
          */
         public
-        DiskMaker logger(final Logger logger) {
+        DiskBuilder logger(final Logger logger) {
             this.logger = logger;
             return this;
         }
@@ -215,7 +215,7 @@ class StorageSystem {
          * suppress serialization errors.
          */
         public
-        DiskMaker noLogger() {
+        DiskBuilder noLogger() {
             this.logger = NOPLogger.NOP_LOGGER;
             return this;
         }
@@ -223,6 +223,7 @@ class StorageSystem {
         /**
          * Makes the storage system
          */
+        @Override
         public
         Storage build() {
             if (this.file == null) {
@@ -285,11 +286,12 @@ class StorageSystem {
      * Creates an in-memory only storage system
      */
     public static
-    class MemoryMaker {
+    class MemoryBuilder implements StorageBuilder {
 
         /**
          * Builds the storage system
          */
+        @Override
         public
         Storage build() {
             return new MemoryStorage();
