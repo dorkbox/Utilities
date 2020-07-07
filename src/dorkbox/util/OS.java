@@ -47,33 +47,6 @@ class OS {
     private static final String originalTimeZone = TimeZone.getDefault().getID();
 
     static {
-        /*
-         * By default, the timer resolution on Windows ARE NOT high-resolution (16ms vs 1ms)
-         *
-         * 'Thread.sleep(1)' will not really sleep for 1ms, but will really sleep for ~16ms. This long-running sleep will trick Windows
-         *  into using higher resolution timers.
-         *
-         * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6435126
-         */
-        if (OS.isWindows()) {
-            // only necessary on windows
-            Thread timerAccuracyThread = new Thread(new Runnable() {
-                @SuppressWarnings("BusyWait")
-                @Override
-                public
-                void run() {
-                    while (true) {
-                        try {
-                            Thread.sleep(Long.MAX_VALUE);
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-            }, "FixWindowsHighResTimer");
-            timerAccuracyThread.setDaemon(true);
-            timerAccuracyThread.start();
-        }
-
         if (!TEMP_DIR.isDirectory()) {
             // create the temp dir if necessary because the TEMP dir doesn't exist.
             TEMP_DIR.mkdirs();
@@ -183,6 +156,33 @@ class OS {
         }
         else {
             osType = null;
+        }
+
+        /*
+         * By default, the timer resolution on Windows ARE NOT high-resolution (16ms vs 1ms)
+         *
+         * 'Thread.sleep(1)' will not really sleep for 1ms, but will really sleep for ~16ms. This long-running sleep will trick Windows
+         *  into using higher resolution timers.
+         *
+         * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6435126
+         */
+        if (osType == null || osType.isWindows()) {
+            // only necessary on windows
+            Thread timerAccuracyThread = new Thread(new Runnable() {
+                @SuppressWarnings("BusyWait")
+                @Override
+                public
+                void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(Long.MAX_VALUE);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }, "FixWindowsHighResTimer");
+            timerAccuracyThread.setDaemon(true);
+            timerAccuracyThread.start();
         }
     }
 
@@ -332,10 +332,6 @@ class OS {
 
         return defaultValue;
     }
-
-
-
-
 
     /**
      * @return the OS Type that is running on this machine
