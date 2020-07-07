@@ -100,7 +100,7 @@ class FontUtil {
      * For example:
      * <p>
      *
-     * Font titleTextFont = SwingUtil.parseFont("Source Code Pro Bold 16");
+     * Font titleTextFont = FontUtil.parseFont("Source Code Pro Bold 16");
      *
      * @param fontInfo This is the font "name style size", as a string. For example "Source Code Pro Bold BOLD 16"
      *
