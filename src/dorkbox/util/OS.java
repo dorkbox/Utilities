@@ -15,6 +15,7 @@
  */
 package dorkbox.util;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -186,26 +187,26 @@ class OS {
     }
 
     /**
-     * @return the System Property in a safe way for a given key, or null if it does not exist.
+     * @return the System Property in a safe way for a given property, or null if it does not exist.
      */
     public static
-    String getProperty(final String key) {
-        return getProperty(key, null);
+    String getProperty(final String property) {
+        return getProperty(property, null);
     }
 
     /**
-     * @return the System Property in a safe way for a given key, and if null - returns the specified default value.
+     * @return the System Property in a safe way for a given property, and if null - returns the specified default value.
      */
     public static
-    String getProperty(final String key, final String defaultValue) {
+    String getProperty(final String property, final String defaultValue) {
         try {
             if (System.getSecurityManager() == null) {
-                return System.getProperty(key, defaultValue);
+                return System.getProperty(property, defaultValue);
             } else {
                 return AccessController.doPrivileged(new PrivilegedAction<String>() {
                     @Override
                     public String run() {
-                        return System.getProperty(key, defaultValue);
+                        return System.getProperty(property, defaultValue);
                     }
                 });
             }
@@ -215,11 +216,11 @@ class OS {
     }
 
     /**
-     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * @return the value of the Java system property with the specified {@code property}, while falling back to the
      * specified default value if the property access fails.
      */
-    public static boolean getBoolean(String key, boolean defaultValue) {
-        String value = getProperty(key);
+    public static boolean getBoolean(String property, boolean defaultValue) {
+        String value = getProperty(property);
         if (value == null) {
             return defaultValue;
         }
@@ -241,11 +242,11 @@ class OS {
     }
 
     /**
-     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * @return the value of the Java system property with the specified {@code property}, while falling back to the
      * specified default value if the property access fails.
      */
-    public static int getInt(String key, int defaultValue) {
-        String value = getProperty(key);
+    public static int getInt(String property, int defaultValue) {
+        String value = getProperty(property);
         if (value == null) {
             return defaultValue;
         }
@@ -260,11 +261,11 @@ class OS {
     }
 
     /**
-     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * @return the value of the Java system property with the specified {@code property}, while falling back to the
      * specified default value if the property access fails.
      */
-    public static long getLong(String key, long defaultValue) {
-        String value = getProperty(key);
+    public static long getLong(String property, long defaultValue) {
+        String value = getProperty(property);
         if (value == null) {
             return defaultValue;
         }
@@ -279,11 +280,11 @@ class OS {
     }
 
     /**
-     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * @return the value of the Java system property with the specified {@code property}, while falling back to the
      * specified default value if the property access fails.
      */
-    public static float getFloat(String key, float defaultValue) {
-        String value = getProperty(key);
+    public static float getFloat(String property, float defaultValue) {
+        String value = getProperty(property);
         if (value == null) {
             return defaultValue;
         }
@@ -298,11 +299,11 @@ class OS {
     }
 
     /**
-     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * @return the value of the Java system property with the specified {@code property}, while falling back to the
      * specified default value if the property access fails.
      */
-    public static double getDouble(String key, double defaultValue) {
-        String value = getProperty(key);
+    public static double getDouble(String property, double defaultValue) {
+        String value = getProperty(property);
         if (value == null) {
             return defaultValue;
         }
@@ -315,6 +316,26 @@ class OS {
 
         return defaultValue;
     }
+
+    public static
+    Color getColor(final String property, final Color defaultValue) {
+        String value = getProperty(property);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim();
+        try {
+            return Color.decode(value);
+        } catch (Exception ignored) {
+        }
+
+        return defaultValue;
+    }
+
+
+
+
 
     /**
      * @return the OS Type that is running on this machine
