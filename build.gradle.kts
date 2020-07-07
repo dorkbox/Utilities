@@ -290,7 +290,7 @@ dependencies {
     implementation("org.javassist:javassist:3.26.0-GA")
     implementation("com.dorkbox:ShellExecutor:1.1")
 
-    implementation("net.jodah:typetools:0.6.1")
+    implementation("net.jodah:typetools:0.6.2")
 
 
     implementation("com.koloboke:koloboke-impl-jdk8:1.0.0")
