@@ -46,32 +46,37 @@ class OS {
     private static final String originalTimeZone = TimeZone.getDefault().getID();
 
     static {
+        /*
+         * By default, the timer resolution on Windows ARE NOT high-resolution (16ms vs 1ms)
+         *
+         * 'Thread.sleep(1)' will not really sleep for 1ms, but will really sleep for ~16ms. This long-running sleep will trick Windows
+         *  into using higher resolution timers.
+         *
+         * See: https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6435126
+         */
+        if (OS.isWindows()) {
+            // only necessary on windows
+            Thread timerAccuracyThread = new Thread(new Runnable() {
+                @SuppressWarnings("BusyWait")
+                @Override
+                public
+                void run() {
+                    while (true) {
+                        try {
+                            Thread.sleep(Long.MAX_VALUE);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }, "FixWindowsHighResTimer");
+            timerAccuracyThread.setDaemon(true);
+            timerAccuracyThread.start();
+        }
+
         if (!TEMP_DIR.isDirectory()) {
             // create the temp dir if necessary because the TEMP dir doesn't exist.
             TEMP_DIR.mkdirs();
         }
-
-        /**
-         * By default, the timer resolution in some operating systems are not particularly high-resolution (ie: 'Thread.sleep(1)' will not
-         * really sleep for 1ms, but will really sleep for 16ms). This forces the JVM to use high resolution timers. This is USUALLY
-         * necessary on Windows.
-         */
-        Thread timerAccuracyThread = new Thread(new Runnable() {
-            @Override
-            public
-            void run() {
-                //noinspection InfiniteLoopStatement
-                while (true) {
-                    try {
-                        Thread.sleep(Long.MAX_VALUE);
-                    } catch (Exception ignored) {
-                    }
-                }
-            }
-        }, "ForceHighResTimer");
-        timerAccuracyThread.setDaemon(true);
-        timerAccuracyThread.start();
-
 
         String osName = getProperty("os.name", "");
         String osArch = getProperty("os.arch", "");
@@ -209,6 +214,111 @@ class OS {
         }
     }
 
+    /**
+     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * specified default value if the property access fails.
+     */
+    public static boolean getBoolean(String key, boolean defaultValue) {
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim().toLowerCase();
+        if (value.isEmpty()) {
+            return defaultValue;
+        }
+
+        if ("false".equals(value) || "no".equals(value) || "0".equals(value)) {
+            return false;
+        }
+
+        if ("true".equals(value) || "yes".equals(value) || "1".equals(value)) {
+            return true;
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * specified default value if the property access fails.
+     */
+    public static int getInt(String key, int defaultValue) {
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim();
+        try {
+            return Integer.parseInt(value);
+        } catch (Exception ignored) {
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * specified default value if the property access fails.
+     */
+    public static long getLong(String key, long defaultValue) {
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim();
+        try {
+            return Long.parseLong(value);
+        } catch (Exception ignored) {
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * specified default value if the property access fails.
+     */
+    public static float getFloat(String key, float defaultValue) {
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim();
+        try {
+            return Float.parseFloat(value);
+        } catch (Exception ignored) {
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * @return the value of the Java system property with the specified {@code key}, while falling back to the
+     * specified default value if the property access fails.
+     */
+    public static double getDouble(String key, double defaultValue) {
+        String value = getProperty(key);
+        if (value == null) {
+            return defaultValue;
+        }
+
+        value = value.trim();
+        try {
+            return Double.parseDouble(value);
+        } catch (Exception ignored) {
+        }
+
+        return defaultValue;
+    }
+
+    /**
+     * @return the OS Type that is running on this machine
+     */
     public static
     OSType get() {
         return osType;
