@@ -159,8 +159,9 @@ class JavaFX {
             if (OS.javaVersion <= 7) {
                 return (Boolean) isEventThreadMethod.invoke(null);
             } else {
-                //noinspection ConfusingArgumentToVarargsMethod
-                return (Boolean) isEventThreadMethod.invoke(isEventThreadObject, (java.lang.Class<?>[])null);
+                Class<?>[] args = null;
+                //noinspection ConstantConditions
+                return (Boolean) isEventThreadMethod.invoke(isEventThreadObject, (Object) args);
             }
         } catch (Throwable e) {
             LoggerFactory.getLogger(JavaFX.class)
