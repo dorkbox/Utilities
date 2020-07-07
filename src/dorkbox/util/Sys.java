@@ -15,7 +15,6 @@
  */
 package dorkbox.util;
 
-import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -637,60 +636,17 @@ class Sys {
         System.err.println(builder.toString());
     }
 
-
-    // Easier access for system properties, if necessary
-
-    public static
-    String getSystemString(final String property, final String defaultValue) {
-        String property1 = System.getProperty(property);
-        if (property1 == null) {
-            return defaultValue;
-        }
-
-        return property1;
+    /**
+     * Raises an exception, but bypasses the compiler checks for the checked exception. This uses type erasure to work
+     */
+    public static void throwException(Throwable t) {
+        Sys.<RuntimeException>throwException0(t);
     }
 
-    public static
-    int getSystemInt(final String property, final int defaultValue) {
-        String property1 = System.getProperty(property);
-        if (property1 == null) {
-            return defaultValue;
-        }
-
-        return Integer.parseInt(property1);
+    @SuppressWarnings("unchecked")
+    private static <E extends Throwable> void throwException0(Throwable t) throws E {
+        throw (E) t;
     }
-
-    public static
-    long getSystemLong(final String property, final long defaultValue) {
-        String property1 = System.getProperty(property);
-        if (property1 == null) {
-            return defaultValue;
-        }
-
-        return Long.parseLong(property1);
-    }
-
-    public static
-    boolean getSystemBoolean(final String property, final boolean defaultValue) {
-        String property1 = System.getProperty(property);
-        if (property1 == null) {
-            return defaultValue;
-        }
-
-        return Boolean.parseBoolean(property1);
-    }
-
-    public static
-    Color getSystemColor(final String property, final Color defaultValue) {
-        String property1 = System.getProperty(property);
-        if (property1 == null) {
-            return defaultValue;
-        }
-
-        return Color.decode(property1);
-    }
-
-    // Parsing font from a string is inside SwingUtil
 
     private
     Sys() {
