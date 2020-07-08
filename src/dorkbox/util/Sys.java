@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
+import io.netty.util.internal.EmptyArrays;
+
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final
 class Sys {
@@ -520,6 +522,55 @@ class Sys {
 
         return new String(hexString);
     }
+
+    /**
+     * from netty 4.1, apache 2.0, https://netty.io
+     */
+    public static byte hexToByte(CharSequence s, int pos) {
+        int hi = hexCharToInt(s.charAt(pos));
+        int lo = hexCharToInt(s.charAt(pos + 1));
+        if (hi == -1 || lo == -1) {
+            throw new IllegalArgumentException(String.format(
+                    "invalid hex byte '%s' at index %d of '%s'", s.subSequence(pos, pos + 2), pos, s));
+        }
+        return (byte) ((hi << 4) + lo);
+    }
+
+    /**
+     * Decodes a string with <a href="http://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
+     *
+     * @param hex a {@link CharSequence} which contains the hex dump
+     */
+    public static byte[] hexToBytes(CharSequence hex) {
+        return hexToBytes(hex, 0, hex.length());
+    }
+
+    /**
+     * Decodes part of a string with <a href="http://en.wikipedia.org/wiki/Hex_dump">hex dump</a>
+     *
+     * from netty 4.1, apache 2.0, https://netty.io
+     *
+     * @param hexDump a {@link CharSequence} which contains the hex dump
+     * @param fromIndex start of hex dump in {@code hexDump}
+     * @param length hex string length
+     */
+    public static byte[] hexToBytes(CharSequence hexDump, int fromIndex, int length) {
+        if (length < 0 || (length & 1) != 0) {
+            throw new IllegalArgumentException("length: " + length);
+        }
+
+        if (length == 0) {
+            return EmptyArrays.EMPTY_BYTES;
+        }
+
+        byte[] bytes = new byte[length >>> 1];
+        for (int i = 0; i < length; i += 2) {
+            bytes[i >>> 1] = hexToByte(hexDump, fromIndex + i);
+        }
+        return bytes;
+    }
+
+
 
     /**
      * XOR two byte arrays together, and save result in originalArray
