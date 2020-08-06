@@ -263,6 +263,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
+                                           .register(StorageTest.Data.class)
                                            .build();
 
             for (int i = 0; i < total; i++) {
@@ -275,6 +276,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             for (int i = 0; i < total; i++) {
@@ -298,6 +300,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             data2 = storage.get(createKey, new Data());
@@ -321,6 +324,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
+                                           .register(StorageTest.Data.class)
                                            .build();
 
             for (int i = 0; i < total; i++) {
@@ -333,6 +337,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             for (int i = 0; i < total; i++) {
@@ -365,6 +370,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             // check 9 again
@@ -389,6 +395,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
+                                           .register(StorageTest.Data.class)
                                            .build();
 
             for (int i = 0; i < total; i++) {
@@ -401,6 +408,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             String updateRecord = updateRecord(storage, 3, createData(3) + "new");
@@ -410,6 +418,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             readRecord = readRecord(storage, 3);
@@ -420,6 +429,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             readRecord = readRecord(storage, 3);
@@ -428,6 +438,7 @@ class StorageTest {
             StorageSystem.close(storage);
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
 
             updateRecord = updateRecord(storage, 0, createData(0) + "new");
@@ -448,6 +459,7 @@ class StorageTest {
         try {
             Storage storage = StorageSystem.Disk()
                                            .file(TEST_DB)
+                                           .register(StorageTest.Data.class)
                                            .build();
 
             for (int i = 0; i < total; i++) {
@@ -464,6 +476,7 @@ class StorageTest {
 
             storage = StorageSystem.Disk()
                                    .file(TEST_DB)
+                                   .register(StorageTest.Data.class)
                                    .build();
             for (int i = 0; i < total; i++) {
                 StorageKey createKey = createKey(i);
