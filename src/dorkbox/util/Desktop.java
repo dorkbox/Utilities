@@ -24,10 +24,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import dorkbox.executor.ShellExecutor;
+import dorkbox.executor.Executor;
 import dorkbox.jna.linux.GnomeVFS;
 import dorkbox.jna.linux.GtkCheck;
 import dorkbox.jna.linux.GtkEventDispatch;
+import dorkbox.os.OS;
+import dorkbox.os.OSUtil;
 
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
@@ -242,9 +244,7 @@ class Desktop {
             if (files != null && files.length > 0) {
                 // Get first child
                 File child = files[0];
-                if (!ShellExecutor.run("open", "-R", child.getCanonicalPath())) {
-                    throw new IOException("Error opening the directory for " + path);
-                }
+                new Executor().command("open", "-R", child.getCanonicalPath()).startAsync();
             }
         }
         // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
@@ -291,10 +291,10 @@ class Desktop {
      * @param path the path to open
      */
     private static
-    void launchNix(final String path) {
+    void launchNix(final String path) throws IOException {
         if (GVFS_VALID) {
             // ubuntu, fedora, etc MIGHT have access to gvfs-open. Ubuntu is also VERY buggy with xdg-open!!
-            ShellExecutor.run(GVFS, path);
+            new Executor().command(GVFS, path).startAsync();
         }
         else if (OSUtil.DesktopEnv.isGnome() && GnomeVFS.isInited) {
             GtkEventDispatch.dispatch(new Runnable() {
@@ -310,7 +310,10 @@ class Desktop {
                         // there are problems with ubuntu and practically everything. Errors galore, and sometimes things don't even work.
                         // see: https://bugzilla.mozilla.org/show_bug.cgi?id=672671
                         // this can be really buggy ... you have been warned
-                        ShellExecutor.run("xdg-open", path);
+                        try {
+                            new Executor().command("xdg-open", path).startAsync();
+                        } catch (IOException ignored) {
+                        }
                     }
                 }
             });
@@ -318,7 +321,7 @@ class Desktop {
         else {
             // just use xdg-open, since it's not gnome.
             // this can be really buggy ... you have been warned
-            ShellExecutor.run("xdg-open", path);
+            new Executor().command("xdg-open", path).startAsync();
         }
     }
 }

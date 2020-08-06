@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 
+import dorkbox.os.OS;
+
 /**
  * A Parallel processor to simplify processing data on multiple threads and provide back-pressure to the main thread (that
  * creates the processor and adds work to it), so that memory is constrained at the expense of CPU waiting

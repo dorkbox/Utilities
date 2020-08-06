@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import dorkbox.os.OS;
+
 /**
  * File related utilities.
  * <p/>
@@ -1597,7 +1599,6 @@ class FileUtil {
      * @param unixSeparator {@code true} if a unix separator should
      *                      be used or {@code false} if a windows separator should be used.
      * @return the normalized filename, or null if invalid
-     * @since 2.0
      */
     public static
     String normalize(String filename, boolean unixSeparator) {
@@ -1711,7 +1712,6 @@ class FileUtil {
      * @param unixSeparator {@code true} if a unix separator should
      *                      be used or {@code false} if a windows separtor should be used.
      * @return the normalized filename, or null if invalid
-     * @since 2.0
      */
     public static
     String normalizeNoEndSeparator(String filename, boolean unixSeparator) {

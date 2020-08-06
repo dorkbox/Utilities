@@ -23,6 +23,8 @@ import java.io.OutputStream;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
+import dorkbox.os.OS;
+
 /**
  * Loads the specified library, extracting it from the jar, if necessary
  */

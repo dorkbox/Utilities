@@ -27,6 +27,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
 
+import dorkbox.os.OS;
+
 public
 class CacheUtil {
 

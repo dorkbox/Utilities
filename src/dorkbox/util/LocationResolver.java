@@ -37,6 +37,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import dorkbox.os.OS;
+
 /**
  * Convenience methods for working with resource/file/class locations
  */

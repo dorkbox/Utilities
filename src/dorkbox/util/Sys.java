@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import io.netty.util.internal.EmptyArrays;
+import dorkbox.os.OS;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final
@@ -560,7 +560,7 @@ class Sys {
         }
 
         if (length == 0) {
-            return EmptyArrays.EMPTY_BYTES;
+            return new byte[0];
         }
 
         byte[] bytes = new byte[length >>> 1];

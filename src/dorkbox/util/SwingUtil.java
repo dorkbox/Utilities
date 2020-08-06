@@ -42,6 +42,8 @@ import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import dorkbox.os.OS;
+
 @SuppressWarnings("unused")
 public
 class SwingUtil {

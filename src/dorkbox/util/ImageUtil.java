@@ -36,6 +36,8 @@ import javax.imageio.stream.ImageInputStream;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+import dorkbox.os.OS;
+
 @SuppressWarnings("WeakerAccess")
 public
 class ImageUtil {
