@@ -19,35 +19,24 @@ import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.slf4j.LoggerFactory;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 
-import dorkbox.jna.JnaClassUtils;
-import dorkbox.util.OS;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.CtMethod;
-import javassist.CtNewMethod;
-import javassist.Modifier;
+import dorkbox.os.OS;
 
 /**
- * Utility methods for SWT. Some of the methods will be overwritten via Javassist so we don't require a hard dependency on SWT.
+ * Utility methods for SWT. SWT is always available for compiling, so it is not necessary to use reflection to compile it.
  * <p>
  * SWT system tray types are GtkStatusIcon trays (so we don't want to use them)
  */
-@SuppressWarnings("Convert2Lambda")
 public
 class Swt {
     public final static boolean isLoaded;
     public final static boolean isGtk3;
     private static final int version;
 
-    private static final Object currentDisplay;
+    private static final Display currentDisplay;
     private static final Thread currentDisplayThread;
-
-    // Methods are cached for performance
-    private static final Method syncExecMethod;
-
 
     static {
         // There is a silly amount of redirection, simply because we have to be able to access SWT, but only if it's in use.
@@ -56,95 +45,14 @@ class Swt {
 
         boolean isSwtLoadable_ = isLoadable();
 
-        int _version = 0;
-        if (isSwtLoadable_) {
-            try {
-                // _version = SWT.getVersion();
-                Class<?> clazz = Class.forName("org.eclipse.swt.SWT");
-                Method _getVersionMethod = clazz.getMethod("getVersion", int.class);
-                _version = (Integer) _getVersionMethod.invoke(null);
-            } catch (Exception ignored) {
-            }
-        }
-
-        version = _version;
+        version = SWT.getVersion();
         isLoaded = isSwtLoadable_;
         isGtk3 = isSwtLoadable_ && isGtk3();
 
 
         // we MUST save this on init, otherwise it is "null" when methods are run from the swing EDT.
-        //
-        // currentDisplay = org.eclipse.swt.widgets.Display.getCurrent();
-        // currentDisplayThread = currentDisplay.getThread();
-
-        Object _currentDisplay = null;
-        Thread _currentDisplayThread = null;
-
-        Method _syncExecMethod = null;
-
-        if (isSwtLoadable_) {
-            try {
-                Class<?> clazz = Class.forName("org.eclipse.swt.widgets.Display");
-                Method getCurrentMethod = clazz.getMethod("getCurrent");
-                Method getThreadMethod = clazz.getMethod("getThread");
-                _syncExecMethod = clazz.getDeclaredMethod("syncExec", Runnable.class);
-
-                _currentDisplay = getCurrentMethod.invoke(null);
-                _currentDisplayThread = (Thread) getThreadMethod.invoke(_currentDisplay);
-
-
-                // re-write the part that is heavily SWT dependent, that cannot be done via reflection.
-                byte[] bytes;
-                String body;
-                CtMethod method;
-                CtField ctField;
-
-                ClassPool pool = ClassPool.getDefault();
-                CtClass swtOverriedClass = pool.get("dorkbox.util.Swt$SwtOverride");
-
-                // the abstractions for listener are REQUIRED by javassist.
-                {
-                    CtClass listener = pool.makeClass("dorkbox.util.Swt_listener");
-                    listener.addInterface(pool.get("org.eclipse.swt.widgets.Listener"));
-
-                    ctField = new CtField(pool.get("java.lang.Runnable"), "runnable", listener);
-                    ctField.setModifiers(Modifier.PROTECTED);
-                    listener.addField(ctField);
-
-                    method = CtNewMethod.make(CtClass.voidType, "handleEvent",
-                                              new CtClass[]{pool.get("org.eclipse.swt.widgets.Event")}, null,
-                                              "{" +
-                                              "   this.runnable.run();" +
-                                              "}", listener);
-                    listener.addMethod(method);
-                    bytes = listener.toBytecode();
-                    JnaClassUtils.defineClass(bytes);
-                }
-
-                method = swtOverriedClass.getDeclaredMethod("onShutdown");
-                body = "{" +
-                       "org.eclipse.swt.widgets.Display currentDisplay = (org.eclipse.swt.widgets.Display)$1;" +
-                       "Runnable runnable = $2;" +
-
-                       "dorkbox.util.Swt_listener listener = new dorkbox.util.Swt_listener();" +
-                       "listener.runnable = runnable;" +
-
-                       "org.eclipse.swt.widgets.Shell shell = currentDisplay.getShells()[0];" +
-                       "shell.addListener(org.eclipse.swt.SWT.Close, listener);" +
-                       "}";
-                method.setBody(body);
-                bytes = swtOverriedClass.toBytecode();
-
-                // define this new class in our current classloader
-                JnaClassUtils.defineClass(bytes);
-            } catch (Throwable e) {
-                LoggerFactory.getLogger(Swt.class).error("Cannot initialize SWT", e);
-            }
-        }
-
-        currentDisplay = _currentDisplay;
-        currentDisplayThread = _currentDisplayThread;
-        syncExecMethod = _syncExecMethod;
+        currentDisplay = org.eclipse.swt.widgets.Display.getCurrent();
+        currentDisplayThread = currentDisplay.getThread();
     }
 
     /**
@@ -168,18 +76,14 @@ class Swt {
             }
         });
 
-        boolean isLoadable = false;
-
-        try {
-            // org.eclipse.swt.SWT.isLoadable();
-            Class<?> clazz = Class.forName("org.eclipse.swt.SWT");
-            Method _isLoadableMethod = clazz.getMethod("isLoadable");
-            isLoadable = (Boolean) _isLoadableMethod.invoke(null);
-        } catch (Exception ignored) {
+        if (null != swtErrorClass) {
+            try {
+                return org.eclipse.swt.SWT.isLoadable();
+            } catch (Exception ignored) {
+            }
         }
 
-
-        return null != swtErrorClass && isLoadable;
+        return false;
     }
 
     /**
@@ -244,23 +148,20 @@ class Swt {
     }
 
 
-    // this class is over-written via Javassist, because reflection cannot create anonymous classes. Javassist can, with caveats.
-    @SuppressWarnings("unused")
     public static
     class SwtOverride {
         static
-        void onShutdown(final Object currentDisplay, final Runnable runnable) {
+        void onShutdown(final Display currentDisplay, final Runnable runnable) {
             // currentDisplay.getShells() must only be called inside the event thread!
 
-//            org.eclipse.swt.widgets.Shell shell = currentDisplay.getShells()[0];
-//            shell.addListener(org.eclipse.swt.SWT.Close, new org.eclipse.swt.widgets.Listener() {
-//                @Override
-//                public
-//                void handleEvent(final org.eclipse.swt.widgets.Event event) {
-//                    runnable.run();
-//                }
-//            });
-            throw new RuntimeException("This should never happen, as this class is over-written at runtime.");
+           org.eclipse.swt.widgets.Shell shell = currentDisplay.getShells()[0];
+           shell.addListener(org.eclipse.swt.SWT.Close, new org.eclipse.swt.widgets.Listener() {
+               @Override
+               public
+               void handleEvent(final org.eclipse.swt.widgets.Event event) {
+                   runnable.run();
+               }
+           });
         }
     }
 
@@ -272,14 +173,7 @@ class Swt {
 
     public static
     void dispatch(final Runnable runnable) {
-        //         currentDisplay.syncExec(runnable);
-        try {
-            syncExecMethod.invoke(currentDisplay, runnable);
-        } catch (Throwable e) {
-            LoggerFactory.getLogger(Swt.class)
-                         .error("Unable to execute JavaFX runLater(). Please create an issue with your OS and Java " +
-                                "version so we may further investigate this issue.");
-        }
+        currentDisplay.syncExec(runnable);
     }
 
     public static
