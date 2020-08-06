@@ -22,13 +22,13 @@ import java.security.PrivilegedAction;
 
 import org.slf4j.LoggerFactory;
 
-import dorkbox.util.OS;
+import dorkbox.os.OS;
 import dorkbox.util.swt.Swt;
 
 /**
  * Utility methods for JavaFX.
  * <p>
- * We use reflection for these methods so that we can compile everything under a version of Java that might now have JavaFX.
+ * We use reflection for these methods so that we can compile everything under a version of Java that might not have JavaFX.
  */
 public
 class JavaFX {
