@@ -41,7 +41,7 @@ import org.lwjgl.util.xxhash.XXH32State;
 import org.lwjgl.util.xxhash.XXHash;
 import org.slf4j.Logger;
 
-import dorkbox.util.OS;
+import dorkbox.os.OS;
 import dorkbox.util.bytes.LittleEndian;
 
 /**

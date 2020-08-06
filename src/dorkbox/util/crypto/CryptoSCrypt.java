@@ -17,6 +17,7 @@ package dorkbox.util.crypto;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * An implementation of the <a href="http://www.tarsnap.com/scrypt/scrypt.pdf"/>scrypt</a> key derivation function.
@@ -111,9 +112,9 @@ class CryptoSCrypt {
         sb.append("$s0$")
           .append(params)
           .append('$');
-        sb.append(dorkbox.util.Base64Fast.encodeToString(salt, false))
+        sb.append(Base64.getEncoder().encodeToString(salt))
           .append('$');
-        sb.append(dorkbox.util.Base64Fast.encodeToString(derived, false));
+        sb.append(Base64.getEncoder().encodeToString(derived));
 
         return sb.toString();
     }
@@ -141,8 +142,8 @@ class CryptoSCrypt {
         }
 
         int params = Integer.parseInt(parts[2], 16);
-        byte[] salt = dorkbox.util.Base64Fast.decodeFast(parts[3]);
-        byte[] derived0 = dorkbox.util.Base64Fast.decodeFast(parts[4]);
+        byte[] salt = Base64.getDecoder().decode(parts[3]);
+        byte[] derived0 = Base64.getDecoder().decode(parts[4]);
 
         //noinspection NumericCastThatLosesPrecision
         int N = (int) Math.pow(2, params >> 16 & 0xFF);

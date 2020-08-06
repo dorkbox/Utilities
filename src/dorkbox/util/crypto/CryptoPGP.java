@@ -63,8 +63,8 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
 
+import dorkbox.os.OS;
 import dorkbox.util.IO;
-import dorkbox.util.OS;
 
 /**
  * PGP crypto related methods

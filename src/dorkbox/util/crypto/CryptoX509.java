@@ -40,6 +40,7 @@ import java.security.interfaces.DSAParams;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Enumeration;
 
@@ -114,7 +115,6 @@ import org.bouncycastle.operator.bc.BcRSAContentVerifierProviderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import dorkbox.util.Base64Fast;
 import dorkbox.util.crypto.signers.BcECDSAContentSignerBuilder;
 import dorkbox.util.crypto.signers.BcECDSAContentVerifierProviderBuilder;
 
@@ -145,14 +145,19 @@ public class CryptoX509 {
                 String cert_begin = "-----BEGIN CERTIFICATE-----";
                 String cert_end =   "-----END CERTIFICATE-----";
 
-                byte[] derCert = x509cert.getEncoded();
-                char[] encodeToChar = Base64Fast.encodeToChar(derCert, false);
+                byte[] derCert = Base64.getMimeEncoder().encode(x509cert.getEncoded());
+                char[] encodeToChar = new char[derCert.length];
+
+                for (int i = 0; i < derCert.length; i++) {
+                    encodeToChar[i] = (char) derCert[i];
+                }
+
 
                 int newLineCount = encodeToChar.length/64;
 
                 int length = encodeToChar.length;
 
-                output = new BufferedWriter(new FileWriter("dorkbox.crt", false),
+                output = new BufferedWriter(new FileWriter(fileName, false),
                                               cert_begin.length() + cert_end.length() + length + newLineCount + 3);
 
                 output.write(cert_begin);
@@ -191,8 +196,12 @@ public class CryptoX509 {
             String cert_begin = "-----BEGIN CERTIFICATE-----";
             String cert_end =   "-----END CERTIFICATE-----";
 
-            byte[] derCert = x509cert.getEncoded();
-            char[] encodeToChar = Base64Fast.encodeToChar(derCert, false);
+            byte[] derCert = Base64.getMimeEncoder().encode(x509cert.getEncoded());
+            char[] encodeToChar = new char[derCert.length];
+
+            for (int i = 0; i < derCert.length; i++) {
+                encodeToChar[i] = (char) derCert[i];
+            }
 
             int newLineCount = encodeToChar.length/64;
 
