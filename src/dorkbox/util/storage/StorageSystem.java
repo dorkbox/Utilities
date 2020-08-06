@@ -24,8 +24,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.helpers.NOPLogger;
 
+import com.esotericsoftware.kryo.Serializer;
+
+import dorkbox.os.OS;
 import dorkbox.util.FileUtil;
-import dorkbox.util.OS;
 import dorkbox.util.serialization.SerializationManager;
 
 public
@@ -151,7 +153,7 @@ class StorageSystem {
     public static
     class DiskBuilder implements StorageBuilder {
         private File file;
-        private SerializationManager serializationManager;
+        private SerializationManager serializationManager = createDefaultSerializationManager(); // default
         private boolean readOnly = false;
         private Logger logger = null;
         private long saveDelayInMilliseconds = 3000L; // default
@@ -220,6 +222,34 @@ class StorageSystem {
             return this;
         }
 
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz) {
+            this.serializationManager.register(clazz);
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final int id) {
+            this.serializationManager.register(clazz, id);
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final Serializer<T> serializer) {
+            this.serializationManager.register(clazz, serializer);
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final Serializer<T> serializer, final int id) {
+            this.serializationManager.register(clazz, serializer, id);
+            return this;
+        }
+
         /**
          * Makes the storage system
          */
@@ -228,10 +258,6 @@ class StorageSystem {
         Storage build() {
             if (this.file == null) {
                 throw new IllegalArgumentException("file cannot be null!");
-            }
-
-            if (this.serializationManager == null) {
-                this.serializationManager = createDefaultSerializationManager();
             }
 
             // if we load from a NEW storage at the same location as an ALREADY EXISTING storage,
@@ -283,7 +309,7 @@ class StorageSystem {
 
 
     /**
-     * Creates an in-memory only storage system
+     * Creates an in-memory only storage system. This storage system DOES NOT care about serializing data, so `register` has no effect.
      */
     public static
     class MemoryBuilder implements StorageBuilder {
@@ -295,6 +321,30 @@ class StorageSystem {
         public
         Storage build() {
             return new MemoryStorage();
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz) {
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final int id) {
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final Serializer<T> serializer) {
+            return this;
+        }
+
+        @Override
+        public
+        <T> StorageBuilder register(final Class<T> clazz, final Serializer<T> serializer, final int id) {
+            return this;
         }
     }
 }

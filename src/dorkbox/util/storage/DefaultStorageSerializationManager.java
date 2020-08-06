@@ -23,6 +23,7 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.minlog.Log;
 
+import dorkbox.util.serialization.SerializationDefaults;
 import dorkbox.util.serialization.SerializationManager;
 import io.netty.buffer.ByteBuf;
 
@@ -31,6 +32,11 @@ class DefaultStorageSerializationManager implements SerializationManager {
             // we don't want logging from Kryo...
             Log.set(Log.LEVEL_ERROR);
         }};
+
+    public
+    DefaultStorageSerializationManager() {
+        SerializationDefaults.register(kryo);
+    }
 
     @Override
     public

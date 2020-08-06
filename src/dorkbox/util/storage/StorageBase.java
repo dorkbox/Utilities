@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.util.OS;
+import dorkbox.os.OS;
 import dorkbox.util.serialization.SerializationManager;
 
 
