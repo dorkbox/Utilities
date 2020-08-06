@@ -15,9 +15,6 @@
  */
 package dorkbox.util;
 
-import lzma.sdk.lzma.Decoder;
-import lzma.sdk.lzma.Encoder;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,74 +22,32 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.LZMAInputStream;
+import org.tukaani.xz.LZMAOutputStream;
+
 public class LZMA {
-    // LZMA (Java) 4.61  2008-11-23
-    // http://jponge.github.com/lzma-java/
+    // https://tukaani.org/xz/java.html
 
-    public static final void encode(long fileSize, InputStream input, OutputStream output) throws IOException  {
-        try {
-            final Encoder encoder = new Encoder();
-
-            if (!encoder.setDictionarySize(1 << 23)) {
-                throw new RuntimeException("Incorrect dictionary size");
-            }
-            if (!encoder.setNumFastBytes(273)) {
-                throw new RuntimeException("Incorrect -fb value");
-            }
-            if (!encoder.setMatchFinder(1)) {
-                throw new RuntimeException("Incorrect -mf value");
-            }
-            if (!encoder.setLcLpPb(3, 0, 2)) {
-                throw new RuntimeException("Incorrect -lc or -lp or -pb value");
-            }
-            encoder.setEndMarkerMode(false);
-            encoder.writeCoderProperties(output);
-
-            for (int ii = 0; ii < 8; ii++) {
-                output.write((int)(fileSize >>> 8 * ii) & 0xFF);
-            }
-
-            encoder.code(input, output, -1, -1, null);
-        } finally {
-            input.close();
-            output.flush();
+    public static final void encode(InputStream input, OutputStream output) throws IOException  {
+        try (OutputStream compressionStream = new LZMAOutputStream(output, new LZMA2Options(3), true)) {
+            IO.copyStream(input, compressionStream);
         }
     }
 
     public static final ByteArrayOutputStream decode(InputStream input) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(8192);
-        decode(input, byteArrayOutputStream);
+
+        try (LZMAInputStream compressedStream = new LZMAInputStream(input)) {
+            IO.copyStream(compressedStream, byteArrayOutputStream);
+        }
+
         return byteArrayOutputStream;
     }
 
     public static final void decode(InputStream input, OutputStream output) throws IOException {
-        try {
-            int propertiesSize = 5;
-            byte[] properties = new byte[propertiesSize];
-            if (input.read(properties, 0, propertiesSize) != propertiesSize) {
-                throw new IOException("input .lzma file is too short");
-            }
-
-            Decoder decoder = new Decoder();
-            if (!decoder.setDecoderProperties(properties)) {
-                throw new IOException("Incorrect stream properties");
-            }
-
-            long outSize = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                int v = input.read();
-                if (v < 0) {
-                    throw new IOException("Can't read stream size");
-                }
-                outSize |= (long)v << 8 * i;
-            }
-            if (!decoder.code(input, output, outSize)) {
-                throw new IOException("Error in data stream");
-            }
-        } finally {
-            output.flush();
-            input.close();
+        try (LZMAInputStream compressedStream = new LZMAInputStream(input)) {
+            IO.copyStream(compressedStream, output);
         }
     }
 
