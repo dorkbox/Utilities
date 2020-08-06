@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import dorkbox.util.OS;
+import dorkbox.os.OS;
 
 /**
  * The EXIT system uses ERRORS to exit the application. We must make sure NOT to swallow them higher up! -- so don't catch "throwable"!
