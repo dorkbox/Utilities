@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.os;
 
 public enum OSType {
     Windows32("windows_32", ".dll"),

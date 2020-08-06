@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.os;
 
 import java.awt.Color;
 import java.io.File;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Locale;
@@ -31,9 +32,8 @@ class OS {
     public static final String LINE_SEPARATOR_UNIX = "\n";
     public static final String LINE_SEPARATOR_WINDOWS = "\r\n";
 
-    public static final Charset US_ASCII = Charset.forName("US-ASCII");
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
-    public static final Charset UTF_16LE = Charset.forName("UTF-16LE");
+    public static final Charset US_ASCII = StandardCharsets.US_ASCII;
+    public static final Charset UTF_8 = StandardCharsets.UTF_8;
 
     public static final File TEMP_DIR = new File(getProperty("java.io.tmpdir", "temp"));
 
@@ -489,8 +489,8 @@ class OS {
 
     @Override
     public final
-    Object clone() throws java.lang.CloneNotSupportedException {
-        throw new java.lang.CloneNotSupportedException();
+    Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
     }
 
     public final

@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.os;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import dorkbox.executor.ShellExecutor;
+import dorkbox.executor.Executor;
 
 /**
  * Container for all OS specific tests and methods. These do not exist in OS.java, because of dependency issues (OS.java should not
@@ -79,8 +80,6 @@ class OSUtil {
         public static
         int[] getVersion() {
             int[] version = new int[2];
-            version[0] = 0;
-            version[1] = 0;
 
             if (!OS.isWindows()) {
                 return version;
@@ -154,12 +153,9 @@ class OSUtil {
             if (version[0] == 6 && version[1] >= 3) {
                 return true;
             }
-            else if (version[0] > 6) {
-                return true;
+            else {
+                return version[0] > 6;
             }
-
-
-            return false;
         }
 
         /**
@@ -189,12 +185,7 @@ class OSUtil {
 
             try {
                 // uname
-                final ShellExecutor shell = new ShellExecutor();
-                shell.setExecutable("uname");
-                shell.start();
-
-                String output = shell.getOutput();
-                return output.startsWith("FreeBSD");
+                return Executor.Companion.run("uname").startsWith("FreeBSD");
             } catch (Throwable ignored) {
             }
 
@@ -482,13 +473,7 @@ class OSUtil {
                 // running as root (also can be "sudo" user). A lot slower that checking a sys env, but this is guaranteed to work
                 try {
                     // id -u
-                    final ShellExecutor shell = new ShellExecutor();
-                    shell.setExecutable("id");
-                    shell.addArgument("-u");
-                    shell.start();
-
-                    String output = shell.getOutput();
-                    isSudoOrRoot = "0".equals(output);
+                    isSudoOrRoot = "0".equals(Executor.Companion.run("id", "-u"));
                 } catch (Throwable ignored) {
                 }
             }
@@ -554,14 +539,7 @@ class OSUtil {
                 // dpkg-query: package 'libappindicator3' is not installed
                 boolean is_dpkg = new File("/usr/bin/dpkg").canExecute();
                 if (is_dpkg) {
-                    final ShellExecutor shell = new ShellExecutor();
-                    shell.setExecutable("dpkg");
-                    shell.addArgument("-L");
-                    shell.addArgument(packageName);
-                    shell.start();
-
-                    String output = shell.getOutput();
-                    return !output.contains("is not installed");
+                    return !Executor.Companion.run("dpkg", "-L", packageName).contains("is not installed");
                 }
 
                 // rpm
@@ -569,30 +547,22 @@ class OSUtil {
                 // package libappindicator234 is not installed
                 boolean is_rpm = new File("/usr/bin/rpm").canExecute();
                 if (is_rpm) {
-                    final ShellExecutor shell = new ShellExecutor();
-                    shell.setExecutable("rpm");
-                    shell.addArgument("-q");
-                    shell.addArgument(packageName);
-                    shell.start();
-
-                    String output = shell.getOutput();
-                    return !output.contains("is not installed");
+                    return !Executor.Companion.run("rpm", "-q", packageName).contains("is not installed");
                 }
 
 
                 // pacman
                 // pacman -Qi <packageName>
-                // use the exit code to determine if the packages existes on the system or not (0 the package exists, 1 it doesn't)
+                // use the exit code to determine if the packages exists on the system or not (0 the package exists, 1 it doesn't)
                 boolean is_pacmac = new File("/usr/bin/pacman").canExecute();
-                if (is_rpm) {
-                    final ShellExecutor shell = new ShellExecutor();
-                    shell.setExecutable("pacman");
-                    shell.addArgument("-Qi");
-                    shell.addArgument(packageName);
-                    int start = shell.start();
+                try {
+                    int start = new Executor().command("pacman", "-Qi", packageName)
+                                                     .startBlocking()
+                                                     .getExitValue();
 
                     // 0 the package exists, 1 it doesn't
                     return start == 0;
+                } catch (Exception ignored) {
                 }
 
                 return false;
@@ -769,25 +739,13 @@ class OSUtil {
                 // we try "x" first
 
                 // ps x | grep gnome-shell
-                ShellExecutor shell = new ShellExecutor();
-                shell.setExecutable("ps");
-                shell.addArgument("x");
-                shell.start();
-
-                String output = shell.getOutput();
-                boolean contains = output.contains("gnome-shell");
+                boolean contains = Executor.Companion.run("ps", "x").contains("gnome-shell");
 
                 if (!contains && OS.isLinux()) {
                     // only try again if we are linux
 
                     // ps a | grep gnome-shell
-                    shell = new ShellExecutor();
-                    shell.setExecutable("ps");
-                    shell.addArgument("a");
-                    shell.start();
-
-                    output = shell.getOutput();
-                    contains = output.contains("gnome-shell");
+                    contains = Executor.Companion.run("ps", "a").contains("gnome-shell");
                 }
 
                 isGnome = contains;
@@ -818,12 +776,7 @@ class OSUtil {
 
             try {
                 // gnome-shell --version
-                final ShellExecutor shellVersion = new ShellExecutor();
-                shellVersion.setExecutable("gnome-shell");
-                shellVersion.addArgument("--version");
-                shellVersion.start();
-
-                String versionString = shellVersion.getOutput();
+                String versionString = Executor.Companion.run("gnome-shell", "--version");
 
                 if (!versionString.isEmpty()) {
                     // GNOME Shell 3.14.1
@@ -913,20 +866,14 @@ class OSUtil {
             try {
                 // plasma-desktop -v
                 // plasmashell --version
-                final ShellExecutor shellVersion = new ShellExecutor();
-                shellVersion.setExecutable("plasmashell");
-                shellVersion.addArgument("--version");
-                shellVersion.start();
-
-                String output = shellVersion.getOutput();
+                String output = Executor.Companion.run("plasmashell", "--version");
 
                 if (!output.isEmpty()) {
                     // DEFAULT icon size is 16. KDE is bananas on what they did with tray icon scale
                     // should be: plasmashell 5.6.5   or something
                     String s = "plasmashell ";
                     if (isValidCommand(s, output)) {
-                        String substring = output.substring(output.indexOf(s) + s.length(), output.length());
-                        getPlasmaVersionFull = substring;
+                        getPlasmaVersionFull = output.substring(output.indexOf(s) + s.length());
                         return getPlasmaVersionFull;
                     }
                 }
@@ -958,12 +905,7 @@ class OSUtil {
 
             try {
                 // nautilus --version
-                final ShellExecutor shellVersion = new ShellExecutor();
-                shellVersion.setExecutable("nautilus");
-                shellVersion.addArgument("--version");
-                shellVersion.start();
-
-                String output = shellVersion.getOutput();
+                String output = Executor.Companion.run("nautilus", "--version");
 
                 if (!output.isEmpty()) {
                     // should be: GNOME nautilus 3.14.3   or something
@@ -994,12 +936,7 @@ class OSUtil {
                 isChromeOS = false;
                 try {
                     // ps aux | grep chromeos
-                    final ShellExecutor shellVersion = new ShellExecutor();
-                    shellVersion.setExecutable("ps");
-                    shellVersion.addArgument("aux");
-                    shellVersion.start();
-
-                    String output = shellVersion.getOutput();
+                    String output = Executor.Companion.run("ps", "aux");
 
                     if (!output.isEmpty()) {
                         if (output.contains("chromeos")) {
@@ -1033,19 +970,19 @@ class OSUtil {
 
             try {
                 // xfconf-query -c xfce4-panel -l
-                final ShellExecutor xfconf_query = new ShellExecutor();
-                xfconf_query.setExecutable("xfconf-query");
-                xfconf_query.addArgument("-c " + channel);
+                List<String> commands = new ArrayList<String>();
+                commands.add("xfconf-query");
+                commands.add("-c " + channel);
+
                 if (property != null) {
                     // get property for channel
-                    xfconf_query.addArgument("-p " + property);
+                    commands.add("-p " + property);
                 } else {
                     // list all properties for the channel
-                    xfconf_query.addArgument("-l");
+                    commands.add("-l");
                 }
-                xfconf_query.start();
 
-                return xfconf_query.getOutput();
+                return Executor.Companion.run(commands);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
