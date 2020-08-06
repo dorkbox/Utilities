@@ -13,30 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.jna.linux;
 
-import static org.junit.Assert.fail;
+import com.sun.jna.Callback;
+import com.sun.jna.Pointer;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Random;
+import dorkbox.util.Keep;
 
-import org.junit.Test;
-
-public class Base64FastTest {
-
-    @Test
-    public void base64Test() throws IOException {
-        byte[] randomData = new byte[1000000];
-        new Random().nextBytes(randomData);
-
-        byte[] enc = Base64Fast.encodeToByte(randomData, true);
-        byte[] dec = Base64Fast.decode(enc);
-
-        if (!Arrays.equals(randomData, dec)) {
-            fail("base64 test failed");
-        }
-
-        randomData = null;
-    }
+@Keep
+public
+interface GCallback extends Callback {
+    /**
+     * @return Gtk.TRUE if we handled this event
+     */
+    int callback(Pointer instance, Pointer data);
 }
