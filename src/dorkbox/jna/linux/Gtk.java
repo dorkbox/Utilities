@@ -107,7 +107,7 @@ interface Gtk {
 
     /**
      * Creates a new GtkImage displaying the file filename . If the file isn’t found or can’t be loaded, the resulting GtkImage will
-     * display a “broken image” icon. This function never returns NULL, it always returns a valid GtkImage widget.
+     * display a "broken image" icon. This function never returns NULL, it always returns a valid GtkImage widget.
      * <p>
      * If the file contains an animation, the image will contain an animation.
      */
@@ -140,7 +140,7 @@ interface Gtk {
     void gtk_image_menu_item_set_image(Pointer image_menu_item, Pointer image);
 
     /**
-     * If TRUE, the menu item will ignore the “gtk-menu-images” setting and always show the image, if available.
+     * If TRUE, the menu item will ignore the "gtk-menu-images" setting and always show the image, if available.
      * Use this property if the menuitem would be useless or hard to use without the image
      * <p>
      * gtk_image_menu_item_set_always_show_image has been deprecated since version 3.10 and should not be used in newly-written code.
@@ -204,7 +204,7 @@ interface Gtk {
 
     /**
      * Sets text as the contents of the tooltip.
-     * This function will take care of setting “has-tooltip” to TRUE and of the default handler for the “query-tooltip” signal.
+     * This function will take care of setting "has-tooltip" to TRUE and of the default handler for the "query-tooltip" signal.
      *
      * app indicators don't support this
      *
@@ -250,8 +250,8 @@ interface Gtk {
     void gtk_menu_shell_append(Pointer menu_shell, Pointer child);
 
     /**
-     * Sets the sensitivity of a widget. A widget is sensitive if the user can interact with it. Insensitive widgets are “grayed out”
-     * and the user can’t interact with them. Insensitive widgets are known as “inactive”, “disabled”, or “ghosted” in some other toolkits.
+     * Sets the sensitivity of a widget. A widget is sensitive if the user can interact with it. Insensitive widgets are "grayed out"
+     * and the user can’t interact with them. Insensitive widgets are known as "inactive", "disabled", or "ghosted" in some other toolkits.
      */
     void gtk_widget_set_sensitive(Pointer widget, boolean sensitive);
 
@@ -277,7 +277,7 @@ interface Gtk {
      * - if the widget is a container, all its children will be destroyed, recursively
      * - if the widget is a top level, it will be removed from the list of top level widgets that GTK+ maintains internally
      * <p>
-     * It's expected that all references held on the widget will also be released; you should connect to the “destroy” signal if you
+     * It's expected that all references held on the widget will also be released; you should connect to the "destroy" signal if you
      * hold a reference to widget and you wish to remove it when this function is called. It is not necessary to do so if you are
      * implementing a GtkContainer, as you'll be able to use the GtkContainerClass.remove() virtual function for that.
      * <p>
@@ -345,7 +345,7 @@ interface Gtk {
      *
      * This function is primarily used in widget implementations, and isn’t very useful otherwise. Many times when you think you might
      * need it, a better approach is to connect to a signal that will be called after the widget is realized automatically, such as
-     * “draw”. Or simply g_signal_connect() to the “realize” signal.
+     * "draw". Or simply g_signal_connect() to the "realize" signal.
      */
     void gtk_widget_realize(Pointer widget);
 
@@ -390,8 +390,8 @@ interface Gtk {
     boolean gtk_show_uri(Pointer screen, String uri, int timestamp, Pointer error);
 
     /**
-     * Sets text as the contents of the tooltip. This function will take care of setting “has-tooltip” to TRUE and of the default
-     * handler for the “query-tooltip” signal. Null text will remove the tooltip
+     * Sets text as the contents of the tooltip. This function will take care of setting "has-tooltip" to TRUE and of the default
+     * handler for the "query-tooltip" signal. Null text will remove the tooltip
      *
      * @since 2.12
      */

@@ -120,7 +120,7 @@ class ObjectiveC {
      * @param cls The class to which to add a method.
      * @param name A selector that specifies the name of the method being added.
      * @param imp A function which is the implementation of the new method. The function must take at least two arguments—self and _cmd.
-     * @param types An array of characters that describe the types of the arguments to the method. For possible values, see Objective-C Runtime Programming Guide > Type Encodings. Since the function must take at least two arguments—self and _cmd, the second and third characters must be “@:” (the first character is the return type).
+     * @param types An array of characters that describe the types of the arguments to the method. For possible values, see Objective-C Runtime Programming Guide > Type Encodings. Since the function must take at least two arguments—self and _cmd, the second and third characters must be "@:" (the first character is the return type).
      *
      * @return YES if the method was added successfully, otherwise NO (for example, the class already contains a method implementation with that name).
      */
