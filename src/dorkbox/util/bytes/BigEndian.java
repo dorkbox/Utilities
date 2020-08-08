@@ -21,7 +21,8 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /**
- * This is (mostly) motorola, and is "network byte order".
+ * This is "motorola endian", or commonly as "network byte order".
+ * <p/>
  * This is also the default for Java.
  * <p/>
  * arm is technically bi-endian
