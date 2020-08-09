@@ -27,54 +27,59 @@ class ClassHelper {
      *
      * Because of how type erasure works in java, this will work on lambda expressions and ONLY parent/super classes.
      *
-     * @param clazz                 class that defines what the parameters can be
-     * @param subClazz              class to actually get the parameter from
+     * @param genericTypeClass  this class is what your are looking for
+     * @param classToCheck              class to actually get the parameter from
      * @param genericParameterToGet 0-based index of parameter as class to get
      *
      * @return null if the generic type could not be found.
      */
     @SuppressWarnings({"StatementWithEmptyBody", "UnnecessaryLocalVariable"})
     public static
-    Class<?> getGenericParameterAsClassForSuperClass(Class<?> clazz, Class<?> subClazz, int genericParameterToGet) {
-        Class<?> classToCheck = subClazz;
+    Class<?> getGenericParameterAsClassForSuperClass(Class<?> genericTypeClass, Class<?> classToCheck, int genericParameterToGet) {
+        Class<?> loopClassCheck = classToCheck;
 
         // this will ALWAYS return something, if it is unknown, it will return TypeResolver.Unknown.class
-        Class<?>[] classes = TypeResolver.resolveRawArguments(clazz, classToCheck);
+        Class<?>[] classes = TypeResolver.resolveRawArguments(genericTypeClass, loopClassCheck);
         if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
             return classes[genericParameterToGet];
         }
 
         // case of multiple inheritance, we are trying to get the first available generic info
         // don't check for Object.class (this is where superclass is null)
-        while (classToCheck != Object.class) {
+        while (loopClassCheck != Object.class) {
             // check to see if we have what we are looking for on our CURRENT class
-            Type superClassGeneric = classToCheck.getGenericSuperclass();
+            Type superClassGeneric = loopClassCheck.getGenericSuperclass();
 
-            classes = TypeResolver.resolveRawArguments(superClassGeneric, classToCheck);
-            if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
-                return classes[genericParameterToGet];
-            }
-
-            // NO MATCH, so walk up.
-            classToCheck = classToCheck.getSuperclass();
-        }
-
-        // NOTHING! now check interfaces!
-        classToCheck = subClazz;
-        while (classToCheck != Object.class) {
-            // check to see if we have what we are looking for on our CURRENT class interfaces
-            Type[] genericInterfaces = classToCheck.getGenericInterfaces();
-            for (Type genericInterface : genericInterfaces) {
-
-                classes = TypeResolver.resolveRawArguments(genericInterface, classToCheck);
-                if (classes.length > genericParameterToGet && classes[genericParameterToGet] != TypeResolver.Unknown.class) {
+            classes = TypeResolver.resolveRawArguments(superClassGeneric, loopClassCheck);
+            if (classes.length > genericParameterToGet) {
+                Class<?> aClass = classes[genericParameterToGet];
+                if (aClass != TypeResolver.Unknown.class) {
                     return classes[genericParameterToGet];
                 }
             }
 
+            // NO MATCH, so walk up.
+            loopClassCheck = loopClassCheck.getSuperclass();
+        }
+
+        // NOTHING! now check interfaces!
+        loopClassCheck = classToCheck;
+        while (loopClassCheck != Object.class) {
+            // check to see if we have what we are looking for on our CURRENT class interfaces
+            Type[] genericInterfaces = loopClassCheck.getGenericInterfaces();
+
+            for (Type genericInterface : genericInterfaces) {
+                classes = TypeResolver.resolveRawArguments(genericInterface, loopClassCheck);
+                if (classes.length > genericParameterToGet) {
+                    Class<?> aClass = classes[genericParameterToGet];
+                    if (aClass != TypeResolver.Unknown.class) {
+                        return aClass;
+                    }
+                }
+            }
 
             // NO MATCH, so walk up.
-            classToCheck = classToCheck.getSuperclass();
+            loopClassCheck = loopClassCheck.getSuperclass();
         }
 
         // couldn't find it.
