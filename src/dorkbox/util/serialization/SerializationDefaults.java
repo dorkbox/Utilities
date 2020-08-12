@@ -44,6 +44,8 @@ class SerializationDefaults {
         kryo.register(Object[][].class);
         kryo.register(Class.class);
 
+        kryo.register(NullPointerException.class);
+
         // necessary for the transport of exceptions.
         kryo.register(StackTraceElement.class);
         kryo.register(StackTraceElement[].class);
