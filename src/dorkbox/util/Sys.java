@@ -345,11 +345,10 @@ class Sys {
     }
 
     public static
-    int[] bytesToInts(byte[] bytes) {
-        int length = bytes.length;
+    int[] bytesToInts(byte[] bytes, int startPosition, int length) {
         int[] ints = new int[length];
 
-        for (int i = 0; i < length; i++) {
+        for (int i = startPosition; i < length; i++) {
             ints[i] = bytes[i] & 0xFF;
         }
 
@@ -358,16 +357,21 @@ class Sys {
 
     public static
     String bytesToHex(byte[] bytes) {
-        return bytesToHex(bytes, false);
+        return bytesToHex(bytes, 0, bytes.length, false);
     }
 
     public static
-    String bytesToHex(byte[] bytes, boolean padding) {
+    String bytesToHex(byte[] bytes, int startPosition, int length) {
+        return bytesToHex(bytes, startPosition, length, false);
+    }
+
+    public static
+    String bytesToHex(byte[] bytes, int startPosition, int length, boolean padding) {
         if (padding) {
-            char[] hexString = new char[3 * bytes.length];
+            char[] hexString = new char[3 * length - startPosition];
             int j = 0;
 
-            for (int i = 0; i < bytes.length; i++) {
+            for (int i = startPosition; i < length; i++) {
                 hexString[j++] = HEX_CHARS[(bytes[i] & 0xF0) >> 4];
                 hexString[j++] = HEX_CHARS[bytes[i] & 0x0F];
                 hexString[j++] = ' ';
@@ -376,10 +380,10 @@ class Sys {
             return new String(hexString);
         }
         else {
-            char[] hexString = new char[2 * bytes.length];
+            char[] hexString = new char[2 * length - startPosition];
             int j = 0;
 
-            for (int i = 0; i < bytes.length; i++) {
+            for (int i = startPosition; i < length; i++) {
                 hexString[j++] = HEX_CHARS[(bytes[i] & 0xF0) >> 4];
                 hexString[j++] = HEX_CHARS[bytes[i] & 0x0F];
             }
