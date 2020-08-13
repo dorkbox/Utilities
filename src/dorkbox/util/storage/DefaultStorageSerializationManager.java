@@ -27,7 +27,7 @@ import dorkbox.util.serialization.SerializationDefaults;
 import dorkbox.util.serialization.SerializationManager;
 import io.netty.buffer.ByteBuf;
 
-class DefaultStorageSerializationManager implements SerializationManager {
+class DefaultStorageSerializationManager implements SerializationManager<ByteBuf> {
     private Kryo kryo = new Kryo() {{
             // we don't want logging from Kryo...
             Log.set(Log.LEVEL_ERROR);

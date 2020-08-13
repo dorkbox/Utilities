@@ -23,10 +23,8 @@ import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import io.netty.buffer.ByteBuf;
-
 public
-interface SerializationManager {
+interface SerializationManager<IO> {
 
     /**
      * Registers the class using the lowest, next available integer ID and the {@link Kryo#getDefaultSerializer(Class) default serializer}.
@@ -79,20 +77,16 @@ interface SerializationManager {
     /**
      * Waits until a kryo is available to write, using CAS operations to prevent having to synchronize.
      * <p/>
-     * No crypto and no sequence number
-     * <p/>
      * There is a small speed penalty if there were no kryo's available to use.
      */
-    void write(ByteBuf buffer, Object message) throws IOException;
+    void write(IO buffer, Object message) throws IOException;
 
     /**
      * Reads an object from the buffer.
-     * <p/>
-     * No crypto and no sequence number
      *
      * @param length should ALWAYS be the length of the expected object!
      */
-    Object read(ByteBuf buffer, int length) throws IOException;
+    Object read(IO buffer, int length) throws IOException;
 
     /**
      * Writes the class and object using an available kryo instance
