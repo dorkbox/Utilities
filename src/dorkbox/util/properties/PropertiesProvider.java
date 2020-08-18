@@ -15,11 +15,15 @@
  */
 package dorkbox.util.properties;
 
-import dorkbox.util.FileUtil;
-
-import java.awt.*;
-import java.io.*;
+import java.awt.Color;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Properties;
+
+import dorkbox.util.FileUtil;
 
 public
 class PropertiesProvider {
@@ -136,13 +140,13 @@ class PropertiesProvider {
         // special cases
         try {
             if (clazz.equals(Integer.class)) {
-                return (T) new Integer(Integer.parseInt(property));
+                return (T) Integer.valueOf(Integer.parseInt(property));
             }
             if (clazz.equals(Long.class)) {
-                return (T) new Long(Long.parseLong(property));
+                return (T) Long.valueOf(Long.parseLong(property));
             }
             if (clazz.equals(Color.class)) {
-                return (T) new Color(new Integer(Integer.parseInt(property)), true);
+                return (T) new Color(Integer.parseInt(property), true);
             }
 
             else {

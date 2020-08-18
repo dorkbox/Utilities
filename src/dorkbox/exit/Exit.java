@@ -71,9 +71,9 @@ public final class Exit {
     private static int               UPGRADE_EXECUTABLE = 103; // must match C source
 
     static {
-        RESERVED_LIST.add(new Integer(SAVED_IN_LOG_FILE));
-        RESERVED_LIST.add(new Integer(RESTART));
-        RESERVED_LIST.add(new Integer(UPGRADE_EXECUTABLE));
+        RESERVED_LIST.add(SAVED_IN_LOG_FILE);
+        RESERVED_LIST.add(RESTART);
+        RESERVED_LIST.add(UPGRADE_EXECUTABLE);
     }
 
 
