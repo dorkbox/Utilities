@@ -133,10 +133,17 @@
        Copyright 2019
          Timothy Wall
 
+     - Java Uuid Generator - A set of Java classes for working with UUIDs
+       [The Apache Software License, Version 2.0]
+       https://github.com/cowtowncoder/java-uuid-generator
+       Copyright 2020
+         Tatu Saloranta (tatu.saloranta@iki.fi)
+         Contributors. See source release-notes/CREDITS
+
      - Kryo - Fast and efficient binary object graph serialization framework for Java
        [BSD 3-Clause License]
        https://github.com/EsotericSoftware/kryo
-       Copyright 2019
+       Copyright 2020
          Nathan Sweet
 
        Extra license information
@@ -161,32 +168,6 @@
        Copyright 2019
          Martin Grotzke
          Rafael Winterhalter
-
-     - Eclipse Platform - Frameworks and common services to support the use of Eclipse and it's tools (SWT)
-       [Eclipse Public License (EPL)]
-       https://projects.eclipse.org/projects/eclipse.platform
-       Copyright 2019
-         The Eclipse Foundation, Inc.
-
-     - SLF4J - Simple facade or abstraction for various logging frameworks
-       [MIT License]
-       http://www.slf4j.org
-       Copyright 2019
-         QOS.ch
-
-     - XZ for Java - Complete implementation of XZ data compression in pure Java
-       [Public Domain, per Creative Commons CC0]
-       https://tukaani.org/xz/java.html
-       Copyright 2018
-         Lasse Collin
-         Igor Pavlov
-
-     - Java Uuid Generator - A set of Java classes for working with UUIDs
-       [The Apache Software License, Version 2.0]
-       https://github.com/cowtowncoder/java-uuid-generator
-       Copyright 2020
-         Tatu Saloranta (tatu.saloranta@iki.fi)
-         Contributors. See source release-notes/CREDITS
 
      - Netty - An event-driven asynchronous network application framework
        [The Apache Software License, Version 2.0]
@@ -213,6 +194,25 @@
        Copyright 2020
          Jonathan Halterman and friends
 
+     - Eclipse Platform - Frameworks and common services to support the use of Eclipse and it's tools (SWT)
+       [Eclipse Public License (EPL)]
+       https://projects.eclipse.org/projects/eclipse.platform
+       Copyright 2019
+         The Eclipse Foundation, Inc.
+
+     - SLF4J - Simple facade or abstraction for various logging frameworks
+       [MIT License]
+       http://www.slf4j.org
+       Copyright 2019
+         QOS.ch
+
+     - XZ for Java - Complete implementation of XZ data compression in pure Java
+       [Public Domain, per Creative Commons CC0]
+       https://tukaani.org/xz/java.html
+       Copyright 2018
+         Lasse Collin
+         Igor Pavlov
+
      - Executor - Shell, JVM, and SSH command execution on Linux, MacOS, or Windows for Java 11+
        [The Apache Software License, Version 2.0]
        https://git.dorkbox.com/dorkbox/Executor
@@ -235,7 +235,7 @@
          - Kotlin - 
            [The Apache Software License, Version 2.0]
            https://github.com/JetBrains/kotlin
-           Copyright 2020
+           Copyright 1980
              JetBrains s.r.o. and Kotlin Programming Language contributors
            Kotlin Compiler, Test Data+Libraries, and Tools repository contain third-party code, to which different licenses may apply
            See: https://github.com/JetBrains/kotlin/blob/master/license/README.md
