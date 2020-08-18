@@ -23,11 +23,11 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.minlog.Log;
 
+import dorkbox.util.bytes.ByteBuffer2;
 import dorkbox.util.serialization.SerializationDefaults;
 import dorkbox.util.serialization.SerializationManager;
-import io.netty.buffer.ByteBuf;
 
-class DefaultStorageSerializationManager implements SerializationManager<ByteBuf> {
+class DefaultStorageSerializationManager implements SerializationManager<ByteBuffer2> {
     private Kryo kryo = new Kryo() {{
             // we don't want logging from Kryo...
             Log.set(Log.LEVEL_ERROR);
@@ -40,35 +40,35 @@ class DefaultStorageSerializationManager implements SerializationManager<ByteBuf
 
     @Override
     public
-    <T> SerializationManager register(final Class<T> clazz) {
+    <T> SerializationManager<ByteBuffer2> register(final Class<T> clazz) {
         kryo.register(clazz);
         return this;
     }
 
     @Override
     public
-    <T> SerializationManager register(final Class<T> clazz, final int id) {
+    <T> SerializationManager<ByteBuffer2> register(final Class<T> clazz, final int id) {
         kryo.register(clazz, id);
         return this;
     }
 
     @Override
     public
-    <T> SerializationManager register(final Class<T> clazz, final Serializer<T> serializer) {
+    <T> SerializationManager<ByteBuffer2> register(final Class<T> clazz, final Serializer<T> serializer) {
         kryo.register(clazz, serializer);
         return this;
     }
 
     @Override
     public
-    <T> SerializationManager register(final Class<T> type, final Serializer<T> serializer, final int id) {
+    <T> SerializationManager<ByteBuffer2> register(final Class<T> type, final Serializer<T> serializer, final int id) {
         kryo.register(type, serializer, id);
         return this;
     }
 
     @Override
     public
-    void write(final ByteBuf buffer, final Object message) {
+    void write(final ByteBuffer2 buffer, final Object message) {
         final Output output = new Output();
         writeFullClassAndObject(output, message);
         buffer.writeBytes(output.getBuffer());
@@ -76,12 +76,12 @@ class DefaultStorageSerializationManager implements SerializationManager<ByteBuf
 
     @Override
     public
-    Object read(final ByteBuf buffer, final int length) throws IOException {
+    Object read(final ByteBuffer2 buffer, final int length) throws IOException {
         final Input input = new Input();
         buffer.readBytes(input.getBuffer());
 
         final Object o = readFullClassAndObject(input);
-        buffer.skipBytes(input.position());
+        buffer.skip(input.position());
 
         return o;
     }
@@ -94,7 +94,7 @@ class DefaultStorageSerializationManager implements SerializationManager<ByteBuf
 
     @Override
     public
-    Object readFullClassAndObject(final Input input) throws IOException {
+    Object readFullClassAndObject(final Input input) {
         return kryo.readClassAndObject(input);
     }
 }

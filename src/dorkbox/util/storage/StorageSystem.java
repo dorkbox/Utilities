@@ -32,7 +32,6 @@ import dorkbox.util.serialization.SerializationManager;
 
 public
 class StorageSystem {
-    @SuppressWarnings("SpellCheckingInspection")
     private static final Map<File, Storage> storages = new HashMap<File, Storage>(1);
 
     // Make sure that the timer is run on shutdown. A HARD shutdown will just POW! kill it, a "nice" shutdown will run the hook
@@ -153,7 +152,7 @@ class StorageSystem {
     public static
     class DiskBuilder implements StorageBuilder {
         private File file;
-        private SerializationManager serializationManager = createDefaultSerializationManager(); // default
+        private SerializationManager<?> serializationManager = new DefaultStorageSerializationManager(); // default
         private boolean readOnly = false;
         private Logger logger = null;
         private long saveDelayInMilliseconds = 3000L; // default
@@ -180,7 +179,7 @@ class StorageSystem {
          * Specify the serialization manager to use. This is what serializes the files (which are then saved to disk)
          */
         public
-        DiskBuilder serializer(SerializationManager serializationManager) {
+        DiskBuilder serializer(SerializationManager<?> serializationManager) {
             this.serializationManager = serializationManager;
             return this;
         }
@@ -299,11 +298,6 @@ class StorageSystem {
 
                 return storage;
             }
-        }
-
-        private
-        SerializationManager createDefaultSerializationManager() {
-            return new DefaultStorageSerializationManager();
         }
     }
 
