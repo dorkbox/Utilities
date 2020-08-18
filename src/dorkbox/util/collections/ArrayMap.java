@@ -30,6 +30,7 @@ import dorkbox.util.collections.ObjectMap.Entry;
  * makes iteration fast. Like {@link Array}, if ordered is false, this class avoids a memory copy when removing elements (the last
  * element is moved to the removed element's position).
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "rawtypes", "unused", "SuspiciousSystemArraycopy", "NullableProblems"})
 public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 	public K[] keys;
 	public V[] values;
@@ -77,7 +78,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 	/** Creates a new map containing the elements in the specified map. The new map will have the same type of backing arrays and
 	 * will be ordered if the specified map is ordered. The capacity is set to the number of elements, so any subsequent elements
 	 * added will cause the backing arrays to be grown. */
-	public ArrayMap (ArrayMap array) {
+	@SuppressWarnings("CopyConstructorMissesField")
+    public ArrayMap (ArrayMap array) {
 		this(array.ordered, array.size, array.keys.getClass().getComponentType(), array.values.getClass().getComponentType());
 		size = array.size;
 		System.arraycopy(array.keys, 0, keys, 0, size);
@@ -405,7 +407,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		size = newSize;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		K[] keys = this.keys;
 		V[] values = this.values;
 		int h = 0;
@@ -418,7 +421,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof ArrayMap)) return false;
 		ArrayMap<K, V> other = (ArrayMap)obj;
@@ -437,7 +441,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "{}";
 		K[] keys = this.keys;
 		V[] values = this.values;
@@ -456,7 +461,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return buffer.toString();
 	}
 
-	public Iterator<Entry<K, V>> iterator () {
+	@Override
+    public Iterator<Entry<K, V>> iterator () {
 		return entries();
 	}
 
@@ -527,17 +533,20 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			this.map = map;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return index < map.size;
 		}
 
-		public Iterator<Entry<K, V>> iterator () {
+		@Override
+        public Iterator<Entry<K, V>> iterator () {
 			return this;
 		}
 
 		/** Note the same entry instance is returned each time this method is called. */
-		public Entry<K, V> next () {
+		@Override
+        public Entry<K, V> next () {
 			if (index >= map.size) throw new NoSuchElementException(String.valueOf(index));
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			entry.key = map.keys[index];
@@ -545,7 +554,8 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			return entry;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			index--;
 			map.removeIndex(index);
 		}
@@ -564,22 +574,26 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			this.map = map;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return index < map.size;
 		}
 
-		public Iterator<V> iterator () {
+		@Override
+        public Iterator<V> iterator () {
 			return this;
 		}
 
-		public V next () {
+		@Override
+        public V next () {
 			if (index >= map.size) throw new NoSuchElementException(String.valueOf(index));
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return map.values[index++];
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			index--;
 			map.removeIndex(index);
 		}
@@ -607,22 +621,26 @@ public class ArrayMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			this.map = map;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return index < map.size;
 		}
 
-		public Iterator<K> iterator () {
+		@Override
+        public Iterator<K> iterator () {
 			return this;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (index >= map.size) throw new NoSuchElementException(String.valueOf(index));
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return map.keys[index++];
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			index--;
 			map.removeIndex(index);
 		}

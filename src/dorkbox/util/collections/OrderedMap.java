@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
  * for faster iteration versus ObjectMap and the order does not actually matter, copying during remove can be greatly reduced by
  * setting {@link Array#ordered} to false for {@link OrderedMap#orderedKeys()}.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "NullableProblems"})
 public class OrderedMap<K, V> extends ObjectMap<K, V> {
 	final Array<K> keys;
 
@@ -52,12 +53,14 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 		keys = new Array(map.keys);
 	}
 
-	public V put (K key, V value) {
+	@Override
+    public V put (K key, V value) {
 		if (!containsKey(key)) keys.add(key);
 		return super.put(key, value);
 	}
 
-	public V remove (K key) {
+	@Override
+    public V remove (K key) {
 		keys.removeValue(key, false);
 		return super.remove(key);
 	}
@@ -66,12 +69,14 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 		return super.remove(keys.removeIndex(index));
 	}
 
-	public void clear (int maximumCapacity) {
+	@Override
+    public void clear (int maximumCapacity) {
 		keys.clear();
 		super.clear(maximumCapacity);
 	}
 
-	public void clear () {
+	@Override
+    public void clear () {
 		keys.clear();
 		super.clear();
 	}
@@ -80,13 +85,15 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 		return keys;
 	}
 
-	public Entries<K, V> iterator () {
+	@Override
+    public Entries<K, V> iterator () {
 		return entries();
 	}
 
 	/** Returns an iterator for the entries in the map. Remove is supported. Note that the same iterator instance is returned each
 	 * time this method is called. Use the {@link OrderedMapEntries} constructor for nested or multithreaded iteration. */
-	public Entries<K, V> entries () {
+	@Override
+    public Entries<K, V> entries () {
 		if (entries1 == null) {
 			entries1 = new OrderedMapEntries(this);
 			entries2 = new OrderedMapEntries(this);
@@ -105,7 +112,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 
 	/** Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
 	 * time this method is called. Use the {@link OrderedMapValues} constructor for nested or multithreaded iteration. */
-	public Values<V> values () {
+	@Override
+    public Values<V> values () {
 		if (values1 == null) {
 			values1 = new OrderedMapValues(this);
 			values2 = new OrderedMapValues(this);
@@ -124,7 +132,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 
 	/** Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
 	 * time this method is called. Use the {@link OrderedMapKeys} constructor for nested or multithreaded iteration. */
-	public Keys<K> keys () {
+	@Override
+    public Keys<K> keys () {
 		if (keys1 == null) {
 			keys1 = new OrderedMapKeys(this);
 			keys2 = new OrderedMapKeys(this);
@@ -141,7 +150,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 		return keys2;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "{}";
 		StringBuilder buffer = new StringBuilder(32);
 		buffer.append('{');
@@ -157,20 +167,23 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 		return buffer.toString();
 	}
 
-	static public class OrderedMapEntries<K, V> extends Entries<K, V> {
-		private Array<K> keys;
+	@SuppressWarnings("rawtypes")
+    static public class OrderedMapEntries<K, V> extends Entries<K, V> {
+		private final Array<K> keys;
 
 		public OrderedMapEntries (OrderedMap<K, V> map) {
 			super(map);
 			keys = map.keys;
 		}
 
-		public void reset () {
+		@Override
+        public void reset () {
 			nextIndex = 0;
 			hasNext = map.size > 0;
 		}
 
-		public Entry next () {
+		@Override
+        public Entry next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			entry.key = keys.get(nextIndex);
@@ -180,7 +193,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 			return entry;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			map.remove(entry.key);
 			nextIndex--;
@@ -188,19 +202,21 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 	}
 
 	static public class OrderedMapKeys<K> extends Keys<K> {
-		private Array<K> keys;
+		private final Array<K> keys;
 
 		public OrderedMapKeys (OrderedMap<K, ?> map) {
 			super(map);
 			keys = map.keys;
 		}
 
-		public void reset () {
+		@Override
+        public void reset () {
 			nextIndex = 0;
 			hasNext = map.size > 0;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K key = keys.get(nextIndex);
@@ -210,7 +226,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 			return key;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			((OrderedMap)map).removeIndex(nextIndex - 1);
 			nextIndex = currentIndex;
@@ -219,19 +236,21 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 	}
 
 	static public class OrderedMapValues<V> extends Values<V> {
-		private Array keys;
+		private final Array keys;
 
 		public OrderedMapValues (OrderedMap<?, V> map) {
 			super(map);
 			keys = map.keys;
 		}
 
-		public void reset () {
+		@Override
+        public void reset () {
 			nextIndex = 0;
 			hasNext = map.size > 0;
 		}
 
-		public V next () {
+		@Override
+        public V next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			V value = (V)map.get(keys.get(nextIndex));
@@ -241,7 +260,8 @@ public class OrderedMap<K, V> extends ObjectMap<K, V> {
 			return value;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			((OrderedMap)map).removeIndex(currentIndex);
 			nextIndex = currentIndex;

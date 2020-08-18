@@ -528,7 +528,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return (h ^ h >>> hashShift) & mask;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		int h = 0;
 		K[] keyTable = this.keyTable;
 		V[] valueTable = this.valueTable;
@@ -546,7 +547,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof ObjectMap)) return false;
 		ObjectMap<K, V> other = (ObjectMap)obj;
@@ -571,7 +573,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return toString(separator, false);
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		return toString(", ", true);
 	}
 
@@ -602,7 +605,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		return buffer.toString();
 	}
 
-	public Entries<K, V> iterator () {
+	@Override
+    public Entries<K, V> iterator () {
 		return entries();
 	}
 
@@ -667,7 +671,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		public K key;
 		public V value;
 
-		public String toString () {
+		@Override
+        public String toString () {
 			return key + "=" + value;
 		}
 	}
@@ -701,7 +706,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			}
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			if (currentIndex >= map.capacity) {
 				map.removeStashIndex(currentIndex);
@@ -724,7 +730,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		}
 
 		/** Note the same entry instance is returned each time this method is called. */
-		public Entry<K, V> next () {
+		@Override
+        public Entry<K, V> next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K[] keyTable = map.keyTable;
@@ -735,27 +742,32 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			return entry;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public Entries<K, V> iterator () {
+		@Override
+        public Entries<K, V> iterator () {
 			return this;
 		}
 	}
 
-	static public class Values<V> extends MapIterator<Object, V, V> {
+	@SuppressWarnings("NullableProblems")
+    static public class Values<V> extends MapIterator<Object, V, V> {
 		public Values (ObjectMap<?, V> map) {
 			super((ObjectMap<Object, V>)map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public V next () {
+		@Override
+        public V next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			V value = map.valueTable[nextIndex];
@@ -764,7 +776,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			return value;
 		}
 
-		public Values<V> iterator () {
+		@Override
+        public Values<V> iterator () {
 			return this;
 		}
 
@@ -786,12 +799,14 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			super((ObjectMap<K, Object>)map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K key = map.keyTable[nextIndex];
@@ -800,7 +815,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 			return key;
 		}
 
-		public Keys<K> iterator () {
+		@Override
+        public Keys<K> iterator () {
 			return this;
 		}
 
