@@ -199,7 +199,9 @@ class Gtk2 implements Gtk {
     public native
     Pointer gtk_image_menu_item_new_from_stock(final String stock_id, final Pointer accel_group);
 
+    @Deprecated
     @Override
+    @SuppressWarnings("deprecation")
     public native
     boolean gtk_show_uri(final Pointer screen, final String uri, final int timestamp, final Pointer error);
 

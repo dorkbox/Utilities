@@ -102,6 +102,7 @@ public class HBITMAPWrap extends HBITMAP {
         this.img = img;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void finalize() throws Throwable {
         close();

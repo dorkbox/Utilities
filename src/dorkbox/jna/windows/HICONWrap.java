@@ -65,6 +65,7 @@ public class HICONWrap extends HICON {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void finalize() throws Throwable {
         close();

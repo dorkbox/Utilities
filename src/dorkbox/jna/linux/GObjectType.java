@@ -29,6 +29,7 @@ class GObjectType extends PointerType {
         super(p);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected
     void finalize() throws Throwable {

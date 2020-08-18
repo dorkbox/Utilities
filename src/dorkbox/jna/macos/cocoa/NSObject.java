@@ -42,6 +42,8 @@ class NSObject extends Pointer {
         this(Pointer.nativeValue(pointer));
     }
 
+    @Override
+    @SuppressWarnings("deprecation")
     protected
     void finalize() throws Throwable {
         release();

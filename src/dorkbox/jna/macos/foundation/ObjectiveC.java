@@ -47,7 +47,7 @@ class ObjectiveC {
         Pointer sel_registerName(String name);
     }
 
-    private static final Objc INSTANCE = Native.loadLibrary("objc", Objc.class);
+    private static final Objc INSTANCE = Native.load("objc", Objc.class);
 
     /**
      * Returns the class definition of a specified class.
