@@ -32,6 +32,7 @@ import java.util.Arrays;
  *
  * @author Nathan Sweet <misc@n4te.com>
  */
+@SuppressWarnings({"unused", "DuplicatedCode", "ForLoopReplaceableByForEach"})
 public class ByteBuffer2 {
     private int capacity;  // exactly how many bytes have been allocated
     private int maxCapacity;  // how large we can grow
@@ -588,10 +589,8 @@ public class ByteBuffer2 {
         if ((buffer[p++] & 0x80) == 0) {
             return true;
         }
-        if (p == this.capacity) {
-            return false;
-        }
-        return true;
+
+        return p != this.capacity;
     }
 
     /**
@@ -630,10 +629,8 @@ public class ByteBuffer2 {
         if ((buffer[p++] & 0x80) == 0) {
             return true;
         }
-        if (p == this.capacity) {
-            return false;
-        }
-        return true;
+
+        return p != this.capacity;
     }
 
    // string
@@ -1081,7 +1078,7 @@ public class ByteBuffer2 {
             case 0 :
                 return null;
             case 1 :
-                return new StringBuilder("");
+                return new StringBuilder();
         }
         charCount--;
         if (this.chars.length < charCount) {
@@ -1380,10 +1377,8 @@ public class ByteBuffer2 {
         if ((buffer[p++] & 0x80) == 0) {
             return true;
         }
-        if (p == this.capacity) {
-            return false;
-        }
-        return true;
+
+        return p != this.capacity;
     }
 
     /**
@@ -1445,10 +1440,8 @@ public class ByteBuffer2 {
         if ((buffer[p++] & 0x80) == 0) {
             return true;
         }
-        if (p == this.capacity) {
-            return false;
-        }
-        return true;
+
+        return p != this.capacity;
     }
 
     /**
@@ -1490,7 +1483,7 @@ public class ByteBuffer2 {
                 | (long) (buffer[position++] & 0xFF) << 24
                 | (buffer[position++] & 0xFF) << 16
                 | (buffer[position++] & 0xFF) << 8
-                | buffer[position++] & 0xFF;
+                | buffer[position] & 0xFF;
 
     }
 
@@ -1654,7 +1647,7 @@ public class ByteBuffer2 {
      */
     public char readChar(int position) {
         byte[] buffer = this.bytes;
-        return (char) ((buffer[position++] & 0xFF) << 8 | buffer[position++] & 0xFF);
+        return (char) ((buffer[position++] & 0xFF) << 8 | buffer[position] & 0xFF);
     }
 
     // double
