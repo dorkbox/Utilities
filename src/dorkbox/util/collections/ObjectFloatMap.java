@@ -32,6 +32,7 @@ import dorkbox.util.RandomUtil;
  * depending on hash collisions. Load factors greater than 0.91 greatly increase the chances the map will have to rehash to the
  * next higher POT size.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "NullableProblems", "rawtypes"})
 public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 	private static final int PRIME1 = 0xbe1f14b1;
 	private static final int PRIME2 = 0xb4b82e39;
@@ -66,7 +67,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 	/** Creates a new map with the specified initial capacity and load factor. This map will hold initialCapacity items before
 	 * growing the backing table.
 	 * @param initialCapacity If not a power of two, it is increased to the next nearest power of two. */
-	public ObjectFloatMap (int initialCapacity, float loadFactor) {
+	@SuppressWarnings("unchecked")
+    public ObjectFloatMap (int initialCapacity, float loadFactor) {
 		if (initialCapacity < 0) throw new IllegalArgumentException("initialCapacity must be >= 0: " + initialCapacity);
 		initialCapacity = MathUtil.nextPowerOfTwo((int)Math.ceil(initialCapacity / loadFactor));
 		if (initialCapacity > 1 << 30) throw new IllegalArgumentException("initialCapacity is too large: " + initialCapacity);
@@ -500,7 +502,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		return (h ^ h >>> hashShift) & mask;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		int h = 0;
 		K[] keyTable = this.keyTable;
 		float[] valueTable = this.valueTable;
@@ -516,7 +519,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof ObjectFloatMap)) return false;
 		ObjectFloatMap<K> other = (ObjectFloatMap) obj;
@@ -535,7 +539,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "{}";
 		StringBuilder buffer = new StringBuilder(32);
 		buffer.append('{');
@@ -562,7 +567,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		return buffer.toString();
 	}
 
-	public Entries<K> iterator () {
+	@Override
+    public Entries<K> iterator () {
 		return entries();
 	}
 
@@ -627,7 +633,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		public K key;
 		public float value;
 
-		public String toString () {
+		@Override
+        public String toString () {
 			return key + "=" + value;
 		}
 	}
@@ -683,7 +690,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		}
 
 		/** Note the same entry instance is returned each time this method is called. */
-		public Entry<K> next () {
+		@Override
+        public Entry<K> next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K[] keyTable = map.keyTable;
@@ -694,16 +702,19 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 			return entry;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public Entries<K> iterator () {
+		@Override
+        public Entries<K> iterator () {
 			return this;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			super.remove();
 		}
 	}
@@ -736,17 +747,20 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 		}
 	}
 
-	static public class Keys<K> extends MapIterator<K> implements Iterable<K>, Iterator<K> {
+	@SuppressWarnings("unchecked")
+    static public class Keys<K> extends MapIterator<K> implements Iterable<K>, Iterator<K> {
 		public Keys (ObjectFloatMap<K> map) {
 			super((ObjectFloatMap<K>)map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K key = map.keyTable[nextIndex];
@@ -755,7 +769,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 			return key;
 		}
 
-		public Keys<K> iterator () {
+		@Override
+        public Keys<K> iterator () {
 			return this;
 		}
 
@@ -774,7 +789,8 @@ public class ObjectFloatMap<K> implements Iterable<ObjectFloatMap.Entry<K>> {
 			return array;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			super.remove();
 		}
 	}

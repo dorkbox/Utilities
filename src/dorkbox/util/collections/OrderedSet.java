@@ -26,6 +26,7 @@ import java.util.NoSuchElementException;
  * matter, copying during remove can be greatly reduced by setting {@link Array#ordered} to false for
  * {@link OrderedSet#orderedItems()}.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class OrderedSet<T> extends ObjectSet<T> {
 	final Array<T> items;
 	OrderedSetIterator iterator1, iterator2;
@@ -50,7 +51,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		items.addAll(set.items);
 	}
 
-	public boolean add (T key) {
+	@Override
+    public boolean add (T key) {
 		if (!super.add(key)) return false;
 		items.add(key);
 		return true;
@@ -66,7 +68,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		return true;
 	}
 
-	public boolean remove (T key) {
+	@Override
+    public boolean remove (T key) {
 		if (!super.remove(key)) return false;
 		items.removeValue(key, false);
 		return true;
@@ -78,12 +81,14 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		return key;
 	}
 
-	public void clear (int maximumCapacity) {
+	@Override
+    public void clear (int maximumCapacity) {
 		items.clear();
 		super.clear(maximumCapacity);
 	}
 
-	public void clear () {
+	@Override
+    public void clear () {
 		items.clear();
 		super.clear();
 	}
@@ -92,7 +97,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		return items;
 	}
 
-	public OrderedSetIterator<T> iterator () {
+	@Override
+    public OrderedSetIterator<T> iterator () {
 		if (iterator1 == null) {
 			iterator1 = new OrderedSetIterator(this);
 			iterator2 = new OrderedSetIterator(this);
@@ -109,7 +115,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		return iterator2;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "{}";
 		T[] items = this.items.items;
 		StringBuilder buffer = new StringBuilder(32);
@@ -123,7 +130,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 		return buffer.toString();
 	}
 
-	public String toString (String separator) {
+	@Override
+    public String toString (String separator) {
 		return items.toString(separator);
 	}
 
@@ -135,12 +143,14 @@ public class OrderedSet<T> extends ObjectSet<T> {
 			items = set.items;
 		}
 
-		public void reset () {
+		@Override
+        public void reset () {
 			nextIndex = 0;
 			hasNext = set.size > 0;
 		}
 
-		public T next () {
+		@Override
+        public T next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			T key = items.get(nextIndex);
@@ -149,7 +159,8 @@ public class OrderedSet<T> extends ObjectSet<T> {
 			return key;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (nextIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			nextIndex--;
 			((OrderedSet)set).removeIndex(nextIndex);

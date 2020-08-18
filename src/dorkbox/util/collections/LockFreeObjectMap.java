@@ -37,6 +37,7 @@ import com.esotericsoftware.kryo.util.ObjectMap.Values;
  * <p>
  * This data structure is for many-read/few-write scenarios
  */
+@SuppressWarnings("unchecked")
 public final
 class LockFreeObjectMap<K, V> implements Cloneable, Serializable {
     // Recommended for best performance while adhering to the "single writer principle". Must be static-final

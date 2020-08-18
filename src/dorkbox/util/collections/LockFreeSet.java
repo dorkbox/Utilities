@@ -15,7 +15,11 @@
  */
 package dorkbox.util.collections;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -31,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  * <p>
  * This data structure is for many-read/few-write scenarios
  */
+@SuppressWarnings("unchecked")
 public final
 class LockFreeSet<E> implements Set<E>, Cloneable, java.io.Serializable {
     // Recommended for best performance while adhering to the "single writer principle". Must be static-final

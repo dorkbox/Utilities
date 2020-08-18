@@ -31,6 +31,7 @@ import dorkbox.util.RandomUtil;
  * depending on hash collisions. Load factors greater than 0.91 greatly increase the chances the map will have to rehash to the
  * next higher POT size.
  * @author Nathan Sweet */
+@SuppressWarnings({"NullableProblems", "rawtypes", "unchecked"})
 public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 	private static final int PRIME1 = 0xbe1f14b1;
 	private static final int PRIME2 = 0xb4b82e39;
@@ -553,7 +554,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		return (int)((h ^ h >>> hashShift) & mask);
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		int h = 0;
 		if (hasZeroValue && zeroValue != null) {
 			h += zeroValue.hashCode();
@@ -574,7 +576,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof LongMap)) return false;
 		LongMap<V> other = (LongMap)obj;
@@ -603,7 +606,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "[]";
 		StringBuilder buffer = new StringBuilder(32);
 		buffer.append('[');
@@ -630,7 +634,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		return buffer.toString();
 	}
 
-	public Iterator<Entry<V>> iterator () {
+	@Override
+    public Iterator<Entry<V>> iterator () {
 		return entries();
 	}
 
@@ -695,7 +700,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		public long key;
 		public V value;
 
-		public String toString () {
+		@Override
+        public String toString () {
 			return key + "=" + value;
 		}
 	}
@@ -754,7 +760,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		}
 	}
 
-	static public class Entries<V> extends MapIterator<V> implements Iterable<Entry<V>>, Iterator<Entry<V>> {
+	@SuppressWarnings("NullableProblems")
+    static public class Entries<V> extends MapIterator<V> implements Iterable<Entry<V>>, Iterator<Entry<V>> {
 		private Entry<V> entry = new Entry();
 
 		public Entries (LongMap map) {
@@ -762,7 +769,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 		}
 
 		/** Note the same entry instance is returned each time this method is called. */
-		public Entry<V> next () {
+		@Override
+        public Entry<V> next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			long[] keyTable = map.keyTable;
@@ -778,31 +786,37 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 			return entry;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public Iterator<Entry<V>> iterator () {
+		@Override
+        public Iterator<Entry<V>> iterator () {
 			return this;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			super.remove();
 		}
 	}
 
-	static public class Values<V> extends MapIterator<V> implements Iterable<V>, Iterator<V> {
+	@SuppressWarnings("rawtypes")
+    static public class Values<V> extends MapIterator<V> implements Iterable<V>, Iterator<V> {
 		public Values (LongMap<V> map) {
 			super(map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public V next () {
+		@Override
+        public V next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			V value;
@@ -815,7 +829,8 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 			return value;
 		}
 
-		public Iterator<V> iterator () {
+		@Override
+        public Iterator<V> iterator () {
 			return this;
 		}
 
@@ -827,12 +842,14 @@ public class LongMap<V> implements Iterable<LongMap.Entry<V>> {
 			return array;
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			super.remove();
 		}
 	}
 
-	static public class Keys extends MapIterator {
+	@SuppressWarnings("rawtypes")
+    static public class Keys extends MapIterator {
 		public Keys (LongMap map) {
 			super(map);
 		}

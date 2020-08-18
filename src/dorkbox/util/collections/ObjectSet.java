@@ -34,6 +34,7 @@ import dorkbox.util.RandomUtil;
  * Iteration can be very slow for a set with a large capacity. {@link #clear(int)} and {@link #shrink(int)} can be used to reduce
  * the capacity. {@link OrderedSet} provides much faster iteration.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "rawtypes", "NullableProblems", "SuspiciousSystemArraycopy"})
 public class ObjectSet<T> implements Iterable<T> {
 	private static final int PRIME1 = 0xbe1f14b1;
 	private static final int PRIME2 = 0xb4b82e39;
@@ -440,14 +441,16 @@ public class ObjectSet<T> implements Iterable<T> {
 		return (h ^ h >>> hashShift) & mask;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		int h = 0;
 		for (int i = 0, n = capacity + stashSize; i < n; i++)
 			if (keyTable[i] != null) h += keyTable[i].hashCode();
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (!(obj instanceof ObjectSet)) return false;
 		ObjectSet other = (ObjectSet)obj;
 		if (other.size != size) return false;
@@ -457,7 +460,8 @@ public class ObjectSet<T> implements Iterable<T> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		return '{' + toString(", ") + '}';
 	}
 
@@ -483,7 +487,8 @@ public class ObjectSet<T> implements Iterable<T> {
 
 	/** Returns an iterator for the keys in the set. Remove is supported. Note that the same iterator instance is returned each
 	 * time this method is called. Use the {@link ObjectSetIterator} constructor for nested or multithreaded iteration. */
-	public ObjectSetIterator<T> iterator () {
+	@Override
+    public ObjectSetIterator<T> iterator () {
 		if (iterator1 == null) {
 			iterator1 = new ObjectSetIterator(this);
 			iterator2 = new ObjectSetIterator(this);
@@ -535,7 +540,8 @@ public class ObjectSet<T> implements Iterable<T> {
 			}
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			if (currentIndex >= set.capacity) {
 				set.removeStashIndex(currentIndex);
@@ -548,12 +554,14 @@ public class ObjectSet<T> implements Iterable<T> {
 			set.size--;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K key = set.keyTable[nextIndex];
@@ -562,7 +570,8 @@ public class ObjectSet<T> implements Iterable<T> {
 			return key;
 		}
 
-		public ObjectSetIterator<K> iterator () {
+		@Override
+        public ObjectSetIterator<K> iterator () {
 			return this;
 		}
 

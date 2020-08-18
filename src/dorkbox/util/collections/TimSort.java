@@ -37,6 +37,7 @@ import java.util.Comparator;
  * While the API to this class consists solely of static methods, it is (privately) instantiable; a TimSort instance holds the
  * state of an ongoing sort, assuming the input array is large enough to warrant the full-blown TimSort. Small arrays are sorted
  * in place, using a binary insertion sort. */
+@SuppressWarnings("unchecked")
 class TimSort<T> {
 	/** This is the minimum sized sequence that will be merged. Shorter sequences will be lengthened by calling binarySort. If the
 	 * entire array is less than this length, no merges will be performed.

@@ -373,6 +373,7 @@ class LockFreeIntBiMap<V> {
      * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
      * time this method is called. Use the {@link Entries} constructor for nested or multithreaded iteration.
      */
+    @SuppressWarnings("unchecked")
     public
     Values<V> values() {
         return forwardREF.get(this)

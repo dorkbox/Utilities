@@ -16,7 +16,11 @@
 package dorkbox.util.collections;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
@@ -137,6 +141,7 @@ class LockFreeHashMap<K, V> implements Map<K, V>, Cloneable, Serializable {
                      .containsValue(value);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public
     V get(final Object key) {

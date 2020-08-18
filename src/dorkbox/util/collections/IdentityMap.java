@@ -32,6 +32,7 @@ import dorkbox.util.RandomUtil;
  * depending on hash collisions. Load factors greater than 0.91 greatly increase the chances the map will have to rehash to the
  * next higher POT size.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "rawtypes", "NullableProblems"})
 public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 	private static final int PRIME1 = 0xbe1f14b1;
 	private static final int PRIME2 = 0xb4b82e39;
@@ -510,7 +511,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		return (h ^ h >>> hashShift) & mask;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		int h = 0;
 		K[] keyTable = this.keyTable;
 		V[] valueTable = this.valueTable;
@@ -528,7 +530,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		return h;
 	}
 
-	public boolean equals (Object obj) {
+	@Override
+    public boolean equals (Object obj) {
 		if (obj == this) return true;
 		if (!(obj instanceof IdentityMap)) return false;
 		IdentityMap<K, V> other = (IdentityMap) obj;
@@ -553,7 +556,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "[]";
 		StringBuilder buffer = new StringBuilder(32);
 		buffer.append('[');
@@ -580,7 +584,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		return buffer.toString();
 	}
 
-	public Iterator<Entry<K, V>> iterator () {
+	@Override
+    public Iterator<Entry<K, V>> iterator () {
 		return entries();
 	}
 
@@ -645,12 +650,14 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		public K key;
 		public V value;
 
-		public String toString () {
+		@Override
+        public String toString () {
 			return key + "=" + value;
 		}
 	}
 
-	static private abstract class MapIterator<K, V, I> implements Iterable<I>, Iterator<I> {
+	@SuppressWarnings("DuplicatedCode")
+    static private abstract class MapIterator<K, V, I> implements Iterable<I>, Iterator<I> {
 		public boolean hasNext;
 
 		final IdentityMap<K, V> map;
@@ -679,7 +686,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 			}
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (currentIndex < 0) throw new IllegalStateException("next must be called before remove.");
 			if (currentIndex >= map.capacity) {
 				map.removeStashIndex(currentIndex);
@@ -694,7 +702,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		}
 	}
 
-	static public class Entries<K, V> extends MapIterator<K, V, Entry<K, V>> {
+	@SuppressWarnings({"NullableProblems", "DuplicatedCode", "unchecked", "FieldMayBeFinal"})
+    static public class Entries<K, V> extends MapIterator<K, V, Entry<K, V>> {
 		private Entry<K, V> entry = new Entry();
 
 		public Entries (IdentityMap<K, V> map) {
@@ -702,7 +711,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		}
 
 		/** Note the same entry instance is returned each time this method is called. */
-		public Entry<K, V> next () {
+		@Override
+        public Entry<K, V> next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K[] keyTable = map.keyTable;
@@ -713,27 +723,32 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 			return entry;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public Iterator<Entry<K, V>> iterator () {
+		@Override
+        public Iterator<Entry<K, V>> iterator () {
 			return this;
 		}
 	}
 
-	static public class Values<V> extends MapIterator<Object, V, V> {
+	@SuppressWarnings({"rawtypes", "NullableProblems"})
+    static public class Values<V> extends MapIterator<Object, V, V> {
 		public Values (IdentityMap<?, V> map) {
 			super((IdentityMap<Object, V>)map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public V next () {
+		@Override
+        public V next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			V value = map.valueTable[nextIndex];
@@ -742,7 +757,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 			return value;
 		}
 
-		public Iterator<V> iterator () {
+		@Override
+        public Iterator<V> iterator () {
 			return this;
 		}
 
@@ -761,17 +777,20 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 		}
 	}
 
-	static public class Keys<K> extends MapIterator<K, Object, K> {
+	@SuppressWarnings("unchecked")
+    static public class Keys<K> extends MapIterator<K, Object, K> {
 		public Keys (IdentityMap<K, ?> map) {
 			super((IdentityMap<K, Object>)map);
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			return hasNext;
 		}
 
-		public K next () {
+		@Override
+        public K next () {
 			if (!hasNext) throw new NoSuchElementException();
 			if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
 			K key = map.keyTable[nextIndex];
@@ -780,7 +799,8 @@ public class IdentityMap<K, V> implements Iterable<IdentityMap.Entry<K, V>> {
 			return key;
 		}
 
-		public Iterator<K> iterator () {
+		@Override
+        public Iterator<K> iterator () {
 			return this;
 		}
 

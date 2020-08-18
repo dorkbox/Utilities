@@ -28,6 +28,7 @@ import dorkbox.util.RandomUtil;
 /** A resizable, ordered or unordered array of objects. If unordered, this class avoids a memory copy when removing elements (the
  * last element is moved to the removed element's position).
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "rawtypes", "SuspiciousSystemArraycopy", "unused", "NullableProblems", "DuplicatedCode"})
 public class Array<T> implements Iterable<T> {
 	/** Provides direct access to the underlying array. If the Array's generic type is not Object, this field may only be accessed
 	 * if the {@link Array#Array(boolean, int, Class)} constructor was used. */
@@ -261,7 +262,7 @@ public class Array<T> implements Iterable<T> {
 	public T removeIndex (int index) {
 		if (index >= size) throw new IndexOutOfBoundsException("index can't be >= size: " + index + " >= " + size);
 		T[] items = this.items;
-		T value = (T)items[index];
+		T value = items[index];
 		size--;
 		if (ordered)
 			System.arraycopy(items, index + 1, items, index, size - index);
@@ -448,7 +449,8 @@ public class Array<T> implements Iterable<T> {
 
 	/** Returns an iterator for the items in the array. Remove is supported. Note that the same iterator instance is returned each
 	 * time this method is called. Use the {@link ArrayIterator} constructor for nested or multithreaded iteration. */
-	public Iterator<T> iterator () {
+	@Override
+    public Iterator<T> iterator () {
 		if (iterable == null) iterable = new ArrayIterable(this);
 		return iterable.iterator();
 	}
@@ -492,7 +494,8 @@ public class Array<T> implements Iterable<T> {
 		return result;
 	}
 
-	public int hashCode () {
+	@Override
+    public int hashCode () {
 		if (!ordered) return super.hashCode();
 		Object[] items = this.items;
 		int h = 1;
@@ -504,7 +507,8 @@ public class Array<T> implements Iterable<T> {
 		return h;
 	}
 
-	public boolean equals (Object object) {
+	@Override
+    public boolean equals (Object object) {
 		if (object == this) return true;
 		if (!ordered) return false;
 		if (!(object instanceof Array)) return false;
@@ -522,7 +526,8 @@ public class Array<T> implements Iterable<T> {
 		return true;
 	}
 
-	public String toString () {
+	@Override
+    public String toString () {
 		if (size == 0) return "[]";
 		T[] items = this.items;
 		StringBuilder buffer = new StringBuilder(32);
@@ -563,7 +568,8 @@ public class Array<T> implements Iterable<T> {
 		return new Array(array);
 	}
 
-	static public class ArrayIterator<T> implements Iterator<T>, Iterable<T> {
+	@SuppressWarnings("NullableProblems")
+    static public class ArrayIterator<T> implements Iterator<T>, Iterable<T> {
 		private final Array<T> array;
 		private final boolean allowRemove;
 		int index;
@@ -580,7 +586,8 @@ public class Array<T> implements Iterable<T> {
 			this.allowRemove = allowRemove;
 		}
 
-		public boolean hasNext () {
+		@Override
+        public boolean hasNext () {
 			if (!valid) {
 // System.out.println(iterable.lastAcquire);
 				throw new RuntimeException("#iterator() cannot be used nested.");
@@ -588,7 +595,8 @@ public class Array<T> implements Iterable<T> {
 			return index < array.size;
 		}
 
-		public T next () {
+		@Override
+        public T next () {
 			if (index >= array.size) throw new NoSuchElementException(String.valueOf(index));
 			if (!valid) {
 // System.out.println(iterable.lastAcquire);
@@ -597,7 +605,8 @@ public class Array<T> implements Iterable<T> {
 			return array.items[index++];
 		}
 
-		public void remove () {
+		@Override
+        public void remove () {
 			if (!allowRemove) throw new RuntimeException("Remove not allowed.");
 			index--;
 			array.removeIndex(index);
@@ -607,12 +616,14 @@ public class Array<T> implements Iterable<T> {
 			index = 0;
 		}
 
-		public Iterator<T> iterator () {
+		@Override
+        public Iterator<T> iterator () {
 			return this;
 		}
 	}
 
-	static public class ArrayIterable<T> implements Iterable<T> {
+	@SuppressWarnings({"unchecked", "NullableProblems"})
+    static public class ArrayIterable<T> implements Iterable<T> {
 		private final Array<T> array;
 		private final boolean allowRemove;
 		private ArrayIterator iterator1, iterator2;
@@ -628,7 +639,8 @@ public class Array<T> implements Iterable<T> {
 			this.allowRemove = allowRemove;
 		}
 
-		public Iterator<T> iterator () {
+		@Override
+        public Iterator<T> iterator () {
 // lastAcquire.getBuffer().setLength(0);
 // new Throwable().printStackTrace(new java.io.PrintWriter(lastAcquire));
 			if (iterator1 == null) {

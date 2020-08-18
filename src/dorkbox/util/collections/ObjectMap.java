@@ -34,6 +34,7 @@ import dorkbox.util.RandomUtil;
  * Iteration can be very slow for a map with a large capacity. {@link #clear(int)} and {@link #shrink(int)} can be used to reduce
  * the capacity. {@link OrderedMap} provides much faster iteration.
  * @author Nathan Sweet */
+@SuppressWarnings("unchecked")
 public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 	private static final int PRIME1 = 0xbe1f14b1;
 	private static final int PRIME2 = 0xb4b82e39;
@@ -722,7 +723,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		}
 	}
 
-	static public class Entries<K, V> extends MapIterator<K, V, Entry<K, V>> {
+	@SuppressWarnings("NullableProblems")
+    static public class Entries<K, V> extends MapIterator<K, V, Entry<K, V>> {
 		Entry<K, V> entry = new Entry();
 
 		public Entries (ObjectMap<K, V> map) {
@@ -754,7 +756,7 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		}
 	}
 
-	@SuppressWarnings("NullableProblems")
+	@SuppressWarnings({"NullableProblems", "unchecked", "rawtypes"})
     static public class Values<V> extends MapIterator<Object, V, V> {
 		public Values (ObjectMap<?, V> map) {
 			super((ObjectMap<Object, V>)map);
@@ -794,7 +796,8 @@ public class ObjectMap<K, V> implements Iterable<ObjectMap.Entry<K, V>> {
 		}
 	}
 
-	static public class Keys<K> extends MapIterator<K, Object, K> {
+	@SuppressWarnings({"unchecked", "NullableProblems", "rawtypes"})
+    static public class Keys<K> extends MapIterator<K, Object, K> {
 		public Keys (ObjectMap<K, ?> map) {
 			super((ObjectMap<K, Object>)map);
 		}

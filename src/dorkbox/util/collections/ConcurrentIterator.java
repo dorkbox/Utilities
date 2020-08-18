@@ -26,6 +26,7 @@ import dorkbox.util.Property;
 /**
  * @author dorkbox, llc
  */
+@SuppressWarnings("unchecked")
 public
 class ConcurrentIterator<T> {
     /**

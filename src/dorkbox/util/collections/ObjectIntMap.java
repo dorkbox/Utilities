@@ -32,6 +32,7 @@ import dorkbox.util.RandomUtil;
  * depending on hash collisions. Load factors greater than 0.91 greatly increase the chances the map will have to rehash to the
  * next higher POT size.
  * @author Nathan Sweet */
+@SuppressWarnings({"unchecked", "NullableProblems"})
 public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
     private static final int PRIME1 = 0xbe1f14b1;
     private static final int PRIME2 = 0xb4b82e39;
@@ -501,6 +502,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         return (h ^ h >>> hashShift) & mask;
     }
 
+    @Override
     public int hashCode () {
         int h = 0;
         K[] keyTable = this.keyTable;
@@ -517,6 +519,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         return h;
     }
 
+    @Override
     public boolean equals (Object obj) {
         if (obj == this) return true;
         if (!(obj instanceof ObjectIntMap)) return false;
@@ -536,6 +539,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         return true;
     }
 
+    @Override
     public String toString () {
         if (size == 0) return "{}";
         StringBuilder buffer = new StringBuilder(32);
@@ -563,6 +567,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         return buffer.toString();
     }
 
+    @Override
     public Entries<K> iterator () {
         return entries();
     }
@@ -628,6 +633,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         public K key;
         public int value;
 
+        @Override
         public String toString () {
             return key + "=" + value;
         }
@@ -684,6 +690,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
         }
 
         /** Note the same entry instance is returned each time this method is called. */
+        @Override
         public Entry<K> next () {
             if (!hasNext) throw new NoSuchElementException();
             if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
@@ -695,15 +702,18 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
             return entry;
         }
 
+        @Override
         public boolean hasNext () {
             if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
             return hasNext;
         }
 
+        @Override
         public Entries<K> iterator () {
             return this;
         }
 
+        @Override
         public void remove () {
             super.remove();
         }
@@ -742,11 +752,13 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
             super((ObjectIntMap<K>)map);
         }
 
+        @Override
         public boolean hasNext () {
             if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
             return hasNext;
         }
 
+        @Override
         public K next () {
             if (!hasNext) throw new NoSuchElementException();
             if (!valid) throw new RuntimeException("#iterator() cannot be used nested.");
@@ -756,6 +768,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
             return key;
         }
 
+        @Override
         public Keys<K> iterator () {
             return this;
         }
@@ -775,6 +788,7 @@ public class ObjectIntMap<K> implements Iterable<ObjectIntMap.Entry<K>> {
             return array;
         }
 
+        @Override
         public void remove () {
             super.remove();
         }
