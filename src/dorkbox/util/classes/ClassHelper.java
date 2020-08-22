@@ -15,7 +15,13 @@
  */
 package dorkbox.util.classes;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
+import java.util.Objects;
 
 import net.jodah.typetools.TypeResolver;
 
@@ -85,6 +91,45 @@ class ClassHelper {
         // couldn't find it.
         return null;
     }
+
+    // from: https://github.com/square/retrofit/blob/108fe23964b986107aed352ba467cd2007d15208/retrofit/src/main/java/retrofit2/Utils.java
+    public static Class<?> getRawType(Type type) {
+        Objects.requireNonNull(type, "type == null");
+
+        if (type instanceof Class<?>) {
+            // Type is a normal class.
+            return (Class<?>) type;
+        }
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+
+            // I'm not exactly sure why getRawType() returns Type instead of Class. Neal isn't either but
+            // suspects some pathological case related to nested classes exists.
+            Type rawType = parameterizedType.getRawType();
+            if (!(rawType instanceof Class)) throw new IllegalArgumentException();
+            return (Class<?>) rawType;
+        }
+        if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return Array.newInstance(getRawType(componentType), 0).getClass();
+        }
+        if (type instanceof TypeVariable) {
+            // We could use the variable's bounds, but that won't work if there are multiple. Having a raw
+            // type that's more general than necessary is okay.
+            return Object.class;
+        }
+        if (type instanceof WildcardType) {
+            return getRawType(((WildcardType) type).getUpperBounds()[0]);
+        }
+
+        throw new IllegalArgumentException(
+                "Expected a Class, ParameterizedType, or "
+                + "GenericArrayType, but <"
+                + type
+                + "> is of type "
+                + type.getClass().getName());
+    }
+
 
     /**
      * Check to see if clazz or interface directly has one of the interfaces defined by requiredClass

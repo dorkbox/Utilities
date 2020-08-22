@@ -38,7 +38,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.6"
+    const val version = "1.7"
 
     // set as project.ext
     const val name = "Utilities"
@@ -167,6 +167,12 @@ licensing {
             it.url("https://netty.io")
             it.copyright(2014)
             it.author("The Netty Project")
+        }
+        extra("Retrofit", License.APACHE_2) {
+            it.copyright(2020)
+            it.description("A type-safe HTTP client for Android and Java")
+            it.author("Square, Inc")
+            it.url("https://github.com/square/retrofit")
         }
     }
 }
