@@ -1,5 +1,6 @@
 package dorkbox.util.serialization;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +45,9 @@ class SerializationDefaults {
         kryo.register(Object[][].class);
         kryo.register(Class.class);
 
+        kryo.register(Exception.class);
+        kryo.register(IOException.class);
+        kryo.register(RuntimeException.class);
         kryo.register(NullPointerException.class);
 
         // necessary for the transport of exceptions.
