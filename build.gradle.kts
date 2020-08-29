@@ -28,17 +28,17 @@ gradle.startParameter.warningMode = WarningMode.All
 plugins {
     java
 
-    id("com.dorkbox.GradleUtils") version "1.10"
-    id("com.dorkbox.Licensing") version "2.2"
+    id("com.dorkbox.GradleUtils") version "1.12"
+    id("com.dorkbox.Licensing") version "2.5"
     id("com.dorkbox.VersionUpdate") version "2.0"
-    id("com.dorkbox.GradlePublish") version "1.6"
+    id("com.dorkbox.GradlePublish") version "1.7"
 }
 
 object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.7"
+    const val version = "1.8"
 
     // set as project.ext
     const val name = "Utilities"
@@ -224,7 +224,7 @@ tasks.jar.get().apply {
 dependencies {
     compileOnly("com.dorkbox:Executor:1.1")
 
-    val jnaVersion = "5.5.0"
+    val jnaVersion = "5.6.0"
     compileOnly("net.java.dev.jna:jna:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform:$jnaVersion")
 
@@ -252,7 +252,7 @@ dependencies {
     compileOnly("net.jodah:typetools:0.6.2")
 
     //  because the eclipse release of SWT is sPecIaL!
-    compileOnly(GradleUtils.getSwtMavenId("3.113.0")) {
+    compileOnly(GradleUtils.getSwtMavenId("3.114.100")) {
         isTransitive = false
     }
 
@@ -262,7 +262,7 @@ dependencies {
     testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    testImplementation("com.esotericsoftware:kryo:5.0.0-RC2")
+    testImplementation("com.esotericsoftware:kryo:5.0.0-RC8")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
     testImplementation("junit:junit:4.13")

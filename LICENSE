@@ -130,13 +130,13 @@
      - JNA - Simplified native library access for Java.
        [The Apache Software License, Version 2.0]
        https://github.com/twall/jna
-       Copyright 2019
+       Copyright 2020
          Timothy Wall
 
      - JNA-Platform - Mappings for a number of commonly used platform functions
        [The Apache Software License, Version 2.0]
        https://github.com/twall/jna
-       Copyright 2019
+       Copyright 2020
          Timothy Wall
 
      - Java Uuid Generator - A set of Java classes for working with UUIDs
@@ -171,7 +171,7 @@
      - Kryo Serializers - Extra kryo serializers
        [The Apache Software License, Version 2.0]
        https://github.com/magro/kryo-serializers
-       Copyright 2019
+       Copyright 2020
          Martin Grotzke
          Rafael Winterhalter
 
@@ -191,7 +191,7 @@
      - Lightweight Java Game Library - Java library that enables cross-platform access to popular native APIs
        [BSD 3-Clause License]
        https://github.com/LWJGL/lwjgl3
-       Copyright 2019
+       Copyright 2020
          Lightweight Java Game Library
 
      - TypeTools - A simple, zero-dependency library for working with types. Supports Java 1.6+ and Android.
@@ -203,19 +203,19 @@
      - Eclipse Platform - Frameworks and common services to support the use of Eclipse and it's tools (SWT)
        [Eclipse Public License (EPL)]
        https://projects.eclipse.org/projects/eclipse.platform
-       Copyright 2019
+       Copyright 2020
          The Eclipse Foundation, Inc.
 
      - SLF4J - Simple facade or abstraction for various logging frameworks
        [MIT License]
        http://www.slf4j.org
-       Copyright 2019
+       Copyright 2020
          QOS.ch
 
      - XZ for Java - Complete implementation of XZ data compression in pure Java
        [Public Domain, per Creative Commons CC0]
        https://tukaani.org/xz/java.html
-       Copyright 2018
+       Copyright 2020
          Lasse Collin
          Igor Pavlov
 
