@@ -27,8 +27,8 @@ public
 class ConcurrentEntry<T> {
     private final T value;
 
-    private ConcurrentEntry<T> next;
-    private ConcurrentEntry<T> prev;
+    private volatile ConcurrentEntry<T> next;
+    private volatile ConcurrentEntry<T> prev;
 
     public
     ConcurrentEntry(T value, ConcurrentEntry<T> next) {
@@ -55,7 +55,7 @@ class ConcurrentEntry<T> {
         // can not nullify references to help GC since running iterators might not see the entire set
         // if this element is their current element
         //next = null;
-        //predecessor = null;
+        //prev = null;
     }
 
     public
