@@ -25,10 +25,10 @@ public
 class NamedThreadFactory implements ThreadFactory {
     private final AtomicInteger poolId = new AtomicInteger();
 
-    private final ThreadGroup group;
-    private final String namePrefix;
-    private final int threadPriority;
-    private final boolean daemon;
+    public final ThreadGroup group;
+    public final String namePrefix;
+    public final int threadPriority;
+    public final boolean daemon;
 
     /**
      * Creates a DAEMON thread
