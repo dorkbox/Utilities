@@ -151,11 +151,11 @@ class StorageSystem {
     @SuppressWarnings("unused")
     public static
     class DiskBuilder implements StorageBuilder {
-        private File file;
-        private SerializationManager<?> serializationManager = new DefaultStorageSerializationManager(); // default
-        private boolean readOnly = false;
-        private Logger logger = null;
-        private long saveDelayInMilliseconds = 3000L; // default
+        public File file;
+        public SerializationManager<?> serializationManager = new DefaultStorageSerializationManager(); // default
+        public boolean readOnly = false;
+        public Logger logger = null;
+        public long saveDelayInMilliseconds = 3000L; // default
 
         /**
          * Specify the file to write to on disk when saving objects
