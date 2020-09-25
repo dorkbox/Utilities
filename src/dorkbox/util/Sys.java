@@ -347,8 +347,8 @@ class Sys {
     public static
     int[] bytesToInts(byte[] bytes, int startPosition, int length) {
         int[] ints = new int[length];
-
-        for (int i = startPosition; i < length; i++) {
+        int endPosition = startPosition + length;
+        for (int i = startPosition; i < endPosition; i++) {
             ints[i] = bytes[i] & 0xFF;
         }
 
@@ -367,11 +367,13 @@ class Sys {
 
     public static
     String bytesToHex(byte[] bytes, int startPosition, int length, boolean padding) {
+        int endPosition = startPosition + length;
+
         if (padding) {
-            char[] hexString = new char[3 * length - startPosition];
+            char[] hexString = new char[3 * length];
             int j = 0;
 
-            for (int i = startPosition; i < length; i++) {
+            for (int i = startPosition; i < endPosition; i++) {
                 hexString[j++] = HEX_CHARS[(bytes[i] & 0xF0) >> 4];
                 hexString[j++] = HEX_CHARS[bytes[i] & 0x0F];
                 hexString[j++] = ' ';
@@ -380,10 +382,10 @@ class Sys {
             return new String(hexString);
         }
         else {
-            char[] hexString = new char[2 * length - startPosition];
+            char[] hexString = new char[2 * length];
             int j = 0;
 
-            for (int i = startPosition; i < length; i++) {
+            for (int i = startPosition; i < endPosition; i++) {
                 hexString[j++] = HEX_CHARS[(bytes[i] & 0xF0) >> 4];
                 hexString[j++] = HEX_CHARS[bytes[i] & 0x0F];
             }
