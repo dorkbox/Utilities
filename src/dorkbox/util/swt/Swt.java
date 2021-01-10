@@ -43,6 +43,8 @@ class Swt {
         // Since this class is the place other code interacts with, we can use SWT stuff if necessary without loading/linking
         // the SWT classes by accident
 
+
+
         boolean isSwtLoadable_ = isLoadable();
 
         version = SWT.getVersion();
@@ -76,7 +78,7 @@ class Swt {
             }
         });
 
-        if (null != swtErrorClass) {
+        if (swtErrorClass != null) {
             try {
                 return org.eclipse.swt.SWT.isLoadable();
             } catch (Exception ignored) {
@@ -96,6 +98,7 @@ class Swt {
             return false;
         }
 
+        // required to use reflection, because this is an internal class
         final String SWT_INTERNAL_CLASS = "org.eclipse.swt.internal.gtk.OS";
         Class<?> osClass = AccessController.doPrivileged(new PrivilegedAction<Class<?>>() {
             @Override
@@ -149,24 +152,6 @@ class Swt {
 
 
     public static
-    class SwtOverride {
-        static
-        void onShutdown(final Display currentDisplay, final Runnable runnable) {
-            // currentDisplay.getShells() must only be called inside the event thread!
-
-           org.eclipse.swt.widgets.Shell shell = currentDisplay.getShells()[0];
-           shell.addListener(org.eclipse.swt.SWT.Close, new org.eclipse.swt.widgets.Listener() {
-               @Override
-               public
-               void handleEvent(final org.eclipse.swt.widgets.Event event) {
-                   runnable.run();
-               }
-           });
-        }
-    }
-
-
-    public static
     int getVersion() {
         return version;
     }
@@ -185,13 +170,13 @@ class Swt {
     void onShutdown(final Runnable runnable) {
         // currentDisplay.getShells() must only be called inside the event thread!
         if (isEventThread()) {
-            SwtOverride.onShutdown(currentDisplay, runnable);
+            SwtAccess.onShutdown(currentDisplay, runnable);
         } else {
             dispatch(new Runnable() {
                 @Override
                 public
                 void run() {
-                    SwtOverride.onShutdown(currentDisplay, runnable);
+                    SwtAccess.onShutdown(currentDisplay, runnable);
                 }
             });
         }
