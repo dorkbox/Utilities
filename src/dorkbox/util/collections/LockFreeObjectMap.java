@@ -15,14 +15,10 @@
  */
 package dorkbox.util.collections;
 
+import static dorkbox.util.collections.ObjectMap.*;
+
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
-
-import com.esotericsoftware.kryo.util.ObjectMap;
-import com.esotericsoftware.kryo.util.ObjectMap.Entries;
-import com.esotericsoftware.kryo.util.ObjectMap.Keys;
-import com.esotericsoftware.kryo.util.ObjectMap.Values;
-
 
 /**
  * This class uses the "single-writer-principle" for lock-free publication.

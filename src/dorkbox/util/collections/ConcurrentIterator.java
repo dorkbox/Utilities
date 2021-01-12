@@ -19,8 +19,6 @@ package dorkbox.util.collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import com.esotericsoftware.kryo.util.IdentityMap;
-
 import dorkbox.util.Property;
 
 /**
