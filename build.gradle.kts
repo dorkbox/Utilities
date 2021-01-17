@@ -120,16 +120,6 @@ licensing {
             it.author("bennidi")
             it.author("dorkbox")
         }
-        extra("Byte Utils (UByte, UInteger, ULong, Unsigned, UNumber, UShort)", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://github.com/jOOQ/jOOQ/tree/master/jOOQ/src/main/java/org/jooq/types")
-            it.copyright(2017)
-            it.author("Data Geekery GmbH (http://www.datageekery.com)")
-            it.author("Lukas Eder")
-            it.author("Ed Schaller")
-            it.author("Jens Nerche")
-            it.author("Ivan Sokolov")
-        }
         extra("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntArray, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
             it.url(Extras.url)
             it.url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
@@ -236,8 +226,8 @@ dependencies {
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-    compileOnly("com.esotericsoftware:kryo:5.0.0-RC8")
-    compileOnly("de.javakaffee:kryo-serializers:0.45")
+//    compileOnly("com.esotericsoftware:kryo:5.0.0-RC8")
+//    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
     compileOnly("io.netty:netty-buffer:4.1.51.Final")
 
@@ -264,6 +254,8 @@ dependencies {
 
     testImplementation("com.esotericsoftware:kryo:5.0.0-RC8")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
+
+    testImplementation("com.dorkbox:Serializers:1.0")
 
     testImplementation("junit:junit:4.13")
     testImplementation("ch.qos.logback:logback-classic:1.2.3")

@@ -1,7 +1,7 @@
  - Utilities - Utilities for use within Java projects
    [The Apache Software License, Version 2.0]
    https://git.dorkbox.com/dorkbox/Utilities
-   Copyright 2020
+   Copyright 2021
      Dorkbox LLC
 
    Extra license information
@@ -67,17 +67,6 @@
          bennidi
          dorkbox
 
-     - Byte Utils (UByte, UInteger, ULong, Unsigned, UNumber, UShort) - 
-       [The Apache Software License, Version 2.0]
-       https://git.dorkbox.com/dorkbox/Utilities
-       https://github.com/jOOQ/jOOQ/tree/master/jOOQ/src/main/java/org/jooq/types
-       Copyright 2017
-         Data Geekery GmbH (http://www.datageekery.com)
-         Lukas Eder
-         Ed Schaller
-         Jens Nerche
-         Ivan Sokolov
-
      - Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntArray, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet) - 
        [The Apache Software License, Version 2.0]
        https://git.dorkbox.com/dorkbox/Utilities
@@ -130,92 +119,63 @@
      - JNA - Simplified native library access for Java.
        [The Apache Software License, Version 2.0]
        https://github.com/twall/jna
-       Copyright 2020
+       Copyright 2021
          Timothy Wall
 
      - JNA-Platform - Mappings for a number of commonly used platform functions
        [The Apache Software License, Version 2.0]
        https://github.com/twall/jna
-       Copyright 2020
+       Copyright 2021
          Timothy Wall
 
      - Java Uuid Generator - A set of Java classes for working with UUIDs
        [The Apache Software License, Version 2.0]
        https://github.com/cowtowncoder/java-uuid-generator
-       Copyright 2020
+       Copyright 2021
          Tatu Saloranta (tatu.saloranta@iki.fi)
          Contributors. See source release-notes/CREDITS
-
-     - Kryo - Fast and efficient binary object graph serialization framework for Java
-       [BSD 3-Clause License]
-       https://github.com/EsotericSoftware/kryo
-       Copyright 2020
-         Nathan Sweet
-
-       Extra license information
-         - ReflectASM - 
-           [BSD 3-Clause License]
-           https://github.com/EsotericSoftware/reflectasm
-             Nathan Sweet
-
-         - Objenesis  - 
-           [The Apache Software License, Version 2.0]
-           http://objenesis.org
-             Objenesis Team and all contributors
-
-         - MinLog-SLF4J - 
-           [BSD 3-Clause License]
-           https://github.com/EsotericSoftware/minlog
-             Nathan Sweet
-
-     - Kryo Serializers - Extra kryo serializers
-       [The Apache Software License, Version 2.0]
-       https://github.com/magro/kryo-serializers
-       Copyright 2020
-         Martin Grotzke
-         Rafael Winterhalter
 
      - Netty - An event-driven asynchronous network application framework
        [The Apache Software License, Version 2.0]
        https://netty.io
-       Copyright 2020
+       Copyright 2021
          The Netty Project
          Contributors. See source NOTICE
 
      - Bouncy Castle Crypto - Lightweight cryptography API and JCE Extension
        [The Apache Software License, Version 2.0]
        http://www.bouncycastle.org
-       Copyright 2020
+       Copyright 2021
          The Legion of the Bouncy Castle Inc
 
      - Lightweight Java Game Library - Java library that enables cross-platform access to popular native APIs
        [BSD 3-Clause License]
        https://github.com/LWJGL/lwjgl3
-       Copyright 2020
+       Copyright 2021
          Lightweight Java Game Library
 
      - TypeTools - A simple, zero-dependency library for working with types. Supports Java 1.6+ and Android.
        [The Apache Software License, Version 2.0]
        https://github.com/jhalterman/typetools
-       Copyright 2020
+       Copyright 2021
          Jonathan Halterman and friends
 
      - Eclipse Platform - Frameworks and common services to support the use of Eclipse and it's tools (SWT)
        [Eclipse Public License (EPL)]
        https://projects.eclipse.org/projects/eclipse.platform
-       Copyright 2020
+       Copyright 2021
          The Eclipse Foundation, Inc.
 
      - SLF4J - Simple facade or abstraction for various logging frameworks
        [MIT License]
        http://www.slf4j.org
-       Copyright 2020
+       Copyright 2021
          QOS.ch
 
      - XZ for Java - Complete implementation of XZ data compression in pure Java
        [Public Domain, per Creative Commons CC0]
        https://tukaani.org/xz/java.html
-       Copyright 2020
+       Copyright 2021
          Lasse Collin
          Igor Pavlov
 
