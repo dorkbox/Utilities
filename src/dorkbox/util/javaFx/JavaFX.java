@@ -50,17 +50,35 @@ class JavaFX {
         // We cannot use getToolkit(), because if JavaFX is not being used, calling getToolkit() will initialize it...
         // see: https://bugs.openjdk.java.net/browse/JDK-8090933
 
+        Class<?> javaFxLoggerClass = AccessController.doPrivileged(new PrivilegedAction<Class<?>>() {
+            @Override
+            public
+            Class<?> run() {
+                try {
+                    return Class.forName("com.sun.javafx.logging.PlatformLogger", true, ClassLoader.getSystemClassLoader());
+                } catch (Exception ignored) {
+                }
+                try {
+                    return Class.forName("com.sun.javafx.logging.PlatformLogger", true, Thread.currentThread().getContextClassLoader());
+                } catch (Exception ignored) {
+                }
+                return null;
+            }
+        });
+
 
         boolean isJavaFxLoaded_ = false;
         try {
-            // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
-            java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-            m.setAccessible(true);
-            ClassLoader cl = ClassLoader.getSystemClassLoader();
+            if (javaFxLoggerClass != null) {
+                // this is important to use reflection, because if JavaFX is not being used, calling getToolkit() will initialize it...
+                java.lang.reflect.Method m = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+                m.setAccessible(true);
+                ClassLoader cl = ClassLoader.getSystemClassLoader();
 
-            // JavaFX Java7,8 is GTK2 only. Java9 can have it be GTK3 if -Djdk.gtk.version=3 is specified
-            // see http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
-            isJavaFxLoaded_ = (null != m.invoke(cl, "com.sun.javafx.tk.Toolkit")) || (null != m.invoke(cl, "javafx.application.Application"));
+                // JavaFX Java7,8 is GTK2 only. Java9 can have it be GTK3 if -Djdk.gtk.version=3 is specified
+                // see http://mail.openjdk.java.net/pipermail/openjfx-dev/2016-May/019100.html
+                isJavaFxLoaded_ = (null != m.invoke(cl, "com.sun.javafx.tk.Toolkit")) || (null != m.invoke(cl, "javafx.application.Application"));
+            }
         } catch (Throwable e) {
             LoggerFactory.getLogger(JavaFX.class).debug("Error detecting if JavaFX is loaded", e);
         }
