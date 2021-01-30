@@ -32,28 +32,32 @@ import dorkbox.os.OS;
 public
 class CacheUtil {
 
-    // will never be null.
-    private static final MessageDigest digest;
-
-    static {
-        @SuppressWarnings("UnusedAssignment")
-        MessageDigest digest_ = null;
-        try {
-            digest_ = MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Unable to initialize hash algorithm for images. MD5 digest doesn't exist.");
+    private static final ThreadLocal<MessageDigest> digestLocal = new ThreadLocal<MessageDigest>() {
+        @Override
+        protected
+        MessageDigest initialValue() {
+            try {
+                return MessageDigest.getInstance("SHA1");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("Unable to initialize hash algorithm. SHA1 digest doesn't exist?!? (This should not happen");
+            }
         }
+    };
 
-        digest = digest_;
+    private final String tempDir;
+
+    public CacheUtil() {
+        this("cache");
     }
 
-    public static String tempDir = "";
-
+    public CacheUtil(String tempDir) {
+        this.tempDir = tempDir;
+    }
 
     /**
      * Clears ALL saved files in the cache
      */
-    public static synchronized
+    public
     void clear() {
         // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
@@ -66,7 +70,7 @@ class CacheUtil {
      * <p>
      * This cache is not persisted across runs.
      */
-    public static synchronized
+    public
     File check(final File file) {
         if (file == null) {
             throw new NullPointerException("file");
@@ -79,7 +83,7 @@ class CacheUtil {
     /**
      * Checks to see if the specified file is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
-    public static synchronized
+    public
     File check(final String fileName) {
         if (fileName == null) {
             throw new NullPointerException("fileName");
@@ -99,7 +103,7 @@ class CacheUtil {
     /**
      * Checks to see if the specified URL is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
-    public static synchronized
+    public
     File check(final URL fileResource) {
         if (fileResource == null) {
             throw new NullPointerException("fileResource");
@@ -112,7 +116,7 @@ class CacheUtil {
      * Checks to see if the specified stream (based on the hash of the input stream) is in the cache. NULL if it is not, otherwise
      * specifies a location on disk.
      */
-    public static synchronized
+    public
     File check(final InputStream fileStream) throws IOException {
         if (fileStream == null) {
             throw new NullPointerException("fileStream");
@@ -125,7 +129,7 @@ class CacheUtil {
      * Checks to see if the specified name is in the cache. NULL if it is not, otherwise specifies a location on disk. If the
      * cacheName is NULL, it will use a HASH of the fileStream
      */
-    public static synchronized
+    public
     File check(String cacheName, final InputStream fileStream) throws IOException {
         if (fileStream == null) {
             throw new NullPointerException("fileStream");
@@ -161,7 +165,7 @@ class CacheUtil {
     /**
      * Saves the name of the file in a cache, based on the file's name.
      */
-    public static synchronized
+    public
     File save(final File file) throws IOException {
         return save(file.getAbsolutePath(), file);
     }
@@ -169,7 +173,7 @@ class CacheUtil {
     /**
      * Saves the name of the file in a cache, based on the specified name. If cacheName is NULL, it will use the file's name.
      */
-    public static synchronized
+    public
     File save(String cacheName, final File file) throws IOException {
         if (cacheName == null) {
             cacheName = file.getAbsolutePath();
@@ -180,7 +184,7 @@ class CacheUtil {
     /**
      * Saves the name of the file in a cache, based on the specified name.
      */
-    public static synchronized
+    public
     File save(final String fileName) throws IOException {
         return save(null, fileName);
     }
@@ -190,7 +194,7 @@ class CacheUtil {
      *
      * @return the newly create cache file, or an IOException if there were problems
      */
-    public static synchronized
+    public
     File save(String cacheName, final String fileName) throws IOException {
         if (cacheName == null) {
             cacheName = fileName;
@@ -235,7 +239,7 @@ class CacheUtil {
     /**
      * Saves the name of the URL in a cache, based on it's path.
      */
-    public static synchronized
+    public
     File save(final URL fileResource) throws IOException {
         return save(null, fileResource);
     }
@@ -243,7 +247,7 @@ class CacheUtil {
     /**
      * Saves the name of the URL in a cache, based on the specified name. If cacheName is NULL, it will use the URL's path.
      */
-    public static synchronized
+    public
     File save(String cacheName, final URL fileResource) throws IOException {
         if (cacheName == null) {
             cacheName = fileResource.getPath();
@@ -266,7 +270,7 @@ class CacheUtil {
     /**
      * This caches the data based on the HASH of the input stream.
      */
-    public static synchronized
+    public
     File save(final InputStream fileStream) throws IOException {
         if (fileStream == null) {
             throw new NullPointerException("fileStream");
@@ -279,7 +283,7 @@ class CacheUtil {
      * Saves the name of the file in a cache, based on the cacheName. If the cacheName is NULL, it will use a HASH of the fileStream
      * as the name.
      */
-    public static synchronized
+    public
     File save(String cacheName, final InputStream fileStream) throws IOException {
         if (cacheName == null) {
             cacheName = createNameAsHash(fileStream);
@@ -316,7 +320,7 @@ class CacheUtil {
      * @return the full path of the resource copied to disk, or NULL if invalid
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static
+    private
     File makeFileViaStream(final String cacheName, final InputStream resourceStream) throws IOException {
         if (resourceStream == null) {
             throw new NullPointerException("resourceStream");
@@ -368,7 +372,7 @@ class CacheUtil {
      *
      * @return the file on disk represented by the file name
      */
-    public static synchronized
+    public
     File create(final String cacheName) {
         return makeCacheFile(cacheName);
     }
@@ -376,7 +380,7 @@ class CacheUtil {
     // creates the file that will be cached. It may, or may not already exist
     // must be called from synchronized block!
     // never returns null
-    private static
+    private
     File makeCacheFile(final String cacheName) {
         if (cacheName == null) {
             throw new NullPointerException("cacheName");
@@ -399,12 +403,12 @@ class CacheUtil {
         return newFile;
     }
 
-    // must be called from synchronized block!
     // hashed name to prevent invalid file names from being used
     private static
     String hashName(final String name) {
         // figure out the fileName
         byte[] bytes = name.getBytes(OS.UTF_8);
+        MessageDigest digest = digestLocal.get();
 
         digest.reset();
         digest.update(bytes);
@@ -414,8 +418,10 @@ class CacheUtil {
     }
 
     // this is if we DO NOT have a file name. We hash the resourceStream bytes to base the name on that. The extension will be ".cache"
-    public static synchronized
+    public static
     String createNameAsHash(final InputStream resourceStream) throws IOException {
+        MessageDigest digest = digestLocal.get();
+
         digest.reset();
 
         try {
