@@ -42,7 +42,6 @@ import org.lwjgl.util.xxhash.XXHash;
 import org.slf4j.Logger;
 
 import dorkbox.os.OS;
-import dorkbox.util.bytes.LittleEndian;
 
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B http://www.nsa.gov/ia/programs/suiteb_cryptography/
@@ -262,6 +261,25 @@ class Crypto {
         }
     }
 
+    static
+    int toInt(final byte[] bytes) {
+        int number = 0;
+
+        switch (bytes.length) {
+            default:
+            case 4:
+                number |= (bytes[3] & 0xFF) << 24;
+            case 3:
+                number |= (bytes[2] & 0xFF) << 16;
+            case 2:
+                number |= (bytes[1] & 0xFF) << 8;
+            case 1:
+                number |= (bytes[0] & 0xFF) << 0;
+        }
+
+        return number;
+    }
+
     /**
      * Specifically, to return the hash of the ALL files/directories inside the jar, minus the action specified (LGPL) files.
      */
@@ -309,7 +327,7 @@ class Crypto {
                         hasAction = true;
 
                         // we have an ACTION describing how it was compressed, etc
-                        int fileAction = LittleEndian.Int_.from(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
+                        int fileAction = toInt(new byte[] {extraData[5], extraData[6], extraData[7], extraData[8]});
 
                         if ((fileAction & action) != action) {
                             okToHash = true;
