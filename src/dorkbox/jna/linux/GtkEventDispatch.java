@@ -27,8 +27,9 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
-import dorkbox.util.javaFx.JavaFX;
-import dorkbox.util.swt.Swt;
+import dorkbox.javaFx.JavaFx;
+import dorkbox.swt.Swt;
+
 
 public
 class GtkEventDispatch {
@@ -136,8 +137,8 @@ class GtkEventDispatch {
             }
         });
 
-        if (JavaFX.isLoaded) {
-            if (!JavaFX.isEventThread()) {
+        if (JavaFx.isLoaded) {
+            if (!JavaFx.isEventThread()) {
                 try {
                     if (!blockUntilStarted.await(10, TimeUnit.SECONDS)) {
                         if (DEBUG) {
@@ -271,14 +272,14 @@ class GtkEventDispatch {
     public static
     void dispatch(final Runnable runnable) {
         if (GtkLoader.alreadyRunningGTK) {
-            if (JavaFX.isLoaded) {
+            if (JavaFx.isLoaded) {
                 // JavaFX only
-                if (JavaFX.isEventThread()) {
+                if (JavaFx.isEventThread()) {
                     // Run directly on the JavaFX event thread
                     runnable.run();
                 }
                 else {
-                    JavaFX.dispatch(runnable);
+                    JavaFx.dispatch(runnable);
                 }
                 return;
             }

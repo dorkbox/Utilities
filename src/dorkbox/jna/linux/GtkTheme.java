@@ -38,9 +38,9 @@ import dorkbox.jna.linux.structs.GtkStyle;
 import dorkbox.jna.linux.structs.PangoRectangle;
 import dorkbox.os.OS;
 import dorkbox.os.OSUtil;
+import dorkbox.swt.Swt;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
-import dorkbox.util.swt.Swt;
 
 /**
  * Class to contain all of the various methods needed to get information set by a GTK theme.

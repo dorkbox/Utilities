@@ -22,7 +22,7 @@ import com.sun.jna.NativeLibrary;
 
 import dorkbox.jna.JnaHelper;
 import dorkbox.os.OS;
-import dorkbox.util.swt.Swt;
+import dorkbox.swt.Swt;
 
 /**
  * Bindings for GTK+ 2. Bindings that are exclusively for GTK+ 3 are in that respective class
