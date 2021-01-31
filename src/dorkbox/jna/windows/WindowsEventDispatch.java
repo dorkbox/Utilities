@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,12 +34,13 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.WString;
 import com.sun.jna.platform.win32.WinUser;
 
-@SuppressWarnings({"Convert2Lambda", "UnusedAssignment", "Convert2Diamond", "FieldCanBeLocal"})
+@SuppressWarnings({"Convert2Lambda", "UnusedAssignment", "Convert2Diamond", "FieldCanBeLocal", "unused"})
 public
 class WindowsEventDispatch implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(WindowsEventDispatch.class);
 
-    private static final String NAME = "WindowsEventDispatch";
+    private static final String NAME = "WindowsEventDispatch_";
+    private static final AtomicInteger COUNT = new AtomicInteger(0);
 
     public static final int WM_TASKBARCREATED = User32.RegisterWindowMessage(new WString("TaskbarCreated"));
     public static final int WM_COMMAND = 0x0111;
@@ -49,12 +51,10 @@ class WindowsEventDispatch implements Runnable {
     public static final int MF_POPUP = 0x00000010;
 
 
-    private static final WindowsEventDispatch edt = new WindowsEventDispatch();
-    private final static Map<Integer, List<Listener>> messageIDs = new HashMap<Integer, List<Listener>>();
+    private final String name = NAME + COUNT.getAndIncrement();
+    private final Map<Integer, List<Listener>> messageIDs = new HashMap<Integer, List<Listener>>();
 
-    private static final Object lock = new Object();
-    private static int referenceCount = 0;
-
+    private final Object lock = new Object();
 
     private Thread dispatchThread;
 
@@ -70,61 +70,55 @@ class WindowsEventDispatch implements Runnable {
     }
 
     public static
-    void start() {
-        synchronized (lock) {
-            int ref = referenceCount++;
+    WindowsEventDispatch start() {
+        WindowsEventDispatch edt = new WindowsEventDispatch();
 
-            if (ref == 0) {
-                edt.start_();
-            }
+        synchronized (edt.lock) {
+            edt.start_();
 
             try {
-                // wait for the dispatch thread to start
-                lock.wait();
+                // wait for the dispatch thread to start if we aren't started yet, but requested it
+                edt.lock.wait();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
+
+        return edt;
     }
 
-    public static
-    void stop() {
-        synchronized (lock) {
-            if (--referenceCount == 0) {
-                edt.stop_();
-            }
-        }
-    }
-
-    public static
+    public
     HWND get() {
-        return edt.hWnd;
+        return hWnd;
     }
 
     // always from inside lock!
     private
     void start_() {
-        dispatchThread = new Thread(this, NAME);
+        dispatchThread = new Thread(this, name);
         dispatchThread.start();
     }
 
-    // always from inside lock!
-    private void
-    stop_() {
-        User32.SendMessage(hWnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
+    public void
+    stop() {
+        synchronized (lock) {
+            if (hWnd != null) {
+                User32.PostMessage(hWnd, WM_QUIT, new WPARAM(0), new LPARAM(0));
 
-        try {
-            // wait for the dispatch thread to quit (but only if we are not on the dispatch thread)
-            if (!Thread.currentThread().equals(dispatchThread)) {
-                dispatchThread.join();
+                try {
+                    // wait for the dispatch thread to quit (but only if we are not on the dispatch thread)
+                    if (!Thread.currentThread().equals(dispatchThread)) {
+                        dispatchThread.join();
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
     @SuppressWarnings("Java8MapApi")
-    public static
+    public
     void addListener(final int messageId, final Listener listener) {
         synchronized (messageIDs) {
             List<Listener> listeners = messageIDs.get(messageId);
@@ -136,7 +130,8 @@ class WindowsEventDispatch implements Runnable {
             listeners.add(listener);
         }
     }
-    public static
+
+    public
     void removeListener(final Listener listener) {
         synchronized (messageIDs) {
             for (Map.Entry<Integer, List<Listener>> entry : messageIDs.entrySet()) {
@@ -180,7 +175,7 @@ class WindowsEventDispatch implements Runnable {
             }
         };
 
-        hWnd = User32.CreateWindowEx(0, "STATIC", NAME, 0, 0, 0, 0, 0, null, null, null,
+        hWnd = User32.CreateWindowEx(0, "STATIC", name, 0, 0, 0, 0, 0, null, null, null,
                                             null);
         if (hWnd == null) {
             throw new GetLastErrorException();
