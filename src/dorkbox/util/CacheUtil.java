@@ -32,19 +32,20 @@ import dorkbox.os.OS;
 public
 class CacheUtil {
 
-    private static final ThreadLocal<MessageDigest> digestLocal = new ThreadLocal<MessageDigest>() {
-        @Override
-        protected
-        MessageDigest initialValue() {
-            try {
-                return MessageDigest.getInstance("SHA1");
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException("Unable to initialize hash algorithm. SHA1 digest doesn't exist?!? (This should not happen");
-            }
+    private static final ThreadLocal<MessageDigest> digestLocal = ThreadLocal.withInitial(()->{
+        try {
+            return MessageDigest.getInstance("SHA1");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Unable to initialize hash algorithm. SHA1 digest doesn't exist?!? (This should not happen");
         }
-    };
+    });
 
     private final String tempDir;
+
+    public static
+    void clear(String tempDir) {
+        new CacheUtil(tempDir).clear();
+    }
 
     public CacheUtil() {
         this("cache");
