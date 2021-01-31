@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import dorkbox.gradle.kotlin
 import java.time.Instant
 
 ///////////////////////////////
@@ -32,13 +33,15 @@ plugins {
     id("com.dorkbox.Licensing") version "2.5"
     id("com.dorkbox.VersionUpdate") version "2.0"
     id("com.dorkbox.GradlePublish") version "1.7"
+
+    kotlin("jvm") version "1.4.0"
 }
 
 object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.8.3"
+    const val version = "1.9"
 
     // set as project.ext
     const val name = "Utilities"
@@ -48,6 +51,8 @@ object Extras {
     const val url = "https://git.dorkbox.com/dorkbox/Utilities"
 
     val buildDate = Instant.now().toString()
+
+    const val coroutineVer = "1.3.9"
 }
 
 ///////////////////////////////
@@ -56,7 +61,7 @@ object Extras {
 GradleUtils.load("$projectDir/../../gradle.properties", Extras)
 GradleUtils.fixIntellijPaths()
 GradleUtils.defaultResolutionStrategy()
-GradleUtils.compileConfiguration(JavaVersion.VERSION_11)
+GradleUtils.compileConfiguration(JavaVersion.VERSION_1_8)
 
 
 licensing {
@@ -175,6 +180,12 @@ sourceSets {
             // want to include java files for the source. 'setSrcDirs' resets includes...
             include("**/*.java")
         }
+//        kotlin {
+//            setSrcDirs(listOf("src"))
+//
+//            // want to include kotlin files for the source. 'setSrcDirs' resets includes...
+//            include("**/*.kt")
+//        }
     }
 
     test {
@@ -183,6 +194,12 @@ sourceSets {
 
             // want to include java files for the source. 'setSrcDirs' resets includes...
             include("**/*.java")
+        }
+        kotlin {
+            setSrcDirs(listOf("test"))
+
+            // want to include java files for the source. 'setSrcDirs' resets includes...
+            include("**/*.java", "**/*.kt")
         }
     }
 }
@@ -212,7 +229,10 @@ tasks.jar.get().apply {
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    compileOnly("com.dorkbox:Executor:1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
+
+    implementation("com.dorkbox:Executor:2.2")
+    implementation("com.dorkbox:SwtJavaFx:1.0")
 
     val jnaVersion = "5.6.0"
     compileOnly("net.java.dev.jna:jna:$jnaVersion")
@@ -241,10 +261,7 @@ dependencies {
 
     compileOnly("net.jodah:typetools:0.6.2")
 
-    //  because the eclipse release of SWT is sPecIaL!
-    compileOnly(GradleUtils.getSwtMavenId("3.114.100")) {
-        isTransitive = false
-    }
+
 
     // testing
     testImplementation("org.bouncycastle:bcprov-jdk15on:$bcVersion")
