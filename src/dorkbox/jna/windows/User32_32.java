@@ -29,6 +29,7 @@ import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.platform.win32.WinNT;
+import com.sun.jna.platform.win32.WinUser.HMONITOR;
 
 import dorkbox.jna.JnaHelper;
 import dorkbox.jna.windows.structs.ICONINFO;
@@ -117,4 +118,8 @@ class User32_32 implements User32 {
     @Override
     public native
     boolean GetCursorPos(final POINT point);
+
+    @Override
+    public native
+    HMONITOR MonitorFromPoint(POINT.ByValue pt, int dwFlags);
 }

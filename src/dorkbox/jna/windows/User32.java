@@ -29,6 +29,7 @@ import com.sun.jna.Callback;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.platform.win32.WinNT;
+import com.sun.jna.platform.win32.WinUser.HMONITOR;
 
 import dorkbox.jna.windows.structs.ICONINFO;
 import dorkbox.os.OS;
@@ -160,9 +161,13 @@ interface User32 {
      */
     int ReleaseDC(HWND hWnd, HDC hDC);
 
-
     /**
      * https://msdn.microsoft.com/en-us/library/windows/desktop/ms648390(v=vs.85).aspx
      */
     boolean GetCursorPos(POINT point);
+
+    /**
+     * https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-monitorfrompoint
+     */
+    HMONITOR MonitorFromPoint(POINT.ByValue pt, int dwFlags);
 }
