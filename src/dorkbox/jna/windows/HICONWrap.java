@@ -27,6 +27,7 @@ import dorkbox.jna.windows.structs.ICONINFO;
  * http://www.pinvoke.net/default.aspx/user32.createiconindirect
  */
 public class HICONWrap extends HICON {
+    private static final Object lockObject = new Object();
 
     static HICON createIconIndirect(HBITMAP bm) {
         ICONINFO info = new ICONINFO();
@@ -36,7 +37,14 @@ public class HICONWrap extends HICON {
 
         HICON hicon = User32.CreateIconIndirect(info);
         if (hicon == null) {
-            throw new GetLastErrorException();
+            // something weird is going on! Try again but more carefully!
+            synchronized(lockObject) {
+                hicon = User32.CreateIconIndirect(info);
+            }
+
+            if (hicon == null) {
+                throw new GetLastErrorException();
+            }
         }
 
         return hicon;
