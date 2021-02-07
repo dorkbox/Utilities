@@ -233,6 +233,7 @@ dependencies {
 
     implementation("com.dorkbox:Executor:2.2")
     implementation("com.dorkbox:SwtJavaFx:1.0")
+    implementation("com.dorkbox:PropertyLoader:1.0")
 
     val jnaVersion = "5.6.0"
     compileOnly("net.java.dev.jna:jna:$jnaVersion")

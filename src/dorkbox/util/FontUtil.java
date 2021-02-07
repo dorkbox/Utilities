@@ -31,6 +31,7 @@ import java.net.URL;
 import java.util.Enumeration;
 
 import dorkbox.os.OS;
+import dorkbox.propertyLoader.Property;
 
 /**
  * Java Font utilities

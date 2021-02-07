@@ -19,7 +19,7 @@ package dorkbox.util.collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import dorkbox.util.Property;
+import dorkbox.propertyLoader.Property;
 
 /**
  * @author dorkbox, llc
