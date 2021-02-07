@@ -30,7 +30,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
-import dorkbox.os.OS;
 import dorkbox.propertyLoader.Property;
 
 /**
@@ -47,8 +46,6 @@ class FontUtil {
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */
     public static
     void loadAllFonts() {
-        boolean isJava6 = OS.javaVersion == 6;
-
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Enumeration<URL> fonts = LocationResolver.getResources(FONTS_LOCATION);
 
@@ -65,8 +62,8 @@ class FontUtil {
                     String path = url.toURI()
                                      .getPath();
 
-                    // only support TTF fonts (java6) and OTF fonts (7+).
-                    if (path.endsWith(".ttf") || (!isJava6 && path.endsWith(".otf"))) {
+                    // only support TTF and OTF fonts (java 7+).
+                    if (path.endsWith(".ttf") || path.endsWith(".otf")) {
                         is = url.openStream();
 
                         java.awt.Font newFont = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, is);
