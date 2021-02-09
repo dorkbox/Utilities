@@ -175,8 +175,7 @@ class WindowsEventDispatch implements Runnable {
             }
         };
 
-        hWnd = User32.CreateWindowEx(0, "STATIC", name, 0, 0, 0, 0, 0, null, null, null,
-                                            null);
+        hWnd = User32.CreateWindowEx(0, "STATIC", name, 0, 0, 0, 0, 0, null, null, null, null);
         if (hWnd == null) {
             throw new GetLastErrorException();
         }
