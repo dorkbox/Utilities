@@ -17,9 +17,11 @@ package dorkbox.util;
 
 import java.awt.AlphaComposite;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.MediaTracker;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -29,12 +31,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+
+import org.slf4j.LoggerFactory;
 
 import dorkbox.os.OS;
 
@@ -161,7 +166,7 @@ class ImageUtil {
             image = new ImageIcon(systemResource).getImage();
         }
 
-        image = ImageUtil.getImageImmediate(image);
+        ImageUtil.waitForImageLoad(image);
 
         // make whatever dirs we need to.
         boolean mkdirs = newFile.getParentFile()
@@ -379,22 +384,41 @@ class ImageUtil {
         throw new IOException("Unable to read file inputStream for image size data.");
     }
 
+
+    private static final Object mediaTrackerLock = new Object();
+    private static final AtomicInteger imageTrackerIndex = new AtomicInteger(0);
+    private static MediaTracker tracker = null;
+
     /**
-     * Because of the way image loading works in Java, if one wants to IMMEDIATELY get a fully loaded image, one must resort to "hacks"
-     * by loading the image twice.
+     * Wait until the image is fully loaded and then init the graphics.
      *
      * @param image the image you want load immediately
-     *
-     * @return a fully loaded image
      */
     public static
-    Image getImageImmediate(final Image image) {
-        // have to do this twice, so that it will finish loading the image (weird callback stuff is required if we don't do this)
-        image.flush();
+    void waitForImageLoad(final Image image) {
+        int imageId = imageTrackerIndex.getAndIncrement();
 
-        final Image loadedImage = new ImageIcon(image).getImage();
-        loadedImage.flush();
+        // make sure the image if fully loaded
+        synchronized (mediaTrackerLock) {
+            if (tracker == null) {
+                tracker = new MediaTracker(new Component() {});
+            }
 
-        return loadedImage;
+            tracker.addImage(image, imageId);
+        }
+
+        try {
+            tracker.waitForID(imageId);
+            if (tracker.isErrorID(imageId)) {
+                LoggerFactory.getLogger(ImageUtil.class).error("Error loading image!");
+            }
+        }
+        catch (InterruptedException ignored) {
+
+        } finally {
+            synchronized (mediaTrackerLock) {
+                tracker.removeImage(image);
+            }
+        }
     }
 }
