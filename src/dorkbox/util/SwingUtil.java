@@ -212,7 +212,7 @@ class SwingUtil {
             }
 
             if (OS.javaVersion >= 9) {
-                String property = System.getProperty("jdk.gtk.version", "2");
+                String property = System.getProperty("jdk.gtk.version");
                 if (property != null) {
                     char c = property.charAt(0);
                     if (MathUtil.isNumber(c)) {
