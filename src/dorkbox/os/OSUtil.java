@@ -213,7 +213,7 @@ class OSUtil {
             }
 
             try {
-                List<File> releaseFiles = new LinkedList<File>();
+                List<File> releaseFiles = new LinkedList<>();
                 int totalLength = 0;
 
                 // looking for files like /etc/os-release
@@ -233,12 +233,9 @@ class OSUtil {
 
                 if (totalLength > 0) {
                     StringBuilder fileContents = new StringBuilder(totalLength);
-                    BufferedReader reader = null;
 
                     for (File releaseFile : releaseFiles) {
-                        try {
-                            reader = new BufferedReader(new FileReader(releaseFile));
-
+                        try (BufferedReader reader = new BufferedReader(new FileReader(releaseFile))) {
                             String currentLine;
 
                             // NAME="Arch Linux"
@@ -255,10 +252,6 @@ class OSUtil {
                             while ((currentLine = reader.readLine()) != null) {
                                 fileContents.append(currentLine)
                                             .append(OS.LINE_SEPARATOR_UNIX);
-                            }
-                        } finally {
-                            if (reader != null) {
-                                reader.close();
                             }
                         }
                     }
@@ -472,19 +465,12 @@ class OSUtil {
                     // looking for /proc/version
                     File file = new File("/proc/version");
                     if (file.canRead()) {
-                        BufferedReader reader = null;
-                        try {
-                            reader = new BufferedReader(new FileReader(file));
-
+                        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                             // Linux version 4.4.0-19041-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #488-Microsoft Mon Sep 01 13:43:00 PST 2020
 
                             String currentLine = reader.readLine();
                             isWSL = currentLine.contains("-Microsoft");
                         } catch (Throwable ignored) {
-                        } finally {
-                            if (reader != null) {
-                                reader.close();
-                            }
                         }
                     }
 
@@ -1006,7 +992,7 @@ class OSUtil {
 
             try {
                 // xfconf-query -c xfce4-panel -l
-                List<String> commands = new ArrayList<String>();
+                List<String> commands = new ArrayList<>();
                 commands.add("xfconf-query");
                 commands.add("-c " + channel);
 
