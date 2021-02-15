@@ -464,6 +464,42 @@ class OSUtil {
             return null;
         }
 
+        private static volatile Boolean isWSL = null;
+        public static
+        boolean isWSL() {
+            if (isWSL == null) {
+                try {
+                    // looking for /proc/version
+                    File file = new File("/proc/version");
+                    if (file.canRead()) {
+                        BufferedReader reader = null;
+                        try {
+                            reader = new BufferedReader(new FileReader(file));
+
+                            // Linux version 4.4.0-19041-Microsoft (Microsoft@Microsoft.com) (gcc version 5.4.0 (GCC) ) #488-Microsoft Mon Sep 01 13:43:00 PST 2020
+
+                            String currentLine = reader.readLine();
+                            isWSL = currentLine.contains("-Microsoft");
+                        } catch (Throwable ignored) {
+                        } finally {
+                            if (reader != null) {
+                                reader.close();
+                            }
+                        }
+                    }
+
+                    if (isWSL == null) {
+                        // reading the file didn't work for whatever reason...
+                        // uname -v
+                        isWSL = Executor.Companion.run("uname", "-v").contains("-Microsoft");
+                    }
+                } catch (Throwable ignored) {
+                    isWSL = false;
+                }
+            }
+            return isWSL;
+        }
+
         public static
         boolean isRoot() {
             // this means we are running as sudo
