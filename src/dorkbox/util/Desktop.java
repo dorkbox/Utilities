@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 dorkbox, llc
+ * Copyright 2021 dorkbox, llc
  *
  * Copyright (C) 2016 Tres Finocchiaro, QZ Industries, LLC
  * Derivative code has been released as Apache 2.0, used with permission.
@@ -38,6 +38,13 @@ class Desktop {
     private static final String GVFS = "/usr/bin/gvfs-open";
     private static final boolean GVFS_VALID = new File(GVFS).canExecute();
 
+    /**
+     * Gets the version number.
+     */
+    public static
+    String getVersion() {
+        return "1.9";
+    }
 
     /**
      * Launches the associated application to open the file.
@@ -61,21 +68,17 @@ class Desktop {
         // WE DO NOTHING HERE TO PREVENT THAT.
 
 
-        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
+        if (requireUnixLauncher()) {
             launchNix(file.toString());
         }
-        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
-                                                                          .isSupported(java.awt.Desktop.Action.OPEN)) {
+        else if (awtSupported(java.awt.Desktop.Action.OPEN)) {
             // make sure this doesn't block the current UI
             SwingUtil.invokeLater(new Runnable() {
                 @Override
                 public
                 void run() {
                     try {
-                        java.awt.Desktop.getDesktop()
-                                        .open(file);
+                        java.awt.Desktop.getDesktop().open(file);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -83,7 +86,7 @@ class Desktop {
             });
         }
         else {
-            throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
+            throw new IOException("Current OS and desktop configuration does not support `open`");
         }
     }
 
@@ -130,21 +133,17 @@ class Desktop {
             throw new IOException("URI must not be null.");
         }
 
-        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
+        if (requireUnixLauncher()) {
             launchNix(uri.toString());
         }
-        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
-                                                                          .isSupported(java.awt.Desktop.Action.BROWSE)) {
+        else if (awtSupported(java.awt.Desktop.Action.BROWSE)) {
             // make sure this doesn't block the current UI
             SwingUtil.invokeLater(new Runnable() {
                 @Override
                 public
                 void run() {
                     try {
-                        java.awt.Desktop.getDesktop()
-                                        .browse(uri);
+                        java.awt.Desktop.getDesktop().browse(uri);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -152,7 +151,7 @@ class Desktop {
             });
         }
         else {
-            throw new IOException("Current OS and desktop configuration does not support browsing for a URL");
+            throw new IOException("Current OS and desktop configuration does not support `browseURL`");
         }
     }
 
@@ -195,21 +194,17 @@ class Desktop {
             throw new IOException("URI must not be null.");
         }
 
-        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
+        if (requireUnixLauncher()) {
             launchNix(uri.toString());
         }
-        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
-                                                                          .isSupported(java.awt.Desktop.Action.MAIL)) {
+        else if (awtSupported(java.awt.Desktop.Action.MAIL)) {
             // make sure this doesn't block the current UI
             SwingUtil.invokeLater(new Runnable() {
                 @Override
                 public
                 void run() {
                     try {
-                        java.awt.Desktop.getDesktop()
-                                        .mail(uri);
+                        java.awt.Desktop.getDesktop().mail(uri);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -217,7 +212,7 @@ class Desktop {
             });
         }
         else {
-            throw new IOException("Current OS and desktop configuration does not support launching an email client");
+            throw new IOException("Current OS and desktop configuration does not support `launchEmail`");
         }
     }
 
@@ -247,9 +242,7 @@ class Desktop {
                 new Executor().command("open", "-R", child.getCanonicalPath()).startAsync();
             }
         }
-        // Prevent GTK2/3 conflict caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
-        // Prefer JNA method over AWT, since there are fewer chances for JNA to fail (even though they call the same method)
-        else if ((OS.isUnix() || OS.isLinux()) && GtkCheck.isGtkLoaded) {
+        if (requireUnixLauncher()) {
             // it can actually be MORE that just "file://" (ie, "ftp://" is legit as well)
             if (!path.contains("://")) {
                 path = "file://" + path;
@@ -257,8 +250,7 @@ class Desktop {
 
             launchNix(path);
         }
-        else if (java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop()
-                                                                          .isSupported(java.awt.Desktop.Action.OPEN)) {
+        else if (awtSupported(java.awt.Desktop.Action.OPEN)) {
             final String finalPath = path;
 
             // make sure this doesn't block the current UI
@@ -267,8 +259,7 @@ class Desktop {
                 public
                 void run() {
                     try {
-                        java.awt.Desktop.getDesktop()
-                                        .open(new File(finalPath));
+                        java.awt.Desktop.getDesktop().open(new File(finalPath));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -276,8 +267,27 @@ class Desktop {
             });
         }
         else {
-            throw new IOException("Current OS and desktop configuration does not support opening a directory to browse");
+            throw new IOException("Current OS and desktop configuration does not support `browseDirectory`");
         }
+    }
+
+    /**
+     * Check if this action is required to use the unix launcher. This prevent GTK2/3 conflict
+     * caused by Desktop.getDesktop(), which is GTK2 only (via AWT)
+     *
+     * CLI calls and AWT call the same methods...
+     *  - AWT doesn't work with GTK3
+     *  - CLI has thread/memory overhead
+     */
+    private static boolean requireUnixLauncher() {
+        return ((OS.isUnix() || OS.isLinux()) && (GtkCheck.isGtkLoaded && GtkCheck.isGtk3));
+    }
+
+    /**
+     * Check if this action is supported by AWT
+     */
+    private static boolean awtSupported(java.awt.Desktop.Action action) {
+        return java.awt.Desktop.isDesktopSupported() && java.awt.Desktop.getDesktop().isSupported(action);
     }
 
     /**
