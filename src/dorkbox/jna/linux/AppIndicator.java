@@ -145,24 +145,26 @@ class AppIndicator {
 
 
         if (isGtk2) {
-            packageName = "libappindicator";
-
-            if (OSUtil.Linux.isFedora()) {
-                packageName = "libappindicator-gtk";
-            }
-            else if (OSUtil.Linux.isDebian()) {
-                // proper debian is slightly different
+            if (OSUtil.Linux.isDebian()) {
+                // debian is slightly different
                 packageName = "libappindicator1";
             }
+            else if (OSUtil.Linux.isFedora()) {
+                packageName = "libappindicator-gtk";
+            }
+            else {
+                packageName = "libappindicator";
+            }
         } else {
-            packageName = "libappindicator3";
-
-            if (OSUtil.Linux.isFedora()) {
+            if (OSUtil.Linux.isDebian()) {
+                // debian is slightly different
+                packageName = "libappindicator3-1";
+            }
+            else if (OSUtil.Linux.isFedora()) {
                 packageName = "libappindicator-gtk3";
             }
-            else if (OSUtil.Linux.isDebian()) {
-                // proper debian is slightly different
-                packageName = "libappindicator3-1";
+            else {
+                packageName = "libappindicator3";
             }
         }
 
