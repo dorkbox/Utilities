@@ -96,19 +96,30 @@ class GtkTheme {
                 Pointer offscreen = Gtk2.gtk_offscreen_window_new();
 
                 // get the default icon size for the "paste" icon.
-                Pointer item = Gtk2.gtk_image_menu_item_new_from_stock("gtk-paste", null);
+                Pointer item = null;
 
-                Gtk2.gtk_container_add(offscreen, item);
+                try {
+                    item = Gtk2.gtk_image_menu_item_new_from_stock("gtk-paste", null);
 
-                PointerByReference r = new PointerByReference();
-                GObject.g_object_get(item, "image", r.getPointer(), null);
+                    Gtk2.gtk_container_add(offscreen, item);
+                    Gtk2.gtk_widget_realize(item);
+                    Gtk2.gtk_widget_show_all(item);
 
-                Pointer imageWidget = r.getValue();
-                GtkRequisition gtkRequisition = new GtkRequisition();
-                Gtk2.gtk_widget_size_request(imageWidget, gtkRequisition.getPointer());
-                gtkRequisition.read();
+                    PointerByReference r = new PointerByReference();
+                    GObject.g_object_get(item, "image", r.getPointer(), null);
 
-                imageHeight.set(gtkRequisition.height);
+                    Pointer imageWidget = r.getValue();
+
+                    GtkRequisition gtkRequisition = new GtkRequisition();
+                    Gtk2.gtk_widget_size_request(imageWidget, gtkRequisition.getPointer());
+                    gtkRequisition.read();
+
+                    imageHeight.set(gtkRequisition.height);
+                } finally {
+                    if (item != null) {
+                        Gtk2.gtk_widget_destroy(item);
+                    }
+                }
             }
         });
 
