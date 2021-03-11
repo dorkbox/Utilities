@@ -16,8 +16,8 @@
 package dorkbox.jna.linux;
 
 import dorkbox.javaFx.JavaFx;
+import dorkbox.os.OS;
 import dorkbox.swt.Swt;
-import dorkbox.util.SwingUtil;
 
 /**
  * Accessor methods/logic for determining if GTK is already loaded by the Swing/JavaFX/SWT, or if GTK has been manually loaded via
@@ -89,7 +89,9 @@ class GtkCheck {
     /**
      * This method is agnostic w.r.t. how GTK is loaded, which can be manually loaded or loaded via JavaFX/SWT/Swing.
      *
-     * @return the version of GTK loaded. 0=no GTK loaded, 2=GTK2, 3=GTK3
+     * NOTE: this WILL NOT attempt to load swing, and will use reflection for JAVA <=8 to check GTK version info
+     *
+     * @return the version of GTK loaded. 0=no GTK loaded (or unknown), 2=GTK2, 3=GTK3
      */
     public static
     int getLoadedGtkVersion() {
@@ -118,9 +120,41 @@ class GtkCheck {
             }
         }
 
-        // now check if swing has loaded GTK from the Look and Feel
-        return SwingUtil.getLoadedGtkVersion();
+        /*
+         * Checks to see if GTK is loaded by Swing from the "Look and Feel", and if so - which version is loaded.
+         *
+         * NOTE: if the UI uses the 'getSystemLookAndFeelClassName' and is on Linux and it's the GtkLookAndFeel,
+         *   this will cause GTK2 to get loaded FIRST, which will cause conflicts if one tries to use GTK3 (and it's GTK2)
+         *
+         * The **ONLY** issue we have is if WE are GTK3 and SWING is GTK2...
+         */
+
+        // java 8 cannot load GTK3. But we can know if GTK was loaded yet or not
+        if (OS.javaVersion <= 8) {
+            try {
+                // Don't want to load the toolkit!!!
+                Class<?> toolkitClass = Class.forName("java.awt.Toolkit");
+                java.lang.reflect.Field kitField = toolkitClass.getDeclaredField("toolkit");
+                kitField.setAccessible(true);
+                Object toolkit = kitField.get(null);
+                if (toolkit != null) {
+                    Class<?> unixTkClazz = Class.forName("sun.awt.UNIXToolkit");
+                    if (unixTkClazz.isAssignableFrom(toolkit.getClass())) {
+                        java.lang.reflect.Field field = unixTkClazz.getDeclaredField("nativeGTKLoaded");
+                        field.setAccessible(true);
+                        Boolean o = (Boolean) field.get(toolkit);
+                        //noinspection UnnecessaryUnboxing
+                        if (o != null && o.booleanValue()) {
+                            // if gtk is loaded, it **must* be version 2, since java <=8 cannot load GTK3
+                            return 2;
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // don't know without forcing GTK to potentially load
+        return 0;
     }
-
-
 }
