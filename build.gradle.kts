@@ -29,12 +29,12 @@ gradle.startParameter.warningMode = WarningMode.All
 plugins {
     java
 
-    id("com.dorkbox.GradleUtils") version "1.12"
-    id("com.dorkbox.Licensing") version "2.5"
-    id("com.dorkbox.VersionUpdate") version "2.0"
-    id("com.dorkbox.GradlePublish") version "1.7"
+    id("com.dorkbox.GradleUtils") version "1.15"
+    id("com.dorkbox.Licensing") version "2.5.5"
+    id("com.dorkbox.VersionUpdate") version "2.1"
+    id("com.dorkbox.GradlePublish") version "1.10"
 
-    kotlin("jvm") version "1.4.0"
+    kotlin("jvm") version "1.4.31"
 }
 
 object Extras {
@@ -52,7 +52,7 @@ object Extras {
 
     val buildDate = Instant.now().toString()
 
-    const val coroutineVer = "1.3.9"
+    const val coroutineVer = "1.4.2"
 }
 
 ///////////////////////////////

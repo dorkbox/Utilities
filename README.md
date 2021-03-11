@@ -11,23 +11,23 @@ Please see the header of each file for the specific license that applies to it. 
 
 Maven Info
 ---------
-```
+````
 <dependencies>
     ...
     <dependency>
       <groupId>com.dorkbox</groupId>
       <artifactId>Utilities</artifactId>
-      <version>1.0</version>
+      <version>1.9</version>
     </dependency>
 </dependencies>
-```
+````
 
 Gradle Info
 ---------
 ````
 dependencies {
     ...
-    compile "com.dorkbox:Utilities:1.0"
+    compile "com.dorkbox:Utilities:1.9"
 }
 ````
 
