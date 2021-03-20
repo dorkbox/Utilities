@@ -657,13 +657,12 @@ class OSUtil {
                 // same thing with plasmashell!
                 XDG = "kde";
             }
-            else if (OSUtil.Linux.isIgel()) {
+            else if (DesktopEnv.isXfce()) {
                 // https://github.com/dorkbox/SystemTray/issues/100
-                // IGEL linux doesn't say what it is... but we know it's XFCE
+                // IGEL linux doesn't say what it is... but we know it's XFCE ... EVEN THOUGH it reports X11!!
                 XDG = "xfce";
             }
 
-            
             // Ubuntu Unity is a weird combination. It's "Gnome", but it's not "Gnome Shell".
             if ("unity".equalsIgnoreCase(XDG)) {
                 return Env.Unity;
@@ -931,6 +930,40 @@ class OSUtil {
             return null;
         }
 
+        private static volatile Boolean isXfce = null;
+        public static
+        boolean isXfce() {
+            if (!OS.isLinux() && !OS.isUnix()) {
+                return false;
+            }
+
+            if (isXfce != null) {
+                return isXfce;
+            }
+
+            try {
+                // note: some versions of linux can ONLY access "ps a"; FreeBSD and most linux is "ps x"
+                // we try "x" first
+
+                // ps x | grep xfce
+                boolean contains = Executor.Companion.run("ps", "x").contains("xfce");
+
+                if (!contains && OS.isLinux()) {
+                    // only try again if we are linux
+
+                    // ps a | grep gnome-shell
+                    contains = Executor.Companion.run("ps", "a").contains("xfce");
+                }
+
+                isXfce = contains;
+                return isXfce;
+            } catch (Throwable ignored) {
+            }
+
+            isXfce = false;
+            return isXfce;
+        }
+
 
         private static volatile Boolean isNautilus = null;
         /**
@@ -1019,11 +1052,13 @@ class OSUtil {
                 // xfconf-query -c xfce4-panel -l
                 List<String> commands = new ArrayList<>();
                 commands.add("xfconf-query");
-                commands.add("-c " + channel);
+                commands.add("-c");
+                commands.add(channel);
 
                 if (property != null) {
                     // get property for channel
-                    commands.add("-p " + property);
+                    commands.add("-p");
+                    commands.add(property);
                 } else {
                     // list all properties for the channel
                     commands.add("-l");
