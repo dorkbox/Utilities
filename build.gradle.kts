@@ -29,7 +29,7 @@ gradle.startParameter.warningMode = WarningMode.All
 plugins {
     java
 
-    id("com.dorkbox.GradleUtils") version "1.15"
+    id("com.dorkbox.GradleUtils") version "1.16"
     id("com.dorkbox.Licensing") version "2.5.5"
     id("com.dorkbox.VersionUpdate") version "2.1"
     id("com.dorkbox.GradlePublish") version "1.10"
@@ -231,8 +231,8 @@ tasks.jar.get().apply {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
 
-    implementation("com.dorkbox:Executor:2.2")
-    implementation("com.dorkbox:SwtJavaFx:1.0")
+    implementation("com.dorkbox:Executor:3.0")
+    implementation("com.dorkbox:SwtJavaFx:1.1")
     implementation("com.dorkbox:PropertyLoader:1.0")
 
     val jnaVersion = "5.6.0"
@@ -241,7 +241,7 @@ dependencies {
 
     implementation("org.slf4j:slf4j-api:1.7.30")
 
-    implementation("org.tukaani:xz:1.8")
+    implementation("org.tukaani:xz:1.9")
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
@@ -252,7 +252,7 @@ dependencies {
 
     compileOnly("io.netty:netty-buffer:4.1.51.Final")
 
-    val bcVersion = "1.66"
+    val bcVersion = "1.68"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
@@ -270,12 +270,12 @@ dependencies {
     testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    testImplementation("com.esotericsoftware:kryo:5.0.0-RC8")
+    testImplementation("com.esotericsoftware:kryo:5.0.4")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
     testImplementation("com.dorkbox:Serializers:1.0")
 
-    testImplementation("junit:junit:4.13")
+    testImplementation("junit:junit:4.13.2")
     testImplementation("ch.qos.logback:logback-classic:1.2.3")
 }
 

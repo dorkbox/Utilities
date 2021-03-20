@@ -493,7 +493,7 @@ class CryptoPGP {
         if (userIds.hasNext()) {
             if (generateUserIdSubPacket) {
                 PGPSignatureSubpacketGenerator subpacketGenerator = new PGPSignatureSubpacketGenerator();
-                subpacketGenerator.setSignerUserID(false, (String) userIds.next());
+                subpacketGenerator.addSignerUserID(false, (String) userIds.next());
                 signature.setHashedSubpackets(subpacketGenerator.generate());
             }
             else {
