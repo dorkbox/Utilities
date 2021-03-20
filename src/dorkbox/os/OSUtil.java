@@ -436,13 +436,22 @@ class OSUtil {
             return isKali;
         }
 
+        private static Boolean isPop = null;
+        public static
+        boolean isPop() {
+            if (isPop == null) {
+                isPop = getInfo("pop");
+            }
+            return isPop;
+        }
+
         private static Boolean isIgel = null;
         public static
         boolean isIgel() {
-            if (isKali == null) {
-                isKali = getInfo("IGEL");
+            if (isIgel == null) {
+                isIgel = getInfo("IGEL");
             }
-            return isKali;
+            return isIgel;
         }
 
         /**
