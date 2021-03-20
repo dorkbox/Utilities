@@ -38,7 +38,6 @@ import dorkbox.jna.linux.structs.GtkStyle;
 import dorkbox.jna.linux.structs.PangoRectangle;
 import dorkbox.os.OS;
 import dorkbox.os.OSUtil;
-import dorkbox.swt.Swt;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 
@@ -242,12 +241,13 @@ class GtkTheme {
 
 
         OSUtil.DesktopEnv.Env env = OSUtil.DesktopEnv.get();
+
         // sometimes the scaling-factor is set. If we have gsettings, great! otherwise try KDE
         try {
             // gsettings get org.gnome.desktop.interface scaling-factor
             String output = Executor.Companion.run("gsettings", "get", "org.gnome.desktop.interface", "scaling-factor");
 
-            if (!output.isEmpty()) {
+            if (!output.isEmpty() && !output.endsWith("not found")) {
                 // DEFAULT icon size is 16. HiDpi changes this scale, so we should use it as well.
                 // should be: uint32 0  or something
                 if (output.contains("uint32")) {
@@ -379,96 +379,92 @@ class GtkTheme {
                 }
             }
         }
-        else {
-            if (OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity(env)) {
-                // if we measure on ubuntu unity using a screen shot (using swing, so....) , the max size was 24, HOWEVER this goes from
-                // the top->bottom of the indicator bar -- and since it was swing, it uses a different rendering method and it (honestly)
-                // looks weird, because there is no padding for the icon. The official AppIndicator size is hardcoded...
-                // http://bazaar.launchpad.net/~indicator-applet-developers/libindicator/trunk.16.10/view/head:/libindicator/indicator-image-helper.c
 
-                return 22;
-            }
-            else {
-                // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
-                if (env == OSUtil.DesktopEnv.Env.XFCE) {
-                    String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
-                    String[] propertiesAsList = properties.split(OS.LINE_SEPARATOR);
-                    for (String prop : propertiesAsList) {
-                        if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
-                            // this is the property we are looking for (we just don't know which panel it's on)
+        if (OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity(env)) {
+            // if we measure on ubuntu unity using a screen shot (using swing, so....) , the max size was 24, HOWEVER this goes from
+            // the top->bottom of the indicator bar -- and since it was swing, it uses a different rendering method and it (honestly)
+            // looks weird, because there is no padding for the icon. The official AppIndicator size is hardcoded...
+            // http://bazaar.launchpad.net/~indicator-applet-developers/libindicator/trunk.16.10/view/head:/libindicator/indicator-image-helper.c
 
-                            String size = OSUtil.DesktopEnv.queryXfce("xfce4-panel", prop);
-                            try {
-                                return Integer.parseInt(size);
-                            } catch (Exception e) {
-                                LoggerFactory.getLogger(GtkTheme.class)
-                                             .error("Unable to get XFCE notification panel size for channel '{}', property '{}'",
-                                                    "xfce4-panel", prop, e);
-                            }
+            return 22;
+        }
+
+        if (env == OSUtil.DesktopEnv.Env.XFCE) {
+            // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
+            String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
+            String[] propertiesAsList = properties.split(OS.LINE_SEPARATOR);
+            for (String prop : propertiesAsList) {
+                if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
+                    // this is the property we are looking for (we just don't know which panel it's on)
+                    // note: trim() is required because it will strip new-line
+
+                    // xfconf-query -c xfce4-panel -p /plugins/plugin-14  (this will say 'systray' or 'tasklist' or whatever)
+                    // find the 'systray' plugin
+                    String panelString = prop.substring(0, prop.indexOf("/size-max"));
+                    String panelName = OSUtil.DesktopEnv.queryXfce("xfce4-panel", panelString).trim();
+                    if (panelName.equals("systray")) {
+                        String size = OSUtil.DesktopEnv.queryXfce("xfce4-panel", prop).trim();
+                        try {
+                            return Integer.parseInt(size);
+                        } catch (Exception e) {
+                            LoggerFactory.getLogger(GtkTheme.class)
+                                         .error("Unable to get XFCE notification panel size for channel '{}', property '{}'",
+                                                "xfce4-panel", prop, e);
                         }
                     }
+                }
+            }
+        }
 
-                    // default...
-                    return 22;
+        // try to use GTK to get the tray icon size
+        final AtomicInteger traySize = new AtomicInteger();
+        GtkEventDispatch.dispatchAndWait(new Runnable() {
+            @Override
+            public
+            void run() {
+                Pointer screen = Gtk2.gdk_screen_get_default();
+                Pointer settings = null;
+
+                if (screen != null) {
+                    settings = Gtk2.gtk_settings_get_for_screen(screen);
                 }
 
+                if (settings != null) {
+                    PointerByReference pointer = new PointerByReference();
 
-                // try to use GTK to get the tray icon size
-                final AtomicInteger traySize = new AtomicInteger();
+                    // https://wiki.archlinux.org/index.php/GTK%2B
+                    // To use smaller icons, use a line like this:
+                    //    gtk-icon-sizes = "panel-menu=16,16:panel=16,16:gtk-menu=16,16:gtk-large-toolbar=16,16:gtk-small-toolbar=16,16:gtk-button=16,16"
 
+                    // this gets icon sizes. On XFCE, ubuntu, it returns "panel-menu-bar=24,24"
+                    // NOTE: gtk-icon-sizes is deprecated and ignored since GTK+ 3.10.
 
-                if (Swt.isLoaded) {
-                } else {
-                    GtkEventDispatch.dispatchAndWait(new Runnable() {
-                        @Override
-                        public
-                        void run() {
-                            Pointer screen = Gtk2.gdk_screen_get_default();
-                            Pointer settings = null;
+                    // A list of icon sizes. The list is separated by colons, and item has the form: size-name = width , height
+                    GObject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
 
-                            if (screen != null) {
-                                settings = Gtk2.gtk_settings_get_for_screen(screen);
-                            }
+                    Pointer value = pointer.getValue();
+                    if (value != null) {
+                        String iconSizes = value.getString(0);
+                        String[] strings = new String[] {"panel-menu-bar=", "panel=", "gtk-large-toolbar=", "gtk-small-toolbar="};
+                        for (String var : strings) {
+                            int i = iconSizes.indexOf(var);
+                            if (i >= 0) {
+                                String size = iconSizes.substring(i + var.length(), iconSizes.indexOf(",", i));
 
-                            if (settings != null) {
-                                PointerByReference pointer = new PointerByReference();
-
-                                // https://wiki.archlinux.org/index.php/GTK%2B
-                                // To use smaller icons, use a line like this:
-                                //    gtk-icon-sizes = "panel-menu=16,16:panel=16,16:gtk-menu=16,16:gtk-large-toolbar=16,16:gtk-small-toolbar=16,16:gtk-button=16,16"
-
-                                // this gets icon sizes. On XFCE, ubuntu, it returns "panel-menu-bar=24,24"
-                                // NOTE: gtk-icon-sizes is deprecated and ignored since GTK+ 3.10.
-
-                                // A list of icon sizes. The list is separated by colons, and item has the form: size-name = width , height
-                                GObject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
-
-                                Pointer value = pointer.getValue();
-                                if (value != null) {
-                                    String iconSizes = value.getString(0);
-                                    String[] strings = new String[] {"panel-menu-bar=", "panel=", "gtk-large-toolbar=", "gtk-small-toolbar="};
-                                    for (String var : strings) {
-                                        int i = iconSizes.indexOf(var);
-                                        if (i >= 0) {
-                                            String size = iconSizes.substring(i + var.length(), iconSizes.indexOf(",", i));
-
-                                            if (MathUtil.isInteger(size)) {
-                                                traySize.set(Integer.parseInt(size));
-                                                return;
-                                            }
-                                        }
-                                    }
+                                if (MathUtil.isInteger(size)) {
+                                    traySize.set(Integer.parseInt(size));
+                                    return;
                                 }
                             }
                         }
-                    });
-                }
-
-                int i = traySize.get();
-                if (i != 0) {
-                    return i;
+                    }
                 }
             }
+        });
+
+        int i = traySize.get();
+        if (i != 0) {
+            return i;
         }
 
         // sane default
