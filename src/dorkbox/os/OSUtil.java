@@ -272,8 +272,9 @@ class OSUtil {
          */
         public static
         boolean getInfo(String id) {
+            // also matches on 'DISTRIB_ID' and 'VERSION_ID'
             // ID=linuxmint/fedora/arch/ubuntu/etc
-            return getInfo().contains("ID=" + id +"\n");
+            return getInfo().contains("ID=" + id + "\n");
         }
 
         private static volatile Boolean isArch = null;
@@ -431,6 +432,15 @@ class OSUtil {
         boolean isKali() {
             if (isKali == null) {
                 isKali = getInfo("kali");
+            }
+            return isKali;
+        }
+
+        private static Boolean isIgel = null;
+        public static
+        boolean isIgel() {
+            if (isKali == null) {
+                isKali = getInfo("IGEL");
             }
             return isKali;
         }
