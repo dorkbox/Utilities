@@ -657,7 +657,13 @@ class OSUtil {
                 // same thing with plasmashell!
                 XDG = "kde";
             }
+            else if (OSUtil.Linux.isIgel()) {
+                // https://github.com/dorkbox/SystemTray/issues/100
+                // IGEL linux doesn't say what it is... but we know it's XFCE
+                XDG = "xfce";
+            }
 
+            
             // Ubuntu Unity is a weird combination. It's "Gnome", but it's not "Gnome Shell".
             if ("unity".equalsIgnoreCase(XDG)) {
                 return Env.Unity;
