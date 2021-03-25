@@ -923,8 +923,7 @@ class OSUtil {
                         return getPlasmaVersionFull;
                     }
                 }
-            } catch (Throwable e) {
-                e.printStackTrace();
+            } catch (Throwable ignored) {
             }
 
             return null;
@@ -995,8 +994,7 @@ class OSUtil {
                         return true;
                     }
                 }
-            } catch (Throwable e) {
-                e.printStackTrace();
+            } catch (Throwable ignored) {
             }
 
             isNautilus = false;
@@ -1024,8 +1022,7 @@ class OSUtil {
                             return true;
                         }
                     }
-                } catch (Throwable e) {
-                    e.printStackTrace();
+                } catch (Throwable ignored) {
                 }
             }
 
@@ -1065,8 +1062,7 @@ class OSUtil {
                 }
 
                 return Executor.Companion.run(commands);
-            } catch (Throwable e) {
-                e.printStackTrace();
+            } catch (Throwable ignored) {
             }
 
             return "";
