@@ -106,7 +106,7 @@ class GtkTheme {
                     Gtk2.gtk_container_add(offscreen, item);
                     Gtk2.gtk_widget_realize(offscreen);
                     Gtk2.gtk_widget_realize(item);
-                    Gtk2.gtk_widget_show_all(offscreen);
+                    Gtk2.gtk_widget_show_all(item);
 
                     PointerByReference r = new PointerByReference();
                     GObject.g_object_get(item, "image", r.getPointer(), null);
