@@ -121,6 +121,7 @@ class GtkTheme {
                 } finally {
                     if (item != null) {
                         Gtk2.gtk_widget_destroy(item);
+                        Gtk2.gtk_widget_destroy(offscreen);
                     }
                 }
             }
