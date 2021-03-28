@@ -100,9 +100,13 @@ class GtkTheme {
                 try {
                     item = Gtk2.gtk_image_menu_item_new_from_stock("gtk-paste", null);
 
+                    // make sure the image is shown (sometimes it's not always shown, then height is 0)
+                    Gtk2.gtk_image_menu_item_set_always_show_image(item, true);
+
                     Gtk2.gtk_container_add(offscreen, item);
+                    Gtk2.gtk_widget_realize(offscreen);
                     Gtk2.gtk_widget_realize(item);
-                    Gtk2.gtk_widget_show_all(item);
+                    Gtk2.gtk_widget_show_all(offscreen);
 
                     PointerByReference r = new PointerByReference();
                     GObject.g_object_get(item, "image", r.getPointer(), null);
