@@ -38,15 +38,24 @@ import dorkbox.jna.linux.structs.GtkStyle;
 import dorkbox.jna.linux.structs.PangoRectangle;
 import dorkbox.os.OS;
 import dorkbox.os.OSUtil;
+import dorkbox.propertyLoader.Property;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 
 /**
  * Class to contain all of the various methods needed to get information set by a GTK theme.
  */
-@SuppressWarnings({"deprecation", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess"})
 public
 class GtkTheme {
+    @Property
+    /** Fallback for an unknown tray image size. */
+    public static int TRAY_IMAGE_SIZE_FALLBACK = 24;
+
+    @Property
+    /** Fallback for an unknown tray menu image size. */
+    public static int TRAY_MENU_IMAGE_SIZE_FALLBACK = 16;
+
     public static
     Rectangle getPixelTextHeight(String text) {
         // the following method requires an offscreen widget to get the size of text (for the checkmark size) via pango
@@ -86,43 +95,39 @@ class GtkTheme {
      */
     public static
     int getMenuEntryImageSize() {
-        final AtomicReference<Integer> imageHeight = new AtomicReference<Integer>();
+        final AtomicReference<Integer> imageHeight = new AtomicReference<>();
 
-        GtkEventDispatch.dispatchAndWait(new Runnable() {
-            @Override
-            public
-            void run() {
-                Pointer offscreen = Gtk2.gtk_offscreen_window_new();
+        GtkEventDispatch.dispatchAndWait(()->{
+            Pointer offscreen = Gtk2.gtk_offscreen_window_new();
 
-                // get the default icon size for the "paste" icon.
-                Pointer item = null;
+            // get the default icon size for the "paste" icon.
+            Pointer item = null;
 
-                try {
-                    item = Gtk2.gtk_image_menu_item_new_from_stock("gtk-paste", null);
+            try {
+                item = Gtk2.gtk_image_menu_item_new_from_stock("gtk-paste", null);
 
-                    // make sure the image is shown (sometimes it's not always shown, then height is 0)
-                    Gtk2.gtk_image_menu_item_set_always_show_image(item, true);
+                // make sure the image is shown (sometimes it's not always shown, then height is 0)
+                Gtk2.gtk_image_menu_item_set_always_show_image(item, true);
 
-                    Gtk2.gtk_container_add(offscreen, item);
-                    Gtk2.gtk_widget_realize(offscreen);
-                    Gtk2.gtk_widget_realize(item);
-                    Gtk2.gtk_widget_show_all(item);
+                Gtk2.gtk_container_add(offscreen, item);
+                Gtk2.gtk_widget_realize(offscreen);
+                Gtk2.gtk_widget_realize(item);
+                Gtk2.gtk_widget_show_all(item);
 
-                    PointerByReference r = new PointerByReference();
-                    GObject.g_object_get(item, "image", r.getPointer(), null);
+                PointerByReference r = new PointerByReference();
+                GObject.g_object_get(item, "image", r.getPointer(), null);
 
-                    Pointer imageWidget = r.getValue();
+                Pointer imageWidget = r.getValue();
 
-                    GtkRequisition gtkRequisition = new GtkRequisition();
-                    Gtk2.gtk_widget_size_request(imageWidget, gtkRequisition.getPointer());
-                    gtkRequisition.read();
+                GtkRequisition gtkRequisition = new GtkRequisition();
+                Gtk2.gtk_widget_size_request(imageWidget, gtkRequisition.getPointer());
+                gtkRequisition.read();
 
-                    imageHeight.set(gtkRequisition.height);
-                } finally {
-                    if (item != null) {
-                        Gtk2.gtk_widget_destroy(item);
-                        Gtk2.gtk_widget_destroy(offscreen);
-                    }
+                imageHeight.set(gtkRequisition.height);
+            } finally {
+                if (item != null) {
+                    Gtk2.gtk_widget_destroy(item);
+                    Gtk2.gtk_widget_destroy(offscreen);
                 }
             }
         });
@@ -132,10 +137,9 @@ class GtkTheme {
         if (height > 0) {
             return height;
         }
-        else {
-            LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray menu image size. Using default.");
-            return 16;
-        }
+
+        LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray menu image size. Using fallback: " + TRAY_MENU_IMAGE_SIZE_FALLBACK);
+        return TRAY_MENU_IMAGE_SIZE_FALLBACK;
     }
 
     /**
@@ -151,28 +155,24 @@ class GtkTheme {
         // 96 DPI is the default
         final double defaultDPI = 96.0;
 
-        final AtomicReference<Double> screenScale = new AtomicReference<Double>();
+        final AtomicReference<Double> screenScale = new AtomicReference<>();
         final AtomicInteger screenDPI = new AtomicInteger();
         screenScale.set(0D);
         screenDPI.set(0);
 
-        GtkEventDispatch.dispatchAndWait(new Runnable() {
-            @Override
-            public
-            void run() {
-                // screen DPI
-                Pointer screen = Gtk2.gdk_screen_get_default();
-                if (screen != null) {
-                    // this call makes NO SENSE, but reading the documentation shows it is the CORRECT call.
-                    screenDPI.set((int) Gtk2.gdk_screen_get_resolution(screen));
-                }
+        GtkEventDispatch.dispatchAndWait(()->{
+            // screen DPI
+            Pointer screen = Gtk2.gdk_screen_get_default();
+            if (screen != null) {
+                // this call makes NO SENSE, but reading the documentation shows it is the CORRECT call.
+                screenDPI.set((int) Gtk2.gdk_screen_get_resolution(screen));
+            }
 
-                if (isGtk3) {
-                    Pointer window = Gtk2.gdk_get_default_root_window();
-                    if (window != null) {
-                        double scale = Gtk3.gdk_window_get_scale_factor(window);
-                        screenScale.set(scale);
-                    }
+            if (isGtk3) {
+                Pointer window = Gtk2.gdk_get_default_root_window();
+                if (window != null) {
+                    double scale = Gtk3.gdk_window_get_scale_factor(window);
+                    screenScale.set(scale);
                 }
             }
         });
@@ -423,43 +423,39 @@ class GtkTheme {
 
         // try to use GTK to get the tray icon size
         final AtomicInteger traySize = new AtomicInteger();
-        GtkEventDispatch.dispatchAndWait(new Runnable() {
-            @Override
-            public
-            void run() {
-                Pointer screen = Gtk2.gdk_screen_get_default();
-                Pointer settings = null;
+        GtkEventDispatch.dispatchAndWait(()->{
+            Pointer screen = Gtk2.gdk_screen_get_default();
+            Pointer settings = null;
 
-                if (screen != null) {
-                    settings = Gtk2.gtk_settings_get_for_screen(screen);
-                }
+            if (screen != null) {
+                settings = Gtk2.gtk_settings_get_for_screen(screen);
+            }
 
-                if (settings != null) {
-                    PointerByReference pointer = new PointerByReference();
+            if (settings != null) {
+                PointerByReference pointer = new PointerByReference();
 
-                    // https://wiki.archlinux.org/index.php/GTK%2B
-                    // To use smaller icons, use a line like this:
-                    //    gtk-icon-sizes = "panel-menu=16,16:panel=16,16:gtk-menu=16,16:gtk-large-toolbar=16,16:gtk-small-toolbar=16,16:gtk-button=16,16"
+                // https://wiki.archlinux.org/index.php/GTK%2B
+                // To use smaller icons, use a line like this:
+                //    gtk-icon-sizes = "panel-menu=16,16:panel=16,16:gtk-menu=16,16:gtk-large-toolbar=16,16:gtk-small-toolbar=16,16:gtk-button=16,16"
 
-                    // this gets icon sizes. On XFCE, ubuntu, it returns "panel-menu-bar=24,24"
-                    // NOTE: gtk-icon-sizes is deprecated and ignored since GTK+ 3.10.
+                // this gets icon sizes. On XFCE, ubuntu, it returns "panel-menu-bar=24,24"
+                // NOTE: gtk-icon-sizes is deprecated and ignored since GTK+ 3.10.
 
-                    // A list of icon sizes. The list is separated by colons, and item has the form: size-name = width , height
-                    GObject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
+                // A list of icon sizes. The list is separated by colons, and item has the form: size-name = width , height
+                GObject.g_object_get(settings, "gtk-icon-sizes", pointer.getPointer(), null);
+                Pointer value = pointer.getValue();
+                if (value != null) {
+                    // this might be null for later versions of GTK!
+                    String iconSizes = value.getString(0);
+                    String[] strings = new String[] {"panel-menu-bar=", "panel=", "gtk-large-toolbar=", "gtk-small-toolbar="};
+                    for (String var : strings) {
+                        int i = iconSizes.indexOf(var);
+                        if (i >= 0) {
+                            String size = iconSizes.substring(i + var.length(), iconSizes.indexOf(",", i));
 
-                    Pointer value = pointer.getValue();
-                    if (value != null) {
-                        String iconSizes = value.getString(0);
-                        String[] strings = new String[] {"panel-menu-bar=", "panel=", "gtk-large-toolbar=", "gtk-small-toolbar="};
-                        for (String var : strings) {
-                            int i = iconSizes.indexOf(var);
-                            if (i >= 0) {
-                                String size = iconSizes.substring(i + var.length(), iconSizes.indexOf(",", i));
-
-                                if (MathUtil.isInteger(size)) {
-                                    traySize.set(Integer.parseInt(size));
-                                    return;
-                                }
+                            if (MathUtil.isInteger(size)) {
+                                traySize.set(Integer.parseInt(size));
+                                return;
                             }
                         }
                     }
@@ -473,9 +469,8 @@ class GtkTheme {
         }
 
         // sane default
-        LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray image size. Using default.");
-
-        return 24;
+        LoggerFactory.getLogger(GtkTheme.class).warn("Unable to get tray image size. Using fallback: " + TRAY_IMAGE_SIZE_FALLBACK);
+        return TRAY_IMAGE_SIZE_FALLBACK;
     }
 
     /**
@@ -483,41 +478,36 @@ class GtkTheme {
      */
     public static
     Color getTextColor() {
-        final AtomicReference<Color> color = new AtomicReference<Color>(null);
-        GtkEventDispatch.dispatchAndWait(new Runnable() {
-            @SuppressWarnings("UnusedAssignment")
-            @Override
-            public
-            void run() {
-                Color c = null;
+        final AtomicReference<Color> color = new AtomicReference<>(null);
+        GtkEventDispatch.dispatchAndWait(()->{
+            Color c;
 
-                // the following method requires an offscreen widget to get the style information from.
-                // don't forget to destroy everything!
-                Pointer menu = null;
-                Pointer item = null;
+            // the following method requires an offscreen widget to get the style information from.
+            // don't forget to destroy everything!
+            Pointer menu = null;
+            Pointer item = null;
 
-                try {
-                    menu = Gtk2.gtk_menu_new();
-                    item = Gtk2.gtk_image_menu_item_new_with_mnemonic("a");
+            try {
+                menu = Gtk2.gtk_menu_new();
+                item = Gtk2.gtk_image_menu_item_new_with_mnemonic("a");
 
-                    Gtk2.gtk_container_add(menu, item);
+                Gtk2.gtk_container_add(menu, item);
 
-                    Gtk2.gtk_widget_realize(menu);
-                    Gtk2.gtk_widget_realize(item);
-                    Gtk2.gtk_widget_show_all(menu);
+                Gtk2.gtk_widget_realize(menu);
+                Gtk2.gtk_widget_realize(item);
+                Gtk2.gtk_widget_show_all(menu);
 
-                    GtkStyle style = Gtk2.gtk_rc_get_style(item);
-                    style.read();
+                GtkStyle style = Gtk2.gtk_rc_get_style(item);
+                style.read();
 
-                    // this is the same color chromium uses (fg)
-                    // https://chromium.googlesource.com/chromium/src/+/b3ca230ddd7d1238ee96ed26ea23e369f10dd655/chrome/browser/ui/libgtk2ui/gtk2_ui.cc#873
-                    c = style.fg[GtkState.NORMAL].getColor();
+                // this is the same color chromium uses (fg)
+                // https://chromium.googlesource.com/chromium/src/+/b3ca230ddd7d1238ee96ed26ea23e369f10dd655/chrome/browser/ui/libgtk2ui/gtk2_ui.cc#873
+                c = style.fg[GtkState.NORMAL].getColor();
 
-                    color.set(c);
-                } finally {
-                    Gtk2.gtk_widget_destroy(item);
-                    Gtk2.gtk_widget_destroy(menu);
-                }
+                color.set(c);
+            } finally {
+                Gtk2.gtk_widget_destroy(item);
+                Gtk2.gtk_widget_destroy(menu);
             }
         });
 
