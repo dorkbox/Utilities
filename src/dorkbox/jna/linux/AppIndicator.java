@@ -17,15 +17,12 @@ package dorkbox.jna.linux;
 
 import org.slf4j.LoggerFactory;
 
-import com.sun.jna.NativeLibrary;
 import com.sun.jna.Pointer;
 
 import dorkbox.jna.JnaHelper;
 import dorkbox.jna.linux.structs.AppIndicatorInstanceStruct;
 import dorkbox.os.OS;
 import dorkbox.os.OSUtil;
-import dorkbox.os.OSUtil.Linux.PackageManager;
-import dorkbox.os.OSUtil.Linux.PackageManager.Type;
 
 /**
  * bindings for libappindicator
@@ -76,18 +73,18 @@ class AppIndicator {
         // NOTE:  appindicator1 -> GTk2, appindicator3 -> GTK3.
         // Note: appindicator-gtk3 is Fedora...
 
-
         if (Gtk.isGtk2) {
             for (String libraryName : GTK2) {
                 if (!_isLoaded) {
                     try {
-                        final NativeLibrary library = JnaHelper.register(libraryName, AppIndicator.class);
-                        if (library != null) {
-                            _isLoaded = true;
+                        JnaHelper.register(libraryName, AppIndicator.class);
+                        _isLoaded = true;
+                        if (GtkEventDispatch.DEBUG) {
+                            LoggerFactory.getLogger(AppIndicator.class).debug("Loaded GTK2 library name '{}'.", libraryName);
                         }
                     } catch (Throwable e) {
                         if (GtkEventDispatch.DEBUG) {
-                            LoggerFactory.getLogger(AppIndicator.class).debug("Error loading GTK2 library name '{}'. {}", libraryName, e.getMessage());
+                            LoggerFactory.getLogger(AppIndicator.class).debug("Error loading GTK2 library name '{}'.", libraryName, e);
                         }
                     }
                 }
@@ -98,13 +95,14 @@ class AppIndicator {
             for (String libraryName : GTK3) {
                 if (!_isLoaded) {
                     try {
-                        final NativeLibrary library = JnaHelper.register(libraryName, AppIndicator.class);
-                        if (library != null) {
-                            _isLoaded = true;
+                        JnaHelper.register(libraryName, AppIndicator.class);
+                        _isLoaded = true;
+                        if (GtkEventDispatch.DEBUG) {
+                            LoggerFactory.getLogger(AppIndicator.class).debug("Loaded GTK3 library name '{}'.", libraryName);
                         }
                     } catch (Throwable e) {
                         if (GtkEventDispatch.DEBUG) {
-                            LoggerFactory.getLogger(AppIndicator.class).debug("Error loading GTK3 library name '{}'. {}", libraryName, e.getMessage());
+                            LoggerFactory.getLogger(AppIndicator.class).debug("Error loading GTK3 library name '{}'.", libraryName, e);
                         }
                     }
                 }
@@ -112,12 +110,7 @@ class AppIndicator {
         }
 
         // We can fall back to GtkStatusIndicator or Swing if this cannot load
-        if (shouldLoadAppIndicator && _isLoaded) {
-            isLoaded = true;
-        }
-        else {
-            isLoaded = false;
-        }
+        isLoaded = shouldLoadAppIndicator && _isLoaded;
     }
 
     // Note: AppIndicators DO NOT support tooltips, as per mark shuttleworth. Rather stupid IMHO.
@@ -126,51 +119,53 @@ class AppIndicator {
 
     public static
     String getInstallString(boolean isGtk2) {
-        Type packageManager = PackageManager.get();
-
         // ARCH
         // requires the install of libappindicator which is GTK2 (as of 25DEC2016)
         // requires the install of libappindicator3 which is GTK3 (as of 25DEC2016)
 
         // FEDORA
-        // appindicator-gtk
-        // appindicator-gtk3
+        // libappindicator-gtk
+        // libappindicator-gtk3
+
+        // ARCH
+        // libappindicator-gtk2
+        // libappindicator-gtk3
 
         // Debian based
         // libappindicator
         // libappindicator3 (or 3-1)
 
 
-        String packageName;
-
-
         if (isGtk2) {
             if (OSUtil.Linux.isDebian()) {
                 // debian is slightly different
-                packageName = "libappindicator1";
+                return "libappindicator1";
             }
             else if (OSUtil.Linux.isFedora()) {
-                packageName = "libappindicator-gtk";
+                return "libappindicator-gtk";
+            }
+            else if (OSUtil.Linux.isArch()) {
+                return "libappindicator-gtk2";
             }
             else {
-                packageName = "libappindicator";
+                return "libappindicator";
             }
         } else {
             if (OSUtil.Linux.isDebian()) {
                 // debian is slightly different
-                packageName = "libappindicator3-1";
+                return "libappindicator3-1";
             }
             else if (OSUtil.Linux.isFedora()) {
-                packageName = "libappindicator-gtk3";
+                return "libappindicator-gtk3";
+            }
+            else if (OSUtil.Linux.isArch()) {
+                return "libappindicator-gtk3";
             }
             else {
-                packageName = "libappindicator3";
+                return "libappindicator3";
             }
         }
-
-        return "Please install " + packageName + ", for example: '" + packageManager.installString() + " " + packageName + "'.";
     }
-
 
     public static final int CATEGORY_APPLICATION_STATUS = 0;
 //    public static final int CATEGORY_COMMUNICATIONS = 1;
