@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 dorkbox, llc
+ * Copyright 2021 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
-    java
-
     id("com.dorkbox.GradleUtils") version "1.16"
     id("com.dorkbox.Licensing") version "2.5.5"
     id("com.dorkbox.VersionUpdate") version "2.1"
@@ -247,7 +245,7 @@ dependencies {
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-//    compileOnly("com.esotericsoftware:kryo:5.0.0-RC8")
+//    compileOnly("com.esotericsoftware:kryo:5.1.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
     compileOnly("io.netty:netty-buffer:4.1.51.Final")
@@ -270,7 +268,7 @@ dependencies {
     testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    testImplementation("com.esotericsoftware:kryo:5.0.4")
+    testImplementation("com.esotericsoftware:kryo:5.1.0")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
     testImplementation("com.dorkbox:Serializers:1.0")
