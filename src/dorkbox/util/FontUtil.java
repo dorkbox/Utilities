@@ -30,7 +30,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 
-import dorkbox.propertyLoader.Property;
+import dorkbox.os.OS;
 
 /**
  * Java Font utilities
@@ -39,8 +39,7 @@ import dorkbox.propertyLoader.Property;
 public
 class FontUtil {
     /** Default location where all the fonts are stored */
-    @Property
-    public static String FONTS_LOCATION = "resources/fonts";
+    public static volatile String FONTS_LOCATION = OS.getProperty(FontUtil.class.getCanonicalName() + ".FONTS_LOCATION", "resources/fonts");
 
 
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */

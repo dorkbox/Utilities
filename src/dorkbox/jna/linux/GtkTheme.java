@@ -38,7 +38,6 @@ import dorkbox.jna.linux.structs.GtkStyle;
 import dorkbox.jna.linux.structs.PangoRectangle;
 import dorkbox.os.OS;
 import dorkbox.os.OSUtil;
-import dorkbox.propertyLoader.Property;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 
@@ -48,13 +47,11 @@ import dorkbox.util.MathUtil;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public
 class GtkTheme {
-    @Property
     /** Fallback for an unknown tray image size. */
-    public static int TRAY_IMAGE_SIZE_FALLBACK = 24;
+    public static volatile int TRAY_IMAGE_SIZE_FALLBACK = OS.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_IMAGE_SIZE_FALLBACK", 24);
 
-    @Property
     /** Fallback for an unknown tray menu image size. */
-    public static int TRAY_MENU_IMAGE_SIZE_FALLBACK = 16;
+    public static volatile int TRAY_MENU_IMAGE_SIZE_FALLBACK = OS.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_MENU_IMAGE_SIZE_FALLBACK", 16);
 
     public static
     Rectangle getPixelTextHeight(String text) {
