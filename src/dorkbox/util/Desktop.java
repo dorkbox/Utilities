@@ -43,7 +43,12 @@ class Desktop {
      */
     public static
     String getVersion() {
-        return "1.9";
+        return "1.10";
+    }
+
+    static {
+        // Add this project to the updates system, which verifies this class + UUID + version information
+        dorkbox.updates.Updates.INSTANCE.add(Desktop.class, "b4c69a68f6b747228592db0800809e30", getVersion());
     }
 
     /**
