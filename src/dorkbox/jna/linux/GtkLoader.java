@@ -32,6 +32,14 @@ import dorkbox.swt.Swt;
 @SuppressWarnings({"Duplicates", "SameParameterValue", "DeprecatedIsStillUsed", "WeakerAccess"})
 public
 class GtkLoader {
+    /**
+     * Gets the version number.
+     */
+    public static
+    String getVersion() {
+        return "1.10";
+    }
+
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 | grep gtk
     // objdump -T /usr/local/lib/libgtk-3.so.0 | grep gtk
@@ -65,6 +73,10 @@ class GtkLoader {
      * SWT uses GTK2 or GTK3. We do not work with the GTK3 version of SWT.
      */
     static {
+        // Add this project to the updates system, which verifies this class + UUID + version information
+        dorkbox.updates.Updates.INSTANCE.add(GtkLoader.class, "d712ab5998d742a1bc96ca2f7be197ce", getVersion());
+
+
         boolean forceGtk2 = GtkEventDispatch.FORCE_GTK2;
         // prefer GTK3 and force GTK2 are mutually exclusive
         boolean preferGtk3 = !forceGtk2 && GtkEventDispatch.PREFER_GTK3;
