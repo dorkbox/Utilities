@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2021 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,30 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.exceptions;
 
+package dorkbox.jna.windows.structs;
+
+/**
+ * Required for intellij to not complain regarding `module-info` for a multi-release jar.
+ * This file is completely ignored by the gradle build process
+ */
 public
-class SecurityException extends Exception {
-
-    private static final long serialVersionUID = -1031633076501715224L;
-
-    public
-    SecurityException() {
-        super();
-    }
-
-    public
-    SecurityException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public
-    SecurityException(String message) {
-        super(message);
-    }
-
-    public
-    SecurityException(Throwable cause) {
-        super(cause);
-    }
-}
+class EmptyClass {}
