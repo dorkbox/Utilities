@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.entropy;
+package dorkbox.util.exceptions
 
-public
-interface EntropyProvider {
-
-    byte[] get(String messageForUser) throws Exception;
+class InitializationException : Exception {
+    constructor() : super()
+    constructor(message: String, cause: Throwable) : super(message, cause)
+    constructor(message: String) : super(message)
+    constructor(cause: Throwable) : super(cause)
 }

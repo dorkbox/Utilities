@@ -13,30 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.exceptions;
+package dorkbox.util.exceptions
 
-public
-class InitializationException extends Exception {
-
-    private static final long serialVersionUID = 3331031046821855954L;
-
-    public
-    InitializationException() {
-        super();
-    }
-
-    public
-    InitializationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public
-    InitializationException(String message) {
-        super(message);
-    }
-
-    public
-    InitializationException(Throwable cause) {
-        super(cause);
-    }
+class SecurityException : Exception {
+    constructor() : super()
+    constructor(message: String, cause: Throwable) : super(message, cause)
+    constructor(message: String) : super(message)
+    constructor(cause: Throwable) : super(cause)
 }

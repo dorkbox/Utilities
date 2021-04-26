@@ -13,24 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.entropy;
+package dorkbox.util.entropy
 
-import java.security.SecureRandom;
+interface EntropyProvider {
 
-public
-class SimpleEntropy implements EntropyProvider {
-
-    public static
-    Object create() {
-        return new SimpleEntropy();
-    }
-
-    @Override
-    public
-    byte[] get(String ignored) throws Exception {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] rand = new byte[256];
-        secureRandom.nextBytes(rand);
-        return rand;
-    }
+    @Throws(Exception::class)
+    fun get(messageForUser: String): ByteArray
 }
