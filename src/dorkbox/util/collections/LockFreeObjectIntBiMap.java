@@ -276,7 +276,9 @@ class LockFreeObjectIntBiMap<V> {
     public synchronized
     int remove(final V key) {
         int value = forwardHashMap.remove(key, defaultReturnValue);
-        reverseHashMap.remove(value);
+        if (value != defaultReturnValue) {
+            reverseHashMap.remove(value);
+        }
         return value;
     }
 
