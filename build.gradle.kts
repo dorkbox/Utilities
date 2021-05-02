@@ -27,18 +27,18 @@ gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
     id("com.dorkbox.GradleUtils") version "2.6"
-    id("com.dorkbox.Licensing") version "2.6"
+    id("com.dorkbox.Licensing") version "2.7"
     id("com.dorkbox.VersionUpdate") version "2.3"
     id("com.dorkbox.GradlePublish") version "1.11"
 
-    kotlin("jvm") version "1.4.32"
+    kotlin("jvm") version "1.5.0"
 }
 
 object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.10"
+    const val version = "1.11"
 
     // set as project.ext
     const val name = "Utilities"
@@ -49,7 +49,7 @@ object Extras {
 
     val buildDate = Instant.now().toString()
 
-    const val coroutineVer = "1.4.2"
+    const val coroutineVer = "1.4.3"
 }
 
 ///////////////////////////////
@@ -58,7 +58,7 @@ object Extras {
 GradleUtils.load("$projectDir/../../gradle.properties", Extras)
 GradleUtils.defaults()
 GradleUtils.compileConfiguration(JavaVersion.VERSION_1_8)
-//GradleUtils.jpms(JavaVersion.VERSION_1_9)
+GradleUtils.jpms(JavaVersion.VERSION_1_9)
 
 licensing {
     license(License.APACHE_2) {
@@ -67,103 +67,103 @@ licensing {
         url(Extras.url)
 
         extra("MersenneTwisterFast", License.BSD_3) {
-            it.url(Extras.url)
-            it.copyright(2003)
-            it.author("Sean Luke")
-            it.author("Michael Lecuyer (portions Copyright 1993")
+            url(Extras.url)
+            copyright(2003)
+            author("Sean Luke")
+            author("Michael Lecuyer (portions Copyright 1993")
         }
         extra("FileUtil (code from FilenameUtils.java for normalize + dependencies)", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("http://commons.apache.org/proper/commons-io/")
-            it.copyright(2013)
-            it.author("The Apache Software Foundation")
-            it.author("Kevin A. Burton")
-            it.author("Scott Sanders")
-            it.author("Daniel Rall")
-            it.author("Christoph.Reck")
-            it.author("Peter Donald")
-            it.author("Jeff Turner")
-            it.author("Matthew Hawthorne")
-            it.author("Martin Cooper")
-            it.author("Jeremias Maerki")
-            it.author("Stephen Colebourne")
+            url(Extras.url)
+            url("http://commons.apache.org/proper/commons-io/")
+            copyright(2013)
+            author("The Apache Software Foundation")
+            author("Kevin A. Burton")
+            author("Scott Sanders")
+            author("Daniel Rall")
+            author("Christoph.Reck")
+            author("Peter Donald")
+            author("Jeff Turner")
+            author("Matthew Hawthorne")
+            author("Martin Cooper")
+            author("Jeremias Maerki")
+            author("Stephen Colebourne")
         }
         extra("FastThreadLocal", License.BSD_3) {
-            it.url(Extras.url)
-            it.url("https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java")
-            it.url("https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java")
-            it.copyright(2014)
-            it.author("Lightweight Java Game Library Project")
-            it.author("Riven")
+            url(Extras.url)
+            url("https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java")
+            url("https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java")
+            copyright(2014)
+            author("Lightweight Java Game Library Project")
+            author("Riven")
         }
         extra("Base64Fast", License.BSD_3) {
-            it.url(Extras.url)
-            it.url("http://migbase64.sourceforge.net/")
-            it.copyright(2004)
-            it.author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
+            url(Extras.url)
+            url("http://migbase64.sourceforge.net/")
+            copyright(2004)
+            author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
         }
         extra("BCrypt", License.BSD_2) {
-            it.url(Extras.url)
-            it.url("http://www.mindrot.org/projects/jBCrypt")
-            it.copyright(2006)
-            it.author("Damien Miller (djm@mindrot.org)")
-            it.note("GWT modified version")
+            url(Extras.url)
+            url("http://www.mindrot.org/projects/jBCrypt")
+            copyright(2006)
+            author("Damien Miller (djm@mindrot.org)")
+            note("GWT modified version")
         }
         extra("Bias, BinarySearch", License.MIT) {
-            it.url(Extras.url)
-            it.url("https://github.com/timboudreau/util")
-            it.copyright(2013)
-            it.author("Tim Boudreau")
+            url(Extras.url)
+            url("https://github.com/timboudreau/util")
+            copyright(2013)
+            author("Tim Boudreau")
         }
         extra("ConcurrentEntry", License.APACHE_2) {
-            it.url(Extras.url)
-            it.copyright(2016)
-            it.author("bennidi")
-            it.author("dorkbox")
+            url(Extras.url)
+            copyright(2016)
+            author("bennidi")
+            author("dorkbox")
         }
         extra("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntArray, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            it.copyright(2011)
-            it.author("LibGDX")
-            it.author("Mario Zechner (badlogicgames@gmail.com)")
-            it.author("Nathan Sweet (nathan.sweet@gmail.com)")
+            url(Extras.url)
+            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+            copyright(2011)
+            author("LibGDX")
+            author("Mario Zechner (badlogicgames@gmail.com)")
+            author("Nathan Sweet (nathan.sweet@gmail.com)")
         }
         extra("Predicate", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            it.copyright(2011)
-            it.author("LibGDX")
-            it.author("Mario Zechner (badlogicgames@gmail.com)")
-            it.author("Nathan Sweet (nathan.sweet@gmail.com)")
-            it.author("xoppa")
+            url(Extras.url)
+            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+            copyright(2011)
+            author("LibGDX")
+            author("Mario Zechner (badlogicgames@gmail.com)")
+            author("Nathan Sweet (nathan.sweet@gmail.com)")
+            author("xoppa")
         }
         extra("Select, QuickSelect", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            it.copyright(2011)
-            it.author("LibGDX")
-            it.author("Mario Zechner (badlogicgames@gmail.com)")
-            it.author("Nathan Sweet (nathan.sweet@gmail.com)")
-            it.author("Jon Renner")
+            url(Extras.url)
+            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+            copyright(2011)
+            author("LibGDX")
+            author("Mario Zechner (badlogicgames@gmail.com)")
+            author("Nathan Sweet (nathan.sweet@gmail.com)")
+            author("Jon Renner")
         }
         extra("TimSort, ComparableTimSort", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            it.copyright(2008)
-            it.author("The Android Open Source Project")
+            url(Extras.url)
+            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
+            copyright(2008)
+            author("The Android Open Source Project")
         }
         extra("Modified hex conversion utility methods", License.APACHE_2) {
-            it.url(Extras.url)
-            it.url("https://netty.io")
-            it.copyright(2014)
-            it.author("The Netty Project")
+            url(Extras.url)
+            url("https://netty.io")
+            copyright(2014)
+            author("The Netty Project")
         }
         extra("Retrofit", License.APACHE_2) {
-            it.copyright(2020)
-            it.description("A type-safe HTTP client for Android and Java")
-            it.author("Square, Inc")
-            it.url("https://github.com/square/retrofit")
+            copyright(2020)
+            description("A type-safe HTTP client for Android and Java")
+            author("Square, Inc")
+            url("https://github.com/square/retrofit")
         }
     }
 }
@@ -188,9 +188,8 @@ tasks.jar.get().apply {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
 
-    implementation("com.dorkbox:Updates:1.1")
     implementation("com.dorkbox:Executor:3.2")
-    implementation("com.dorkbox:SwtJavaFx:1.2")
+    implementation("com.dorkbox:Updates:1.1")
 
     val jnaVersion = "5.8.0"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
@@ -207,7 +206,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.1.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.51.Final")
+    compileOnly("io.netty:netty-buffer:4.1.63.Final")
 
     val bcVersion = "1.68"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
