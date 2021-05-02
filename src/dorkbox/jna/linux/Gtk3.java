@@ -264,6 +264,10 @@ class Gtk3 implements Gtk {
 
     @Override
     public native
+    Pointer gtk_settings_get_default();
+
+    @Override
+    public native
     GtkStyle gtk_rc_get_style(final Pointer widget);
 
     @Override

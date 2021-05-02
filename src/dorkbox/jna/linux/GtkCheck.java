@@ -15,9 +15,8 @@
  */
 package dorkbox.jna.linux;
 
-import dorkbox.javaFx.JavaFx;
+import dorkbox.jna.rendering.RenderProvider;
 import dorkbox.os.OS;
-import dorkbox.swt.Swt;
 
 /**
  * Accessor methods/logic for determining if GTK is already loaded by the Swing/JavaFX/SWT, or if GTK has been manually loaded via
@@ -104,20 +103,9 @@ class GtkCheck {
             }
         }
 
-        if (Swt.isLoaded) {
-            if (Swt.isGtk3) {
-                return 3;
-            } else {
-                return 2;
-            }
-        }
-
-        if (JavaFx.isLoaded) {
-            if (JavaFx.isGtk3) {
-                return 3;
-            } else {
-                return 2;
-            }
+        int gtkVersion = RenderProvider.getGtkVersion();
+        if (gtkVersion > 0) {
+            return gtkVersion;
         }
 
         /*

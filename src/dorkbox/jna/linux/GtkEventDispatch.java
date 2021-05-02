@@ -27,8 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Pointer;
 
-import dorkbox.javaFx.JavaFx;
-import dorkbox.swt.Swt;
+import dorkbox.jna.rendering.RenderProvider;
 
 
 public
@@ -137,59 +136,7 @@ class GtkEventDispatch {
             }
         });
 
-        if (JavaFx.isLoaded) {
-            if (!JavaFx.isEventThread()) {
-                try {
-                    if (!blockUntilStarted.await(10, TimeUnit.SECONDS)) {
-                        if (DEBUG) {
-                            LoggerFactory.getLogger(GtkEventDispatch.class)
-                                         .error("Something is very wrong. The waitForEventsToComplete took longer than expected.",
-                                                new Exception(""));
-                        }
-                    }
-
-                    // we have to WAIT until all events are done processing, OTHERWISE we have initialization issues
-                    while (true) {
-                        Thread.sleep(100);
-
-                        synchronized (gtkCallbacks) {
-                            if (gtkCallbacks.isEmpty()) {
-                                break;
-                            }
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        else if (Swt.isLoaded) {
-            if (!Swt.isEventThread()) {
-                // we have to WAIT until all events are done processing, OTHERWISE we have initialization issues
-                try {
-                    if (!blockUntilStarted.await(10, TimeUnit.SECONDS)) {
-                        if (DEBUG) {
-                            LoggerFactory.getLogger(GtkEventDispatch.class)
-                                         .error("Something is very wrong. The waitForEventsToComplete took longer than expected.",
-                                                new Exception(""));
-                        }
-                    }
-
-                    while (true) {
-                        Thread.sleep(100);
-
-                        synchronized (gtkCallbacks) {
-                            if (gtkCallbacks.isEmpty()) {
-                                break;
-                            }
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        else {
+        if (!RenderProvider.isEventThread()) {
             try {
                 if (!blockUntilStarted.await(10, TimeUnit.SECONDS)) {
                     if (DEBUG) {
@@ -271,24 +218,8 @@ class GtkEventDispatch {
      */
     public static
     void dispatch(final Runnable runnable) {
-        if (GtkLoader.alreadyRunningGTK) {
-            if (JavaFx.isLoaded) {
-                // JavaFX only
-                if (JavaFx.isEventThread()) {
-                    // Run directly on the JavaFX event thread
-                    runnable.run();
-                }
-                else {
-                    JavaFx.dispatch(runnable);
-                }
-                return;
-            }
-
-            if (Swt.isLoaded && Swt.isEventThread()) {
-                // Run directly on the SWT event thread. If it's not on the dispatch thread, we will use GTK to put it there
-                runnable.run();
-                return;
-            }
+        if (GtkLoader.alreadyRunningGTK && RenderProvider.dispatch(runnable)) {
+            return;
         }
 
         // not javafx

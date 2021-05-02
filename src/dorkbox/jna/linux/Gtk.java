@@ -60,6 +60,8 @@ interface Gtk {
     /**
      * This would NORMALLY have a 2nd argument that is a String[] -- however JNA direct-mapping DOES NOT support this. We are lucky
      * enough that we just pass 'null' as the second argument, therefore, we don't have to define that parameter here.
+     *
+     * This does the same thing as gtk_init(), but without a hard quit
      */
     boolean gtk_init_check(int argc);
 
@@ -291,11 +293,18 @@ interface Gtk {
     void gtk_widget_destroy(Pointer widget);
 
     /**
-     * Gets the GtkSettings object for screen , creating it if necessary.
+     * Gets the GtkSettings object for the screen, creating it if necessary.
      *
      * @since 2.2
      */
     Pointer gtk_settings_get_for_screen(Pointer screen);
+
+    /**
+     * Gets the GtkSettings object for the default GDK screen, creating it if necessary.
+     *
+     * @since 2.2
+     */
+    Pointer gtk_settings_get_default();
 
     /**
      * Finds all matching RC styles for a given widget, composites them together, and then creates a GtkStyle representing the composite

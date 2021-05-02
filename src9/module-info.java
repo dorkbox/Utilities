@@ -1,6 +1,7 @@
 module dorkbox.utilities {
     exports dorkbox.exit;
     exports dorkbox.jna;
+    exports dorkbox.jna.rendering;
     exports dorkbox.jna.linux;
     exports dorkbox.jna.linux.structs;
     exports dorkbox.jna.macos;
@@ -24,7 +25,6 @@ module dorkbox.utilities {
 
     requires dorkbox.executor;
     requires dorkbox.updates;
-    requires static dorkbox.swtjavafx;
 
     requires static com.sun.jna;
     requires static com.sun.jna.platform;

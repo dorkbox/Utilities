@@ -21,8 +21,8 @@ import com.sun.jna.Function;
 import com.sun.jna.NativeLibrary;
 
 import dorkbox.jna.JnaHelper;
+import dorkbox.jna.rendering.RenderProvider;
 import dorkbox.os.OS;
-import dorkbox.swt.Swt;
 
 /**
  * Bindings for GTK+ 2. Bindings that are exclusively for GTK+ 3 are in that respective class
@@ -213,9 +213,9 @@ class GtkLoader {
         if (shouldLoadGtk && _isLoaded) {
             isLoaded = true;
 
-            // depending on how the system is initialized, SWT may, or may not, have the gtk_main loop running. It will EVENTUALLY run, so we
-            // do not want to run our own GTK event loop.
-            _alreadyRunningGTK |= Swt.isLoaded;
+            // depending on how the system is initialized, SWT may, or may not, have the gtk_main loop running.
+            // It will ALWAYS EVENTUALLY run, so we do not want to run our own GTK event loop. It is also incompatible with our event loop
+            _alreadyRunningGTK |= RenderProvider.alreadyRunning();
 
             alreadyRunningGTK = _alreadyRunningGTK;
             isGtk2 = _isGtk2;

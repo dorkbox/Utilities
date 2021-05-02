@@ -14,4 +14,9 @@
  * limitations under the License.
  */
 
-package dorkbox.util.swing;
+package dorkbox.jna.rendering;
+
+public
+enum ProviderType {
+    SWT, JAVAFX, NONE
+}
