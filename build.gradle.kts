@@ -26,7 +26,7 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "2.6"
+    id("com.dorkbox.GradleUtils") version "2.8"
     id("com.dorkbox.Licensing") version "2.7"
     id("com.dorkbox.VersionUpdate") version "2.3"
     id("com.dorkbox.GradlePublish") version "1.11"
@@ -38,7 +38,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.11"
+    const val version = "1.12"
 
     // set as project.ext
     const val name = "Utilities"
@@ -188,7 +188,7 @@ tasks.jar.get().apply {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
 
-    implementation("com.dorkbox:Executor:3.2")
+    implementation("com.dorkbox:Executor:3.3")
     implementation("com.dorkbox:Updates:1.1")
 
     val jnaVersion = "5.8.0"
@@ -216,7 +216,7 @@ dependencies {
 
     compileOnly("org.lwjgl:lwjgl-xxhash:3.2.3")
 
-    compileOnly("net.jodah:typetools:0.6.2")
+    compileOnly("net.jodah:typetools:0.6.3")
 
 
 
