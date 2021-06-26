@@ -34,7 +34,7 @@ class ClassHelper {
      * Because of how type erasure works in java, this will work on lambda expressions and ONLY parent/super classes.
      *
      * @param genericTypeClass  this class is what your are looking for
-     * @param classToCheck              class to actually get the parameter from
+     * @param classToCheck      class to actually get the parameter from
      * @param genericParameterToGet 0-based index of parameter as class to get
      *
      * @return null if the generic type could not be found.
