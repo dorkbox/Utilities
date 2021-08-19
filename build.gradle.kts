@@ -26,12 +26,12 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "2.8.1"
-    id("com.dorkbox.Licensing") version "2.7"
-    id("com.dorkbox.VersionUpdate") version "2.3"
+    id("com.dorkbox.GradleUtils") version "2.9"
+    id("com.dorkbox.Licensing") version "2.9.2"
+    id("com.dorkbox.VersionUpdate") version "2.4"
     id("com.dorkbox.GradlePublish") version "1.11"
 
-    kotlin("jvm") version "1.5.20"
+    kotlin("jvm") version "1.5.21"
 }
 
 object Extras {
@@ -49,7 +49,7 @@ object Extras {
 
     val buildDate = Instant.now().toString()
 
-    const val coroutineVer = "1.4.3"
+    const val coroutineVer = "1.5.1"
 }
 
 ///////////////////////////////
@@ -212,9 +212,9 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.1.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.63.Final")
+    compileOnly("io.netty:netty-buffer:4.1.67.Final")
 
-    val bcVersion = "1.68"
+    val bcVersion = "1.69"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
