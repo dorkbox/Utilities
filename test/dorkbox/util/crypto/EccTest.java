@@ -51,10 +51,10 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.serializers.bouncycastle.EccPrivateKeySerializer;
-import dorkbox.serializers.bouncycastle.EccPublicKeySerializer;
-import dorkbox.serializers.bouncycastle.IesParametersSerializer;
-import dorkbox.serializers.bouncycastle.IesWithCipherParametersSerializer;
+import dorkbox.serializers.EccPrivateKeySerializer;
+import dorkbox.serializers.EccPublicKeySerializer;
+import dorkbox.serializers.IesParametersSerializer;
+import dorkbox.serializers.IesWithCipherParametersSerializer;
 
 public class EccTest {
 
