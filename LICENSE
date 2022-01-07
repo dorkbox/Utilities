@@ -122,6 +122,19 @@
        Copyright 2017
          Greg Briggs
 
+     - SLF4J - Simple facade or abstraction for various logging frameworks
+       [MIT License]
+       http://www.slf4j.org
+       Copyright 2021
+         QOS.ch
+
+     - XZ for Java - Complete implementation of XZ data compression in pure Java
+       [Public Domain, per Creative Commons CC0]
+       https://tukaani.org/xz/java.html
+       Copyright 2021
+         Lasse Collin
+         Igor Pavlov
+
      - Kotlin - 
        [The Apache Software License, Version 2.0]
        https://github.com/JetBrains/kotlin
@@ -180,19 +193,6 @@
        Copyright 2021
          JetBrains s.r.o.
 
-     - SLF4J - Simple facade or abstraction for various logging frameworks
-       [MIT License]
-       http://www.slf4j.org
-       Copyright 2021
-         QOS.ch
-
-     - XZ for Java - Complete implementation of XZ data compression in pure Java
-       [Public Domain, per Creative Commons CC0]
-       https://tukaani.org/xz/java.html
-       Copyright 2021
-         Lasse Collin
-         Igor Pavlov
-
      - Executor - Shell, JVM, and SSH command execution on Linux, MacOS, or Windows for Java 8+
        [The Apache Software License, Version 2.0]
        https://git.dorkbox.com/dorkbox/Executor
@@ -219,6 +219,18 @@
              JetBrains s.r.o. and Kotlin Programming Language contributors
            Kotlin Compiler, Test Data+Libraries, and Tools repository contain third-party code, to which different licenses may apply
            See: https://github.com/JetBrains/kotlin/blob/master/license/README.md
+
+         - kotlinx.coroutines - Library support for Kotlin coroutines with multiplatform support
+           [The Apache Software License, Version 2.0]
+           https://github.com/Kotlin/kotlinx.coroutines
+           Copyright 2021
+             JetBrains s.r.o.
+
+         - SLF4J - Simple facade or abstraction for various logging frameworks
+           [MIT License]
+           http://www.slf4j.org
+           Copyright 2021
+             QOS.ch
 
          - Logback - Logback is a logging framework for Java applications
            [The Apache Software License, Version 2.0]
@@ -259,18 +271,6 @@
                [Public Domain, per Creative Commons CC0]
                https://github.com/str4d/ed25519-java
                  https://github.com/str4d
-
-         - kotlinx.coroutines - Library support for Kotlin coroutines with multiplatform support
-           [The Apache Software License, Version 2.0]
-           https://github.com/Kotlin/kotlinx.coroutines
-           Copyright 2021
-             JetBrains s.r.o.
-
-         - SLF4J - Simple facade or abstraction for various logging frameworks
-           [MIT License]
-           http://www.slf4j.org
-           Copyright 2021
-             QOS.ch
 
          - Updates - Software Update Management
            [The Apache Software License, Version 2.0]
