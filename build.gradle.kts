@@ -22,15 +22,14 @@ import java.time.Instant
 ////// RELEASE : (to sonatype/maven central), <'publish and release' - 'publishToSonatypeAndRelease'>
 ///////////////////////////////
 
-gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
     id("com.dorkbox.GradleUtils") version "2.14"
-    id("com.dorkbox.Licensing") version "2.9.2"
+    id("com.dorkbox.Licensing") version "2.10"
     id("com.dorkbox.VersionUpdate") version "2.4"
-    id("com.dorkbox.GradlePublish") version "1.11"
+    id("com.dorkbox.GradlePublish") version "1.12"
 
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.6.10"
 }
 
 object Extras {
@@ -193,27 +192,29 @@ tasks.jar.get().apply {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
 
-    implementation("com.dorkbox:Executor:3.3")
-    implementation("com.dorkbox:Updates:1.1")
+    api("com.dorkbox:Executor:3.5")
+    api("com.dorkbox:Updates:1.1")
 
-    val jnaVersion = "5.8.0"
+    val jnaVersion = "5.10.0"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
-    implementation("org.slf4j:slf4j-api:1.8.0-beta4")
+    api("org.slf4j:slf4j-api:1.8.0-beta4")
 
-    implementation("org.tukaani:xz:1.9")
+    api("org.tukaani:xz:1.9")
+
+
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-//    compileOnly("com.esotericsoftware:kryo:5.1.0")
+//    compileOnly("com.esotericsoftware:kryo:5.2.1")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.67.Final")
+    compileOnly("io.netty:netty-buffer:4.1.72.Final")
 
-    val bcVersion = "1.69"
+    val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
@@ -234,7 +235,7 @@ dependencies {
     testImplementation("com.esotericsoftware:kryo:5.1.0")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
-    testImplementation("com.dorkbox:Serializers:1.0")
+    testImplementation("com.dorkbox:Serializers:2.5")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
