@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Arrays;
@@ -40,8 +41,6 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.lwjgl.util.xxhash.XXH32State;
 import org.lwjgl.util.xxhash.XXHash;
 import org.slf4j.Logger;
-
-import dorkbox.os.OS;
 
 /**
  * http://en.wikipedia.org/wiki/NSA_Suite_B http://www.nsa.gov/ia/programs/suiteb_cryptography/
@@ -346,7 +345,7 @@ class Crypto {
                 if (okToHash) {
                     // System.err.println("HASHING: " + name);
                     // hash the file name
-                    byte[] bytes = name.getBytes(OS.US_ASCII);
+                    byte[] bytes = name.getBytes(StandardCharsets.US_ASCII);
                     digest.update(bytes, 0, bytes.length);
 
                     if (hasAction) {

@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -63,7 +64,6 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDataEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.bc.BcPublicKeyKeyEncryptionMethodGenerator;
 
-import dorkbox.os.OS;
 import dorkbox.util.IO;
 
 /**
@@ -601,7 +601,7 @@ class CryptoPGP {
 
 
         // Encode the string into bytes using utf-8
-        byte[] utf8Bytes = message.getBytes(OS.UTF_8);
+        byte[] utf8Bytes = message.getBytes(StandardCharsets.UTF_8);
 
         ByteArrayOutputStream compressedOutput = new ByteArrayOutputStream();
 
@@ -797,7 +797,7 @@ class CryptoPGP {
     void main(String[] args) throws Exception {
         InputStream privateKeyInputStream = new FileInputStream(new File("/home/user/dorkbox/sonatype_private.key"));
 
-        byte[] textBytes = "hello".getBytes(OS.UTF_8);
+        byte[] textBytes = "hello".getBytes(StandardCharsets.UTF_8);
 
         byte[] bytes = CryptoPGP.signGpgCompatible(privateKeyInputStream, "Dorkbox <sonatype@dorkbox.com>", new char[0], textBytes);
 
