@@ -44,9 +44,11 @@ enum class OSType(name: String, vararg libraryNames: String) {
     LinuxArm64("linux_arm8_hf", ".so");
 
 
+    val standardName: String
     val libraryNames: Array<out String>
 
     init {
+        this.standardName = name
         this.libraryNames = libraryNames
     }
 
