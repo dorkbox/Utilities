@@ -150,7 +150,7 @@ class LockFreeIntStringMap<V> {
      * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
      *
      * Returns an iterator for the keys in the map. Remove is supported. Note that the same iterator instance is returned each
-     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multithreaded iteration.
+     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multi-threaded iteration.
      */
     public
     IntMap.Keys keys() {
@@ -162,7 +162,7 @@ class LockFreeIntStringMap<V> {
      * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
      *
      * Returns an iterator for the values in the map. Remove is supported. Note that the same iterator instance is returned each
-     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multithreaded iteration.
+     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multi-threaded iteration.
      */
     public
     IntMap.Values<V> values() {
@@ -174,7 +174,7 @@ class LockFreeIntStringMap<V> {
      * DO NOT MODIFY THE MAP VIA THIS (unless you synchronize around it!) It will result in unknown object visibility!
      *
      * Returns an iterator for the entries in the map. Remove is supported. Note that the same iterator instance is returned each
-     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multithreaded iteration.
+     * time this method is called. Use the {@link IntMap.Entries} constructor for nested or multi-threaded iteration.
      */
     public
     IntMap.Entries<V> entries() {
