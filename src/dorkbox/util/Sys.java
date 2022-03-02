@@ -737,7 +737,7 @@ class Sys {
                 builder.append(",");
             }
             if (i > inputOffset && lineLength > 0 && i % lineLength == 0) {
-                builder.append(OS.LINE_SEPARATOR);
+                builder.append(OS.INSTANCE.LINE_SEPARATOR);
             }
         }
 

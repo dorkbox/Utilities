@@ -39,7 +39,7 @@ import dorkbox.os.OS;
 public
 class FontUtil {
     /** Default location where all the fonts are stored */
-    public static volatile String FONTS_LOCATION = OS.getProperty(FontUtil.class.getCanonicalName() + ".FONTS_LOCATION", "resources/fonts");
+    public static volatile String FONTS_LOCATION = OS.INSTANCE.getProperty(FontUtil.class.getCanonicalName() + ".FONTS_LOCATION", "resources/fonts");
 
 
     /** All of the fonts in the {@link #FONTS_LOCATION} will be loaded by the Font manager */

@@ -65,7 +65,7 @@ class ParallelProcessor<Task> {
      */
     public
     ParallelProcessor() {
-        this(-1, OS.getOptimumNumberOfThreads(), null);
+        this(-1, OS.INSTANCE.getOptimumNumberOfThreads(), null);
     }
 
     /**
@@ -81,7 +81,7 @@ class ParallelProcessor<Task> {
      */
     public
     ParallelProcessor(final int totalWorkload) {
-        this(totalWorkload, OS.getOptimumNumberOfThreads(), null);
+        this(totalWorkload, OS.INSTANCE.getOptimumNumberOfThreads(), null);
     }
 
     /**

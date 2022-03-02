@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
@@ -62,7 +63,7 @@ class CacheUtil {
     void clear() {
         // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
-        FileUtil.delete(new File(OS.TEMP_DIR, tempDir));
+        FileUtil.delete(new File(OS.INSTANCE.TEMP_DIR, tempDir));
     }
 
 
@@ -387,11 +388,11 @@ class CacheUtil {
             throw new NullPointerException("cacheName");
         }
 
-        File saveDir = new File(OS.TEMP_DIR, tempDir);
+        File saveDir = new File(OS.INSTANCE.TEMP_DIR, tempDir);
 
         // can be wimpy, only one at a time
         String hash = hashName(cacheName);
-        String extension = FileUtil.getExtension(cacheName);
+        String extension = FileUtil.INSTANCE.getExtension(cacheName);
         if (extension.isEmpty()) {
             extension = "cache";
         }
@@ -408,7 +409,7 @@ class CacheUtil {
     private static
     String hashName(final String name) {
         // figure out the fileName
-        byte[] bytes = name.getBytes(OS.UTF_8);
+        byte[] bytes = name.getBytes(StandardCharsets.UTF_8);
         MessageDigest digest = digestLocal.get();
 
         digest.reset();

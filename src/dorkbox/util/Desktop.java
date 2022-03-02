@@ -236,7 +236,7 @@ class Desktop {
             throw new IOException("Path must not be null or empty.");
         }
 
-        if (OS.isMacOsX()) {
+        if (OS.INSTANCE.isMacOsX()) {
             File directory = new File(path);
 
             // Mac tries to open the .app rather than browsing it.  Instead, pass a child with -R to select it in finder
@@ -285,7 +285,7 @@ class Desktop {
      *  - CLI has thread/memory overhead
      */
     private static boolean requireUnixLauncher() {
-        return ((OS.isUnix() || OS.isLinux()) && (GtkCheck.isGtkLoaded && GtkCheck.isGtk3));
+        return ((OS.INSTANCE.isUnix() || OS.INSTANCE.isLinux()) && (GtkCheck.isGtkLoaded && GtkCheck.isGtk3));
     }
 
     /**

@@ -81,7 +81,7 @@ class OSUtil {
         int[] getVersion() {
             int[] version = new int[2];
 
-            if (!OS.isWindows()) {
+            if (!OS.INSTANCE.isWindows()) {
                 return version;
             }
 
@@ -179,7 +179,7 @@ class OSUtil {
     class Unix {
         public static
         boolean isFreeBSD() {
-            if (!OS.isUnix()) {
+            if (!OS.INSTANCE.isUnix()) {
                 return false;
             }
 
@@ -207,7 +207,7 @@ class OSUtil {
                 return info;
             }
 
-            if (!OS.isLinux()) {
+            if (!OS.INSTANCE.isLinux()) {
                 info = "";
                 return info;
             }
@@ -751,7 +751,7 @@ class OSUtil {
         private static volatile Boolean isMATE = null;
         public static
         boolean isMATE() {
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return false;
             }
 
@@ -772,7 +772,7 @@ class OSUtil {
         private static volatile Boolean isGnome = null;
         public static
         boolean isGnome() {
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return false;
             }
 
@@ -787,7 +787,7 @@ class OSUtil {
                 // ps x | grep gnome-shell
                 boolean contains = Executor.Companion.run("ps", "x").contains("gnome-shell");
 
-                if (!contains && OS.isLinux()) {
+                if (!contains && OS.INSTANCE.isLinux()) {
                     // only try again if we are linux
 
                     // ps a | grep gnome-shell
@@ -814,7 +814,7 @@ class OSUtil {
                 return gnomeVersion;
             }
 
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return null;
             }
 
@@ -903,7 +903,7 @@ class OSUtil {
                 return getPlasmaVersionFull;
             }
 
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return null;
             }
 
@@ -932,7 +932,7 @@ class OSUtil {
         private static volatile Boolean isXfce = null;
         public static
         boolean isXfce() {
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return false;
             }
 
@@ -947,7 +947,7 @@ class OSUtil {
                 // ps x | grep xfce
                 boolean contains = Executor.Companion.run("ps", "x").contains("xfce");
 
-                if (!contains && OS.isLinux()) {
+                if (!contains && OS.INSTANCE.isLinux()) {
                     // only try again if we are linux
 
                     // ps a | grep gnome-shell
@@ -977,7 +977,7 @@ class OSUtil {
                 return isNautilus;
             }
 
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 isNautilus = false;
                 return false;
             }
@@ -1006,7 +1006,7 @@ class OSUtil {
         public static
         boolean isChromeOS() {
             if (isChromeOS == null) {
-                if (!OS.isLinux()) {
+                if (!OS.INSTANCE.isLinux()) {
                     isChromeOS = false;
                     return false;
                 }
@@ -1037,7 +1037,7 @@ class OSUtil {
          */
         public static
         String queryXfce(String channel, String property) {
-            if (!OS.isLinux() && !OS.isUnix()) {
+            if (!OS.INSTANCE.isLinux() && !OS.INSTANCE.isUnix()) {
                 return "";
             }
 

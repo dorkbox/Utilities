@@ -88,7 +88,7 @@ class GtkLoader {
         int minor = 0;
         int micro = 0;
 
-        boolean shouldLoadGtk = !(OS.isWindows() || OS.isMacOsX());
+        boolean shouldLoadGtk = !(OS.INSTANCE.isWindows() || OS.INSTANCE.isMacOsX());
         if (!shouldLoadGtk) {
             _isLoaded = true;
         }

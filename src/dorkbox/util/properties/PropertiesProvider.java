@@ -43,7 +43,7 @@ class PropertiesProvider {
             throw new NullPointerException("propertiesFile");
         }
 
-        propertiesFile = FileUtil.normalize(propertiesFile);
+        propertiesFile = FileUtil.INSTANCE.normalize(propertiesFile);
         // make sure the parent dir exists...
         File parentFile = propertiesFile.getParentFile();
         if (parentFile != null && !parentFile.exists()) {

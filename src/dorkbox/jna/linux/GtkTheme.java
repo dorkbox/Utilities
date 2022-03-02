@@ -48,10 +48,10 @@ import dorkbox.util.MathUtil;
 public
 class GtkTheme {
     /** Fallback for an unknown tray image size. */
-    public static volatile int TRAY_IMAGE_SIZE_FALLBACK = OS.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_IMAGE_SIZE_FALLBACK", 24);
+    public static volatile int TRAY_IMAGE_SIZE_FALLBACK = OS.INSTANCE.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_IMAGE_SIZE_FALLBACK", 24);
 
     /** Fallback for an unknown tray menu image size. */
-    public static volatile int TRAY_MENU_IMAGE_SIZE_FALLBACK = OS.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_MENU_IMAGE_SIZE_FALLBACK", 16);
+    public static volatile int TRAY_MENU_IMAGE_SIZE_FALLBACK = OS.INSTANCE.getInt(GtkTheme.class.getCanonicalName() + ".TRAY_MENU_IMAGE_SIZE_FALLBACK", 16);
 
     public static
     Rectangle getPixelTextHeight(String text) {
@@ -279,7 +279,7 @@ class GtkTheme {
             try {
                 File customSettings = new File("/usr/bin/startkde-custom");
                 if (customSettings.canRead()) {
-                    List<String> lines = FileUtil.readLines(customSettings);
+                    List<String> lines = FileUtil.INSTANCE.readLines(customSettings);
                     for (String line : lines) {
                         String str = "export GDK_SCALE=";
                         int i = line.indexOf(str);
@@ -327,7 +327,7 @@ class GtkTheme {
 
                 File mainFile = new File("/usr/share/plasma/plasmoids/org.kde.plasma.private.systemtray/contents/config/main.xml");
                 if (mainFile.canRead()) {
-                    List<String> lines = FileUtil.readLines(mainFile);
+                    List<String> lines = FileUtil.INSTANCE.readLines(mainFile);
                     boolean found = false;
                     int index;
                     for (final String line : lines) {
@@ -394,7 +394,7 @@ class GtkTheme {
         if (env == OSUtil.DesktopEnv.Env.XFCE) {
             // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
             String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
-            String[] propertiesAsList = properties.split(OS.LINE_SEPARATOR);
+            String[] propertiesAsList = properties.split(OS.INSTANCE.LINE_SEPARATOR);
             for (String prop : propertiesAsList) {
                 if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
                     // this is the property we are looking for (we just don't know which panel it's on)

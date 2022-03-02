@@ -45,7 +45,7 @@ class AppIndicator {
     static {
         boolean _isLoaded = false;
 
-        boolean shouldLoadAppIndicator = !(OS.isWindows() || OS.isMacOsX());
+        boolean shouldLoadAppIndicator = !(OS.INSTANCE.isWindows() || OS.INSTANCE.isMacOsX());
         if (!shouldLoadAppIndicator) {
             _isLoaded = true;
         }

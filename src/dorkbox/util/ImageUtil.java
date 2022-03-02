@@ -145,13 +145,13 @@ class ImageUtil {
 
         // have to resize the file (and return the new path)
 
-        String extension = FileUtil.getExtension(fileName);
+        String extension = FileUtil.INSTANCE.getExtension(fileName);
         if (extension.isEmpty()) {
             extension = "png"; // made up
         }
 
         // now have to resize this file.
-        File newFile = new File(OS.TEMP_DIR, "temp_resize." + extension).getAbsoluteFile();
+        File newFile = new File(OS.INSTANCE.TEMP_DIR, "temp_resize." + extension).getAbsoluteFile();
         Image image;
 
         // is file sitting on drive

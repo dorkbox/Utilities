@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import javax.imageio.stream.ImageInputStream;
 
 @SuppressWarnings({"unused", "Duplicates"})
+// deprecated. use kotlin.
+@Deprecated
 public
 class IO {
     /**

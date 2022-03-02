@@ -35,10 +35,10 @@ class NativeLoader {
     File extractLibrary(final String sourceFileName, final String destinationDirectory, final String destinationName, String version) throws IOException {
         try {
             String suffix;
-            if (OS.isLinux()) {
+            if (OS.INSTANCE.isLinux()) {
                 suffix = ".so";
             }
-            else if (OS.isWindows()) {
+            else if (OS.INSTANCE.isWindows()) {
                 suffix = ".dll";
             }
             else {

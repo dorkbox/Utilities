@@ -37,7 +37,7 @@ import dorkbox.os.OS;
 @SuppressWarnings("WeakerAccess")
 public
 interface User32 {
-    User32 User32 = OS.is64bit() ? new User32_64() : new User32_32();
+    User32 User32 = OS.INSTANCE.is64bit() ? new User32_64() : new User32_32();
 
     int GWL_WNDPROC = -4;
 

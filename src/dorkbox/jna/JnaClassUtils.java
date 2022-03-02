@@ -55,8 +55,8 @@ public class JnaClassUtils {
 
     private static final String libName;
     static {
-        if (OS.isMacOsX()) {
-            if (OS.javaVersion < 7) {
+        if (OS.INSTANCE.isMacOsX()) {
+            if (OS.INSTANCE.javaVersion < 7) {
                 libName = "JavaVM";
             } else {
                 String javaLocation = System.getProperty("java.home");
@@ -77,7 +77,7 @@ public class JnaClassUtils {
         Map options = new HashMap();
         options.put(Library.OPTION_ALLOW_OBJECTS, Boolean.TRUE);
 
-        if (OS.isWindows() && OS.is32bit()) {
+        if (OS.INSTANCE.isWindows() && OS.INSTANCE.is32bit()) {
             options.put(Library.OPTION_FUNCTION_MAPPER, new StdCallFunctionMapper() {
                 @Override
                 public

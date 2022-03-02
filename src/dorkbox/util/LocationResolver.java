@@ -578,7 +578,7 @@ class LocationResolver {
         }
         String path = url.getPath();
 
-        if (OS.isWindows()) {
+        if (OS.INSTANCE.isWindows()) {
             if (path.startsWith("/")) {
                 path = path.substring(1);
             }

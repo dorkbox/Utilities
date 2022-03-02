@@ -37,7 +37,7 @@ class JnaHelper {
         final Map<String, Object> options = new HashMap<String, Object>();
         options.put(Library.OPTION_CLASSLOADER, clazz.getClassLoader());
 
-        if (OS.isWindows()) {
+        if (OS.INSTANCE.isWindows()) {
             Set<Map.Entry<String, Object>> entries = W32APIOptions.DEFAULT_OPTIONS.entrySet();
             for (Map.Entry<String, Object> entry : entries) {
                 options.put(entry.getKey(), entry.getValue());

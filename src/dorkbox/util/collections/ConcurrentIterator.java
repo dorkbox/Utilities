@@ -30,7 +30,7 @@ class ConcurrentIterator<T> {
     /**
      * Specifies the load-factor for the IdentityMap used
      */
-    public static volatile float LOAD_FACTOR = OS.getFloat(ConcurrentIterator.class.getCanonicalName() + ".LOAD_FACTOR", 0.8F);
+    public static volatile float LOAD_FACTOR = OS.INSTANCE.getFloat(ConcurrentIterator.class.getCanonicalName() + ".LOAD_FACTOR", 0.8F);
 
     private static final AtomicInteger ID_COUNTER = new AtomicInteger();
     private final int ID = ID_COUNTER.getAndIncrement();
