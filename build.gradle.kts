@@ -30,14 +30,14 @@ plugins {
     id("com.dorkbox.VersionUpdate") version "2.4"
     id("com.dorkbox.GradlePublish") version "1.11"
 
-    kotlin("jvm") version "1.5.21"
+    kotlin("jvm") version "1.6.10"
 }
 
 object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.12"
+    const val version = "1.13"
 
     // set as project.ext
     const val name = "Utilities"
@@ -47,8 +47,6 @@ object Extras {
     const val url = "https://git.dorkbox.com/dorkbox/Utilities"
 
     val buildDate = Instant.now().toString()
-
-    const val coroutineVer = "1.5.1"
 }
 
 ///////////////////////////////
@@ -170,6 +168,19 @@ licensing {
             author("Greg Briggs")
             url("http://www.uofr.net/~greg/java/get-resource-listing.html")
         }
+        extra("CommonUtils", License.APACHE_2) {
+            copyright(2017)
+            description("Common utility extension functions for kotlin")
+            author("Pronghorn Technology LLC")
+            author("Dorkbox LLC")
+            url("https://www.pronghorn.tech ")
+        }
+        extra("ConcurrentWeakIdentityHashMap", License.APACHE_2) {
+            copyright(2016)
+            description("Concurrent WeakIdentity HashMap")
+            author("zhanhb")
+            url("https://github.com/spring-projects/spring-loaded/blob/master/springloaded/src/main/java/org/springsource/loaded/support/ConcurrentWeakIdentityHashMap.java")
+        }
     }
 }
 
@@ -191,38 +202,45 @@ tasks.jar.get().apply {
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${Extras.coroutineVer}")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
-    implementation("com.dorkbox:Executor:3.3")
-    implementation("com.dorkbox:Updates:1.1")
+    api("com.dorkbox:Executor:3.9")
+    api("com.dorkbox:Updates:1.1")
 
-    val jnaVersion = "5.8.0"
+
+
+    val jnaVersion = "5.10.0"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
-    implementation("org.slf4j:slf4j-api:1.8.0-beta4")
+    // https://github.com/cowtowncoder/java-uuid-generator
+    // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.s
+    api("com.fasterxml.uuid:java-uuid-generator:4.0.1")
 
-    implementation("org.tukaani:xz:1.9")
+    // https://github.com/MicroUtils/kotlin-logging
+    api("io.github.microutils:kotlin-logging:2.1.21")
+    api("org.slf4j:slf4j-api:1.8.0-beta4")
+
+    api("org.tukaani:xz:1.9")
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-//    compileOnly("com.esotericsoftware:kryo:5.1.0")
+//    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.67.Final")
+    compileOnly("io.netty:netty-buffer:4.1.74.Final")
 
-    val bcVersion = "1.69"
+    val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    compileOnly("org.lwjgl:lwjgl-xxhash:3.2.3")
+    compileOnly("org.lwjgl:lwjgl-xxhash:3.3.1")
 
     compileOnly("net.jodah:typetools:0.6.3")
-
 
 
     // testing
@@ -234,7 +252,7 @@ dependencies {
     testImplementation("com.esotericsoftware:kryo:5.1.0")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
-    testImplementation("com.dorkbox:Serializers:1.0")
+    testImplementation("com.dorkbox:Serializers:2.5")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("ch.qos.logback:logback-classic:1.3.0-alpha4")
