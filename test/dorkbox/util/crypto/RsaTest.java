@@ -40,8 +40,8 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import dorkbox.serializers.RsaPrivateKeySerializer;
-import dorkbox.serializers.RsaPublicKeySerializer;
+import dorkbox.serializers.bouncycastle.RsaPrivateKeySerializer;
+import dorkbox.serializers.bouncycastle.RsaPublicKeySerializer;
 
 public class RsaTest {
     org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(this.getClass());
