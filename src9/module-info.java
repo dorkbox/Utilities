@@ -23,15 +23,14 @@ module dorkbox.utilities {
     exports dorkbox.util.swing;
     exports dorkbox.util.userManagement;
 
-    requires dorkbox.executor;
-    requires dorkbox.updates;
+    requires transitive dorkbox.executor;
+    requires transitive dorkbox.updates;
+
+    requires transitive kotlin.stdlib;
 
     requires static com.sun.jna;
     requires static com.sun.jna.platform;
 
     requires static org.slf4j;
     requires static java.desktop;
-
-    requires java.base;
-    requires kotlin.stdlib;
 }

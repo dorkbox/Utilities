@@ -232,7 +232,7 @@ dependencies {
 
     compileOnly("io.netty:netty-buffer:4.1.74.Final")
 
-    val bcVersion = "1.70"
+    val bcVersion = "1.69"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
