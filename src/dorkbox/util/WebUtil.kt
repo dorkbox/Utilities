@@ -36,6 +36,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("unused")
 object WebUtil {
     private val SECOND_LEVEL_DOMAIN_PATTERN = Pattern.compile("^(https?:\\/\\/)?([\\dA-Za-z\\.-]+)\\.([a-z\\.]{2,6})([\\w \\.-]*)*$")
 
@@ -503,14 +504,14 @@ object WebUtil {
 
 
 
-    @JvmStatic
-    fun main(args: Array<String>) {
-        println(cleanupAndPreservePath("https://www.youtube.com/watch?v=YP6EaIDlmEg&t=1s", removeQueryString = true))
-        println(cleanupAndPreservePath("https://www.khanacademy.org/", removeQueryString = true))
-        println(cleanupAndRemoveWwwAndPath("https://sat184.cloud1.tds.airast.org/student/V746/Pages/TestShell.aspx"))
-        println(cleanupAndRemoveWwwAndPath("https://sat184.cloud1.tds.airast.org/student/V746/Pages/TestShell.aspx"))
-
-    }
+//    @JvmStatic
+//    fun main(args: Array<String>) {
+//        println(cleanupAndPreservePath("https://www.youtube.com/watch?v=YP6EaIDlmEg&t=1s", removeQueryString = true))
+//        println(cleanupAndPreservePath("https://www.khanacademy.org/", removeQueryString = true))
+//        println(cleanupAndRemoveWwwAndPath("https://sat184.cloud1.tds.airast.org/student/V746/Pages/TestShell.aspx"))
+//        println(cleanupAndRemoveWwwAndPath("https://sat184.cloud1.tds.airast.org/student/V746/Pages/TestShell.aspx"))
+//
+//    }
 
 //        println(WEB_URL.matcher("https://www.youtube.com/watch?v=WEVctuQTeaI").matches())
 //        println(WEB_URL.matcher("www.youtube.com/watch?v=WEVctuQTeaI").matches())
@@ -543,9 +544,9 @@ object WebUtil {
      */
     suspend fun fetchData(scheme: String, domain: String, vararg paths: String,
                                   onError: (String) ->Unit,
-                                  action: suspend (InputStream)->Unit) = withContext(Dispatchers.IO) {
+                                  onSuccess: suspend (InputStream)->Unit) = withContext(Dispatchers.IO) {
         val encodedPath = paths.joinToString(separator = "/") { URLEncoder.encodePathSegment(it, Charsets.UTF_8) }
-        var location = "scheme$domain/$encodedPath"
+        var location = "$scheme://$domain/$encodedPath"
 
 //        logger.trace{ "Getting data: $location" }
 
@@ -587,7 +588,9 @@ object WebUtil {
                             return@with
                         }
                         HttpURLConnection.HTTP_OK -> {
-                            action(inputStream)
+                            inputStream.use {
+                                onSuccess(it)
+                            }
 
                             // done
                             return@withContext
@@ -597,7 +600,7 @@ object WebUtil {
                             if (location.startsWith(scheme)) {
                                 visitedCount = 0
 
-                                location = if (scheme == "http://") {
+                                location = if (scheme == "http") {
                                     "https://$domain/$encodedPath"
                                 } else {
                                     "http://$domain/$encodedPath"
@@ -623,11 +626,11 @@ object WebUtil {
             }
             catch (e: UnknownHostException) {
                 // TMI for what's going on. We just can't, so leave it at that.
-                onError("Failed to retrieve or write icon for domain: '${location}'")
+                onError("Failed to retrieve or write icon for location: '${location}'")
                 return@withContext
             }
             catch (e: Exception) {
-                onError("Failed to retrieve or write icon for domain: '${location}'. ${e.message}")
+                onError("Failed to retrieve or write icon for location: '${location}'. ${e.message}")
                 return@withContext
             }
         }
