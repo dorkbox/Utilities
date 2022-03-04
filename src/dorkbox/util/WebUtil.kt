@@ -542,11 +542,12 @@ object WebUtil {
     /**
      * Runs the 'action' function when the scheme+domain+path(s) when it was successful. Runs the 'onError' function when it fails.
      */
-    suspend fun fetchData(scheme: String, domain: String, vararg paths: String,
-                                  onError: (String) ->Unit,
-                                  onSuccess: suspend (InputStream)->Unit) = withContext(Dispatchers.IO) {
+    suspend fun fetchData(scheme: String, domain: String, vararg paths: String, retryCount: Int = 10,
+                          onError: (String) ->Unit,
+                          onSuccess: suspend (InputStream)->Unit) = withContext(Dispatchers.IO) {
         val encodedPath = paths.joinToString(separator = "/") { URLEncoder.encodePathSegment(it, Charsets.UTF_8) }
         var location = "$scheme://$domain/$encodedPath"
+        var alreadyTriedOtherScheme = false
 
 //        logger.trace{ "Getting data: $location" }
 
@@ -557,8 +558,8 @@ object WebUtil {
 
         while (true) {
             visitedCount += 1
-            if (visitedCount > 10)  {
-                onError("Stuck in a loop for '$location'  ---   more than $visitedCount tries to get the domain '$location'")
+            if (visitedCount > retryCount)  {
+                onError("Stuck in a loop for '$location'  ---   more than $visitedCount attempts")
                 return@withContext
             }
 
@@ -596,27 +597,28 @@ object WebUtil {
                             return@withContext
                         }
                         HttpsURLConnection.HTTP_NOT_FOUND -> {
-                            // if we are HTTPS, retry again as HTTP.
-                            if (location.startsWith(scheme)) {
-                                visitedCount = 0
-
-                                location = if (scheme == "http") {
-                                    "https://$domain/$encodedPath"
-                                } else {
-                                    "http://$domain/$encodedPath"
-                                }
-
-                                // loop again with the new location
-                                return@with
-                            } else {
-                                onError("Error '$responseCode' getting domain '$location'  HTTPS option exhausted.")
+                            if (alreadyTriedOtherScheme) {
+                                onError("Error '$responseCode' getting location '$location'  HTTPS option exhausted.")
 
                                 // done
                                 return@withContext
                             }
+
+                            // if we are HTTPS, retry again as HTTP.
+                            alreadyTriedOtherScheme = true
+                            visitedCount = 0
+
+                            location = if (location.startsWith("https")) {
+                                "http://$domain/$encodedPath"
+                            } else {
+                                "https://$domain/$encodedPath"
+                            }
+
+                            // loop again with the new location
+                            return@with
                         }
                         else -> {
-                            onError("Error '$responseCode' getting domain '$location'")
+                            onError("Error '$responseCode' getting location '$location'")
 
                             // done
                             return@withContext
