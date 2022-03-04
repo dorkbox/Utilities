@@ -25,10 +25,10 @@ import java.time.Instant
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "2.14"
-    id("com.dorkbox.Licensing") version "2.9.2"
+    id("com.dorkbox.GradleUtils") version "2.16"
+    id("com.dorkbox.Licensing") version "2.12"
     id("com.dorkbox.VersionUpdate") version "2.4"
-    id("com.dorkbox.GradlePublish") version "1.11"
+    id("com.dorkbox.GradlePublish") version "1.12"
 
     kotlin("jvm") version "1.6.10"
 }
@@ -37,7 +37,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.14"
+    const val version = "1.15"
 
     // set as project.ext
     const val name = "Utilities"
@@ -232,7 +232,7 @@ dependencies {
 
     compileOnly("io.netty:netty-buffer:4.1.74.Final")
 
-    val bcVersion = "1.69"
+    val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
