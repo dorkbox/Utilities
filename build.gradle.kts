@@ -181,6 +181,12 @@ licensing {
             author("zhanhb")
             url("https://github.com/spring-projects/spring-loaded/blob/master/springloaded/src/main/java/org/springsource/loaded/support/ConcurrentWeakIdentityHashMap.java")
         }
+        extra("UrlRewriteFilter", License.BSD_3) {
+            description("UrlRewriteFilter is a Java Web Filter for any J2EE compliant web application server")
+            url("https://github.com/paultuckey/urlrewritefilter")
+            copyright(2022)
+            author("Paul Tuckey")
+        }
     }
 }
 
