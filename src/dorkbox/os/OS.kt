@@ -63,45 +63,59 @@ object OS {
             val isAndroid = "Dalvik" == value
             if (isAndroid) {
                 // android check from https://stackoverflow.com/questions/14859954/android-os-arch-output-for-arm-mips-x86
-                when (osArch) {
+                osType = when (osArch) {
                     "armeabi" -> {
-                        // really old/low-end non-hf 32bit cpu
-                        osType = OSType.AndroidArm56
+                        OSType.AndroidArm56 // really old/low-end non-hf 32bit cpu
                     }
                     "armeabi-v7a" -> {
-                        // 32bit hf cpu
-                        osType = OSType.AndroidArm7
+                        OSType.AndroidArm7 // 32bit hf cpu
                     }
                     "arm64-v8a" -> {
-                        // 64bit hf cpu
-                        osType = OSType.AndroidArm8
+                        OSType.AndroidArm8  // 64bit hf cpu
                     }
                     "x86" -> {
-                        // 32bit x86 (usually emulator)
-                        osType = OSType.AndroidX86
+                        OSType.AndroidX86 // 32bit x86 (usually emulator)
                     }
                     "x86_64" -> {
-                        // 64bit x86 (usually emulator)
-                        osType = OSType.AndroidX86_64
+                        OSType.AndroidX86_64 // 64bit x86 (usually emulator)
                     }
                     "mips" -> {
-                        // 32bit mips
-                        osType = OSType.AndroidMips
+                        OSType.AndroidMips // 32bit mips
                     }
                     "mips64" -> {
-                        // 64bit mips
-                        osType = OSType.AndroidMips64
+                        OSType.AndroidMips64  // 64bit mips
                     }
                     else -> {
-                        // who knows?
-                        osType = null
+                        null // who knows?
                     }
                 }
             } else {
-                when {
+                // http://mail.openjdk.java.net/pipermail/jigsaw-dev/2017-April/012107.html
+                osType = when {
+                    osArch == "i386" -> {
+                        OSType.Linux32
+                    }
+                    osArch == "x86" -> {
+                        OSType.Linux32
+                    }
+                    osArch == "arm" -> {
+                        OSType.LinuxArm32
+                    }
+
                     osArch == "amd64" -> {
-                        // normal linux 32/64/arm32/arm64
-                        osType = OSType.Linux64
+                        OSType.Linux64
+                    }
+                    osArch == "x86_64" -> {
+                        OSType.Linux64
+                    }
+                    osArch == "aarch64" -> {
+                        OSType.LinuxArm64
+                    }
+
+
+                    // oddballs (android usually)
+                    osArch.startsWith("arm64") -> {
+                        OSType.LinuxArm64
                     }
                     osArch.startsWith("arm") -> {
                         if (osArch.contains("v8")) {
@@ -121,7 +135,7 @@ object OS {
             } else {
                 OSType.Windows32
             }
-        } else if (osName.startsWith("mac") || osName.startsWith("darwin")) {
+        } else if (osName.startsWith("macos") || osName.startsWith("darwin")) {
             osType = if ("x86_64" == osArch) {
                 OSType.MacOsX64
             } else {
