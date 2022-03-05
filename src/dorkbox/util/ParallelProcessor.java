@@ -120,8 +120,7 @@ class ParallelProcessor<Task> {
 
         threads = new ArrayList<Thread>(numberOfThreads);
 
-        ThreadGroup threadGroup = new ThreadGroup(Thread.currentThread()
-                                                        .getThreadGroup(), "ParallelProcessor");
+        ThreadGroup threadGroup = new ThreadGroup(Thread.currentThread().getThreadGroup(), "ParallelProcessor");
         NamedThreadFactory dispatchThreadFactory = new NamedThreadFactory("Processor", threadGroup);
         for (int i = 0; i < numberOfThreads; i++) {
             java.lang.Runnable runnable = new java.lang.Runnable() {

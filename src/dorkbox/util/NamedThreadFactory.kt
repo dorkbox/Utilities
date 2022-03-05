@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2022 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,112 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util
 
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*
+import java.util.concurrent.atomic.*
 
 /**
- * The default thread factory with names.
+ * The default thread factory with names and daemon state
  */
-public
-class NamedThreadFactory implements ThreadFactory {
-    private final AtomicInteger poolId = new AtomicInteger();
+class NamedThreadFactory constructor(
+    /** @param namePrefix what you want the subsequent threads to be named. */
+    val namePrefix: String,
 
-    public final ThreadGroup group;
-    public final String namePrefix;
-    public final int threadPriority;
-    public final boolean daemon;
+    /** @param group the group this thread will belong to. If NULL, it will belong to the current thread group. */
+    val group: ThreadGroup = Thread.currentThread().threadGroup,
 
-    /**
-     * Creates a DAEMON thread
-     */
-    public
-    NamedThreadFactory(String poolNamePrefix) {
-        this(poolNamePrefix,
-             Thread.currentThread()
-                   .getThreadGroup(),
-             Thread.MAX_PRIORITY,
-             true);
-    }
+    /** @param threadPriority 1-10, with 5 being normal and 10 being max */
+    val threadPriority: Int = Thread.MAX_PRIORITY,
 
-    public
-    NamedThreadFactory(String poolNamePrefix, boolean isDaemon) {
-        this(poolNamePrefix,
-             Thread.currentThread()
-                   .getThreadGroup(),
-             Thread.MAX_PRIORITY,
-             isDaemon);
-    }
+    /** @param daemon true to stop this thread automatically when the JVM shutsdown */
+    val daemon: Boolean = true
+
+) : ThreadFactory {
+    constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.MAX_PRIORITY, true)
+    constructor(poolNamePrefix: String, isDaemon: Boolean) : this(poolNamePrefix, Thread.currentThread().threadGroup, isDaemon)
+    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.MAX_PRIORITY, isDaemon)
 
 
-    /**
-     * Creates a DAEMON thread
-     */
-    public
-    NamedThreadFactory(String poolNamePrefix, ThreadGroup group) {
-        this(poolNamePrefix, group, Thread.MAX_PRIORITY, true);
-    }
+    private val poolId = AtomicInteger()
 
-    public
-    NamedThreadFactory(String poolNamePrefix, ThreadGroup group, boolean isDaemon) {
-        this(poolNamePrefix, group, Thread.MAX_PRIORITY, isDaemon);
-    }
-
-    /**
-     * Creates a DAEMON thread
-     */
-    public
-    NamedThreadFactory(String poolNamePrefix, int threadPriority) {
-        this(poolNamePrefix, threadPriority, true);
-    }
-
-    public
-    NamedThreadFactory(String poolNamePrefix, int threadPriority, boolean isDaemon) {
-        this(poolNamePrefix, null, threadPriority, isDaemon);
-    }
-
-    /**
-     * @param poolNamePrefix what you want the subsequent threads to be named.
-     * @param group          the group this thread will belong to. If NULL, it will belong to the current thread group.
-     * @param threadPriority 1-10, with 5 being normal and 10 being max
-     */
-    public
-    NamedThreadFactory(String poolNamePrefix, ThreadGroup group, int threadPriority, boolean isDaemon) {
-        this.daemon = isDaemon;
-        this.namePrefix = poolNamePrefix;
-        if (group == null) {
-            this.group = Thread.currentThread()
-                               .getThreadGroup();
+    init {
+        require(threadPriority >= Thread.MIN_PRIORITY) {
+            String.format(
+                "Thread priority (%s) must be >= %s", threadPriority, Thread.MIN_PRIORITY
+            )
         }
-        else {
-            this.group = group;
+        require(threadPriority <= Thread.MAX_PRIORITY) {
+            String.format(
+                "Thread priority (%s) must be <= %s", threadPriority, Thread.MAX_PRIORITY
+            )
         }
-
-
-        if (threadPriority < Thread.MIN_PRIORITY) {
-            throw new IllegalArgumentException(String.format("Thread priority (%s) must be >= %s", threadPriority, Thread.MIN_PRIORITY));
-        }
-        if (threadPriority > Thread.MAX_PRIORITY) {
-            throw new IllegalArgumentException(String.format("Thread priority (%s) must be <= %s", threadPriority, Thread.MAX_PRIORITY));
-        }
-
-
-        this.threadPriority = threadPriority;
     }
 
-    @Override
-    public
-    Thread newThread(Runnable r) {
+    override fun newThread(r: Runnable): Thread {
         // stack size is arbitrary based on JVM implementation. Default is 0
         // 8k is the size of the android stack. Depending on the version of android, this can either change, or will always be 8k
         // To be honest, 8k is pretty reasonable for an asynchronous/event based system (32bit) or 16k (64bit)
         // Setting the size MAY or MAY NOT have any effect!!!
-        Thread t = new Thread(this.group, r, this.namePrefix + '-' + this.poolId.incrementAndGet());
-        t.setDaemon(this.daemon);
-        if (t.getPriority() != this.threadPriority) {
-            t.setPriority(this.threadPriority);
-        }
-        return t;
+        val t = Thread(group, r, namePrefix + '-' + poolId.incrementAndGet())
+        t.isDaemon = daemon
+        t.priority = threadPriority
+        return t
     }
 }
