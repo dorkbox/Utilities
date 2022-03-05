@@ -151,7 +151,7 @@ class ImageUtil {
         }
 
         // now have to resize this file.
-        File newFile = new File(OS.INSTANCE.TEMP_DIR, "temp_resize." + extension).getAbsoluteFile();
+        File newFile = new File(OS.INSTANCE.getTEMP_DIR(), "temp_resize." + extension).getAbsoluteFile();
         Image image;
 
         // is file sitting on drive

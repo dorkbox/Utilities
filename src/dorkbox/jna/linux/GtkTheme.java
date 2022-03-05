@@ -394,7 +394,7 @@ class GtkTheme {
         if (env == OSUtil.DesktopEnv.Env.XFCE) {
             // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
             String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
-            String[] propertiesAsList = properties.split(OS.INSTANCE.LINE_SEPARATOR);
+            String[] propertiesAsList = properties.split(OS.INSTANCE.getLINE_SEPARATOR());
             for (String prop : propertiesAsList) {
                 if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
                     // this is the property we are looking for (we just don't know which panel it's on)

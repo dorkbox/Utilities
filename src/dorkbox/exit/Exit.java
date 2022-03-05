@@ -143,16 +143,16 @@ public final class Exit {
                     // FileWriter always assumes default encoding is OK
                     if (title != null) {
                         output.write(title);
-                        output.write(OS.LINE_SEPARATOR + "   ");
+                        output.write(OS.INSTANCE.getLINE_SEPARATOR() + "   ");
                     }
 
-                    output.write(new java.util.Date() + OS.LINE_SEPARATOR + "     ");
+                    output.write(new java.util.Date() + OS.INSTANCE.getLINE_SEPARATOR() + "     ");
                     output.write(message);
-                    output.write(OS.LINE_SEPARATOR);
+                    output.write(OS.INSTANCE.getLINE_SEPARATOR());
                 } else {
                     output.write("Execption thrown! Unknown error.");
                 }
-                output.write(OS.LINE_SEPARATOR);
+                output.write(OS.INSTANCE.getLINE_SEPARATOR());
             } finally {
                 output.close();
             }
@@ -187,7 +187,6 @@ public final class Exit {
 
     /**
      * Undefined/unknown exit, and the info has been written to the log file.
-     * @param string
      * @return
      */
     public static int Undefined(Throwable e) {
@@ -260,7 +259,7 @@ public final class Exit {
 
 
     public static int Generic(int exitCode, String errorMessage, Throwable throwable) {
-        return Generic(exitCode, errorMessage + OS.LINE_SEPARATOR + throwable.getClass() + OS.LINE_SEPARATOR + throwable.getMessage());
+        return Generic(exitCode, errorMessage + OS.INSTANCE.getLINE_SEPARATOR() + throwable.getClass() + OS.INSTANCE.getLINE_SEPARATOR() + throwable.getMessage());
     }
 
     public static int Generic(int exitCode, String errorMessage) {
@@ -305,7 +304,7 @@ public final class Exit {
             if (isNative()) {
                 if (e.getTitle() != null) {
                     // can set the title if we want to. Normally it's just the program name.
-                    setExitError("<title>" + e.getTitle() + "</title>" + OS.LINE_SEPARATOR + message);
+                    setExitError("<title>" + e.getTitle() + "</title>" + OS.INSTANCE.getLINE_SEPARATOR() + message);
                 } else {
                     setExitError(message);
                 }

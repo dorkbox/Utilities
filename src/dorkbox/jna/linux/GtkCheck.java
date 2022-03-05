@@ -118,7 +118,7 @@ class GtkCheck {
          */
 
         // java 8 cannot load GTK3. But we can know if GTK was loaded yet or not
-        if (OS.INSTANCE.javaVersion <= 8) {
+        if (OS.INSTANCE.getJavaVersion() <= 8) {
             try {
                 // Don't want to load the toolkit!!!
                 Class<?> toolkitClass = Class.forName("java.awt.Toolkit");

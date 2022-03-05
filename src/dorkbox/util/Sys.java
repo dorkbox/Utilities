@@ -664,7 +664,7 @@ class Sys {
                     builder.append(",");
                 }
                 if (i > 0 && i % lineLength == 0) {
-                    builder.append(OS.LINE_SEPARATOR);
+                    builder.append(OS.INSTANCE.getLINE_SEPARATOR());
                 }
             }
 
@@ -722,11 +722,11 @@ class Sys {
 
         if (header != null) {
             builder.append(header)
-                   .append(OS.LINE_SEPARATOR);
+                   .append(OS.INSTANCE.getLINE_SEPARATOR());
         }
 
         if (includeByteCount) {
-            builder.append("Bytes: ").append(length).append(OS.LINE_SEPARATOR);
+            builder.append("Bytes: ").append(length).append(OS.INSTANCE.getLINE_SEPARATOR());
         }
 
         builder.append("{");
@@ -737,7 +737,7 @@ class Sys {
                 builder.append(",");
             }
             if (i > inputOffset && lineLength > 0 && i % lineLength == 0) {
-                builder.append(OS.INSTANCE.LINE_SEPARATOR);
+                builder.append(OS.INSTANCE.getLINE_SEPARATOR());
             }
         }
 

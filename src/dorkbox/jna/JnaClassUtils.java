@@ -56,7 +56,7 @@ public class JnaClassUtils {
     private static final String libName;
     static {
         if (OS.INSTANCE.isMacOsX()) {
-            if (OS.INSTANCE.javaVersion < 7) {
+            if (OS.INSTANCE.getJavaVersion() < 7) {
                 libName = "JavaVM";
             } else {
                 String javaLocation = System.getProperty("java.home");

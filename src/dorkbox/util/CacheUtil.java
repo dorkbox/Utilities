@@ -63,7 +63,7 @@ class CacheUtil {
     void clear() {
         // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
-        FileUtil.delete(new File(OS.INSTANCE.TEMP_DIR, tempDir));
+        FileUtil.delete(new File(OS.INSTANCE.getTEMP_DIR(), tempDir));
     }
 
 
@@ -388,7 +388,7 @@ class CacheUtil {
             throw new NullPointerException("cacheName");
         }
 
-        File saveDir = new File(OS.INSTANCE.TEMP_DIR, tempDir);
+        File saveDir = new File(OS.INSTANCE.getTEMP_DIR(), tempDir);
 
         // can be wimpy, only one at a time
         String hash = hashName(cacheName);
