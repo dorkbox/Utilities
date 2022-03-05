@@ -22,7 +22,6 @@ import com.sun.jna.Pointer;
 import dorkbox.jna.JnaHelper;
 import dorkbox.jna.linux.structs.AppIndicatorInstanceStruct;
 import dorkbox.os.OS;
-import dorkbox.os.OSUtil;
 
 /**
  * bindings for libappindicator
@@ -137,28 +136,28 @@ class AppIndicator {
 
 
         if (isGtk2) {
-            if (OSUtil.Linux.isDebian()) {
+            if (OS.Linux.INSTANCE.isDebian()) {
                 // debian is slightly different
                 return "libappindicator1";
             }
-            else if (OSUtil.Linux.isFedora()) {
+            else if (OS.Linux.INSTANCE.isFedora()) {
                 return "libappindicator-gtk";
             }
-            else if (OSUtil.Linux.isArch()) {
+            else if (OS.Linux.INSTANCE.isArch()) {
                 return "libappindicator-gtk2";
             }
             else {
                 return "libappindicator";
             }
         } else {
-            if (OSUtil.Linux.isDebian()) {
+            if (OS.Linux.INSTANCE.isDebian()) {
                 // debian is slightly different
                 return "libappindicator3-1";
             }
-            else if (OSUtil.Linux.isFedora()) {
+            else if (OS.Linux.INSTANCE.isFedora()) {
                 return "libappindicator-gtk3";
             }
-            else if (OSUtil.Linux.isArch()) {
+            else if (OS.Linux.INSTANCE.isArch()) {
                 return "libappindicator-gtk3";
             }
             else {

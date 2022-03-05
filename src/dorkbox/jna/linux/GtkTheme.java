@@ -37,7 +37,6 @@ import dorkbox.jna.linux.structs.GtkRequisition;
 import dorkbox.jna.linux.structs.GtkStyle;
 import dorkbox.jna.linux.structs.PangoRectangle;
 import dorkbox.os.OS;
-import dorkbox.os.OSUtil;
 import dorkbox.util.FileUtil;
 import dorkbox.util.MathUtil;
 
@@ -242,7 +241,7 @@ class GtkTheme {
 
 
 
-        OSUtil.DesktopEnv.Env env = OSUtil.DesktopEnv.get();
+        OS.DesktopEnv.Env env = OS.DesktopEnv.INSTANCE.getEnv();
 
         // sometimes the scaling-factor is set. If we have gsettings, great! otherwise try KDE
         try {
@@ -274,7 +273,7 @@ class GtkTheme {
         } catch (Throwable ignore) {
         }
 
-        if (OSUtil.DesktopEnv.isKDE()) {
+        if (OS.DesktopEnv.INSTANCE.isKDE()) {
             // check the custom KDE override file
             try {
                 File customSettings = new File("/usr/bin/startkde-custom");
@@ -382,7 +381,7 @@ class GtkTheme {
             }
         }
 
-        if (OSUtil.Linux.isUbuntu() && OSUtil.DesktopEnv.isUnity(env)) {
+        if (OS.Linux.INSTANCE.isUbuntu() && OS.DesktopEnv.INSTANCE.isUnity(env)) {
             // if we measure on ubuntu unity using a screen shot (using swing, so....) , the max size was 24, HOWEVER this goes from
             // the top->bottom of the indicator bar -- and since it was swing, it uses a different rendering method and it (honestly)
             // looks weird, because there is no padding for the icon. The official AppIndicator size is hardcoded...
@@ -391,9 +390,9 @@ class GtkTheme {
             return 22;
         }
 
-        if (env == OSUtil.DesktopEnv.Env.XFCE) {
+        if (env == OS.DesktopEnv.Env.XFCE) {
             // xfce is easy, because it's not a GTK setting for the size  (xfce notification area maximum icon size)
-            String properties = OSUtil.DesktopEnv.queryXfce("xfce4-panel", null);
+            String properties = OS.DesktopEnv.INSTANCE.queryXfce("xfce4-panel", null);
             String[] propertiesAsList = properties.split(OS.INSTANCE.getLINE_SEPARATOR());
             for (String prop : propertiesAsList) {
                 if (prop.startsWith("/plugins/") && prop.endsWith("/size-max")) {
@@ -403,9 +402,9 @@ class GtkTheme {
                     // xfconf-query -c xfce4-panel -p /plugins/plugin-14  (this will say 'systray' or 'tasklist' or whatever)
                     // find the 'systray' plugin
                     String panelString = prop.substring(0, prop.indexOf("/size-max"));
-                    String panelName = OSUtil.DesktopEnv.queryXfce("xfce4-panel", panelString).trim();
+                    String panelName = OS.DesktopEnv.INSTANCE.queryXfce("xfce4-panel", panelString).trim();
                     if (panelName.equals("systray")) {
-                        String size = OSUtil.DesktopEnv.queryXfce("xfce4-panel", prop).trim();
+                        String size = OS.DesktopEnv.INSTANCE.queryXfce("xfce4-panel", prop).trim();
                         try {
                             return Integer.parseInt(size);
                         } catch (Exception e) {

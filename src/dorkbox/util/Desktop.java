@@ -29,7 +29,6 @@ import dorkbox.jna.linux.GnomeVFS;
 import dorkbox.jna.linux.GtkCheck;
 import dorkbox.jna.linux.GtkEventDispatch;
 import dorkbox.os.OS;
-import dorkbox.os.OSUtil;
 
 @SuppressWarnings({"WeakerAccess", "Convert2Lambda", "Duplicates"})
 public
@@ -311,7 +310,7 @@ class Desktop {
             // ubuntu, fedora, etc MIGHT have access to gvfs-open. Ubuntu is also VERY buggy with xdg-open!!
             new Executor().command(GVFS, path).startAsync();
         }
-        else if (OSUtil.DesktopEnv.isGnome() && GnomeVFS.isInited) {
+        else if (OS.DesktopEnv.INSTANCE.isGnome() && GnomeVFS.isInited) {
             GtkEventDispatch.dispatch(new Runnable() {
                 @Override
                 public

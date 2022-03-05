@@ -22,7 +22,7 @@ import com.sun.jna.platform.win32.WinUser;
 import com.sun.jna.ptr.IntByReference;
 
 import dorkbox.jna.JnaHelper;
-import dorkbox.os.OSUtil;
+import dorkbox.os.OS;
 
 /**
  * bindings for ShCore.dll
@@ -41,7 +41,7 @@ class ShCore {
     private static Function GetDpiForMonitor = null;
 
     static {
-        if (OSUtil.Windows.isWindows8_1_plus()) {
+        if (OS.Windows.INSTANCE.isWindows8_1_plus()) {
             NativeLibrary library = JnaHelper.register("shcore", ShCore.class);
 
             // Abusing static fields this way is not proper, but it gets the job done nicely.

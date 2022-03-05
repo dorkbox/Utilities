@@ -212,7 +212,7 @@ dependencies {
 
     api("com.dorkbox:Executor:3.9")
     api("com.dorkbox:Updates:1.1")
-
+    api("com.dorkbox:OS:1.0")
 
 
     val jnaVersion = "5.10.0"
