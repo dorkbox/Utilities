@@ -30,7 +30,6 @@ import java.io.InputStream
 import java.io.PrintWriter
 import java.io.RandomAccessFile
 import java.io.Reader
-import java.nio.channels.FileChannel
 import java.nio.charset.StandardCharsets
 import java.nio.file.DirectoryIteratorException
 import java.nio.file.FileVisitResult
@@ -637,26 +636,13 @@ object FileUtil {
         if (DEBUG) {
             System.err.println("Copying file: '$`in`'  -->  '$out'")
         }
-        var sourceChannel: FileChannel? = null
-        var destinationChannel: FileChannel? = null
-        try {
-            sourceChannel = FileInputStream(normalizedIn).channel
-            destinationChannel = FileOutputStream(normalizedout).channel
-            if (sourceChannel.size() == 0L) {
-                System.err.println("Source size is ZERO: $normalizedIn")
-            }
 
-            sourceChannel.transferTo(0, sourceChannel.size(), destinationChannel)
-        } finally {
-            try {
-                sourceChannel?.close()
-            } catch (ignored: Exception) {
-            }
-            try {
-                destinationChannel?.close()
-            } catch (ignored: Exception) {
+        FileInputStream(normalizedIn).bufferedReader().use { reader ->
+            FileOutputStream(normalizedout, false).bufferedWriter().use { writer ->
+                reader.transferTo(writer)
             }
         }
+
         out.setLastModified(`in`.lastModified())
         return out
     }
@@ -665,33 +651,16 @@ object FileUtil {
      * Copies the contents of file two onto the END of file one.
      */
     fun concatFiles(one: File, two: File): File {
-        val normalizedOne = normalize(one)!!.absolutePath
-        val normalizedTwo = normalize(two)!!.absolutePath
         if (DEBUG) {
             System.err.println("Concat'ing file: '$one'  -->  '$two'")
         }
-        var channelOne: FileChannel? = null
-        var channelTwo: FileChannel? = null
-        try {
-            // open it in append mode
-            channelOne = FileOutputStream(normalizedOne, true).channel
-            channelTwo = FileInputStream(normalizedTwo).channel
-            var size = two.length()
-            while (size > 0) {
-                size -= channelOne.transferFrom(channelTwo, 0, size)
-            }
-        } catch (ignored: Exception) {
-            ignored.printStackTrace()
-        } finally {
-            try {
-                channelOne?.close()
-            } catch (ignored: Exception) {
-            }
-            try {
-                channelTwo?.close()
-            } catch (ignored: Exception) {
+
+        FileOutputStream(one, true).bufferedWriter().use { writer ->
+            FileInputStream(two).bufferedReader().use { reader ->
+                reader.transferTo(writer)
             }
         }
+
         one.setLastModified(System.currentTimeMillis())
         return one
     }
