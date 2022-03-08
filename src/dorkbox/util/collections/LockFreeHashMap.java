@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
@@ -162,10 +163,42 @@ class LockFreeHashMap<K, V> implements Map<K, V>, Cloneable, Serializable {
         return hashMap.remove(key);
     }
 
+    @SuppressWarnings("Java8CollectionRemoveIf")
+    public synchronized
+    void removeAllValues(final V value) {
+        for (Iterator<Entry<K, V>> iterator = hashMap.entrySet().iterator(); iterator.hasNext(); ) {
+            final Map.Entry<K, V> kvEntry = iterator.next();
+            if (kvEntry.getValue().equals(value)) {
+                iterator.remove();
+            }
+        }
+    }
+
     @Override
     public synchronized
     void putAll(final Map<? extends K, ? extends V> map) {
         this.hashMap.putAll(map);
+    }
+
+    /**
+     * This uses equals to update values. At first glance, this seems like a waste (since if it's equal, why update it?). This is because
+     * the ONLY location this is used (in the Database, for updating all DeviceUser in the map), equals compares ONLY the DB ID. In only
+     * this situation, this makes sense (since anything with the same DB ID, we should replace/update the value)
+     */
+    public synchronized
+    void updateAllWithValue(final V value) {
+        for (Map.Entry<K, V> entry : hashMap.entrySet()) {
+            if (value.equals(entry.getValue())) {
+                // get's all device IDs that have this user assigned, and reassign the value
+                entry.setValue(value);
+            }
+        }
+    }
+
+    public synchronized
+    void replaceAll(Map<K,V> hashMap) {
+        this.hashMap.clear();
+        this.hashMap.putAll(hashMap);
     }
 
     @Override
@@ -211,5 +244,26 @@ class LockFreeHashMap<K, V> implements Map<K, V>, Cloneable, Serializable {
     String toString() {
         return mapREF.get(this)
                      .toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    public
+    Collection<K> keys() {
+        // use the SWP to get a lock-free get of the value
+        return mapREF.get(this).keySet();
+    }
+
+    @SuppressWarnings("unchecked")
+    public
+    Map<K,V> elements() {
+        // use the SWP to get a lock-free get of the value
+        return mapREF.get(this);
+    }
+
+    @SuppressWarnings("unchecked")
+    public
+    HashMap<K, V> backingMap() {
+        // use the SWP to get a lock-free get of the value
+        return mapREF.get(this);
     }
 }
