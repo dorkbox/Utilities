@@ -63,6 +63,12 @@ licensing {
         author(Extras.vendor)
         url(Extras.url)
 
+        extra("AhoCorasickDoubleArrayTrie", License.APACHE_2) {
+            description(Extras.description)
+            copyright(2018)
+            author("hankcs <me@hankcs.com>")
+            url("https://github.com/hankcs/AhoCorasickDoubleArrayTrie")
+        }
         extra("MersenneTwisterFast", License.BSD_3) {
             url(Extras.url)
             copyright(2003)
