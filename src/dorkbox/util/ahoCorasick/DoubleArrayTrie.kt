@@ -20,7 +20,7 @@
 
 @file:Suppress("unused")
 
-package dorkbox.vaadin.util.ahoCorasick
+package dorkbox.util.ahoCorasick
 
 import java.io.IOException
 import java.io.ObjectInputStream

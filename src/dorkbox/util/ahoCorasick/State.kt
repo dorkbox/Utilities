@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-package dorkbox.vaadin.util.ahoCorasick
+package dorkbox.util.ahoCorasick
 
 import java.util.*
 
