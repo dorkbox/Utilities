@@ -60,7 +60,7 @@ class DoubleArrayTrie<V>(map: Map<String, V>? = null,
     /**
      * outer value array
      */
-    private val v: Array<V>
+    internal val v: Array<V>
 
     /**
      * the length of every key
@@ -718,11 +718,11 @@ class DoubleArrayTrie<V>(map: Map<String, V>? = null,
         private var keySize: Int = 0
 
 
-        internal lateinit var output: Array<IntArray?>
-        internal lateinit var fail: IntArray
-        internal lateinit var base: IntArray
-        internal lateinit var check: IntArray
-        internal var size: Int = 0
+        lateinit var output: Array<IntArray?>
+        lateinit var fail: IntArray
+        lateinit var base: IntArray
+        lateinit var check: IntArray
+        var size: Int = 0
 
         /**
          * Build from a map
