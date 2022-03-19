@@ -29,7 +29,7 @@ import dorkbox.os.OS;
  * <p>
  * Direct-mapping, See: https://github.com/java-native-access/jna/blob/master/www/DirectMapping.md
  */
-@SuppressWarnings({"Duplicates", "SameParameterValue", "DeprecatedIsStillUsed", "WeakerAccess"})
+@SuppressWarnings({"Duplicates", "SameParameterValue", "WeakerAccess"})
 public
 class GtkLoader {
     /**
@@ -37,7 +37,7 @@ class GtkLoader {
      */
     public static
     String getVersion() {
-        return "1.20";
+        return "1.21";
     }
 
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
