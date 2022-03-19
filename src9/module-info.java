@@ -9,11 +9,9 @@ module dorkbox.utilities {
     exports dorkbox.jna.macos.foundation;
     exports dorkbox.jna.windows;
     exports dorkbox.jna.windows.structs;
-    exports dorkbox.os;
     exports dorkbox.urlHandler;
     exports dorkbox.util;
     exports dorkbox.util.classes;
-    exports dorkbox.util.collections;
     exports dorkbox.util.crypto;
     exports dorkbox.util.crypto.signers;
     exports dorkbox.util.entropy;
