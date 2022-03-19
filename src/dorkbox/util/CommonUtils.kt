@@ -32,17 +32,9 @@ import java.io.StringWriter
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-inline fun <reified T> T.logger(name: String): KLogger {
+inline fun <reified T> T.logger(name: String = T::class.java.simpleName): KLogger {
     return KotlinLogging.logger(name)
 }
-
-inline fun <reified T> T.logger(): KLogger {
-    if (T::class.isCompanion) {
-        return KotlinLogging.logger(T::class.java.enclosingClass.simpleName)
-    }
-    return KotlinLogging.logger(T::class.java.simpleName)
-}
-
 
 fun Exception.stackTraceToString(): String {
     val exceptionWriter = StringWriter()
@@ -69,8 +61,15 @@ inline fun ignoreExceptions(vararg blocks: () -> Unit) {
     }
 }
 
-fun async(dispatcher: CoroutineDispatcher = Dispatchers.IO, action: suspend CoroutineScope.() -> Unit): Job {
+fun async(dispatcher: CoroutineDispatcher, action: suspend CoroutineScope.() -> Unit): Job {
     return GlobalScope.launch(dispatcher) {
+        action()
+    }
+}
+
+
+fun asyncIO(action: suspend CoroutineScope.() -> Unit): Job {
+    return GlobalScope.launch(Dispatchers.IO) {
         action()
     }
 }
