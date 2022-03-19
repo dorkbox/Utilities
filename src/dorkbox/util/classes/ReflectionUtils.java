@@ -42,7 +42,7 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import dorkbox.util.collections.IdentityMap;
+import dorkbox.collections.IdentityMap;
 
 /**
  * @author bennidi
@@ -161,7 +161,7 @@ class ReflectionUtils {
         return getAnnotation(from, annotationType, new IdentityMap<AnnotatedElement, Boolean>());
     }
 
-    //
+
     private static
     boolean isOverriddenBy(final Method superclassMethod, final Method subclassMethod) {
         // if the declaring classes are the same or the subclass method is not defined in the subclass

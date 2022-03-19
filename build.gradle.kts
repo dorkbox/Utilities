@@ -37,7 +37,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.19"
+    const val version = "1.20"
 
     // set as project.ext
     const val name = "Utilities"
@@ -63,12 +63,7 @@ licensing {
         author(Extras.vendor)
         url(Extras.url)
 
-        extra("AhoCorasickDoubleArrayTrie", License.APACHE_2) {
-            description(Extras.description)
-            copyright(2018)
-            author("hankcs <me@hankcs.com>")
-            url("https://github.com/hankcs/AhoCorasickDoubleArrayTrie")
-        }
+
         extra("MersenneTwisterFast", License.BSD_3) {
             url(Extras.url)
             copyright(2003)
@@ -112,50 +107,6 @@ licensing {
             author("Damien Miller (djm@mindrot.org)")
             note("GWT modified version")
         }
-        extra("Bias, BinarySearch", License.MIT) {
-            url(Extras.url)
-            url("https://github.com/timboudreau/util")
-            copyright(2013)
-            author("Tim Boudreau")
-        }
-        extra("ConcurrentEntry", License.APACHE_2) {
-            url(Extras.url)
-            copyright(2016)
-            author("bennidi")
-            author("dorkbox")
-        }
-        extra("Collection Utilities (Array, ArrayMap, BooleanArray, ByteArray, CharArray, FloatArray, IdentityMap, IntArray, IntFloatMap, IntIntMap, IntMap, IntSet, LongArray, LongMap, ObjectFloatMap, ObjectIntMap, ObjectMap, ObjectSet, OrderedMap, OrderedSet)", License.APACHE_2) {
-            url(Extras.url)
-            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            copyright(2011)
-            author("LibGDX")
-            author("Mario Zechner (badlogicgames@gmail.com)")
-            author("Nathan Sweet (nathan.sweet@gmail.com)")
-        }
-        extra("Predicate", License.APACHE_2) {
-            url(Extras.url)
-            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            copyright(2011)
-            author("LibGDX")
-            author("Mario Zechner (badlogicgames@gmail.com)")
-            author("Nathan Sweet (nathan.sweet@gmail.com)")
-            author("xoppa")
-        }
-        extra("Select, QuickSelect", License.APACHE_2) {
-            url(Extras.url)
-            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            copyright(2011)
-            author("LibGDX")
-            author("Mario Zechner (badlogicgames@gmail.com)")
-            author("Nathan Sweet (nathan.sweet@gmail.com)")
-            author("Jon Renner")
-        }
-        extra("TimSort, ComparableTimSort", License.APACHE_2) {
-            url(Extras.url)
-            url("https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/utils")
-            copyright(2008)
-            author("The Android Open Source Project")
-        }
         extra("Modified hex conversion utility methods", License.APACHE_2) {
             url(Extras.url)
             url("https://netty.io")
@@ -180,12 +131,6 @@ licensing {
             author("Pronghorn Technology LLC")
             author("Dorkbox LLC")
             url("https://www.pronghorn.tech ")
-        }
-        extra("ConcurrentWeakIdentityHashMap", License.APACHE_2) {
-            copyright(2016)
-            description("Concurrent WeakIdentity HashMap")
-            author("zhanhb")
-            url("https://github.com/spring-projects/spring-loaded/blob/master/springloaded/src/main/java/org/springsource/loaded/support/ConcurrentWeakIdentityHashMap.java")
         }
         extra("UrlRewriteFilter", License.BSD_3) {
             description("UrlRewriteFilter is a Java Web Filter for any J2EE compliant web application server")
@@ -216,9 +161,10 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
 
+    api("com.dorkbox:Collections:1.0")
     api("com.dorkbox:Executor:3.9")
-    api("com.dorkbox:Updates:1.1")
     api("com.dorkbox:OS:1.0")
+    api("com.dorkbox:Updates:1.1")
 
 
     val jnaVersion = "5.10.0"
@@ -226,7 +172,7 @@ dependencies {
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
     // https://github.com/cowtowncoder/java-uuid-generator
-    // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.s
+    // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.
     api("com.fasterxml.uuid:java-uuid-generator:4.0.1")
 
     // https://github.com/MicroUtils/kotlin-logging

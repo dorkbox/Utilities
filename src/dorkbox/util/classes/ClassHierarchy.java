@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
-import dorkbox.util.collections.IdentityMap;
+import dorkbox.collections.IdentityMap;
 
 /**
  * @author dorkbox

@@ -42,7 +42,7 @@ class Desktop {
      */
     public static
     String getVersion() {
-        return "1.19";
+        return "1.20";
     }
 
     static {
