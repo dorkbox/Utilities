@@ -16,6 +16,7 @@
 package dorkbox.util
 
 import dorkbox.os.OS
+import mu.KotlinLogging
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -58,7 +59,7 @@ object FileUtil {
         fun finished()
     }
 
-    private val log = logger()
+    private val log = KotlinLogging.logger(FileUtil::class.java.name)
 
     private const val DEBUG = false
 
