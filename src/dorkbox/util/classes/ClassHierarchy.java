@@ -77,11 +77,11 @@ class ClassHierarchy {
             Class<?> c;
             final boolean isArray = clazz.isArray();
 
-            if (isArray) {
-                // have to add the original class to the front of the list
-                c = getArrayClass(clazz);
-                newList.add(c);
+            // have to add the original class to the front of the list
+            newList.add(clazz);
 
+            if (isArray) {
+                // super-types for an array ALSO must be an array.
                 while (superTypesIterator.hasNext()) {
                     c = superTypesIterator.next();
                     c = getArrayClass(c);
@@ -92,9 +92,6 @@ class ClassHierarchy {
                 }
             }
             else {
-                // have to add the original class to the front of the list
-                newList.add(clazz);
-
                 while (superTypesIterator.hasNext()) {
                     c = superTypesIterator.next();
 
