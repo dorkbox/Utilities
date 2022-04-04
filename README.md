@@ -17,7 +17,7 @@ Maven Info
     <dependency>
       <groupId>com.dorkbox</groupId>
       <artifactId>Utilities</artifactId>
-      <version>1.9</version>
+      <version>1.22</version>
     </dependency>
 </dependencies>
 ````
@@ -27,7 +27,7 @@ Gradle Info
 ````
 dependencies {
     ...
-    compile "com.dorkbox:Utilities:1.9"
+    compile "com.dorkbox:Utilities:1.22"
 }
 ````
 
@@ -35,4 +35,3 @@ dependencies {
 License
 ---------
 This project is © 2015 dorkbox llc, and is distributed under the terms of the Apache v2.0 License. See file "LICENSE" for further references.
-
