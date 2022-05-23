@@ -37,7 +37,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.24"
+    const val version = "1.25"
 
     // set as project.ext
     const val name = "Utilities"
@@ -188,7 +188,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.74.Final")
+    compileOnly("io.netty:netty-buffer:4.1.77.Final")
 
     val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
