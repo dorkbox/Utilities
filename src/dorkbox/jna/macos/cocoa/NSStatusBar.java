@@ -25,8 +25,8 @@ import dorkbox.jna.macos.foundation.ObjectiveC;
 public
 class NSStatusBar extends NSObject {
 
-    public final static double NSVariableStatusItemLength = -1;  // can specify exactly how wide to make the space
-    public final static double NSSquareStatusItemLength = -2; // the space will be a square
+    public final static float NSVariableStatusItemLength = -1;  // A status item length that dynamically adjusts to the width of its contents.
+    public final static float NSSquareStatusItemLength = -2; // A status item length that is equal to the status bar’s thickness.
 
     static Pointer objectClass = ObjectiveC.objc_lookUpClass("NSStatusBar");
 
@@ -46,7 +46,8 @@ class NSStatusBar extends NSObject {
 
     public
     NSStatusItem newStatusItem() {
-        return new NSStatusItem(ObjectiveC.objc_msgSend(this, statusItemWithLength, NSStatusBar.NSSquareStatusItemLength));
+        long result = ObjectiveC.objc_msgSend(this, statusItemWithLength, NSStatusBar.NSSquareStatusItemLength);
+        return result != 0 ? new NSStatusItem(result) : null;
     }
 
     public

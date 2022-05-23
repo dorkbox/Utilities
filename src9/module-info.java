@@ -18,13 +18,13 @@ module dorkbox.utilities {
     exports dorkbox.util.exceptions;
     exports dorkbox.util.gwt;
     exports dorkbox.util.properties;
-    exports dorkbox.util.swing;
     exports dorkbox.util.userManagement;
 
     requires transitive dorkbox.executor;
     requires transitive dorkbox.updates;
 
     requires transitive kotlin.stdlib;
+    requires kotlinx.coroutines.core.jvm;
 
     requires static com.sun.jna;
     requires static com.sun.jna.platform;
