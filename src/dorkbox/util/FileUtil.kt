@@ -31,13 +31,7 @@ import java.io.InputStream
 import java.io.PrintWriter
 import java.io.RandomAccessFile
 import java.io.Reader
-import java.nio.charset.StandardCharsets
 import java.nio.file.DirectoryIteratorException
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
-import java.nio.file.attribute.BasicFileAttributes
 import java.util.*
 import java.util.zip.*
 
@@ -58,6 +52,11 @@ object FileUtil {
         fun onLineRead(line: String)
         fun finished()
     }
+
+    /**
+     * Gets the version number.
+     */
+    val version = "1.25"
 
     private val log = KotlinLogging.logger(FileUtil::class.java.name)
 
@@ -202,16 +201,16 @@ object FileUtil {
     @Throws(IOException::class)
     fun read(file: File, includeEmptyLines: Boolean): List<String> {
         val lines: MutableList<String> = ArrayList()
-        FileReader(file).use {
-            val bin = BufferedReader(it)
-            var line: String
 
-            if (includeEmptyLines) {
-                while (bin.readLine().also { line = it } != null) {
+        if (includeEmptyLines) {
+            file.reader().use {
+                it.forEachLine { line ->
                     lines.add(line)
                 }
-            } else {
-                while (bin.readLine().also { line = it } != null) {
+            }
+        } else {
+            file.reader().use {
+                it.forEachLine { line ->
                     if (line.isNotEmpty()) {
                         lines.add(line)
                     }
@@ -231,9 +230,7 @@ object FileUtil {
      */
     @Throws(IOException::class)
     fun readAsString(file: File): String {
-        val stringBuilder = StringBuilder(file.length().toInt())
-        read(file, stringBuilder)
-        return stringBuilder.toString()
+        return file.readText()
     }
 
     /**
@@ -247,13 +244,13 @@ object FileUtil {
      * @return contents of the file if we could read the file without errors. Null if we could not
      */
     fun read(file: File): String? {
-        val stringBuilder = StringBuilder()
-        return if (read(file, stringBuilder, OS.LINE_SEPARATOR)) {
-            stringBuilder.toString()
+        val text = file.readText()
+
+        if (text.isEmpty()) {
+            return null
         }
-        else {
-            null
-        }
+
+        return text
     }
 
     /**
@@ -283,19 +280,9 @@ object FileUtil {
             return false
         }
 
-        val path = Path.of(file.toURI())
-        val bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)
-
         try {
-            bufferedReader.use { reader ->
-                while (true) {
-                    /*
-                     * returns the content of a line MINUS the newline.
-                     * returns null only for the END of the stream.
-                     * returns an empty String if two newlines appear in a row.
-                     */
-                    val line = reader.readLine() ?: break
-
+            file.reader().use { reader ->
+                reader.forEachLine { line ->
                     if (lineSeparator != null) {
                         builder.append(line).append(lineSeparator)
                     }
@@ -322,18 +309,9 @@ object FileUtil {
             return false
         }
 
-        val path = Path.of(file.toURI())
-        val bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)
-
         try {
-            bufferedReader.use { reader ->
-                while (true) {
-                    /*
-                     * returns the content of a line MINUS the newline.
-                     * returns null only for the END of the stream.
-                     * returns an empty String if two newlines appear in a row.
-                     */
-                    val line = reader.readLine() ?: break
+            file.reader().use { reader ->
+                reader.forEachLine { line ->
                     action.onLineRead(line)
                 }
             }
@@ -358,21 +336,9 @@ object FileUtil {
             return ""
         }
 
-        val path = Path.of(file.toURI())
-        val bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)
-
-        bufferedReader.use { reader ->
-            while (true) {
-                /*
-                 * returns the content of a line MINUS the newline.
-                 * returns null only for the END of the stream.
-                 * returns an empty String if two newlines appear in a row.
-                 */
-                return reader.readLine() ?: break
-            }
-        }
-
-        return ""
+        return file.reader().use { reader ->
+            reader.buffered().lineSequence().firstOrNull()
+        } ?: ""
     }
 
     fun getPid(pidFileName: String): String? {
@@ -453,10 +419,10 @@ object FileUtil {
                 var lineNumber = 0
 
                 override fun onLineRead(line: String) {
-                    if (!line.isEmpty() && !line.startsWith("#")) {
+                    if (line.isNotEmpty() && !line.startsWith("#")) {
                         val newLine = line.trim()
 
-                        if (!newLine.isEmpty()) {
+                        if (newLine.isNotEmpty()) {
                             list.add(newLine)
                         }
                     }
@@ -481,22 +447,12 @@ object FileUtil {
         }
     }
 
-    fun deleteDirectory(dir: File) {
+    /**
+     * @return true if the directory was fully deleted. A false indicates that a partial delete has occurred
+     */
+    fun deleteDirectory(dir: File): Boolean {
         try {
-            val directory = Path.of(dir.absolutePath)
-            Files.walkFileTree(directory, object : SimpleFileVisitor<Path>() {
-                @kotlin.jvm.Throws(IOException::class)
-                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
-                    Files.delete(file)
-                    return FileVisitResult.CONTINUE
-                }
-
-                @kotlin.jvm.Throws(IOException::class)
-                override fun postVisitDirectory(dir: Path, exc: IOException?): FileVisitResult {
-                    Files.delete(dir)
-                    return FileVisitResult.CONTINUE
-                }
-            })
+            return dir.deleteRecursively()
         }
         catch (e: IOException) {
             log.error("Error deleting the contents of dir $dir", e)
@@ -505,6 +461,7 @@ object FileUtil {
             log.error("Error deleting the contents of dir $dir", e)
         }
 
+        return false
     }
 
     /**
@@ -547,18 +504,13 @@ object FileUtil {
 
         // as a last resort, try copying the old data over the new
         return try {
-            FileInputStream(source).use { fin ->
-                FileOutputStream(dest).use { fout ->
-                    fin.copyTo(fout)
-
-                    if (!source.delete()) {
-                        if (DEBUG) {
-                            System.err.println("Failed to delete '$source' after brute force copy to '$dest'.")
-                        }
-                    }
-                    true
+            source.copyTo(dest)
+            if (!source.delete()) {
+                if (DEBUG) {
+                    System.err.println("Failed to delete '$source' after brute force copy to '$dest'.")
                 }
             }
+            true
         } catch (ioe: IOException) {
             if (DEBUG) {
                 System.err.println("Failed to copy '$source' to '$dest'.")
@@ -638,12 +590,7 @@ object FileUtil {
             System.err.println("Copying file: '$`in`'  -->  '$out'")
         }
 
-        FileInputStream(normalizedIn).bufferedReader().use { reader ->
-            FileOutputStream(normalizedout, false).bufferedWriter().use { writer ->
-                reader.transferTo(writer)
-            }
-        }
-
+        `in`.copyTo(`out`)
         out.setLastModified(`in`.lastModified())
         return out
     }
@@ -656,11 +603,7 @@ object FileUtil {
             System.err.println("Concat'ing file: '$one'  -->  '$two'")
         }
 
-        FileOutputStream(one, true).bufferedWriter().use { writer ->
-            FileInputStream(two).bufferedReader().use { reader ->
-                reader.transferTo(writer)
-            }
-        }
+        one.appendBytes(two.readBytes())
 
         one.setLastModified(System.currentTimeMillis())
         return one
@@ -724,7 +667,7 @@ object FileUtil {
         requireNotNull(src) { "Source must be valid" }
         requireNotNull(dest) { "Destination must be valid" }
 
-        if (namesToIgnore.size > 0) {
+        if (namesToIgnore.isNotEmpty()) {
             val name = src.name
             for (ignore in namesToIgnore) {
                 if (name == ignore) {
@@ -918,22 +861,20 @@ object FileUtil {
      * @return the contents of the file as a byte array
      */
     fun toBytes(file: File): ByteArray? {
-        FileInputStream(file.absolutePath).use {
-            return it.readAllBytes()
-        }
+        return file.readBytes()
     }
 
     /**
      * Creates the directories in the specified location.
      */
     fun mkdir(location: File): String {
-        val path = normalize(location)!!.absolutePath
+        val path = normalize(location)!!.absoluteFile
         if (location.mkdirs()) {
             if (DEBUG) {
                 System.err.println("Created directory: $path")
             }
         }
-        return path
+        return path.path
     }
 
     /**
