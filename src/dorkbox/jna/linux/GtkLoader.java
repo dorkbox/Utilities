@@ -37,7 +37,7 @@ class GtkLoader {
      */
     public static
     String getVersion() {
-        return "1.26";
+        return "1.27";
     }
 
     // objdump -T /usr/lib/x86_64-linux-gnu/libgtk-x11-2.0.so.0 | grep gtk
