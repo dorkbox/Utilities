@@ -127,6 +127,47 @@ object WebUtil {
 
     }
 
+    /**
+     * Only removes the path and query parameters. Only the transport + domain remain.
+     * ie:
+     * http://foo.com/index.php  -->  http://foo.com
+     * https://www.aa.foo.com/index.php  --> https://www.aa.foo.com
+     * https://www.aa.foo.com/index&foo%bar --> https://www.aa.foo.com
+     * https://www.aa.foo.com%foobar --> https://www.aa.foo.com
+     */
+    fun cleanupAndRemovePath(fullDomainName: String): String {
+        val start = 0
+        var end = fullDomainName.length
+
+        val slash = fullDomainName.indexOf("/", start + 3)
+        if (slash > -1 && slash < end) {
+            end = slash
+        }
+
+        val colon = fullDomainName.indexOf(":", start + 3)
+        if (colon > -1 && colon < end) {
+            end = colon
+        }
+
+        val percent = fullDomainName.indexOf("%", start)
+        if (percent > -1 && percent < end) {
+            end = percent
+        }
+
+        val ampersand = fullDomainName.indexOf("&", start)
+        if (ampersand > -1 && ampersand < end) {
+            end = ampersand
+        }
+
+        val question = fullDomainName.indexOf("?", start)
+        if (question > -1 && question < end) {
+            end = question
+        }
+
+
+        return fullDomainName.substring(start, end)
+    }
+
 
 
     /**
@@ -578,7 +619,8 @@ object WebUtil {
                         HttpURLConnection.HTTP_MOVED_PERM, HttpURLConnection.HTTP_MOVED_TEMP -> {
                             location = getHeaderField("Location")
                             // java.net.URLDecoder is only valid for query parameters/headers -- NOT FOR ACTUAL URLS!
-                            location = URLDecoder.decode(location, Charsets.UTF_8)
+                            location = URLDecoder.decode(location, "US-ASCII")
+
 
                             // logger.trace { "Response to '$url' redirected to '$location'" }
 
