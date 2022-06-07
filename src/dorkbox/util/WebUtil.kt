@@ -136,7 +136,14 @@ object WebUtil {
      * https://www.aa.foo.com%foobar --> https://www.aa.foo.com
      */
     fun cleanupAndRemovePath(fullDomainName: String): String {
-        val start = 0
+        var start = fullDomainName.indexOf("://")
+        if (start == -1) {
+            start = 0
+        }
+        else {
+            start += 3 // 3 is the length of ://
+        }
+
         var end = fullDomainName.length
 
         val slash = fullDomainName.indexOf("/", start + 3)
@@ -165,7 +172,7 @@ object WebUtil {
         }
 
 
-        return fullDomainName.substring(start, end)
+        return fullDomainName.substring(0, end)
     }
 
 
