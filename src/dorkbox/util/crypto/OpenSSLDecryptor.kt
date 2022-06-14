@@ -139,9 +139,9 @@ object OpenSSLDecryptor {
 
 
 
-            // openssl enc -aes-256-cbc -d -md sha256 -in netref_install_2019.1.bin.enc -out netref_install_2019.1.bin.new -pass pass:xyfjWNl6yPIZfRYLu64L2sleiF8vD5xgHsJ3sa3Ya6sY01
-//            val plaintextFileName = "build/netref_install_2019.1.bin"
-//            val encryptedFileName = "build/netref_install_2019.1.bin.enc"
+            // openssl enc -aes-256-cbc -d -md sha256 -in install_2019.1.bin.enc -out install_2019.1.bin.new -pass pass:xyfjWNl6yPIZfRYLu64L2sleiF8vD5xgHsJ3sa3Ya6sY01
+//            val plaintextFileName = "build/install_2019.1.bin"
+//            val encryptedFileName = "build/install_2019.1.bin.enc"
 //            val fileOutputStream = FileOutputStream(File(encryptedFileName))
 //            OpenSSLPBEOutputStream(fileOutputStream, password).use { outputStream ->
 //                Files.copy(Path.of(plaintextFileName), outputStream)
@@ -152,8 +152,8 @@ object OpenSSLDecryptor {
 //            }
 
 
-            val plaintextFileName = "NetRefCommon/password.txt"
-            val encryptedFileName = "NetRefCommon/password.txt.enc"
+            val plaintextFileName = "password.txt"
+            val encryptedFileName = "password.txt.enc"
             if (decrypt) {
                 // --- read base 64 encoded file ---
 

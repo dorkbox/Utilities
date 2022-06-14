@@ -21,6 +21,7 @@
 package dorkbox.util
 
 
+import dorkbox.netUtil.Dns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -424,7 +425,7 @@ object WebUtil {
 
         substring = substring.substring(nextDot + 1)
 
-        if (DomainUtils.isTLD(substring)) {
+        if (Dns.isTLD(substring)) {
             substring = last
         }
 
@@ -465,15 +466,15 @@ object WebUtil {
         if (end == -1) {
             if (start == 0) {
                 // it was already clean.
-                return DomainUtils.extractSLD(fullDomainName)
+                return Dns.extractSLD(fullDomainName)
             }
 
             end = fullDomainName.length
         }
 
         // for now, get the SLD as well
-        val substring= fullDomainName.substring(start, end)
-        return DomainUtils.extractSLD(substring)
+        val substring = fullDomainName.substring(start, end)
+        return Dns.extractSLD(substring)
     }
 
     /**
