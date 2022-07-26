@@ -29,15 +29,15 @@ class NamedThreadFactory constructor(
     val group: ThreadGroup = Thread.currentThread().threadGroup,
 
     /** @param threadPriority 1-10, with 5 being normal and 10 being max */
-    val threadPriority: Int = Thread.MAX_PRIORITY,
+    val threadPriority: Int = Thread.NORM_PRIORITY,
 
     /** @param daemon true to stop this thread automatically when the JVM shutsdown */
     val daemon: Boolean = true
 
 ) : ThreadFactory {
-    constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.MAX_PRIORITY, true)
+    constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, true)
     constructor(poolNamePrefix: String, isDaemon: Boolean) : this(poolNamePrefix, Thread.currentThread().threadGroup, isDaemon)
-    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.MAX_PRIORITY, isDaemon)
+    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon)
 
 
     private val poolId = AtomicInteger()
