@@ -74,7 +74,9 @@ fun asyncIO(action: suspend CoroutineScope.() -> Unit): Job {
     }
 }
 
-suspend fun <T> Mutex.withReentrantLock(block: suspend () -> T): T {
+
+// From: https://elizarov.medium.com/phantom-of-the-coroutine-afc63b03a131
+suspend inline fun <T> Mutex.withReentrantLock(crossinline block: suspend () -> T): T {
     val key = ReentrantMutexContextKey(this)
 
     // call block directly when this mutex is already locked in the context
@@ -82,7 +84,9 @@ suspend fun <T> Mutex.withReentrantLock(block: suspend () -> T): T {
 
     // otherwise add it to the context and lock the mutex
     return withContext(ReentrantMutexContextElement(key)) {
-        withLock { block() }
+        withLock {
+            return@withContext block()
+        }
     }
 }
 
