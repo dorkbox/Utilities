@@ -33,7 +33,7 @@ public class MersenneTwisterFastTest {
         // http://www.math.keio.ac.jp/matumoto/CODES/MT2002/mt19937ar.out
 
         r = new MersenneTwisterFast(new int[] {0x123,0x234,0x345,0x456});
-        System.out.println("Output of MersenneTwisterFast with new (2002/1/26) seeding mechanism");
+        // System.out.println("Output of MersenneTwisterFast with new (2002/1/26) seeding mechanism");
         for (j = 0; j < 1000; j++) {
             // first, convert the int from signed to "unsigned"
             long l = r.nextInt();
@@ -78,41 +78,64 @@ public class MersenneTwisterFastTest {
         // TEST TO COMPARE TYPE CONVERSION BETWEEN
         // MersenneTwisterFast.java AND MersenneTwister.java
 
+        boolean test = false;
         System.out.println("\nGrab the first 1000 booleans");
+        ms = System.currentTimeMillis();
         r = new MersenneTwisterFast(SEED);
         for (j = 0; j < 1000; j++) {
-            System.out.print(r.nextBoolean() + " ");
+            // System.out.print(r.nextBoolean() + " ");
+            test = r.nextBoolean();
             if (j % 8 == 7) {
-                System.out.println();
+                // System.out.println();
+                test = false;
             }
         }
         if (!(j % 8 == 7)) {
-            System.out.println();
+            // System.out.println();
+            test = true;
         }
+
+        System.out.println("Mersenne Twister Fast: " + (System.currentTimeMillis() - ms) + "          Ignore this: "
+                           + xx + "" + test);
 
         System.out.println("\nGrab 1000 booleans of increasing probability using nextBoolean(double)");
         r = new MersenneTwisterFast(SEED);
+        ms = System.currentTimeMillis();
         for (j = 0; j < 1000; j++) {
-            System.out.print(r.nextBoolean(j / 999.0) + " ");
+            // System.out.print(r.nextBoolean(j / 999.0) + " ");
+            test = r.nextBoolean(j / 999.0);
             if (j % 8 == 7) {
-                System.out.println();
+                // System.out.println();
+                test = false;
             }
         }
         if (!(j % 8 == 7)) {
-            System.out.println();
+            // System.out.println();
+            test = true;
         }
+
+        System.out.println("Mersenne Twister Fast: " + (System.currentTimeMillis() - ms) + "          Ignore this: "
+                           + xx + "" + test);
 
         System.out.println("\nGrab 1000 booleans of increasing probability using nextBoolean(float)");
         r = new MersenneTwisterFast(SEED);
+        ms = System.currentTimeMillis();
         for (j = 0; j < 1000; j++) {
-            System.out.print(r.nextBoolean(j / 999.0f) + " ");
+            // System.out.print(r.nextBoolean(j / 999.0f) + " ");
+            test = r.nextBoolean(j / 999.0f);
             if (j % 8 == 7) {
+                test = false;
                 System.out.println();
             }
         }
         if (!(j % 8 == 7)) {
-            System.out.println();
+            // System.out.println();
+            test = true;
         }
+
+        System.out.println("Mersenne Twister Fast: " + (System.currentTimeMillis() - ms) + "          Ignore this: "
+                           + xx + "" + test);
+
 
         byte[] bytes = new byte[1000];
         System.out.println("\nGrab the first 1000 bytes using nextBytes");
