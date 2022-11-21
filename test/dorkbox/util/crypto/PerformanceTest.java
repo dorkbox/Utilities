@@ -19,7 +19,7 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 import org.bouncycastle.crypto.CipherParameters;
-import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.ParametersWithIV;
@@ -63,7 +63,7 @@ class PerformanceTest {
         long javaEncryptStartTime = System.currentTimeMillis();
 
         // convert to bouncycastle
-        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESEngine());
         CipherParameters aesIVAndKey = new ParametersWithIV(new KeyParameter(aesKey), aesIV);
 
         long encryptInitTime = 0L;

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
+import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.AESFastEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.modes.GCMBlockCipher;
@@ -40,7 +41,7 @@ public class AesTest {
 
         SecureRandom rand = new SecureRandom(entropySeed.getBytes());
 
-        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESEngine());
 
         byte[] key = new byte[32];
         byte[] iv = new byte[16];
@@ -100,7 +101,7 @@ public class AesTest {
 
         SecureRandom rand = new SecureRandom(entropySeed.getBytes());
 
-        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESEngine());
 
         byte[] key = new byte[32];
         byte[] iv = new byte[16];
@@ -193,7 +194,7 @@ public class AesTest {
 
         SecureRandom rand = new SecureRandom(entropySeed.getBytes());
 
-        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESEngine());
 
         byte[] key = new byte[32]; // 256bit key
         byte[] iv = new byte[aesEngine.getUnderlyingCipher().getBlockSize()];
@@ -253,7 +254,7 @@ public class AesTest {
 
         SecureRandom rand = new SecureRandom(entropySeed.getBytes());
 
-        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESFastEngine());
+        GCMBlockCipher aesEngine = new GCMBlockCipher(new AESEngine());
 
         byte[] key = new byte[32];
         byte[] iv = new byte[16];

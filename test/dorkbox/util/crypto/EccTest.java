@@ -28,7 +28,7 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.BasicAgreement;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.agreement.ECDHCBasicAgreement;
-import org.bouncycastle.crypto.engines.AESFastEngine;
+import org.bouncycastle.crypto.engines.AESEngine;
 import org.bouncycastle.crypto.engines.IESEngine;
 import org.bouncycastle.crypto.modes.CBCBlockCipher;
 import org.bouncycastle.crypto.paddings.PaddedBufferedBlockCipher;
@@ -108,8 +108,8 @@ public class EccTest {
         AsymmetricCipherKeyPair key2 = CryptoECC.generateKeyPair(CryptoECC.default_curve, secureRandom);
 
 
-        PaddedBufferedBlockCipher aesEngine1 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
-        PaddedBufferedBlockCipher aesEngine2 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESFastEngine()));
+        PaddedBufferedBlockCipher aesEngine1 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESEngine()));
+        PaddedBufferedBlockCipher aesEngine2 = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESEngine()));
 
         IESWithCipherParameters cipherParams = CryptoECC.generateSharedParametersWithCipher(secureRandom);
 
