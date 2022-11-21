@@ -42,7 +42,6 @@ import java.security.spec.RSAPrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Enumeration;
 
 import org.bouncycastle.asn1.ASN1EncodableVector;
 import org.bouncycastle.asn1.ASN1Encoding;
@@ -52,11 +51,10 @@ import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.ASN1Sequence;
 import org.bouncycastle.asn1.ASN1Set;
-import org.bouncycastle.asn1.ASN1TaggedObject;
+import org.bouncycastle.asn1.BERSequence;
 import org.bouncycastle.asn1.BERSet;
 import org.bouncycastle.asn1.DERBMPString;
 import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.DERSequence;
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.cms.CMSObjectIdentifiers;
 import org.bouncycastle.asn1.cms.ContentInfo;
@@ -485,40 +483,37 @@ public class CryptoX509 {
             try {
                 asn1InputStream = new ASN1InputStream(new ByteArrayInputStream(signatureBytes));
                 ASN1Primitive signatureASN = asn1InputStream.readObject();
-                ASN1Sequence seq = ASN1Sequence.getInstance(signatureASN);
-                ASN1TaggedObject tagged = (ASN1TaggedObject)seq.getObjectAt(1);
+
+                BERSequence seq = (BERSequence) ASN1Sequence.getInstance(signatureASN);
+                ContentInfo contentInfo = ContentInfo.getInstance(seq);
 
                 // Extract certificates
-                SignedData newSignedData = SignedData.getInstance(tagged.getObject());
+                SignedData newSignedData = SignedData.getInstance(contentInfo.getContent());
 
-                @SuppressWarnings("rawtypes")
-                Enumeration newSigObjects = newSignedData.getCertificates().getObjects();
-                Object newSigElement = newSigObjects.nextElement();
+                InputStream newSigIn = new ByteArrayInputStream(newSignedData.getCertificates().parser().readObject().toASN1Primitive().getEncoded());
 
-                if (newSigElement instanceof DERSequence) {
-                    DERSequence newSigDERElement = (DERSequence) newSigElement;
-                    InputStream newSigIn = new ByteArrayInputStream(newSigDERElement.getEncoded());
+                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
+                java.security.cert.Certificate engineGenerateCert = certificateFactory.engineGenerateCertificate(newSigIn);
 
-                    org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                    java.security.cert.Certificate engineGenerateCert = certificateFactory.engineGenerateCertificate(newSigIn);
+                BCDSAPublicKey publicKey2 = (BCDSAPublicKey) engineGenerateCert.getPublicKey();
 
-                    BCDSAPublicKey publicKey2 = (BCDSAPublicKey) engineGenerateCert.getPublicKey();
+                if (optionalOriginalPublicKey != null) {
+                    DSAParams params = publicKey2.getParams();
+                    DSAParameters parameters = optionalOriginalPublicKey.getParameters();
 
-                    if (optionalOriginalPublicKey != null) {
-                        DSAParams params = publicKey2.getParams();
-                        DSAParameters parameters = optionalOriginalPublicKey.getParameters();
+                    if (!publicKey2.getY().equals(optionalOriginalPublicKey.getY()) ||
+                        !params.getP().equals(parameters.getP()) ||
+                        !params.getQ().equals(parameters.getQ()) ||
+                        !params.getG().equals(parameters.getG())) {
 
-                        if (!publicKey2.getY().equals(optionalOriginalPublicKey.getY()) ||
-                            !params.getP().equals(parameters.getP()) ||
-                            !params.getQ().equals(parameters.getQ()) ||
-                            !params.getG().equals(parameters.getG())) {
-
-                            return false;
-                        }
+                        return false;
                     }
-
-                    engineGenerateCert.verify(publicKey2);
                 }
+
+                // throws exception if it fails
+                engineGenerateCert.verify(publicKey2);
+
+                return true;
             } catch (Throwable t) {
                 return false;
             } finally {
@@ -530,8 +525,6 @@ public class CryptoX509 {
                     }
                 }
             }
-
-            return true;
         }
     }
 
@@ -1034,35 +1027,30 @@ public class CryptoX509 {
             try {
                 asn1InputStream = new ASN1InputStream(new ByteArrayInputStream(signatureBytes));
                 ASN1Primitive signatureASN = asn1InputStream.readObject();
-                ASN1Sequence seq = ASN1Sequence.getInstance(signatureASN);
-                ASN1TaggedObject tagged = (ASN1TaggedObject)seq.getObjectAt(1);
+                BERSequence seq = (BERSequence) ASN1Sequence.getInstance(signatureASN);
+                ContentInfo contentInfo = ContentInfo.getInstance(seq);
 
                 // Extract certificates
-                SignedData newSignedData = SignedData.getInstance(tagged.getObject());
+                SignedData newSignedData = SignedData.getInstance(contentInfo.getContent());
 
-                @SuppressWarnings("rawtypes")
-                Enumeration newSigOjects = newSignedData.getCertificates().getObjects();
-                Object newSigElement = newSigOjects.nextElement();
+                InputStream newSigIn = new ByteArrayInputStream(newSignedData.getCertificates().parser().readObject().toASN1Primitive().getEncoded());
 
-                if (newSigElement instanceof DERSequence) {
-                    DERSequence newSigDERElement = (DERSequence) newSigElement;
-                    InputStream newSigIn = new ByteArrayInputStream(newSigDERElement.getEncoded());
+                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
+                java.security.cert.Certificate certificate = certFactory.engineGenerateCertificate(newSigIn);
 
-                    org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                    java.security.cert.Certificate certificate = certFactory.engineGenerateCertificate(newSigIn);
+                BCRSAPublicKey publicKey2 = (BCRSAPublicKey) certificate.getPublicKey();
 
-                    BCRSAPublicKey publicKey2 = (BCRSAPublicKey) certificate.getPublicKey();
+                if (publicKey != null) {
+                    if (!publicKey.getModulus().equals(publicKey2.getModulus()) ||
+                        !publicKey.getExponent().equals(publicKey2.getPublicExponent())) {
 
-                    if (publicKey != null) {
-                        if (!publicKey.getModulus().equals(publicKey2.getModulus()) ||
-                            !publicKey.getExponent().equals(publicKey2.getPublicExponent())) {
-
-                            return false;
-                        }
+                        return false;
                     }
-
-                    certificate.verify(publicKey2);
                 }
+
+                // throws exception if it fails.
+                certificate.verify(publicKey2);
+
                 return true;
             } catch (Throwable t) {
                 logger.error("Error validating certificate.", t);
@@ -1192,40 +1180,36 @@ public class CryptoX509 {
             try {
                 asn1InputStream = new ASN1InputStream(new ByteArrayInputStream(signatureBytes));
                 ASN1Primitive signatureASN = asn1InputStream.readObject();
-                ASN1Sequence seq = ASN1Sequence.getInstance(signatureASN);
-                ASN1TaggedObject tagged = (ASN1TaggedObject)seq.getObjectAt(1);
+                BERSequence seq = (BERSequence) ASN1Sequence.getInstance(signatureASN);
+                ContentInfo contentInfo = ContentInfo.getInstance(seq);
 
                 // Extract certificates
-                SignedData newSignedData = SignedData.getInstance(tagged.getObject());
+                SignedData newSignedData = SignedData.getInstance(contentInfo.getContent());
 
-                @SuppressWarnings("rawtypes")
-                Enumeration newSigOjects = newSignedData.getCertificates().getObjects();
-                Object newSigElement = newSigOjects.nextElement();
+                InputStream newSigIn = new ByteArrayInputStream(newSignedData.getCertificates().parser().readObject().toASN1Primitive().getEncoded());
 
-                if (newSigElement instanceof DERSequence) {
-                    DERSequence newSigDERElement = (DERSequence) newSigElement;
-                    InputStream newSigIn = new ByteArrayInputStream(newSigDERElement.getEncoded());
+                org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
+                java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(newSigIn);
 
-                    org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory certificateFactory = new org.bouncycastle.jcajce.provider.asymmetric.x509.CertificateFactory();
-                    java.security.cert.Certificate certificate = certificateFactory.engineGenerateCertificate(newSigIn);
+                PublicKey publicKey2 = certificate.getPublicKey();
 
-                    PublicKey publicKey2 = certificate.getPublicKey();
+                if (optionalOriginalPublicKey != null) {
+                    ECDomainParameters parameters = optionalOriginalPublicKey.getParameters();
+                    ECParameterSpec ecParameterSpec = new ECParameterSpec(parameters.getCurve(), parameters.getG(), parameters.getN(), parameters.getH());
+                    BCECPublicKey origPublicKey = new BCECPublicKey("EC", optionalOriginalPublicKey, ecParameterSpec, null);
 
-                    if (optionalOriginalPublicKey != null) {
-                        ECDomainParameters parameters = optionalOriginalPublicKey.getParameters();
-                        ECParameterSpec ecParameterSpec = new ECParameterSpec(parameters.getCurve(), parameters.getG(), parameters.getN(), parameters.getH());
-                        BCECPublicKey origPublicKey = new BCECPublicKey("EC", optionalOriginalPublicKey, ecParameterSpec, null);
-
-                        boolean equals = origPublicKey.equals(publicKey2);
-                        if (!equals) {
-                            return false;
-                        }
-
-                        publicKey2 = origPublicKey;
+                    boolean equals = origPublicKey.equals(publicKey2);
+                    if (!equals) {
+                        return false;
                     }
 
-                    certificate.verify(publicKey2);
+                    publicKey2 = origPublicKey;
                 }
+
+                // throws an exception if not valid!
+                certificate.verify(publicKey2);
+
+                return true;
             } catch (Throwable t) {
                 logger.error("Error validating certificate.", t);
                 return false;
@@ -1238,8 +1222,6 @@ public class CryptoX509 {
                     }
                 }
             }
-
-            return true;
         }
     }
 

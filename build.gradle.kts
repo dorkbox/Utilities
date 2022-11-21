@@ -178,7 +178,7 @@ dependencies {
 
     // https://github.com/MicroUtils/kotlin-logging
     api("io.github.microutils:kotlin-logging:3.0.4")
-    api("org.slf4j:slf4j-api:2.0.3")
+    api("org.slf4j:slf4j-api:2.0.4")
 
     api("org.tukaani:xz:1.9")
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
@@ -214,7 +214,7 @@ dependencies {
     testImplementation("com.dorkbox:Serializers:2.7")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("ch.qos.logback:logback-classic:1.3.0-beta0")
+    testImplementation("ch.qos.logback:logback-classic:1.4.4")
 }
 repositories {
     mavenCentral()
