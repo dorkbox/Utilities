@@ -163,12 +163,12 @@ dependencies {
 
     api("com.dorkbox:Collections:1.2")
     api("com.dorkbox:Executor:3.11")
-    api("com.dorkbox:NetworkUtils:2.19")
+    api("com.dorkbox:NetworkUtils:2.19.1")
     api("com.dorkbox:OS:1.0")
     api("com.dorkbox:Updates:1.1")
 
 
-    val jnaVersion = "5.10.0"
+    val jnaVersion = "5.12.1"
     compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
     compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
@@ -178,7 +178,7 @@ dependencies {
 
     // https://github.com/MicroUtils/kotlin-logging
     api("io.github.microutils:kotlin-logging:3.0.4")
-    api("org.slf4j:slf4j-api:2.0.4")
+    api("org.slf4j:slf4j-api:2.0.6")
 
     api("org.tukaani:xz:1.9")
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
@@ -189,7 +189,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.85.Final")
+    compileOnly("io.netty:netty-buffer:4.1.86.Final")
 
     val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
@@ -208,13 +208,13 @@ dependencies {
     testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    testImplementation("com.esotericsoftware:kryo:5.1.0")
+    testImplementation("com.esotericsoftware:kryo:5.3.0")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
     testImplementation("com.dorkbox:Serializers:2.7")
 
     testImplementation("junit:junit:4.13.2")
-    testImplementation("ch.qos.logback:logback-classic:1.4.4")
+    testImplementation("ch.qos.logback:logback-classic:1.4.5")
 }
 repositories {
     mavenCentral()
