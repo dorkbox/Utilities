@@ -1233,7 +1233,7 @@ object FileUtil {
 
         val split = dirInHeirarchy.split(File.separator).toTypedArray()
         var splitIndex = split.size - 1
-        var parent = file
+        var parent: File? = file
         var parentName: String
         if (splitIndex == 0) {
             // match on ONE dir
