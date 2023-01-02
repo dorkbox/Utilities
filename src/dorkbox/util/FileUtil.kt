@@ -56,7 +56,7 @@ object FileUtil {
     /**
      * Gets the version number.
      */
-    val version = "1.32"
+    val version = "1.33"
 
     private val log = KotlinLogging.logger(FileUtil::class.java.name)
 
