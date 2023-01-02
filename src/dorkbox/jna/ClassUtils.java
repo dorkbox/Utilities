@@ -35,7 +35,7 @@ import dorkbox.os.OS;
 // http://hg.openjdk.java.net/jdk7/jdk7/hotspot/file/tip/src/share/vm/prims/jvm.cpp
 
 // objdump -T <file> | grep foo
-// otool -T <file> | grep foo
+// otool -tvV <file> | grep foo
 
 /**
  * Gives us the ability to inject bytes into the "normal" classloader, or directly into java's bootstrap classloader.
