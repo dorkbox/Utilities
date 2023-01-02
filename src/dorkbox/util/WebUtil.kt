@@ -545,7 +545,7 @@ object WebUtil {
         HttpsURLConnection.setDefaultSSLSocketFactory(sc.socketFactory)
 
         // Create all-trusting host name verifier
-        val allHostsValid = HostnameVerifier { hostname, session -> true }
+        val allHostsValid = HostnameVerifier { _, _ -> true }
 
         // Install the all-trusting host verifier
         HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid)
