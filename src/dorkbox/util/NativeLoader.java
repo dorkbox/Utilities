@@ -34,17 +34,7 @@ class NativeLoader {
     public static
     File extractLibrary(final String sourceFileName, final String destinationDirectory, final String destinationName, String version) throws IOException {
         try {
-            String suffix;
-            if (OS.INSTANCE.isLinux()) {
-                suffix = ".so";
-            }
-            else if (OS.INSTANCE.isWindows()) {
-                suffix = ".dll";
-            }
-            else {
-                suffix = ".dylib";
-            }
-
+            String suffix = OS.INSTANCE.getType().getLibraryNames()[0];
             final String outputFileName;
             if (version == null) {
                 outputFileName = destinationName + suffix;
