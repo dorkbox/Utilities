@@ -1295,9 +1295,9 @@ object FileUtil {
                 if (name == fileToExtract) {
                     val tempFile = tempFile(name)
                     tempFile.deleteOnExit()
-                    val output = FileOutputStream(tempFile)
-                    output.use { output ->
-                        inputStream.copyTo(output)
+                    val tempOutput = FileOutputStream(tempFile)
+                    tempOutput.use {
+                        inputStream.copyTo(it)
                     }
                     return tempFile.absolutePath
                 }
