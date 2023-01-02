@@ -5,12 +5,10 @@ import java.security.InvalidKeyException
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.security.spec.InvalidKeySpecException
-import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.NoSuchPaddingException
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
-import kotlin.jvm.Throws
 
 
 // https://stackoverflow.com/questions/11783062/how-to-decrypt-file-in-java-encrypted-with-openssl-command-using-aes/11786924#11786924
@@ -25,7 +23,7 @@ internal object OpenSSLPBECommon {
         val bytes = ByteArray(chars.size)
 
         for (i in bytes.indices) {
-            bytes[i] = chars[i].toByte()
+            bytes[i] = chars[i].code.toByte()
         }
 
         return bytes
@@ -40,14 +38,11 @@ internal object OpenSSLPBECommon {
     fun initializeCipher(password: String, salt: ByteArray, cipherMode: Int): Cipher {
         val passwordBytes = password.toByteArray(Charsets.US_ASCII)
 
-        var hash = ByteArray(0)
-        var keyAndIV = ByteArray(0)
-
         hashDigest.update(passwordBytes)
         hashDigest.update(salt)
 
-        hash = hashDigest.digest()
-        keyAndIV = hash.clone()
+        var hash = hashDigest.digest()
+        var keyAndIV = hash.clone()
 
         // 1 round
         hashDigest.update(hash)
@@ -57,8 +52,8 @@ internal object OpenSSLPBECommon {
         hash = hashDigest.digest()
         keyAndIV = concat(keyAndIV, hash)
 
-        val keyBytes = Arrays.copyOfRange(keyAndIV, 0, 32)
-        val ivBytes = Arrays.copyOfRange(keyAndIV, 32, 48)
+        val keyBytes = keyAndIV.copyOfRange(0, 32)
+        val ivBytes = keyAndIV.copyOfRange(32, 48)
 
         val key = SecretKeySpec(keyBytes, "AES")
         val iv = IvParameterSpec(ivBytes)
