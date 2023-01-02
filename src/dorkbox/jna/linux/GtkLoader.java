@@ -63,6 +63,7 @@ class GtkLoader {
     static int MICRO;
 
 
+    @SuppressWarnings("unused")
     private static final NativeLibrary libraryReference;
 
     /*
@@ -125,7 +126,7 @@ class GtkLoader {
                 }
             } catch (Throwable e) {
                 if (library != null) {
-                    library.dispose();
+                    library.close();
                 }
 
                 if (GtkEventDispatch.DEBUG) {
@@ -152,7 +153,7 @@ class GtkLoader {
                 minor = version.gtk_get_minor_version();
                 micro = version.gtk_get_micro_version();
 
-                library.dispose();
+                library.close();
                 library = null;
 
                 library = JnaHelper.register(gtk3LibName, Gtk3.class);
@@ -170,7 +171,7 @@ class GtkLoader {
                 }
             } catch (Throwable e) {
                 if (library != null) {
-                    library.dispose();
+                    library.close();
                 }
 
                 if (GtkEventDispatch.DEBUG) {
@@ -201,7 +202,7 @@ class GtkLoader {
                 }
             } catch (Throwable e) {
                 if (library != null) {
-                    library.dispose();
+                    library.close();
                 }
 
                 if (GtkEventDispatch.DEBUG) {
@@ -262,4 +263,3 @@ class GtkLoader {
         }
     }
 }
-
