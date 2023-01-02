@@ -46,7 +46,7 @@ object OpenSSLDecryptor {
         var md_buf: ByteArray? = null
         var nkey = key_len
         var niv = iv_len
-        var i = 0
+        var i: Int
 
         var addmd = 0
 
@@ -199,14 +199,11 @@ object OpenSSLDecryptor {
 //                val key = SecretKeySpec(keyBytes, "AES")
 //                val iv = IvParameterSpec(ivBytes)
 //////////////////////
-                var hash = ByteArray(0)
-                var keyAndIV = ByteArray(0)
-
                 md.update(passwordBytes)
                 md.update(salt)
 
-                hash = md.digest()
-                keyAndIV = hash.clone()
+                var hash = md.digest()
+                var keyAndIV = hash.clone()
 
                 // 1 round
                 md.update(hash)
@@ -261,14 +258,11 @@ object OpenSSLDecryptor {
 //                val key = SecretKeySpec(keyAndIV[INDEX_KEY], "AES")
 //                val iv = IvParameterSpec(keyAndIV[INDEX_IV])
 //////////////////////////////////////////
-                var hash = ByteArray(0)
-                var keyAndIV = ByteArray(0)
-
                 md.update(passwordBytes)
                 md.update(salt)
 
-                hash = md.digest()
-                keyAndIV = hash.clone()
+                var hash = md.digest()
+                var keyAndIV = hash.clone()
 
                 // 1 round
                 md.update(hash)
