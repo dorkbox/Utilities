@@ -911,6 +911,7 @@ object FileUtil {
      * @return true if the inputStream is a zip/jar stream. DOES NOT CLOSE THE STREAM
      */
     fun isZipStream(`in`: InputStream): Boolean {
+        @Suppress("NAME_SHADOWING")
         var `in` = `in`
         if (!`in`.markSupported()) {
             `in` = BufferedInputStream(`in`)
@@ -1101,6 +1102,7 @@ object FileUtil {
         val jarList: MutableList<File> = LinkedList()
         val directories = LinkedList<File?>()
 
+        @Suppress("NAME_SHADOWING")
         val rootDirectory = normalize(rootDirectory) ?: throw IOException("Root directory was invalid!")
 
         if (!rootDirectory.exists()) {
