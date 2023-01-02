@@ -164,7 +164,7 @@ dependencies {
     api("com.dorkbox:Collections:1.2")
     api("com.dorkbox:Executor:3.11")
     api("com.dorkbox:NetworkUtils:2.19.1")
-    api("com.dorkbox:OS:1.0")
+    api("com.dorkbox:OS:1.2")
     api("com.dorkbox:Updates:1.1")
 
 
