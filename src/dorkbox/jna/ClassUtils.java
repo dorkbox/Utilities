@@ -60,7 +60,6 @@ public class ClassUtils {
     public
     interface JVM extends com.sun.jna.Library {
         void JVM_DefineClass(JNIEnv env, String name, Object classLoader, byte[] buffer, int length, Object protectionDomain);
-        // Class JVM_FindLoadedClass(JNIEnv env, Object classLoader, JString name);
     }
 
     private static final String libName;
