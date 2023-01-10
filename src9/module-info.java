@@ -22,6 +22,7 @@ module dorkbox.utilities {
 
     requires transitive dorkbox.executor;
     requires transitive dorkbox.updates;
+    requires transitive dorkbox.os;
 
     requires transitive kotlin.stdlib;
     requires kotlinx.coroutines.core.jvm;
