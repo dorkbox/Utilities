@@ -51,7 +51,7 @@ public class ClassUtils {
      */
     public static
     String getVersion() {
-        return "1.35";
+        return "1.36";
     }
 
 
