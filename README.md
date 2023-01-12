@@ -1,6 +1,6 @@
 Dorkbox General Utilities
 
-###### [![Dorkbox](https://badge.dorkbox.com/dorkbox.svg "Dorkbox")](https://git.dorkbox.com/dorkbox/Utilities) [![Github](https://badge.dorkbox.com/github.svg "Github")](https://github.com/dorkbox/Utilities) [![Gitlab](https://badge.dorkbox.com/gitlab.svg "Gitlab")](https://gitlab.com/dorkbox/Utilities) [![Bitbucket](https://badge.dorkbox.com/bitbucket.svg "Bitbucket")](https://bitbucket.org/dorkbox/Utilities)
+###### [![Dorkbox](https://badge.dorkbox.com/dorkbox.svg "Dorkbox")](https://git.dorkbox.com/dorkbox/Utilities) [![Github](https://badge.dorkbox.com/github.svg "Github")](https://github.com/dorkbox/Utilities) [![Gitlab](https://badge.dorkbox.com/gitlab.svg "Gitlab")](https://gitlab.com/dorkbox/Utilities)
 
 
 The files here are copyright by many different authors, usually Apache 2.0, MIT, or BSD. 
@@ -17,7 +17,7 @@ Maven Info
     <dependency>
       <groupId>com.dorkbox</groupId>
       <artifactId>Utilities</artifactId>
-      <version>1.22</version>
+      <version>1.36</version>
     </dependency>
 </dependencies>
 ````
@@ -27,11 +27,11 @@ Gradle Info
 ````
 dependencies {
     ...
-    compile "com.dorkbox:Utilities:1.22"
+    compile "com.dorkbox:Utilities:1.36"
 }
 ````
 
 
 License
 ---------
-This project is © 2015 dorkbox llc, and is distributed under the terms of the Apache v2.0 License. See file "LICENSE" for further references.
+This project is © 2023 dorkbox llc, and is distributed under the terms of the Apache v2.0 License. See file "LICENSE" for further references.
