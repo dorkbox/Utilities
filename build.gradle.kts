@@ -28,7 +28,7 @@ plugins {
     id("com.dorkbox.GradleUtils") version "3.5"
     id("com.dorkbox.Licensing") version "2.17"
     id("com.dorkbox.VersionUpdate") version "2.5"
-    id("com.dorkbox.GradlePublish") version "1.13"
+    id("com.dorkbox.GradlePublish") version "1.14"
 
     kotlin("jvm") version "1.7.20"
 }
@@ -163,8 +163,9 @@ dependencies {
 
     api("com.dorkbox:Collections:1.2")
     api("com.dorkbox:Executor:3.11")
+    api("com.dorkbox:JNA:1.0")
     api("com.dorkbox:NetworkUtils:2.19.1")
-    api("com.dorkbox:OS:1.5")
+    api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
 
 
@@ -181,7 +182,7 @@ dependencies {
     api("org.slf4j:slf4j-api:2.0.6")
 
     api("org.tukaani:xz:1.9")
-    compileOnly("com.fasterxml.uuid:java-uuid-generator:4.0.1")
+    compileOnly("com.fasterxml.uuid:java-uuid-generator:4.1.0")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
@@ -208,7 +209,7 @@ dependencies {
     testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    testImplementation("com.esotericsoftware:kryo:5.3.0")
+    testImplementation("com.esotericsoftware:kryo:5.4.0")
     testImplementation("de.javakaffee:kryo-serializers:0.45")
 
     testImplementation("com.dorkbox:Serializers:2.7")
