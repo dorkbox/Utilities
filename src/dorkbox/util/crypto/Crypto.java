@@ -22,12 +22,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+
+import javax.crypto.Cipher;
 
 import org.bouncycastle.crypto.Digest;
 import org.bouncycastle.crypto.PBEParametersGenerator;
@@ -81,6 +84,21 @@ class Crypto {
         Provider provider = Security.getProvider(BouncyCastleProvider.PROVIDER_NAME);
         if (provider == null) {
             Security.addProvider(new BouncyCastleProvider());
+        }
+    }
+
+    /**
+     * Determines if cryptography restrictions apply.
+     * Restrictions apply if the value of {@link Cipher#getMaxAllowedKeyLength(String)} returns a value smaller than {@link Integer#MAX_VALUE} if there are any restrictions according to the JavaDoc of the method.
+     * This method is used with the transform <code>"AES/CBC/PKCS5Padding"</code> as this is an often used algorithm that is <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#impl">an implementation requirement for Java SE</a>.
+     *
+     * @return <code>true</code> if restrictions apply, <code>false</code> otherwise
+     */
+    public static boolean restrictedCryptography() {
+        try {
+            return Cipher.getMaxAllowedKeyLength("AES/CBC/PKCS5Padding") < Integer.MAX_VALUE;
+        } catch (final NoSuchAlgorithmException e) {
+            throw new IllegalStateException("The transform \"AES/CBC/PKCS5Padding\" is not available (the availability of this algorithm is mandatory for Java SE implementations)", e);
         }
     }
 
