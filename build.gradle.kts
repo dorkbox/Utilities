@@ -25,10 +25,10 @@ import java.time.Instant
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "3.5"
+    id("com.dorkbox.GradleUtils") version "3.6"
     id("com.dorkbox.Licensing") version "2.17"
     id("com.dorkbox.VersionUpdate") version "2.5"
-    id("com.dorkbox.GradlePublish") version "1.14"
+    id("com.dorkbox.GradlePublish") version "1.15"
 
     kotlin("jvm") version "1.7.20"
 }
@@ -163,15 +163,10 @@ dependencies {
 
     api("com.dorkbox:Collections:1.2")
     api("com.dorkbox:Executor:3.11")
-    api("com.dorkbox:JNA:1.0")
     api("com.dorkbox:NetworkUtils:2.19.1")
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
 
-
-    val jnaVersion = "5.12.1"
-    compileOnly("net.java.dev.jna:jna-jpms:$jnaVersion")
-    compileOnly("net.java.dev.jna:jna-platform-jpms:$jnaVersion")
 
     // https://github.com/cowtowncoder/java-uuid-generator
     // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.

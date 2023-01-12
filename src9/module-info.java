@@ -12,7 +12,6 @@ module dorkbox.utilities {
     exports dorkbox.util.userManagement;
 
     requires transitive dorkbox.executor;
-    requires transitive dorkbox.jna;
     requires transitive dorkbox.updates;
     requires transitive dorkbox.os;
 
