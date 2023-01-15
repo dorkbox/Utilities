@@ -16,7 +16,8 @@
 package dorkbox.util
 
 import dorkbox.os.OS
-import mu.KotlinLogging
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedReader
 import java.io.BufferedWriter
@@ -56,9 +57,9 @@ object FileUtil {
     /**
      * Gets the version number.
      */
-    val version = "1.38"
+    val version = "1.39"
 
-    private val log = KotlinLogging.logger(FileUtil::class.java.name)
+    private val log: Logger = LoggerFactory.getLogger(FileUtil::class.java)
 
     private const val DEBUG = false
 

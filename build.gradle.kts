@@ -26,7 +26,7 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 
 plugins {
     id("com.dorkbox.GradleUtils") version "3.6"
-    id("com.dorkbox.Licensing") version "2.17"
+    id("com.dorkbox.Licensing") version "2.17.1"
     id("com.dorkbox.VersionUpdate") version "2.5"
     id("com.dorkbox.GradlePublish") version "1.15"
 
@@ -37,7 +37,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.38"
+    const val version = "1.39"
 
     // set as project.ext
     const val name = "Utilities"
@@ -170,10 +170,10 @@ dependencies {
 
     // https://github.com/cowtowncoder/java-uuid-generator
     // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.
-    api("com.fasterxml.uuid:java-uuid-generator:4.0.1")
+    api("com.fasterxml.uuid:java-uuid-generator:4.1.0")
 
-    // https://github.com/MicroUtils/kotlin-logging
-    api("io.github.microutils:kotlin-logging:3.0.4")
+//    // https://github.com/MicroUtils/kotlin-logging  NO JPMS SUPPORT!
+//    api("io.github.microutils:kotlin-logging:3.0.4")
     api("org.slf4j:slf4j-api:2.0.6")
 
     api("org.tukaani:xz:1.9")
@@ -185,7 +185,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.86.Final")
+    compileOnly("io.netty:netty-buffer:4.1.87.Final")
 
     val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")

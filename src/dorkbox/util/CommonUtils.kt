@@ -25,16 +25,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import mu.KLogger
-import mu.KotlinLogging
 import java.io.PrintWriter
 import java.io.StringWriter
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-inline fun <reified T> T.logger(name: String = T::class.java.simpleName): KLogger {
-    return KotlinLogging.logger(name)
-}
 
 fun Exception.stackTraceToString(): String {
     val exceptionWriter = StringWriter()

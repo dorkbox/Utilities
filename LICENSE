@@ -98,12 +98,6 @@
          Tatu Saloranta (tatu.saloranta@iki.fi)
          Contributors. See source release-notes/CREDITS
 
-     - kotlin-logging - Lightweight logging framework for Kotlin
-       [The Apache Software License, Version 2.0]
-       https://github.com/MicroUtils/kotlin-logging
-       Copyright 2023
-         Ohad Shai
-
      - SLF4J - Simple facade or abstraction for various logging frameworks
        [MIT License]
        http://www.slf4j.org
