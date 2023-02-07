@@ -25,12 +25,12 @@ import java.time.Instant
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "3.6"
-    id("com.dorkbox.Licensing") version "2.17.1"
-    id("com.dorkbox.VersionUpdate") version "2.5"
-    id("com.dorkbox.GradlePublish") version "1.15"
+    id("com.dorkbox.GradleUtils") version "3.11"
+    id("com.dorkbox.Licensing") version "2.20"
+    id("com.dorkbox.VersionUpdate") version "2.6"
+    id("com.dorkbox.GradlePublish") version "1.17"
 
-    kotlin("jvm") version "1.7.20"
+    kotlin("jvm") version "1.8.0"
 }
 
 object Extras {
@@ -161,8 +161,8 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-    api("com.dorkbox:Collections:1.2")
-    api("com.dorkbox:Executor:3.11")
+    api("com.dorkbox:Collections:1.4")
+    api("com.dorkbox:Executor:3.12")
     api("com.dorkbox:NetworkUtils:2.19.1")
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
