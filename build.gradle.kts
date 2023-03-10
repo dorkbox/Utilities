@@ -138,6 +138,12 @@ licensing {
             copyright(2022)
             author("Paul Tuckey")
         }
+        extra("Kotlin Coroutine CountDownLatch", License.APACHE_2) {
+            url("https://github.com/Kotlin/kotlinx.coroutines/issues/59")
+            url("https://github.com/venkatperi/kotlin-coroutines-lib")
+            copyright(2018)
+            author("Venkat Peri")
+        }
     }
 }
 
