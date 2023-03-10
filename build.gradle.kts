@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ licensing {
         }
         extra("FileUtil (code from FilenameUtils.java for normalize + dependencies)", License.APACHE_2) {
             url(Extras.url)
-            url("http://commons.apache.org/proper/commons-io/")
+            url("https://commons.apache.org/proper/commons-io/")
             copyright(2013)
             author("The Apache Software Foundation")
             author("Kevin A. Burton")
@@ -96,13 +96,13 @@ licensing {
         }
         extra("Base64Fast", License.BSD_3) {
             url(Extras.url)
-            url("http://migbase64.sourceforge.net/")
+            url("https://migbase64.sourceforge.net/")
             copyright(2004)
             author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
         }
         extra("BCrypt", License.BSD_2) {
             url(Extras.url)
-            url("http://www.mindrot.org/projects/jBCrypt")
+            url("https://www.mindrot.org/projects/jBCrypt")
             copyright(2006)
             author("Damien Miller (djm@mindrot.org)")
             note("GWT modified version")
@@ -123,7 +123,7 @@ licensing {
             copyright(2017)
             description("Listing the contents of a resource directory")
             author("Greg Briggs")
-            url("http://www.uofr.net/~greg/java/get-resource-listing.html")
+            url("https://www.uofr.net/~greg/java/get-resource-listing.html")
         }
         extra("CommonUtils", License.APACHE_2) {
             copyright(2017)

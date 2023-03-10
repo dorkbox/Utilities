@@ -15,7 +15,7 @@
      - FileUtil (code from FilenameUtils.java for normalize + dependencies) - 
        [The Apache Software License, Version 2.0]
        https://git.dorkbox.com/dorkbox/Utilities
-       http://commons.apache.org/proper/commons-io/
+       https://commons.apache.org/proper/commons-io/
        Copyright 2013
          The Apache Software Foundation
          Kevin A. Burton
@@ -41,14 +41,14 @@
      - Base64Fast - 
        [BSD 3-Clause License]
        https://git.dorkbox.com/dorkbox/Utilities
-       http://migbase64.sourceforge.net/
+       https://migbase64.sourceforge.net/
        Copyright 2004
          Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)
 
      - BCrypt - 
        [BSD 2-Clause "Simplified" or "FreeBSD" license]
        https://git.dorkbox.com/dorkbox/Utilities
-       http://www.mindrot.org/projects/jBCrypt
+       https://www.mindrot.org/projects/jBCrypt
        Copyright 2006
          Damien Miller (djm@mindrot.org)
        GWT modified version
@@ -68,7 +68,7 @@
 
      - Resource Listing - Listing the contents of a resource directory
        [The Apache Software License, Version 2.0]
-       http://www.uofr.net/~greg/java/get-resource-listing.html
+       https://www.uofr.net/~greg/java/get-resource-listing.html
        Copyright 2017
          Greg Briggs
 
@@ -84,6 +84,13 @@
        https://github.com/paultuckey/urlrewritefilter
        Copyright 2022
          Paul Tuckey
+
+     - Kotlin Coroutine CountDownLatch - 
+       [The Apache Software License, Version 2.0]
+       https://github.com/Kotlin/kotlinx.coroutines/issues/59
+       https://github.com/venkatperi/kotlin-coroutines-lib
+       Copyright 2018
+         Venkat Peri
 
      - kotlinx.coroutines - Library support for Kotlin coroutines with multiplatform support
        [The Apache Software License, Version 2.0]
