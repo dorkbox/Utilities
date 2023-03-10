@@ -25,10 +25,10 @@ import java.time.Instant
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "3.11"
-    id("com.dorkbox.Licensing") version "2.20"
-    id("com.dorkbox.VersionUpdate") version "2.6"
-    id("com.dorkbox.GradlePublish") version "1.17"
+    id("com.dorkbox.GradleUtils") version "3.14.1"
+    id("com.dorkbox.Licensing") version "2.22"
+    id("com.dorkbox.VersionUpdate") version "2.7"
+    id("com.dorkbox.GradlePublish") version "1.18"
 
     kotlin("jvm") version "1.8.0"
 }
@@ -167,7 +167,7 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-    api("com.dorkbox:Collections:1.4")
+    api("com.dorkbox:Collections:1.5")
     api("com.dorkbox:Executor:3.12")
     api("com.dorkbox:NetworkUtils:2.19.1")
     api("com.dorkbox:OS:1.6")
@@ -191,7 +191,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.87.Final")
+    compileOnly("io.netty:netty-buffer:4.1.89.Final")
 
     val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
