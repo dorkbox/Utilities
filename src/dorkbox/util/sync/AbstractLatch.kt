@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Copyright 2018 Venkat Peri
  *
@@ -32,7 +33,25 @@
 package dorkbox.util.sync
 
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
+import java.util.concurrent.*
 
 open class AbstractLatch(val count: Int, val trigger: Trigger) : Deferred<Unit> by trigger {
-  val current: Int get() = trigger.get()
+    val current: Int get() = trigger.get()
+
+    suspend fun await(timeMillis: Long): Boolean {
+        return await(timeMillis, TimeUnit.MILLISECONDS)
+    }
+
+    suspend fun await(time: Long, timeUnit: TimeUnit): Boolean {
+        return try {
+            withTimeout(timeUnit.toMillis(time)) {
+                await()
+                true
+            }
+        } catch (exception: TimeoutCancellationException) {
+            false
+        }
+    }
 }

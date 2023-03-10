@@ -36,7 +36,7 @@ import kotlinx.coroutines.Job
 /**
  * Like a [CountDownLatch] but the count can be increased via [countUp]
  */
-class CountingLatch(count: Int, parent: Job? = null) : AbstractLatch(count, Trigger(count, false, parent)) {
+class CountingLatch(count: Int = 0, parent: Job? = null) : AbstractLatch(count, Trigger(count, false, parent)) {
 
     fun countDown() {
         trigger.decrement()

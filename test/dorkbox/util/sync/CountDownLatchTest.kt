@@ -43,6 +43,8 @@ import java.util.concurrent.atomic.*
 
 class CountDownLatchTest {
 
+    private fun randomDelay() = ThreadLocalRandom.current().nextInt(300, 500).toLong()
+
     @Test
     fun count() {
         val latch = CountDownLatch(10)
@@ -58,7 +60,7 @@ class CountDownLatchTest {
         runBlocking {
             (0 until count).forEach { _ ->
                 async {
-                    delay(ThreadLocalRandom.current().nextInt(100, 500).toLong())
+                    delay(randomDelay())
 
                     counter.incrementAndGet()
                     latch.countDown()
@@ -78,7 +80,7 @@ class CountDownLatchTest {
             withCountDown(count) {
                 (0 until count).forEach { _ ->
                     async {
-                        delay(ThreadLocalRandom.current().nextInt(100, 500).toLong())
+                        delay(randomDelay())
 
                         counter.incrementAndGet()
                         countDown()
@@ -97,12 +99,30 @@ class CountDownLatchTest {
             withTimeout(50) {
                 (0 until count).forEach { _ ->
                     async {
-                        delay(ThreadLocalRandom.current().nextInt(300, 500).toLong())
+                        delay(randomDelay())
                         latch.countDown()
                     }
                 }
                 latch.await()
             }
+        }
+    }
+
+    @Test
+    fun await_timeout_expires2() {
+        val count = 100
+        val latch = CountDownLatch(count)
+        runBlocking {
+            (0 until count).forEach { _ ->
+                async {
+
+                    delay(randomDelay())
+                    latch.countDown()
+                }
+            }
+            val success = latch.await(50)
+
+            Assert.assertFalse(success)
         }
     }
 
@@ -115,11 +135,31 @@ class CountDownLatchTest {
             withTimeout(1000) {
                 (0 until count).forEach { _ ->
                     async {
-                        delay(ThreadLocalRandom.current().nextInt(300, 500).toLong())
+                        delay(randomDelay())
                         latch.countDown()
                     }
                 }
                 latch.await()
+                x = 1
+            }
+            Assert.assertEquals(1, x)
+        }
+    }
+
+    @Test
+    fun await_timeout_does_not_expire2() {
+        val count = 100
+        val latch = CountDownLatch(count)
+        var x = 0
+        runBlocking {
+            withTimeout(1000) {
+                (0 until count).forEach { _ ->
+                    async {
+                        delay(randomDelay())
+                        latch.countDown()
+                    }
+                }
+                Assert.assertTrue(latch.await(1000))
                 x = 1
             }
             Assert.assertEquals(1, x)
