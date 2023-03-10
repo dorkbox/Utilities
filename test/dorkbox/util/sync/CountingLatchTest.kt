@@ -42,7 +42,7 @@ import org.junit.Test
 import java.util.concurrent.*
 import java.util.concurrent.atomic.*
 
-class CoCountingLatchTest {
+class CountingLatchTest {
 
     private fun randomDelay() = ThreadLocalRandom.current().nextInt(300, 500).toLong()
 

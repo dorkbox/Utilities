@@ -46,7 +46,7 @@ class Trigger(
         validate {
             when (triggerInitially && initial == 0) {
                 true -> 0
-                else -> 1  // only has to be a non zero value
+                else -> 1  // only has to be a non-zero value
             }
         }
     }
