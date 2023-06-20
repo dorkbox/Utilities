@@ -16,7 +16,7 @@ module dorkbox.utilities {
     requires transitive dorkbox.os;
 
     requires transitive kotlin.stdlib;
-    requires kotlinx.coroutines.core.jvm;
+    requires kotlinx.coroutines.core;
 
     requires static com.sun.jna;
     requires static com.sun.jna.platform;
