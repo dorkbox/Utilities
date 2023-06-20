@@ -34,9 +34,10 @@ package dorkbox.util.sync
 import kotlinx.coroutines.Job
 
 /**
- * Like a [CountDownLatch] but the count can be increased via [countUp]
+ * Like a [CountDownLatch] but the count can be increased via [countUp].
  */
-class CountingLatch(count: Int = 0, parent: Job? = null) : AbstractLatch(count, Trigger(count, false, parent)) {
+class CountingLatch(count: Int = 0, parent: Job? = null) : AbstractLatch(count, Trigger(count, count == 0, parent)) {
+    // if the count == 0, and have not counted up or down yet, then we want `await` to instantly release.
 
     fun countDown() {
         trigger.decrement()
