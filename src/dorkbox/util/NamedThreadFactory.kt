@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,17 @@ class NamedThreadFactory constructor(
     val threadPriority: Int = Thread.NORM_PRIORITY,
 
     /** @param daemon true to stop this thread automatically when the JVM shutsdown */
-    val daemon: Boolean = true
+    val daemon: Boolean = true,
+
+    /** @param actionOnNewThread the action that will run whenever a new thread is created */
+    val actionOnNewThread: (Thread) -> Unit
 
 ) : ThreadFactory {
-    constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, true)
-    constructor(poolNamePrefix: String, isDaemon: Boolean) : this(poolNamePrefix, Thread.currentThread().threadGroup, isDaemon)
-    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon)
+    constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, true, {})
+    constructor(poolNamePrefix: String, isDaemon: Boolean) : this(poolNamePrefix, Thread.currentThread().threadGroup, isDaemon, {})
+    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon, {})
+    constructor(poolNamePrefix: String, group: ThreadGroup, threadPriority: Int, isDaemon: Boolean) : this(poolNamePrefix, group, threadPriority, isDaemon, {})
+    constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean, actionOnNewThread: (Thread) -> Unit) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon, actionOnNewThread)
 
 
     private val poolId = AtomicInteger()
@@ -63,6 +68,8 @@ class NamedThreadFactory constructor(
         val t = Thread(group, r, namePrefix + '-' + poolId.incrementAndGet())
         t.isDaemon = daemon
         t.priority = threadPriority
+
+        actionOnNewThread(t)
         return t
     }
 }
