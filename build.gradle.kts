@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import java.time.Instant
-
 ///////////////////////////////
 //////    PUBLISH TO SONATYPE / MAVEN CENTRAL
 ////// TESTING : (to local maven repo) <'publish and release' - 'publishToMavenLocal'>
@@ -25,9 +23,9 @@ import java.time.Instant
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "3.14.1"
-    id("com.dorkbox.Licensing") version "2.22"
-    id("com.dorkbox.VersionUpdate") version "2.7"
+    id("com.dorkbox.GradleUtils") version "3.17"
+    id("com.dorkbox.Licensing") version "2.24"
+    id("com.dorkbox.VersionUpdate") version "2.8"
     id("com.dorkbox.GradlePublish") version "1.18"
 
     kotlin("jvm") version "1.8.0"
@@ -45,8 +43,6 @@ object Extras {
     const val vendor = "Dorkbox LLC"
     const val vendorUrl = "https://dorkbox.com"
     const val url = "https://git.dorkbox.com/dorkbox/Utilities"
-
-    val buildDate = Instant.now().toString()
 }
 
 ///////////////////////////////
@@ -151,7 +147,7 @@ tasks.jar.get().apply {
         attributes["Specification-Vendor"] = Extras.vendor
 
         attributes["Implementation-Title"] = "${Extras.group}.${Extras.id}"
-        attributes["Implementation-Version"] = Extras.buildDate
+        attributes["Implementation-Version"] = GradleUtils.now()
         attributes["Implementation-Vendor"] = Extras.vendor
     }
 }
@@ -169,11 +165,11 @@ dependencies {
 
     // https://github.com/cowtowncoder/java-uuid-generator
     // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.
-    api("com.fasterxml.uuid:java-uuid-generator:4.1.0")
+    api("com.fasterxml.uuid:java-uuid-generator:4.2.0")
 
 //    // https://github.com/MicroUtils/kotlin-logging  NO JPMS SUPPORT!
 //    api("io.github.microutils:kotlin-logging:3.0.4")
-    api("org.slf4j:slf4j-api:2.0.6")
+    api("org.slf4j:slf4j-api:2.0.7")
 
     api("org.tukaani:xz:1.9")
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.1.0")
@@ -184,7 +180,7 @@ dependencies {
 //    compileOnly("com.esotericsoftware:kryo:5.3.0")
 //    compileOnly("de.javakaffee:kryo-serializers:0.45")
 
-    compileOnly("io.netty:netty-buffer:4.1.89.Final")
+    compileOnly("io.netty:netty-buffer:4.1.94.Final")
 
     val bcVersion = "1.70"
     compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
@@ -192,7 +188,7 @@ dependencies {
     compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
     compileOnly("org.bouncycastle:bctls-jdk15on:$bcVersion")
 
-    compileOnly("org.lwjgl:lwjgl-xxhash:3.3.1")
+    compileOnly("org.lwjgl:lwjgl-xxhash:3.3.2")
 
     compileOnly("net.jodah:typetools:0.6.3")
 
