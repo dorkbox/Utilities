@@ -37,13 +37,33 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.*
 
-open class AbstractLatch(val count: Int, val trigger: Trigger) : Deferred<Unit> by trigger {
-    val current: Int get() = trigger.get()
+/**
+ * @param initialCount this is the initial count specified when the latch was created
+ */
+open class AbstractLatch(val initialCount: Int, val trigger: Trigger) : Deferred<Unit> by trigger {
+    /**
+     * The current latch count affected by the count*() methods.
+     *
+     * Can be manually changed
+     */
+    var count: Int
+        get() { return trigger.get() }
+        set(value) { trigger.set(value) }
 
+    /**
+     * Waits the specified amount of time for the latch to reach 0
+     *
+     * @return true if the latch reached 0 before the timeout
+     */
     suspend fun await(timeMillis: Long): Boolean {
         return await(timeMillis, TimeUnit.MILLISECONDS)
     }
 
+    /**
+     * Waits the specified amount of time for the latch to reach 0
+     *
+     * @return true if the latch reached 0 before the timeout
+     */
     suspend fun await(time: Long, timeUnit: TimeUnit): Boolean {
         return try {
             withTimeout(timeUnit.toMillis(time)) {

@@ -31,46 +31,19 @@
 
 package dorkbox.util.sync
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
-import java.util.concurrent.atomic.*
 
-class Trigger(
-    initial: Int, private val releaseLatchOnZero: Boolean = true,
-    parent: Job? = null
-) : CompletableDeferred<Unit> by CompletableDeferred(parent) {
-
-    private val value = AtomicInteger(initial)
-
-    init {
-        validate {
-            if (releaseLatchOnZero && initial == 0) {
-                0
-            }
-            else if (!releaseLatchOnZero && initial != 0) {
-                1
-            } else {
-                initial
-            }
-        }
+/**
+ * Like a [CountDownLatch] but the count can be increased via [countUp]. At a NON-ZERO number, the latch will release.
+ *
+ * Once the latch is released, you must re-create this object to re-create the latch
+ */
+class CountingLatchInverse(count: Int = 0, parent: Job? = null) : AbstractLatch(count, Trigger(count, false, parent)) {
+    fun countDown() {
+        trigger.decrement()
     }
 
-    fun increment(): Int = validate { value.incrementAndGet() }
-
-    fun decrement(): Int = validate { value.decrementAndGet() }
-
-    fun set(value: Int): Int = validate { this.value.getAndSet(value) }
-
-    fun get(): Int = value.get()
-
-    private fun validate(block: () -> Int): Int {
-        val v = block()
-        if (!isCompleted && (
-            (releaseLatchOnZero && v == 0) ||
-            (!releaseLatchOnZero && v != 0)
-           )) {
-            complete(Unit)
-        }
-        return v
+    fun countUp() {
+        trigger.increment()
     }
 }

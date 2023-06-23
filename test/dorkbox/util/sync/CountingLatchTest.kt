@@ -47,10 +47,46 @@ class CountingLatchTest {
     private fun randomDelay() = ThreadLocalRandom.current().nextInt(300, 500).toLong()
 
     @Test
+    fun awaitCountingWithZero() {
+        // await on a latch of 0 should not block
+        val latch = CountingLatch(0)
+        runBlocking {
+            if (!latch.await(100)) {
+                Assert.fail("latch did not trigger and it shouldn't have!")
+            }
+        }
+    }
+
+    @Test
+    fun awaitCountingWithOne() {
+        // await on a latch of 0 should not block
+        val latch = CountingLatch(1)
+        runBlocking {
+            if (latch.await(100)) {
+                Assert.fail("latch triggered and it shouldn't have!")
+            }
+        }
+    }
+
+    @Test
+    fun awaitCountingWithOneStartZeroUpDown() {
+        // await on a latch of 0 should not block
+        val latch = CountingLatch(1)
+        runBlocking {
+            latch.countUp()
+            latch.countDown()
+            latch.countDown()
+            if (!latch.await(100)) {
+                Assert.fail("waited and it shouldn't have!")
+            }
+        }
+    }
+
+    @Test
     fun count() {
         val latch = CountingLatch(10)
+        Assert.assertEquals(10, latch.initialCount)
         Assert.assertEquals(10, latch.count)
-        Assert.assertEquals(10, latch.current)
     }
 
     @Test
@@ -169,8 +205,34 @@ class CountingLatchTest {
     }
 
     @Test
-    fun `when count is zero`() {
+    fun `when count is 0`() {
         val latch = CountingLatch(0)
+        Assert.assertTrue(latch.isCompleted)
+    }
+
+    @Test
+    fun `when count is 1`() {
+        val latch = CountingLatch(1)
         Assert.assertFalse(latch.isCompleted)
+    }
+
+    @Test
+    fun `when count is 1 to 0`() {
+        val latch = CountingLatch(1)
+        latch.countDown()
+        Assert.assertTrue(latch.isCompleted)
+    }
+
+    @Test
+    fun `when inverse count is 0`() {
+        val latch = CountingLatchInverse(0)
+        Assert.assertFalse(latch.isCompleted)
+    }
+
+    @Test
+    fun `when inverse count is 1`() {
+        val latch = CountingLatchInverse(0)
+        latch.countDown()
+        Assert.assertTrue(latch.isCompleted)
     }
 }

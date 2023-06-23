@@ -63,13 +63,13 @@ import kotlinx.coroutines.Job
  * }
  * ```
  *
+ * Once the latch is released, you must re-create this object to re-create the latch
+ *
  * @constructor Constructs a [CountDownLatch] initialized with the given count.
  * @param count the number of times [countDown] must be invoked before
  *      [await] will not block.
  */
-class CountDownLatch(
-    count: Int, parent: Job? = null
-) : AbstractLatch(count, Trigger(count, true, parent)) {
+class CountDownLatch(count: Int, parent: Job? = null) : AbstractLatch(count, Trigger(count, true, parent)) {
 
     init {
         require(count >= 0) { "Count $count cannot be negative" }

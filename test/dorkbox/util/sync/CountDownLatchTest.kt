@@ -48,7 +48,7 @@ class CountDownLatchTest {
     @Test
     fun count() {
         val latch = CountDownLatch(10)
-        Assert.assertEquals(10, latch.count)
+        Assert.assertEquals(10, latch.initialCount)
     }
 
     @Test
@@ -57,28 +57,6 @@ class CountDownLatchTest {
         val latch = CountDownLatch(0)
         runBlocking {
             if (!latch.await(100)) {
-                Assert.fail("waited and it shouldn't have!")
-            }
-        }
-    }
-
-    @Test
-    fun awaitCountingWithZero() {
-        // await on a latch of 0 should not block
-        val latch = CountingLatch(0)
-        runBlocking {
-            if (!latch.await(100)) {
-                Assert.fail("waited and it shouldn't have!")
-            }
-        }
-    }
-
-    @Test
-    fun awaitCountingWithOne() {
-        // await on a latch of 0 should not block
-        val latch = CountingLatch(1)
-        runBlocking {
-            if (latch.await(100)) {
                 Assert.fail("waited and it shouldn't have!")
             }
         }

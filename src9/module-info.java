@@ -9,6 +9,7 @@ module dorkbox.utilities {
     exports dorkbox.util.exceptions;
     exports dorkbox.util.gwt;
     exports dorkbox.util.properties;
+    exports dorkbox.util.sync;
     exports dorkbox.util.userManagement;
 
     requires transitive dorkbox.executor;
@@ -16,10 +17,7 @@ module dorkbox.utilities {
     requires transitive dorkbox.os;
 
     requires transitive kotlin.stdlib;
-    requires kotlinx.coroutines.core;
-
-    requires static com.sun.jna;
-    requires static com.sun.jna.platform;
+    requires transitive kotlinx.coroutines.core;
 
     requires static org.slf4j;
 }
