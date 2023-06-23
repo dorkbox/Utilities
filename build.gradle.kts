@@ -132,12 +132,6 @@ licensing {
             author("Dorkbox LLC")
             url("https://www.pronghorn.tech ")
         }
-        extra("UrlRewriteFilter", License.BSD_3) {
-            description("UrlRewriteFilter is a Java Web Filter for any J2EE compliant web application server")
-            url("https://github.com/paultuckey/urlrewritefilter")
-            copyright(2022)
-            author("Paul Tuckey")
-        }
         extra("Kotlin Coroutine CountDownLatch", License.APACHE_2) {
             url("https://github.com/Kotlin/kotlinx.coroutines/issues/59")
             url("https://github.com/venkatperi/kotlin-coroutines-lib")
@@ -167,9 +161,8 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-    api("com.dorkbox:Collections:1.5")
-    api("com.dorkbox:Executor:3.12")
-    api("com.dorkbox:NetworkUtils:2.19.1")
+    api("com.dorkbox:Collections:1.6")
+    api("com.dorkbox:Executor:3.13")
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
 
