@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.*
 /**
  * The default thread factory with names and daemon state
  */
-class NamedThreadFactory constructor(
+class NamedThreadFactory(
     /** @param namePrefix what you want the subsequent threads to be named. */
     val namePrefix: String,
 
@@ -38,6 +38,7 @@ class NamedThreadFactory constructor(
     val actionOnNewThread: (Thread) -> Unit
 
 ) : ThreadFactory {
+    constructor(poolNamePrefix: String) : this(poolNamePrefix, Thread.currentThread().threadGroup, Thread.NORM_PRIORITY, true, {})
     constructor(poolNamePrefix: String, group: ThreadGroup) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, true, {})
     constructor(poolNamePrefix: String, isDaemon: Boolean) : this(poolNamePrefix, Thread.currentThread().threadGroup, isDaemon, {})
     constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon, {})
