@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util
 
-public class RegExp {
-    private static final String whitespace_chars =  ""       /* dummy empty string for homogeneity */
-            + "\\u0009" // CHARACTER TABULATION
+object RegExp {
+    private const val whitespace_chars = ("" /* dummy empty string for homogeneity */ + "\\u0009" // CHARACTER TABULATION
             + "\\u000A" // LINE FEED (LF)
             + "\\u000B" // LINE TABULATION
             + "\\u000C" // FORM FEED (FF)
@@ -42,12 +41,11 @@ public class RegExp {
             + "\\u2029" // PARAGRAPH SEPARATOR
             + "\\u202F" // NARROW NO-BREAK SPACE
             + "\\u205F" // MEDIUM MATHEMATICAL SPACE
-            + "\\u3000" // IDEOGRAPHIC SPACE
-                ;
+            + "\\u3000") // IDEOGRAPHIC SPACE
 
     /* A \s that actually works for Java’s native character set: Unicode */
-    public static final String whitespace_charclass = "["  + whitespace_chars + "]";
+    const val WHITESPACE = "[" + whitespace_chars + "]"
 
     /* A \S that actually works for  Java’s native character set: Unicode */
-    public static final String not_whitespace_charclass = "[^" + whitespace_chars + "]";
+    const val NOT_WHITESPACE = "[^" + whitespace_chars + "]"
 }

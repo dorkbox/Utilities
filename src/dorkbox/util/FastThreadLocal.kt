@@ -1,4 +1,20 @@
 /*
+ * Copyright 2023 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * Copyright © 2012-2014 Lightweight Java Game Library Project
  * All rights reserved.
  *
@@ -26,90 +42,81 @@
  *   IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  *   OF SUCH DAMAGE.
  */
-package dorkbox.util;
-
-import java.util.Arrays;
+package dorkbox.util
 
 /**
- * Fast {@code ThreadLocal} implementation, adapted from the
- * <a href="https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java">LibStruct</a> library.
+ * Fast `ThreadLocal` implementation, adapted from the
+ * [LibStruct](https://github.com/riven8192/LibStruct/blob/master/src/net/indiespot/struct/runtime/FastThreadLocal.java) library.
  *
- * <p>This implementation replaces the {@code ThreadLocalMap} lookup in {@link ThreadLocal} with a simple array access. The big advantage of this method is
- * that thread-local accesses are identified as invariant by the JVM, which enables significant code-motion optimizations.</p>
  *
- * <p>The underlying array contains a slot for each thread that uses the {@link FastThreadLocal} instance. The slot is indexed by {@link Thread#getId()}. The
- * array grows if necessary when the {@link #set} method is called.</p>
+ * This implementation replaces the `ThreadLocalMap` lookup in [ThreadLocal] with a simple array access. The big advantage of this method is
+ * that thread-local accesses are identified as invariant by the JVM, which enables significant code-motion optimizations.
  *
- * <p>It is assumed that usages of this class will be read heavy, so any contention/false-sharing issues caused by the {@link #set} method are ignored.</p>
+ *
+ * The underlying array contains a slot for each thread that uses the [FastThreadLocal] instance. The slot is indexed by [Thread.getId]. The
+ * array grows if necessary when the [.set] method is called.
+ *
+ *
+ * It is assumed that usages of this class will be read heavy, so any contention/false-sharing issues caused by the [.set] method are ignored.
  *
  * @param <T> the thread-local value type
  *
  * @author Riven
  * @see java.lang.ThreadLocal
- */
-public class FastThreadLocal<T> {
+</T> */
+abstract class FastThreadLocal<T> {
+    /** Creates a thread local variable.  */
+    @Suppress("UNCHECKED_CAST")
+    private var threadIDMap = arrayOfNulls<Any>(1) as Array<T?>
 
-	@SuppressWarnings("unchecked")
-    private T[] threadIDMap = (T[])new Object[1];
+    /**
+     * Returns the current thread's "initial value" for this thread-local variable.
+     */
+    abstract fun initialValue(): T
 
-	/** Creates a thread local variable. */
-	public FastThreadLocal() {
-	}
+    /**
+     * Sets the current thread's copy of this thread-local variable to the specified value.
+     *
+     * @param value the value to be stored in the current thread's copy of this thread-local.
+     *
+     * @see ThreadLocal.set
+     */
+    fun set(value: T?) {
+        val id = Thread.currentThread().id.toInt()
 
-	/**
-	 * Returns the current thread's "initial value" for this thread-local variable.
-	 */
-	public T initialValue() {
-		return null;
-	}
-
-	/**
-	 * Sets the current thread's copy of this thread-local variable to the specified value.
-	 *
-	 * @param value the value to be stored in the current thread's copy of this thread-local.
-	 *
-	 * @see ThreadLocal#set(T)
-	 */
-	public void set(T value) {
-		int id = (int)Thread.currentThread().getId();
-
-		synchronized ( this ) {
-			int len = threadIDMap.length;
+        synchronized(this) {
+            val len = threadIDMap.size
             if (len <= id) {
-                threadIDMap = Arrays.copyOf(threadIDMap, id + 1);
+                threadIDMap = threadIDMap.copyOf(id + 1)
             }
+            threadIDMap[id] = value
+        }
+    }
 
-			threadIDMap[id] = value;
-		}
-	}
+    /**
+     * Returns the value in the current thread's copy of this thread-local variable.
+     *
+     * @see ThreadLocal.get
+     */
+    fun get(): T {
+        val id = Thread.currentThread().id.toInt()
+        val threadIDMap: Array<T?> = threadIDMap // It's OK if the array is resized after this access, will just use the old array.
+        var value = if (threadIDMap.size <= id) null else threadIDMap[id]
 
-	/**
-	 * Returns the value in the current thread's copy of this thread-local variable.
-	 *
-	 * @see ThreadLocal#get()
-	 */
-	public final T get() {
-		int id = (int)Thread.currentThread().getId();
+        if (value == null) {
+            value = initialValue()
+            set(value)
+        }
 
-		T[] threadIDMap = this.threadIDMap; // It's OK if the array is resized after this access, will just use the old array.
+        return value!!
+    }
 
-		T value = threadIDMap.length <= id ? null : threadIDMap[id];
-
-		if ( value == null ) {
-			value = initialValue();
-			set(value);
-		}
-
-		return value;
-	}
-
-	/**
-	 * Removes the current thread's value for this thread-local variable.
-	 *
-	 * @see ThreadLocal#remove()
-	 */
-	public void remove() {
-		set(null);
-	}
-
+    /**
+     * Removes the current thread's value for this thread-local variable.
+     *
+     * @see ThreadLocal.remove
+     */
+    fun remove() {
+        set(null)
+    }
 }

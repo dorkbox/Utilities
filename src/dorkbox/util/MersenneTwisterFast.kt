@@ -1,162 +1,212 @@
-package dorkbox.util;
+/*
+ * Copyright 2023 dorkbox, llc
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
+package dorkbox.util
 
 /**
  * <h3>MersenneTwister and MersenneTwisterFast</h3>
- * <p><b>Version 20</b>, based on version MT199937(99/10/29)
+ *
+ * **Version 22**, based on version MT199937(99/10/29)
  * of the Mersenne Twister algorithm found at
- * <a href="http://www.math.keio.ac.jp/matumoto/emt.html">
- * The Mersenne Twister Home Page</a>, with the initialization
+ * [
+   * The Mersenne Twister Home Page](http://www.math.keio.ac.jp/matumoto/emt.html), with the initialization
  * improved using the new 2002/1/26 initialization algorithm
  * By Sean Luke, October 2004.
+
  *
- * <p><b>MersenneTwister</b> is a drop-in subclass replacement
+ * **MersenneTwister** is a drop-in subclass replacement
  * for java.util.Random.  It is properly synchronized and
  * can be used in a multithreaded environment.  On modern VMs such
  * as HotSpot, it is approximately 1/3 slower than java.util.Random.
+
  *
- * <p><b>MersenneTwisterFast</b> is not a subclass of java.util.Random.  It has
+ * **MersenneTwisterFast** is not a subclass of java.util.Random.  It has
  * the same public methods as Random does, however, and it is
  * algorithmically identical to MersenneTwister.  MersenneTwisterFast
  * has hard-code inlined all of its methods directly, and made all of them
  * final (well, the ones of consequence anyway).  Further, these
- * methods are <i>not</i> synchronized, so the same MersenneTwisterFast
+ * methods are *not* synchronized, so the same MersenneTwisterFast
  * instance cannot be shared by multiple threads.  But all this helps
  * MersenneTwisterFast achieve well over twice the speed of MersenneTwister.
  * java.util.Random is about 1/3 slower than MersenneTwisterFast.
- *
+
  * <h3>About the Mersenne Twister</h3>
- * <p>This is a Java version of the C-program for MT19937: Integer version.
+ *
+ * This is a Java version of the C-program for MT19937: Integer version.
  * The MT19937 algorithm was created by Makoto Matsumoto and Takuji Nishimura,
  * who ask: "When you use this, send an email to: matumoto@math.keio.ac.jp
  * with an appropriate reference to your work".  Indicate that this
  * is a translation of their algorithm into Java.
+
  *
- * <p><b>Reference. </b>
+ * **Reference. **
  * Makato Matsumoto and Takuji Nishimura,
  * "Mersenne Twister: A 623-Dimensionally Equidistributed Uniform
  * Pseudo-Random Number Generator",
- * <i>ACM Transactions on Modeling and. Computer Simulation,</i>
+ * *ACM Transactions on Modeling and. Computer Simulation,*
  * Vol. 8, No. 1, January 1998, pp 3--30.
- *
+
  * <h3>About this Version</h3>
+
  *
- * <p><b>Changes since V19:</b> nextFloat(boolean, boolean) now returns float,
+ * Converted to Kotlin by copying the original Java source into IntelliJ and auto-correcting all errors
+ *
+ * **Changes since V21:** Minor documentation HTML fixes.
+
+ *
+ * **Changes since V20:** Added clearGuassian().  Modified stateEquals()
+ * to be synchronizd on both objects for MersenneTwister, and changed its
+ * documentation.  Added synchronization to both setSeed() methods, to
+ * writeState(), and to readState() in MersenneTwister.  Removed synchronization
+ * from readObject() in MersenneTwister.
+
+ *
+ * **Changes since V19:** nextFloat(boolean, boolean) now returns float,
  * not double.
+
  *
- * <p><b>Changes since V18:</b> Removed old final declarations, which used to
+ * **Changes since V18:** Removed old final declarations, which used to
  * potentially speed up the code, but no longer.
+
  *
- * <p><b>Changes since V17:</b> Removed vestigial references to &= 0xffffffff
+ * **Changes since V17:** Removed vestigial references to &amp;= 0xffffffff
  * which stemmed from the original C code.  The C code could not guarantee that
  * ints were 32 bit, hence the masks.  The vestigial references in the Java
  * code were likely optimized out anyway.
+
  *
- * <p><b>Changes since V16:</b> Added nextDouble(includeZero, includeOne) and
+ * **Changes since V16:** Added nextDouble(includeZero, includeOne) and
  * nextFloat(includeZero, includeOne) to allow for half-open, fully-closed, and
  * fully-open intervals.
+
  *
- * <p><b>Changes Since V15:</b> Added serialVersionUID to quiet compiler warnings
+ * **Changes Since V15:** Added serialVersionUID to quiet compiler warnings
  * from Sun's overly verbose compilers as of JDK 1.5.
+
  *
- * <p><b>Changes Since V14:</b> made strictfp, with StrictMath.log and StrictMath.sqrt
+ * **Changes Since V14:** made strictfp, with StrictMath.log and StrictMath.sqrt
  * in nextGaussian instead of Math.log and Math.sqrt.  This is largely just to be safe,
  * as it presently makes no difference in the speed, correctness, or results of the
  * algorithm.
+
  *
- * <p><b>Changes Since V13:</b> clone() method CloneNotSupportedException removed.
+ * **Changes Since V13:** clone() method CloneNotSupportedException removed.
+
  *
- * <p><b>Changes Since V12:</b> clone() method added.
+ * **Changes Since V12:** clone() method added.
+
  *
- * <p><b>Changes Since V11:</b> stateEquals(...) method added.  MersenneTwisterFast
+ * **Changes Since V11:** stateEquals(...) method added.  MersenneTwisterFast
  * is equal to other MersenneTwisterFasts with identical state; likewise
  * MersenneTwister is equal to other MersenneTwister with identical state.
  * This isn't equals(...) because that requires a contract of immutability
  * to compare by value.
+
  *
- * <p><b>Changes Since V10:</b> A documentation error suggested that
+ * **Changes Since V10:** A documentation error suggested that
  * setSeed(int[]) required an int[] array 624 long.  In fact, the array
  * can be any non-zero length.  The new version also checks for this fact.
+
  *
- * <p><b>Changes Since V9:</b> readState(stream) and writeState(stream)
+ * **Changes Since V9:** readState(stream) and writeState(stream)
  * provided.
+
  *
- * <p><b>Changes Since V8:</b> setSeed(int) was only using the first 28 bits
+ * **Changes Since V8:** setSeed(int) was only using the first 28 bits
  * of the seed; it should have been 32 bits.  For small-number seeds the
  * behavior is identical.
+
  *
- * <p><b>Changes Since V7:</b> A documentation error in MersenneTwisterFast
+ * **Changes Since V7:** A documentation error in MersenneTwisterFast
  * (but not MersenneTwister) stated that nextDouble selects uniformly from
  * the full-open interval [0,1].  It does not.  nextDouble's contract is
  * identical across MersenneTwisterFast, MersenneTwister, and java.util.Random,
  * namely, selection in the half-open interval [0,1).  That is, 1.0 should
  * not be returned.  A similar contract exists in nextFloat.
+
  *
- * <p><b>Changes Since V6:</b> License has changed from LGPL to BSD.
+ * **Changes Since V6:** License has changed from LGPL to BSD.
  * New timing information to compare against
  * java.util.Random.  Recent versions of HotSpot have helped Random increase
  * in speed to the point where it is faster than MersenneTwister but slower
  * than MersenneTwisterFast (which should be the case, as it's a less complex
  * algorithm but is synchronized).
+
  *
- * <p><b>Changes Since V5:</b> New empty constructor made to work the same
+ * **Changes Since V5:** New empty constructor made to work the same
  * as java.util.Random -- namely, it seeds based on the current time in
  * milliseconds.
+
  *
- * <p><b>Changes Since V4:</b> New initialization algorithms.  See
- * (see <a href="http://www.math.keio.ac.jp/matumoto/MT2002/emt19937ar.html"</a>
- * http://www.math.keio.ac.jp/matumoto/MT2002/emt19937ar.html</a>)
+ * **Changes Since V4:** New initialization algorithms.  See
+ * (see [
+   * http://www.math.keio.ac.jp/matumoto/MT2002/emt19937ar.html](http://www.math.keio.ac.jp/matumoto/MT2002/emt19937ar.html))
+
  *
- * <p>The MersenneTwister code is based on standard MT19937 C/C++
+ * The MersenneTwister code is based on standard MT19937 C/C++
  * code by Takuji Nishimura,
  * with suggestions from Topher Cooper and Marc Rieffel, July 1997.
  * The code was originally translated into Java by Michael Lecuyer,
  * January 1999, and the original code is Copyright (c) 1999 by Michael Lecuyer.
- *
+
  * <h3>Java notes</h3>
+
  *
- * <p>This implementation implements the bug fixes made
+ * This implementation implements the bug fixes made
  * in Java 1.2's version of Random, which means it can be used with
  * earlier versions of Java.  See
- * <a href="http://www.javasoft.com/products/jdk/1.2/docs/api/java/util/Random.html">
- * the JDK 1.2 java.util.Random documentation</a> for further documentation
+ * [
+   * the JDK 1.2 java.util.Random documentation](http://www.javasoft.com/products/jdk/1.2/docs/api/java/util/Random.html) for further documentation
  * on the random-number generation contracts made.  Additionally, there's
  * an undocumented bug in the JDK java.util.Random.nextBytes() method,
  * which this code fixes.
+
  *
- * <p> Just like java.util.Random, this
+ *  Just like java.util.Random, this
  * generator accepts a long seed but doesn't use all of it.  java.util.Random
  * uses 48 bits.  The Mersenne Twister instead uses 32 bits (int size).
  * So it's best if your seed does not exceed the int range.
+
  *
- * <p>MersenneTwister can be used reliably
+ * MersenneTwister can be used reliably
  * on JDK version 1.1.5 or above.  Earlier Java versions have serious bugs in
  * java.util.Random; only MersenneTwisterFast (and not MersenneTwister nor
  * java.util.Random) should be used with them.
- *
+
  * <h3>License</h3>
+
+ * Copyright (c) 2003 by Sean Luke. <br></br>
+ * Portions copyright (c) 1993 by Michael Lecuyer. <br></br>
+ * All rights reserved. <br></br>
+
  *
- * Copyright (c) 2003 by Sean Luke. <br>
- * Portions copyright (c) 1993 by Michael Lecuyer. <br>
- * All rights reserved. <br>
- *
- * <p>Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * <ul>
- * <li> Redistributions of source code must retain the above copyright notice,
+ *
+ *  *  Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * <li> Redistributions in binary form must reproduce the above copyright notice,
+ *  *  Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * <li> Neither the name of the copyright owners, their employers, nor the
+ *  *  Neither the name of the copyright owners, their employers, nor the
  * names of its contributors may be used to endorse or promote products
  * derived from this software without specific prior written permission.
- * </ul>
- * <p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ *
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNERS OR CONTRIBUTORS BE
@@ -167,9 +217,9 @@ import java.io.Serializable;
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- @version 20
-*/
+
+ * @version 22
+ */
 
 
 // Note: this class is hard-inlined in all of its methods.  This makes some of
@@ -178,185 +228,78 @@ import java.io.Serializable;
 // on the code, I strongly suggest looking at MersenneTwister.java first.
 // -- Sean
 
-public strictfp class MersenneTwisterFast implements Serializable, Cloneable {
-    // Serialization
-    private static final long serialVersionUID = -8219700664442619525L; // locked
-                                                                        // as of
-                                                                        // Version
-                                                                        // 15
+open class MersenneTwisterFast {
 
-    // Period parameters
-    private static final int  N                = 624;
-
-    private static final int  M                = 397;
-
-    private static final int  MATRIX_A         = 0x9908b0df;           // private
-                                                                        // static
-                                                                        // final
-                                                                        // *
-                                                                        // constant
-                                                                        // vector
-                                                                        // a
-
-    private static final int  UPPER_MASK       = 0x80000000;           // most
-                                                                        // significant
-                                                                        // w-r
-                                                                        // bits
-
-    private static final int  LOWER_MASK       = 0x7fffffff;           // least
-                                                                        // significant
-                                                                        // r
-                                                                        // bits
-
-    // Tempering parameters
-    private static final int  TEMPERING_MASK_B = 0x9d2c5680;
-
-    private static final int  TEMPERING_MASK_C = 0xefc60000;
-
-    private int               mt[];                                    // the
-                                                                        // array
-                                                                        // for
-                                                                        // the
-                                                                        // state
-                                                                        // vector
-
-    private int               mti;                                     // mti==N+1
-                                                                        // means
-                                                                        // mt[N]
-                                                                        // is
-                                                                        // not
-                                                                        // initialized
-
-    private int               mag01[];
+    private var mt: IntArray? = null // the array for the state vector
+    private var mti: Int = 0 // mti==N+1 means mt[N] is not initialized
+    private var mag01: IntArray? = null
 
     // a good initial seed (of int size, though stored in a long)
-    // private static final long GOOD_SEED = 4357;
+    //private static final long GOOD_SEED = 4357;
 
-    private double            __nextNextGaussian;
+    private var __nextNextGaussian: Double = 0.toDouble()
+    private var __haveNextNextGaussian: Boolean = false
 
-    private boolean           __haveNextNextGaussian;
+    /** Returns true if the MersenneTwisterFast's current internal state is equal to another MersenneTwisterFast.
+     * This is roughly the same as equals(other), except that it compares based on value but does not
+     * guarantee the contract of immutability (obviously random number generators are immutable).
+     * Note that this does NOT check to see if the internal gaussian storage is the same
+     * for both.  You can guarantee that the internal gaussian storage is the same (and so the
+     * nextGaussian() methods will return the same values) by calling clearGaussian() on both
+     * objects.  */
+    fun stateEquals(other: MersenneTwisterFast?): Boolean {
+        if (other === this) return true
+        if (other == null) return false
 
-    /*
-     * We're overriding all internal data, to my knowledge, so this should be
-     * okay
-     */
-    @Override
-    public Object clone() {
-        try {
-            MersenneTwisterFast f = (MersenneTwisterFast) super.clone();
-            f.mt = this.mt.clone();
-            f.mag01 = this.mag01.clone();
-            return f;
-        } catch (CloneNotSupportedException e) {
-            throw new InternalError();
-        } // should never happen
+        if (mti != other.mti) return false
+        for (x in mag01!!.indices)
+            if (mag01!![x] != other.mag01!![x]) return false
+        for (x in mt!!.indices)
+            if (mt!![x] != other.mt!![x]) return false
+        return true
     }
 
-    public boolean stateEquals(Object o) {
-        if (o == this) {
-            return true;
-        }
-        if (o == null || !(o instanceof MersenneTwisterFast)) {
-            return false;
-        }
-        MersenneTwisterFast other = (MersenneTwisterFast) o;
-        if (this.mti != other.mti) {
-            return false;
-        }
-        for (int x = 0; x < this.mag01.length; x++) {
-            if (this.mag01[x] != other.mag01[x]) {
-                return false;
-            }
-        }
-        for (int x = 0; x < this.mt.length; x++) {
-            if (this.mt[x] != other.mt[x]) {
-                return false;
-            }
-        }
-        return true;
+    constructor(): this((Math.random() * Long.MAX_VALUE).toLong())
+
+    constructor(seed: Long) {
+        setSeed(seed)
     }
 
-    /** Reads the entire state of the MersenneTwister RNG from the stream */
-    public void readState(DataInputStream stream) throws IOException {
-        int len = this.mt.length;
-        for (int x = 0; x < len; x++) {
-            this.mt[x] = stream.readInt();
-        }
-
-        len = this.mag01.length;
-        for (int x = 0; x < len; x++) {
-            this.mag01[x] = stream.readInt();
-        }
-
-        this.mti = stream.readInt();
-        this.__nextNextGaussian = stream.readDouble();
-        this.__haveNextNextGaussian = stream.readBoolean();
-    }
-
-    /** Writes the entire state of the MersenneTwister RNG to the stream */
-    public void writeState(DataOutputStream stream) throws IOException {
-        int len = this.mt.length;
-        for (int x = 0; x < len; x++) {
-            stream.writeInt(this.mt[x]);
-        }
-
-        len = this.mag01.length;
-        for (int x = 0; x < len; x++) {
-            stream.writeInt(this.mag01[x]);
-        }
-
-        stream.writeInt(this.mti);
-        stream.writeDouble(this.__nextNextGaussian);
-        stream.writeBoolean(this.__haveNextNextGaussian);
-    }
 
     /**
-     * Constructor using the default seed.
+     * Constructor using an array of integers as seed.
+     * Your array must have a non-zero length.  Only the first 624 integers
+     * in the array are used; if the array is shorter than this then
+     * integers are repeatedly used in a wrap-around fashion.
      */
-    public MersenneTwisterFast() {
-        this(System.currentTimeMillis());
+    constructor(array: IntArray) {
+        setSeed(array)
     }
 
-    /**
-     * Constructor using a given seed. Though you pass this seed in as a long,
-     * it's best to make sure it's actually an integer.
-     *
-     */
-    public MersenneTwisterFast(long seed) {
-        setSeed(seed);
-    }
 
     /**
-     * Constructor using an array of integers as seed. Your array must have a
-     * non-zero length. Only the first 624 integers in the array are used; if
-     * the array is shorter than this then integers are repeatedly used in a
-     * wrap-around fashion.
-     */
-    public MersenneTwisterFast(int[] array) {
-        setSeed(array);
-    }
-
-    /**
-     * Initalize the pseudo random number generator. Don't pass in a long that's
-     * bigger than an int (Mersenne Twister only uses the first 32 bits for its
-     * seed).
+     * Initalize the pseudo random number generator.  Don't
+     * pass in a long that's bigger than an int (Mersenne Twister
+     * only uses the first 32 bits for its seed).
      */
 
-    synchronized public void setSeed(long seed) {
+    fun setSeed(seed: Long) {
         // Due to a bug in java.util.Random clear up to 1.2, we're
         // doing our own Gaussian variable.
-        this.__haveNextNextGaussian = false;
+        __haveNextNextGaussian = false
 
-        this.mt = new int[N];
+        mt = IntArray(N)
 
-        this.mag01 = new int[2];
-        this.mag01[0] = 0x0;
-        this.mag01[1] = MATRIX_A;
+        mag01 = IntArray(2).also {
+            it[0] = 0x0
+            it[1] = MATRIX_A
+        }
 
-        this.mt[0] = (int) (seed & 0xffffffff);
-        for (this.mti = 1; this.mti < N; this.mti++) {
-            this.mt[this.mti] =
-                1812433253 * (this.mt[this.mti-1] ^ this.mt[this.mti-1] >>> 30) + this.mti;
+        mt!![0] = (seed and 0xfffffffffffffff).toInt()
+        mti = 1
+        while (mti < N) {
+            mt!![mti] = 1812433253 * (mt!![mti - 1] xor mt!![mti - 1].ushr(30)) + mti
+            mti++
             /* See Knuth TAOCP Vol2. 3rd Ed. P.106 for multiplier. */
             /* In the previous versions, MSBs of the seed affect   */
             /* only MSBs of the array mt[].                        */
@@ -366,868 +309,971 @@ public strictfp class MersenneTwisterFast implements Serializable, Cloneable {
         }
     }
 
+
     /**
-     * Sets the seed of the MersenneTwister using an array of integers. Your
-     * array must have a non-zero length. Only the first 624 integers in the
-     * array are used; if the array is shorter than this then integers are
-     * repeatedly used in a wrap-around fashion.
+     * Sets the seed of the MersenneTwister using an array of integers.
+     * Your array must have a non-zero length.  Only the first 624 integers
+     * in the array are used; if the array is shorter than this then
+     * integers are repeatedly used in a wrap-around fashion.
      */
 
-    synchronized public void setSeed(int[] array) {
-        if (array.length == 0) {
-            throw new IllegalArgumentException("Array length must be greater than zero");
-        }
-        int i, j, k;
-        setSeed(19650218);
-        i = 1;
-        j = 0;
-        k = N > array.length ? N : array.length;
-        for (; k != 0; k--) {
-            this.mt[i] = (this.mt[i] ^ (this.mt[i-1] ^ this.mt[i-1] >>> 30) * 1664525) + array[j] + j; /* non linear */
+    fun setSeed(array: IntArray) {
+        if (array.isEmpty())
+            throw IllegalArgumentException("Array length must be greater than zero")
+        var i: Int
+        var j: Int
+        var k: Int
+        setSeed(19650218)
+        i = 1
+        j = 0
+        k = if (N > array.size) N else array.size
+        while (k != 0) {
+            mt!![i] = (mt!![i] xor (mt!![i - 1] xor mt!![i - 1].ushr(30)) * 1664525) + array[j] + j /* non linear */
             // mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
-            i++;
-            j++;
+            i++
+            j++
             if (i >= N) {
-                this.mt[0] = this.mt[N - 1];
-                i = 1;
+                mt!![0] = mt!![N - 1]
+                i = 1
             }
-            if (j >= array.length) {
-                j = 0;
-            }
+            if (j >= array.size) j = 0
+            k--
         }
-        for (k = N - 1; k != 0; k--) {
-            this.mt[i] = (this.mt[i] ^ (this.mt[i - 1] ^ this.mt[i - 1] >>> 30) * 1566083941) - i; /* non linear */
+        k = N - 1
+        while (k != 0) {
+            mt!![i] = (mt!![i] xor (mt!![i - 1] xor mt!![i - 1].ushr(30)) * 1566083941) - i /* non linear */
             // mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
-            i++;
+            i++
             if (i >= N) {
-                this.mt[0] = this.mt[N - 1];
-                i = 1;
+                mt!![0] = mt!![N - 1]
+                i = 1
             }
+            k--
         }
-        this.mt[0] = 0x80000000; /* MSB is 1; assuring non-zero initial array */
+        mt!![0] = 0x80000000.toInt() /* MSB is 1; assuring non-zero initial array */
     }
 
 
-    public int nextInt() {
-        int y;
+    open fun nextInt(): Int {
+        var y: Int
 
-        if (this.mti >= N) // generate N words at one time
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11; // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B; // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C; // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18; // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return y;
+        return y
     }
 
-    public short nextShort() {
-        int y;
 
-        if (this.mti >= N) // generate N words at one time
+    open fun nextShort(): Short {
+        var y: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                         // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return (short) (y >>> 16);
+        return y.ushr(16).toShort()
     }
 
-    public char nextChar() {
-        int y;
 
-        if (this.mti >= N) // generate N words at one time
+    open fun nextChar(): Char {
+        var y: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return (char) (y >>> 16);
+        return y.ushr(16).toChar()
     }
 
-    public boolean nextBoolean() {
-        int y;
 
-        if (this.mti >= N) // generate N words at one time
+    open fun nextBoolean(): Boolean {
+        var y: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return y >>> 31 != 0;
+        return y.ushr(31) != 0
     }
 
-    /**
-     * This generates a coin flip with a probability <tt>probability</tt> of returning true, else returning false.
-     * <tt>probability</tt> must be between 0.0 and 1.0, inclusive. Not as precise a random real event as
-     * nextBoolean(double), but twice as fast. To explicitly use this, remember you may need to cast to float first.
-     */
 
-    public boolean nextBoolean(float probability) {
-        int y;
+    /** This generates a coin flip with a probability <tt>probability</tt>
+     * of returning true, else returning false.  <tt>probability</tt> must
+     * be between 0.0 and 1.0, inclusive.   Not as precise a random real
+     * event as nextBoolean(double), but twice as fast. To explicitly
+     * use this, remember you may need to cast to float first.  */
 
-        if (probability < 0.0f || probability > 1.0f) {
-            throw new IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.");
-        }
-        if (probability == 0.0f) {
-            return false; // fix half-open issues
-        } else if (probability == 1.0f) {
-            return true; // fix half-open issues
-        }
-        if (this.mti >= N) // generate N words at one time
+    open fun nextBoolean(probability: Float): Boolean {
+        var y: Int
+
+        if (probability < 0.0f || probability > 1.0f)
+            throw IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.")
+        if (probability == 0.0f)
+            return false            // fix half-open issues
+        else if (probability == 1.0f) return true        // fix half-open issues
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return (y >>> 8) / (float) (1 << 24) < probability;
+        return y.ushr(8) / (1 shl 24).toFloat() < probability
     }
 
-    /**
-     * This generates a coin flip with a probability <tt>probability</tt> of returning true, else returning false.
-     * <tt>probability</tt> must be between 0.0 and 1.0, inclusive.
-     */
 
-    public boolean nextBoolean(double probability) {
-        int y;
-        int z;
+    /** This generates a coin flip with a probability <tt>probability</tt>
+     * of returning true, else returning false.  <tt>probability</tt> must
+     * be between 0.0 and 1.0, inclusive.  */
 
-        if (probability < 0.0 || probability > 1.0) {
-            throw new IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.");
-        }
-        if (probability == 0.0) {
-            return false; // fix half-open issues
-        } else if (probability == 1.0) {
-            return true; // fix half-open issues
-        }
-        if (this.mti >= N) // generate N words at one time
+    open fun nextBoolean(probability: Double): Boolean {
+        var y: Int
+        var z: Int
+
+        if (probability < 0.0 || probability > 1.0)
+            throw IllegalArgumentException("probability must be between 0.0 and 1.0 inclusive.")
+        if (probability == 0.0)
+            return false             // fix half-open issues
+        else if (probability == 1.0) return true // fix half-open issues
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        if (this.mti >= N) // generate N words at one time
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ z >>> 1 ^ mag01[z & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ z >>> 1 ^ mag01[z & 0x1];
+            while (kk < N - 1) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            z = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ z >>> 1 ^ mag01[z & 0x1];
+            z = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor z.ushr(1) xor mag01!![z and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        z = this.mt[this.mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= z << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= z << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-        z ^= z >>> 18;                        // TEMPERING_SHIFT_L(z)
+        z = mt!![mti++]
+        z = z xor z.ushr(11)                          // TEMPERING_SHIFT_U(z)
+        z = z xor (z shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(z)
+        z = z xor (z shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(z)
+        z = z xor z.ushr(18)                        // TEMPERING_SHIFT_L(z)
 
         /* derived from nextDouble documentation in jdk 1.2 docs, see top */
-        return (((long) (y >>> 6) << 27) + (z >>> 5)) / (double) (1L << 53) < probability;
+        return ((y.ushr(6).toLong() shl 27) + z.ushr(5)) / (1L shl 53).toDouble() < probability
     }
 
-    public byte nextByte() {
-        int y;
 
-        if (this.mti >= N) // generate N words at one time
+    open fun nextByte(): Byte {
+        var y: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return (byte) (y >>> 24);
+        return y.ushr(24).toByte()
     }
 
-    public void nextBytes(byte[] bytes) {
-        int y;
 
-        for (int x = 0; x < bytes.length; x++) {
-            if (this.mti >= N) // generate N words at one time
+    open fun nextBytes(bytes: ByteArray) {
+        var y: Int
+
+        for (x in bytes.indices) {
+            if (mti >= N)
+            // generate N words at one time
             {
-                int kk;
-                final int[] mt = this.mt; // locals are slightly faster
-                final int[] mag01 = this.mag01; // locals are slightly faster
+                var kk: Int
+                val mt = this.mt // locals are slightly faster
+                val mag01 = this.mag01 // locals are slightly faster
 
-                for (kk = 0; kk < N - M; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+                kk = 0
+                while (kk < N - M) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                for (; kk < N - 1; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+                while (kk < N - 1) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+                y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-                this.mti = 0;
+                mti = 0
             }
 
-            y = this.mt[this.mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-            y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+            y = mt!![mti++]
+            y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+            y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+            y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+            y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-            bytes[x] = (byte) (y >>> 24);
+            bytes[x] = y.ushr(24).toByte()
         }
     }
 
-    public long nextLong() {
-        int y;
-        int z;
 
-        if (this.mti >= N) // generate N words at one time
+    /** Returns a long drawn uniformly from 0 to n-1.  Suffice it to say,
+     * n must be greater than 0, or an IllegalArgumentException is raised.  */
+
+    fun nextLong(): Long {
+        var y: Int
+        var z: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        if (this.mti >= N) // generate N words at one time
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ z >>> 1 ^ mag01[z & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ z >>> 1 ^ mag01[z & 0x1];
+            while (kk < N - 1) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            z = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ z >>> 1 ^ mag01[z & 0x1];
+            z = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor z.ushr(1) xor mag01!![z and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        z = this.mt[this.mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= z << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= z << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-        z ^= z >>> 18;                        // TEMPERING_SHIFT_L(z)
+        z = mt!![mti++]
+        z = z xor z.ushr(11)                          // TEMPERING_SHIFT_U(z)
+        z = z xor (z shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(z)
+        z = z xor (z shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(z)
+        z = z xor z.ushr(18)                        // TEMPERING_SHIFT_L(z)
 
-        return ((long) y << 32) + z;
+        return (y.toLong() shl 32) + z.toLong()
     }
 
-    /**
-     * Returns a long drawn uniformly from 0 to n-1. Suffice it to say, n must be > 0, or an IllegalArgumentException is
-     * raised.
-     */
-    public long nextLong(long n) {
-        if (n <= 0) {
-            throw new IllegalArgumentException("n must be positive, got: " + n);
-        }
 
-        long bits, val;
+    /** Returns a long drawn uniformly from 0 to n-1.  Suffice it to say,
+     * n must be &gt; 0, or an IllegalArgumentException is raised.  */
+    open fun nextLong(n: Long): Long {
+        if (n <= 0)
+            throw IllegalArgumentException("n must be positive, got: " + n)
+
+        var bits: Long
+        var `val`: Long
         do {
-            int y;
-            int z;
+            var y: Int
+            var z: Int
 
-            if (this.mti >= N) // generate N words at one time
+            if (mti >= N)
+            // generate N words at one time
             {
-                int kk;
-                final int[] mt = this.mt; // locals are slightly faster
-                final int[] mag01 = this.mag01; // locals are slightly faster
+                var kk: Int
+                val mt = this.mt // locals are slightly faster
+                val mag01 = this.mag01 // locals are slightly faster
 
-                for (kk = 0; kk < N - M; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+                kk = 0
+                while (kk < N - M) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                for (; kk < N - 1; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+                while (kk < N - 1) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+                y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-                this.mti = 0;
+                mti = 0
             }
 
-            y = this.mt[this.mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-            y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+            y = mt!![mti++]
+            y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+            y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+            y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+            y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-            if (this.mti >= N) // generate N words at one time
+            if (mti >= N)
+            // generate N words at one time
             {
-                int kk;
-                final int[] mt = this.mt; // locals are slightly faster
-                final int[] mag01 = this.mag01; // locals are slightly faster
+                var kk: Int
+                val mt = this.mt // locals are slightly faster
+                val mag01 = this.mag01 // locals are slightly faster
 
-                for (kk = 0; kk < N - M; kk++) {
-                    z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M] ^ z >>> 1 ^ mag01[z & 0x1];
+                kk = 0
+                while (kk < N - M) {
+                    z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + M] xor z.ushr(1) xor mag01!![z and 0x1]
+                    kk++
                 }
-                for (; kk < N - 1; kk++) {
-                    z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M - N] ^ z >>> 1 ^ mag01[z & 0x1];
+                while (kk < N - 1) {
+                    z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + (M - N)] xor z.ushr(1) xor mag01!![z and 0x1]
+                    kk++
                 }
-                z = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                mt[N - 1] = mt[M - 1] ^ z >>> 1 ^ mag01[z & 0x1];
+                z = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                mt[N - 1] = mt[M - 1] xor z.ushr(1) xor mag01!![z and 0x1]
 
-                this.mti = 0;
+                mti = 0
             }
 
-            z = this.mt[this.mti++];
-            z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-            z ^= z << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-            z ^= z << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-            z ^= z >>> 18;                        // TEMPERING_SHIFT_L(z)
+            z = mt!![mti++]
+            z = z xor z.ushr(11)                          // TEMPERING_SHIFT_U(z)
+            z = z xor (z shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(z)
+            z = z xor (z shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(z)
+            z = z xor z.ushr(18)                        // TEMPERING_SHIFT_L(z)
 
-            bits = ((long) y << 32) + z >>> 1;
-            val = bits % n;
-        } while (bits - val + n - 1 < 0);
-        return val;
+            bits = ((y.toLong() shl 32) + z.toLong()).ushr(1)
+            `val` = bits % n
+        }
+        while (bits - `val` + (n - 1) < 0)
+        return `val`
     }
 
-    /**
-     * Returns a random double in the half-open range from [0.0,1.0). Thus 0.0 is a valid result but 1.0 is not.
-     */
-    public double nextDouble() {
-        int y;
-        int z;
+    /** Returns a random double in the half-open range from [0.0,1.0).  Thus 0.0 is a valid
+     * result but 1.0 is not.  */
+    open fun nextDouble(): Double {
+        var y: Int
+        var z: Int
 
-        if (this.mti >= N) // generate N words at one time
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        if (this.mti >= N) // generate N words at one time
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ z >>> 1 ^ mag01[z & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ z >>> 1 ^ mag01[z & 0x1];
+            while (kk < N - 1) {
+                z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor z.ushr(1) xor mag01!![z and 0x1]
+                kk++
             }
-            z = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ z >>> 1 ^ mag01[z & 0x1];
+            z = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor z.ushr(1) xor mag01!![z and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        z = this.mt[this.mti++];
-        z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-        z ^= z << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-        z ^= z << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-        z ^= z >>> 18;                        // TEMPERING_SHIFT_L(z)
+        z = mt!![mti++]
+        z = z xor z.ushr(11)                          // TEMPERING_SHIFT_U(z)
+        z = z xor (z shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(z)
+        z = z xor (z shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(z)
+        z = z xor z.ushr(18)                        // TEMPERING_SHIFT_L(z)
 
         /* derived from nextDouble documentation in jdk 1.2 docs, see top */
-        return (((long) (y >>> 6) << 27) + (z >>> 5)) / (double) (1L << 53);
+        return ((y.ushr(6).toLong() shl 27) + z.ushr(5)) / (1L shl 53).toDouble()
     }
 
-    /**
-     * Returns a double in the range from 0.0 to 1.0, possibly inclusive of 0.0 and 1.0 themselves. Thus:
-     *
-     * <p>
+
+    /** Returns a double in the range from 0.0 to 1.0, possibly inclusive of 0.0 and 1.0 themselves.  Thus:
+
      * <table border=0>
-     * <th>
-     * <td>Expression
-     * <td>Interval
-     * <tr>
-     * <td>nextDouble(false, false)
-     * <td>(0.0, 1.0)
-     * <tr>
-     * <td>nextDouble(true, false)
-     * <td>[0.0, 1.0)
-     * <tr>
-     * <td>nextDouble(false, true)
-     * <td>(0.0, 1.0]
-     * <tr>
-     * <td>nextDouble(true, true)
-     * <td>[0.0, 1.0]
-     * </table>
+     * <tr><th>Expression</th><th>Interval</th></tr>
+     * <tr><td>nextDouble(false, false)</td><td>(0.0, 1.0)</td></tr>
+     * <tr><td>nextDouble(true, false)</td><td>[0.0, 1.0)</td></tr>
+     * <tr><td>nextDouble(false, true)</td><td>(0.0, 1.0]</td></tr>
+     * <tr><td>nextDouble(true, true)</td><td>[0.0, 1.0]</td></tr>
+     * <caption>Table of intervals</caption>
+    </table> *
+
      *
-     * <p>
      * This version preserves all possible random values in the double range.
      */
-    public double nextDouble(boolean includeZero, boolean includeOne) {
-        double d = 0.0;
+    open fun nextDouble(includeZero: Boolean, includeOne: Boolean): Double {
+        var d : Double
         do {
-            d = nextDouble(); // grab a value, initially from half-open [0.0, 1.0)
-            if (includeOne && nextBoolean()) {
-                d += 1.0; // if includeOne, with 1/2 probability, push to [1.0, 2.0)
-            }
-        } while (d > 1.0 || // everything above 1.0 is always invalid
-                !includeZero && d == 0.0); // if we're not including zero, 0.0 is invalid
-        return d;
+            d = nextDouble()                           // grab a value, initially from half-open [0.0, 1.0)
+            if (includeOne && nextBoolean()) d += 1.0  // if includeOne, with 1/2 probability, push to [1.0, 2.0)
+        }
+        while (d > 1.0 || // everything above 1.0 is always invalid
+            !includeZero && d == 0.0)            // if we're not including zero, 0.0 is invalid
+        return d
     }
 
-    public double nextGaussian() {
-        if (this.__haveNextNextGaussian) {
-            this.__haveNextNextGaussian = false;
-            return this.__nextNextGaussian;
-        } else {
-            double v1, v2, s;
+
+    /**
+     * Clears the internal gaussian variable from the RNG.  You only need to do this
+     * in the rare case that you need to guarantee that two RNGs have identical internal
+     * state.  Otherwise, disregard this method.  See stateEquals(other).
+     */
+    fun clearGaussian() {
+        __haveNextNextGaussian = false
+    }
+
+
+    open fun nextGaussian(): Double {
+        if (__haveNextNextGaussian) {
+            __haveNextNextGaussian = false
+            return __nextNextGaussian
+        }
+        else {
+            var v1: Double
+            var v2: Double
+            var s: Double
             do {
-                int y;
-                int z;
-                int a;
-                int b;
+                var y: Int
+                var z: Int
+                var a: Int
+                var b: Int
 
-                if (this.mti >= N) // generate N words at one time
+                if (mti >= N)
+                // generate N words at one time
                 {
-                    int kk;
-                    final int[] mt = this.mt; // locals are slightly faster
-                    final int[] mag01 = this.mag01; // locals are slightly faster
+                    var kk: Int
+                    val mt = this.mt // locals are slightly faster
+                    val mag01 = this.mag01 // locals are slightly faster
 
-                    for (kk = 0; kk < N - M; kk++) {
-                        y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+                    kk = 0
+                    while (kk < N - M) {
+                        y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                        kk++
                     }
-                    for (; kk < N - 1; kk++) {
-                        y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+                    while (kk < N - 1) {
+                        y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                        kk++
                     }
-                    y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                    mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+                    y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                    mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-                    this.mti = 0;
+                    mti = 0
                 }
 
-                y = this.mt[this.mti++];
-                y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-                y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-                y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-                y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+                y = mt!![mti++]
+                y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+                y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+                y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+                y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-                if (this.mti >= N) // generate N words at one time
+                if (mti >= N)
+                // generate N words at one time
                 {
-                    int kk;
-                    final int[] mt = this.mt; // locals are slightly faster
-                    final int[] mag01 = this.mag01; // locals are slightly faster
+                    var kk: Int
+                    val mt = this.mt // locals are slightly faster
+                    val mag01 = this.mag01 // locals are slightly faster
 
-                    for (kk = 0; kk < N - M; kk++) {
-                        z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M] ^ z >>> 1 ^ mag01[z & 0x1];
+                    kk = 0
+                    while (kk < N - M) {
+                        z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + M] xor z.ushr(1) xor mag01!![z and 0x1]
+                        kk++
                     }
-                    for (; kk < N - 1; kk++) {
-                        z = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M - N] ^ z >>> 1 ^ mag01[z & 0x1];
+                    while (kk < N - 1) {
+                        z = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + (M - N)] xor z.ushr(1) xor mag01!![z and 0x1]
+                        kk++
                     }
-                    z = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                    mt[N - 1] = mt[M - 1] ^ z >>> 1 ^ mag01[z & 0x1];
+                    z = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                    mt[N - 1] = mt[M - 1] xor z.ushr(1) xor mag01!![z and 0x1]
 
-                    this.mti = 0;
+                    mti = 0
                 }
 
-                z = this.mt[this.mti++];
-                z ^= z >>> 11;                          // TEMPERING_SHIFT_U(z)
-                z ^= z << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(z)
-                z ^= z << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(z)
-                z ^= z >>> 18;                        // TEMPERING_SHIFT_L(z)
+                z = mt!![mti++]
+                z = z xor z.ushr(11)                          // TEMPERING_SHIFT_U(z)
+                z = z xor (z shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(z)
+                z = z xor (z shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(z)
+                z = z xor z.ushr(18)                        // TEMPERING_SHIFT_L(z)
 
-                if (this.mti >= N) // generate N words at one time
+                if (mti >= N)
+                // generate N words at one time
                 {
-                    int kk;
-                    final int[] mt = this.mt; // locals are slightly faster
-                    final int[] mag01 = this.mag01; // locals are slightly faster
+                    var kk: Int
+                    val mt = this.mt // locals are slightly faster
+                    val mag01 = this.mag01 // locals are slightly faster
 
-                    for (kk = 0; kk < N - M; kk++) {
-                        a = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M] ^ a >>> 1 ^ mag01[a & 0x1];
+                    kk = 0
+                    while (kk < N - M) {
+                        a = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + M] xor a.ushr(1) xor mag01!![a and 0x1]
+                        kk++
                     }
-                    for (; kk < N - 1; kk++) {
-                        a = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M - N] ^ a >>> 1 ^ mag01[a & 0x1];
+                    while (kk < N - 1) {
+                        a = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + (M - N)] xor a.ushr(1) xor mag01!![a and 0x1]
+                        kk++
                     }
-                    a = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                    mt[N - 1] = mt[M - 1] ^ a >>> 1 ^ mag01[a & 0x1];
+                    a = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                    mt[N - 1] = mt[M - 1] xor a.ushr(1) xor mag01!![a and 0x1]
 
-                    this.mti = 0;
+                    mti = 0
                 }
 
-                a = this.mt[this.mti++];
-                a ^= a >>> 11;                          // TEMPERING_SHIFT_U(a)
-                a ^= a << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(a)
-                a ^= a << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(a)
-                a ^= a >>> 18;                        // TEMPERING_SHIFT_L(a)
+                a = mt!![mti++]
+                a = a xor a.ushr(11)                          // TEMPERING_SHIFT_U(a)
+                a = a xor (a shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(a)
+                a = a xor (a shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(a)
+                a = a xor a.ushr(18)                        // TEMPERING_SHIFT_L(a)
 
-                if (this.mti >= N) // generate N words at one time
+                if (mti >= N)
+                // generate N words at one time
                 {
-                    int kk;
-                    final int[] mt = this.mt; // locals are slightly faster
-                    final int[] mag01 = this.mag01; // locals are slightly faster
+                    var kk: Int
+                    val mt = this.mt // locals are slightly faster
+                    val mag01 = this.mag01 // locals are slightly faster
 
-                    for (kk = 0; kk < N - M; kk++) {
-                        b = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M] ^ b >>> 1 ^ mag01[b & 0x1];
+                    kk = 0
+                    while (kk < N - M) {
+                        b = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + M] xor b.ushr(1) xor mag01!![b and 0x1]
+                        kk++
                     }
-                    for (; kk < N - 1; kk++) {
-                        b = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                        mt[kk] = mt[kk + M - N] ^ b >>> 1 ^ mag01[b & 0x1];
+                    while (kk < N - 1) {
+                        b = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                        mt[kk] = mt[kk + (M - N)] xor b.ushr(1) xor mag01!![b and 0x1]
+                        kk++
                     }
-                    b = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                    mt[N - 1] = mt[M - 1] ^ b >>> 1 ^ mag01[b & 0x1];
+                    b = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                    mt[N - 1] = mt[M - 1] xor b.ushr(1) xor mag01!![b and 0x1]
 
-                    this.mti = 0;
+                    mti = 0
                 }
 
-                b = this.mt[this.mti++];
-                b ^= b >>> 11;                          // TEMPERING_SHIFT_U(b)
-                b ^= b << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(b)
-                b ^= b << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(b)
-                b ^= b >>> 18;                        // TEMPERING_SHIFT_L(b)
+                b = mt!![mti++]
+                b = b xor b.ushr(11)                          // TEMPERING_SHIFT_U(b)
+                b = b xor (b shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(b)
+                b = b xor (b shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(b)
+                b = b xor b.ushr(18)                        // TEMPERING_SHIFT_L(b)
 
                 /* derived from nextDouble documentation in jdk 1.2 docs, see top */
-                v1 = 2 * ((((long) (y >>> 6) << 27) + (z >>> 5)) / (double) (1L << 53)) - 1;
-                v2 = 2 * ((((long) (a >>> 6) << 27) + (b >>> 5)) / (double) (1L << 53)) - 1;
-                s = v1 * v1 + v2 * v2;
-            } while (s >= 1 || s == 0);
-            double multiplier = StrictMath.sqrt(-2 * StrictMath.log(s) / s);
-            this.__nextNextGaussian = v2 * multiplier;
-            this.__haveNextNextGaussian = true;
-            return v1 * multiplier;
+                v1 = 2 * (((y.ushr(6).toLong() shl 27) + z.ushr(5)) / (1L shl 53).toDouble()) - 1
+                v2 = 2 * (((a.ushr(6).toLong() shl 27) + b.ushr(5)) / (1L shl 53).toDouble()) - 1
+                s = v1 * v1 + v2 * v2
+            }
+            while (s >= 1 || s == 0.0)
+            val multiplier = Math.sqrt(-2 * Math.log(s) / s)
+            __nextNextGaussian = v2 * multiplier
+            __haveNextNextGaussian = true
+            return v1 * multiplier
         }
     }
 
-    /**
-     * Returns a random float in the half-open range from [0.0f,1.0f). Thus 0.0f is a valid result but 1.0f is not.
-     */
-    public float nextFloat() {
-        int y;
 
-        if (this.mti >= N) // generate N words at one time
+    /** Returns a random float in the half-open range from [0.0f,1.0f).  Thus 0.0f is a valid
+     * result but 1.0f is not.  */
+    open fun nextFloat(): Float {
+        var y: Int
+
+        if (mti >= N)
+        // generate N words at one time
         {
-            int kk;
-            final int[] mt = this.mt; // locals are slightly faster
-            final int[] mag01 = this.mag01; // locals are slightly faster
+            var kk: Int
+            val mt = this.mt // locals are slightly faster
+            val mag01 = this.mag01 // locals are slightly faster
 
-            for (kk = 0; kk < N - M; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+            kk = 0
+            while (kk < N - M) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            for (; kk < N - 1; kk++) {
-                y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+            while (kk < N - 1) {
+                y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                kk++
             }
-            y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-            mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+            y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+            mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-            this.mti = 0;
+            mti = 0
         }
 
-        y = this.mt[this.mti++];
-        y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-        y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-        y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-        y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+        y = mt!![mti++]
+        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-        return (y >>> 8) / (float) (1 << 24);
+        return y.ushr(8) / (1 shl 24).toFloat()
     }
 
-    /**
-     * Returns a float in the range from 0.0f to 1.0f, possibly inclusive of 0.0f and 1.0f themselves. Thus:
-     *
-     * <p>
+
+    /** Returns a float in the range from 0.0f to 1.0f, possibly inclusive of 0.0f and 1.0f themselves.  Thus:
+
      * <table border=0>
-     * <th>
-     * <td>Expression
-     * <td>Interval
-     * <tr>
-     * <td>nextFloat(false, false)
-     * <td>(0.0f, 1.0f)
-     * <tr>
-     * <td>nextFloat(true, false)
-     * <td>[0.0f, 1.0f)
-     * <tr>
-     * <td>nextFloat(false, true)
-     * <td>(0.0f, 1.0f]
-     * <tr>
-     * <td>nextFloat(true, true)
-     * <td>[0.0f, 1.0f]
-     * </table>
+     * <tr><th>Expression</th><th>Interval</th></tr>
+     * <tr><td>nextFloat(false, false)</td><td>(0.0f, 1.0f)</td></tr>
+     * <tr><td>nextFloat(true, false)</td><td>[0.0f, 1.0f)</td></tr>
+     * <tr><td>nextFloat(false, true)</td><td>(0.0f, 1.0f]</td></tr>
+     * <tr><td>nextFloat(true, true)</td><td>[0.0f, 1.0f]</td></tr>
+     * <caption>Table of intervals</caption>
+    </table> *
+
      *
-     * <p>
      * This version preserves all possible random values in the float range.
      */
-    public float nextFloat(boolean includeZero, boolean includeOne) {
-        float d = 0.0f;
+    open fun nextFloat(includeZero: Boolean, includeOne: Boolean): Float {
+        var d: Float
         do {
-            d = nextFloat(); // grab a value, initially from half-open [0.0f, 1.0f)
-            if (includeOne && nextBoolean()) {
-                d += 1.0f; // if includeOne, with 1/2 probability, push to [1.0f, 2.0f)
-            }
-        } while (d > 1.0f || // everything above 1.0f is always invalid
-                !includeZero && d == 0.0f); // if we're not including zero, 0.0f is invalid
-        return d;
+            d = nextFloat()                            // grab a value, initially from half-open [0.0f, 1.0f)
+            if (includeOne && nextBoolean()) d += 1.0f // if includeOne, with 1/2 probability, push to [1.0f, 2.0f)
+        }
+        while (d > 1.0f || // everything above 1.0f is always invalid
+            !includeZero && d == 0.0f)           // if we're not including zero, 0.0f is invalid
+        return d
     }
 
 
-    /**
-     * Returns an integer drawn uniformly from 0 to n-1. Suffice it to say, n must be > 0, or an
-     * IllegalArgumentException is raised.
-     */
-    public int nextInt(int n) {
-        if (n <= 0) {
-            throw new IllegalArgumentException("n must be positive, got: " + n);
-        }
+    /** Returns an integer drawn uniformly from 0 to n-1.  Suffice it to say,
+     * n must be &gt; 0, or an IllegalArgumentException is raised.  */
+    open fun nextInt(n: Int): Int {
+        if (n <= 0)
+            throw IllegalArgumentException("n must be positive, got: " + n)
 
-        if ((n & -n) == n) // i.e., n is a power of 2
+        if (n and -n == n)
+        // i.e., n is a power of 2
         {
-            int y;
+            var y: Int
 
-            if (this.mti >= N) // generate N words at one time
+            if (mti >= N)
+            // generate N words at one time
             {
-                int kk;
-                final int[] mt = this.mt; // locals are slightly faster
-                final int[] mag01 = this.mag01; // locals are slightly faster
+                var kk: Int
+                val mt = this.mt // locals are slightly faster
+                val mag01 = this.mag01 // locals are slightly faster
 
-                for (kk = 0; kk < N - M; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+                kk = 0
+                while (kk < N - M) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                for (; kk < N - 1; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+                while (kk < N - 1) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+                y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-                this.mti = 0;
+                mti = 0
             }
 
-            y = this.mt[this.mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-            y ^= y >>> 18;                        // TEMPERING_SHIFT_L(y)
+            y = mt!![mti++]
+            y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+            y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+            y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+            y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-            return (int) (n * (long) (y >>> 1) >> 31);
+            return (n * y.ushr(1).toLong() shr 31).toInt()
         }
 
-        int bits, val;
+        var bits: Int
+        var `val`: Int
         do {
-            int y;
+            var y: Int
 
-            if (this.mti >= N) // generate N words at one time
+            if (mti >= N)
+            // generate N words at one time
             {
-                int kk;
-                final int[] mt = this.mt; // locals are slightly faster
-                final int[] mag01 = this.mag01; // locals are slightly faster
+                var kk: Int
+                val mt = this.mt // locals are slightly faster
+                val mag01 = this.mag01 // locals are slightly faster
 
-                for (kk = 0; kk < N - M; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M] ^ y >>> 1 ^ mag01[y & 0x1];
+                kk = 0
+                while (kk < N - M) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + M] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                for (; kk < N - 1; kk++) {
-                    y = mt[kk] & UPPER_MASK | mt[kk + 1] & LOWER_MASK;
-                    mt[kk] = mt[kk + M - N] ^ y >>> 1 ^ mag01[y & 0x1];
+                while (kk < N - 1) {
+                    y = mt!![kk] and UPPER_MASK or (mt[kk + 1] and LOWER_MASK)
+                    mt[kk] = mt[kk + (M - N)] xor y.ushr(1) xor mag01!![y and 0x1]
+                    kk++
                 }
-                y = mt[N - 1] & UPPER_MASK | mt[0] & LOWER_MASK;
-                mt[N - 1] = mt[M - 1] ^ y >>> 1 ^ mag01[y & 0x1];
+                y = mt!![N - 1] and UPPER_MASK or (mt[0] and LOWER_MASK)
+                mt[N - 1] = mt[M - 1] xor y.ushr(1) xor mag01!![y and 0x1]
 
-                this.mti = 0;
+                mti = 0
             }
 
-            y = this.mt[this.mti++];
-            y ^= y >>> 11;                          // TEMPERING_SHIFT_U(y)
-            y ^= y << 7 & TEMPERING_MASK_B;       // TEMPERING_SHIFT_S(y)
-            y ^= y << 15 & TEMPERING_MASK_C;      // TEMPERING_SHIFT_T(y)
-            y ^= y >>> 18; // TEMPERING_SHIFT_L(y)
+            y = mt!![mti++]
+            y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
+            y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
+            y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+            y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
-            bits = y >>> 1;
-            val = bits % n;
-        } while (bits - val + n - 1 < 0);
-        return val;
+            bits = y.ushr(1)
+            `val` = bits % n
+        }
+        while (bits - `val` + (n - 1) < 0)
+        return `val`
+    }
+
+    companion object {
+        // Serialization
+        private const val serialVersionUID = -8219700664442619525L  // locked as of Version 15
+
+        // Period parameters
+        private val N = 624
+        private val M = 397
+        private val MATRIX_A = 0x9908b0df.toInt()   //    private static final * constant vector a
+        private val UPPER_MASK = 0x80000000.toInt() // most significant w-r bits
+        private val LOWER_MASK = 0x7fffffff // least significant r bits
+
+        // Tempering parameters
+        private val TEMPERING_MASK_B = 0x9d2c5680.toInt()
+        private val TEMPERING_MASK_C = 0xefc60000.toInt()
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,182 +13,132 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Locale;
+import dorkbox.os.OS.TEMP_DIR
+import dorkbox.util.FileUtil.copyFile
+import dorkbox.util.FileUtil.delete
+import dorkbox.util.FileUtil.getExtension
+import java.io.*
+import java.math.BigInteger
+import java.net.URL
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
-import dorkbox.os.OS;
-
-public
-class CacheUtil {
-
-    private static final ThreadLocal<MessageDigest> digestLocal = ThreadLocal.withInitial(()->{
-        try {
-            return MessageDigest.getInstance("SHA1");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Unable to initialize hash algorithm. SHA1 digest doesn't exist?!? (This should not happen");
-        }
-    });
-
-    private final String tempDir;
-
-    public static
-    void clear(String tempDir) {
-        new CacheUtil(tempDir).clear();
-    }
-
-    public CacheUtil() {
-        this("cache");
-    }
-
-    public CacheUtil(String tempDir) {
-        this.tempDir = tempDir;
-    }
-
+class CacheUtil(private val tempDir: String = "cache") {
     /**
      * Clears ALL saved files in the cache
      */
-    public
-    void clear() {
+    fun clear() {
         // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
-        FileUtil.delete(new File(OS.INSTANCE.getTEMP_DIR(), tempDir));
+        delete(File(TEMP_DIR, tempDir))
     }
-
 
     /**
      * Checks to see if the specified file is in the cache. NULL if it is not, otherwise specifies a location on disk.
-     * <p>
+     *
+     *
      * This cache is not persisted across runs.
      */
-    public
-    File check(final File file) {
+    fun check(file: File?): File? {
         if (file == null) {
-            throw new NullPointerException("file");
+            throw NullPointerException("file")
         }
 
         // if we already have this fileName, reuse it
-        return check(file.getAbsolutePath());
+        return check(file.absolutePath)
     }
 
     /**
      * Checks to see if the specified file is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
-    public
-    File check(final String fileName) {
+    fun check(fileName: String?): File? {
         if (fileName == null) {
-            throw new NullPointerException("fileName");
+            throw NullPointerException("fileName")
         }
 
         // if we already have this fileName, reuse it
-        File newFile = makeCacheFile(fileName);
+        val newFile = makeCacheFile(fileName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile;
-        }
-
-        return null;
+        return if (newFile.canRead() && newFile.isFile) {
+            newFile
+        } else null
     }
 
     /**
      * Checks to see if the specified URL is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
-    public
-    File check(final URL fileResource) {
+    fun check(fileResource: URL?): File? {
         if (fileResource == null) {
-            throw new NullPointerException("fileResource");
+            throw NullPointerException("fileResource")
         }
-
-        return check(fileResource.getPath());
+        return check(fileResource.path)
     }
 
     /**
      * Checks to see if the specified stream (based on the hash of the input stream) is in the cache. NULL if it is not, otherwise
      * specifies a location on disk.
      */
-    public
-    File check(final InputStream fileStream) throws IOException {
+    @Throws(IOException::class)
+    fun check(fileStream: InputStream?): File? {
         if (fileStream == null) {
-            throw new NullPointerException("fileStream");
+            throw NullPointerException("fileStream")
         }
-
-        return check(null, fileStream);
+        return check(null, fileStream)
     }
 
     /**
      * Checks to see if the specified name is in the cache. NULL if it is not, otherwise specifies a location on disk. If the
      * cacheName is NULL, it will use a HASH of the fileStream
      */
-    public
-    File check(String cacheName, final InputStream fileStream) throws IOException {
+    @Throws(IOException::class)
+    fun check(cacheName: String?, fileStream: InputStream?): File? {
+        var cacheName = cacheName
         if (fileStream == null) {
-            throw new NullPointerException("fileStream");
+            throw NullPointerException("fileStream")
         }
-
         if (cacheName == null) {
-            cacheName = createNameAsHash(fileStream);
+            cacheName = createNameAsHash(fileStream)
         }
 
         // if we already have this fileName, reuse it
-        File newFile = makeCacheFile(cacheName);
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile;
-        }
-
-        return null;
+        return if (newFile.canRead() && newFile.isFile) {
+            newFile
+        } else null
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Saves the name of the file in a cache, based on the file's name.
      */
-    public
-    File save(final File file) throws IOException {
-        return save(file.getAbsolutePath(), file);
+    @Throws(IOException::class)
+    fun save(file: File): File {
+        return save(file.absolutePath, file)
     }
 
     /**
      * Saves the name of the file in a cache, based on the specified name. If cacheName is NULL, it will use the file's name.
      */
-    public
-    File save(String cacheName, final File file) throws IOException {
+    @Throws(IOException::class)
+    fun save(cacheName: String?, file: File): File {
+        var cacheName = cacheName
         if (cacheName == null) {
-            cacheName = file.getAbsolutePath();
+            cacheName = file.absolutePath
         }
-        return save(cacheName, file.getAbsolutePath());
+        return save(cacheName, file.absolutePath)
     }
 
     /**
      * Saves the name of the file in a cache, based on the specified name.
      */
-    public
-    File save(final String fileName) throws IOException {
-        return save(null, fileName);
+    @Throws(IOException::class)
+    fun save(fileName: String): File {
+        return save(null, fileName)
     }
 
     /**
@@ -196,122 +146,103 @@ class CacheUtil {
      *
      * @return the newly create cache file, or an IOException if there were problems
      */
-    public
-    File save(String cacheName, final String fileName) throws IOException {
+    @Throws(IOException::class)
+    fun save(cacheName: String?, fileName: String): File {
+        var cacheName = cacheName
         if (cacheName == null) {
-            cacheName = fileName;
+            cacheName = fileName
         }
 
         // if we already have this fileName, reuse it
-        File newFile = makeCacheFile(cacheName);
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile;
+        if (newFile.canRead() && newFile.isFile) {
+            return newFile
         }
 
 
         // is file sitting on drive
-        File iconTest = new File(fileName);
-        if (iconTest.isFile()) {
+        val iconTest = File(fileName)
+        return if (iconTest.isFile) {
             if (!iconTest.canRead()) {
-                throw new IOException("File exists but unable to read source file " + fileName);
+                throw IOException("File exists but unable to read source file $fileName")
             }
 
             // have to copy the resource to the cache
-            FileUtil.copyFile(iconTest, newFile);
-
-            return newFile;
-        }
-        else {
+            copyFile(iconTest, newFile)
+            newFile
+        } else {
             // suck it out of a URL/Resource (with debugging if necessary)
-            final URL systemResource = LocationResolver.getResource(fileName);
-
-            if (systemResource == null) {
-                throw new IOException("Unable to load URL resource " + fileName);
-            }
-
-            InputStream inStream = systemResource.openStream();
+            val systemResource = LocationResolver.getResource(fileName) ?: throw IOException("Unable to load URL resource $fileName")
+            val inStream = systemResource.openStream()
 
             // saves the file into our temp location, uses HASH of cacheName
-            return makeFileViaStream(cacheName, inStream);
+            makeFileViaStream(cacheName, inStream)
         }
     }
 
     /**
      * Saves the name of the URL in a cache, based on it's path.
      */
-    public
-    File save(final URL fileResource) throws IOException {
-        return save(null, fileResource);
+    @Throws(IOException::class)
+    fun save(fileResource: URL): File {
+        return save(null, fileResource)
     }
 
     /**
      * Saves the name of the URL in a cache, based on the specified name. If cacheName is NULL, it will use the URL's path.
      */
-    public
-    File save(String cacheName, final URL fileResource) throws IOException {
+    @Throws(IOException::class)
+    fun save(cacheName: String?, fileResource: URL): File {
+        var cacheName = cacheName
         if (cacheName == null) {
-            cacheName = fileResource.getPath();
+            cacheName = fileResource.path
         }
 
         // if we already have this fileName, reuse it
-        File newFile = makeCacheFile(cacheName);
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile;
+        if (newFile.canRead() && newFile.isFile) {
+            return newFile
         }
-
-        InputStream inStream = fileResource.openStream();
+        val inStream = fileResource.openStream()
 
         // saves the file into our temp location, uses HASH of cacheName
-        return makeFileViaStream(cacheName, inStream);
+        return makeFileViaStream(cacheName, inStream)
     }
 
     /**
      * This caches the data based on the HASH of the input stream.
      */
-    public
-    File save(final InputStream fileStream) throws IOException {
+    @Throws(IOException::class)
+    fun save(fileStream: InputStream?): File {
         if (fileStream == null) {
-            throw new NullPointerException("fileStream");
+            throw NullPointerException("fileStream")
         }
-
-        return save(null, fileStream);
+        return save(null, fileStream)
     }
 
     /**
      * Saves the name of the file in a cache, based on the cacheName. If the cacheName is NULL, it will use a HASH of the fileStream
      * as the name.
      */
-    public
-    File save(String cacheName, final InputStream fileStream) throws IOException {
+    @Throws(IOException::class)
+    fun save(cacheName: String?, fileStream: InputStream): File {
+        var cacheName = cacheName
         if (cacheName == null) {
-            cacheName = createNameAsHash(fileStream);
+            cacheName = createNameAsHash(fileStream)
         }
 
         // if we already have this fileName, reuse it
-        File newFile = makeCacheFile(cacheName);
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile;
-        }
-
-        return makeFileViaStream(cacheName, fileStream);
+        return if (newFile.canRead() && newFile.isFile) {
+            newFile
+        } else makeFileViaStream(cacheName, fileStream)
     }
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * must be called from synchronized block!
@@ -321,52 +252,45 @@ class CacheUtil {
      *
      * @return the full path of the resource copied to disk, or NULL if invalid
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private
-    File makeFileViaStream(final String cacheName, final InputStream resourceStream) throws IOException {
+    @Throws(IOException::class)
+    private fun makeFileViaStream(cacheName: String?, resourceStream: InputStream?): File {
         if (resourceStream == null) {
-            throw new NullPointerException("resourceStream");
+            throw NullPointerException("resourceStream")
         }
-
         if (cacheName == null) {
-            throw new NullPointerException("cacheName");
+            throw NullPointerException("cacheName")
         }
-
-        File newFile = makeCacheFile(cacheName);
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
-        if (newFile.canRead() && newFile.isFile()) {
-            return newFile.getAbsoluteFile();
+        if (newFile.canRead() && newFile.isFile) {
+            return newFile.absoluteFile
         }
-
-        OutputStream outStream = null;
+        var outStream: OutputStream? = null
         try {
-            int read;
-            byte[] buffer = new byte[2048];
-            outStream = new FileOutputStream(newFile);
-
-            while ((read = resourceStream.read(buffer)) > 0) {
-                outStream.write(buffer, 0, read);
+            var read: Int
+            val buffer = ByteArray(2048)
+            outStream = FileOutputStream(newFile)
+            while (resourceStream.read(buffer).also { read = it } > 0) {
+                outStream.write(buffer, 0, read)
             }
-        } catch (IOException e) {
+        } catch (e: IOException) {
             // Send up exception
-            String message = "Unable to copy '" + cacheName + "' to temporary location: '" + newFile.getAbsolutePath() + "'";
-            throw new IOException(message, e);
+            val message = "Unable to copy '" + cacheName + "' to temporary location: '" + newFile.absolutePath + "'"
+            throw IOException(message, e)
         } finally {
             try {
-                resourceStream.close();
-            } catch (Exception ignored) {
+                resourceStream.close()
+            } catch (ignored: Exception) {
             }
             try {
-                if (outStream != null) {
-                    outStream.close();
-                }
-            } catch (Exception ignored) {
+                outStream?.close()
+            } catch (ignored: Exception) {
             }
         }
 
         //get the name of the new file
-        return newFile.getAbsoluteFile();
+        return newFile.absoluteFile
     }
 
     /**
@@ -374,80 +298,82 @@ class CacheUtil {
      *
      * @return the file on disk represented by the file name
      */
-    public
-    File create(final String cacheName) {
-        return makeCacheFile(cacheName);
+    fun create(cacheName: String?): File {
+        return makeCacheFile(cacheName)
     }
 
     // creates the file that will be cached. It may, or may not already exist
     // must be called from synchronized block!
     // never returns null
-    private
-    File makeCacheFile(final String cacheName) {
+    private fun makeCacheFile(cacheName: String?): File {
         if (cacheName == null) {
-            throw new NullPointerException("cacheName");
+            throw NullPointerException("cacheName")
         }
-
-        File saveDir = new File(OS.INSTANCE.getTEMP_DIR(), tempDir);
+        val saveDir = File(TEMP_DIR, tempDir)
 
         // can be wimpy, only one at a time
-        String hash = hashName(cacheName);
-        String extension = FileUtil.INSTANCE.getExtension(cacheName);
+        val hash = hashName(cacheName)
+        var extension = getExtension(cacheName)
         if (extension.isEmpty()) {
-            extension = "cache";
+            extension = "cache"
+        }
+        val newFile = File(saveDir, "$hash.$extension").absoluteFile
+        // make whatever dirs we need to.
+        newFile.parentFile.mkdirs()
+        return newFile
+    }
+
+    companion object {
+        private val digestLocal = ThreadLocal.withInitial {
+            try {
+                return@withInitial MessageDigest.getInstance("SHA1")
+            } catch (e: NoSuchAlgorithmException) {
+                throw RuntimeException("Unable to initialize hash algorithm. SHA1 digest doesn't exist?!? (This should not happen")
+            }
         }
 
-        File newFile = new File(saveDir, hash + '.' + extension).getAbsoluteFile();
-        // make whatever dirs we need to.
-        //noinspection ResultOfMethodCallIgnored
-        newFile.getParentFile().mkdirs();
+        fun clear(tempDir: String) {
+            CacheUtil(tempDir).clear()
+        }
 
-        return newFile;
-    }
-
-    // hashed name to prevent invalid file names from being used
-    private static
-    String hashName(final String name) {
-        // figure out the fileName
-        byte[] bytes = name.getBytes(StandardCharsets.UTF_8);
-        MessageDigest digest = digestLocal.get();
-
-        digest.reset();
-        digest.update(bytes);
-
-        // convert to alpha-numeric. see https://stackoverflow.com/questions/29183818/why-use-tostring32-and-not-tostring36
-        return new BigInteger(1, digest.digest()).toString(32).toUpperCase(Locale.US);
-    }
-
-    // this is if we DO NOT have a file name. We hash the resourceStream bytes to base the name on that. The extension will be ".cache"
-    public static
-    String createNameAsHash(final InputStream resourceStream) throws IOException {
-        MessageDigest digest = digestLocal.get();
-
-        digest.reset();
-
-        try {
-            // we have to set the cache name based on the hash of the input stream ONLY...
-            final ByteArrayOutputStream outStream = new ByteArrayOutputStream(4096); // will resize if necessary
-
-            int read;
-            byte[] buffer = new byte[2048];
-
-            while ((read = resourceStream.read(buffer)) > 0) {
-                digest.update(buffer, 0, read);
-                outStream.write(buffer, 0, read);
-            }
+        // hashed name to prevent invalid file names from being used
+        private fun hashName(name: String): String {
+            // figure out the fileName
+            val bytes = name.toByteArray(StandardCharsets.UTF_8)
+            val digest = digestLocal.get()
+            digest.reset()
+            digest.update(bytes)
 
             // convert to alpha-numeric. see https://stackoverflow.com/questions/29183818/why-use-tostring32-and-not-tostring36
-            return new BigInteger(1, digest.digest()).toString(32).toUpperCase(Locale.US) + ".cache";
-        } catch (IOException e) {
-            // Send up exception
-            String message = "Unable to copy InputStream to memory.";
-            throw new IOException(message, e);
-        } finally {
-            try {
-                resourceStream.close();
-            } catch (Exception ignored) {
+            return BigInteger(1, digest.digest()).toString(32).uppercase()
+        }
+
+        // this is if we DO NOT have a file name. We hash the resourceStream bytes to base the name on that. The extension will be ".cache"
+        @Throws(IOException::class)
+        fun createNameAsHash(resourceStream: InputStream): String {
+            val digest = digestLocal.get()
+            digest.reset()
+            return try {
+                // we have to set the cache name based on the hash of the input stream ONLY...
+                val outStream = ByteArrayOutputStream(4096) // will resize if necessary
+                var read: Int
+                val buffer = ByteArray(2048)
+                while (resourceStream.read(buffer).also { read = it } > 0) {
+                    digest.update(buffer, 0, read)
+                    outStream.write(buffer, 0, read)
+                }
+
+                // convert to alpha-numeric. see https://stackoverflow.com/questions/29183818/why-use-tostring32-and-not-tostring36
+                BigInteger(1, digest.digest()).toString(32).uppercase() + ".cache"
+            } catch (e: IOException) {
+                // Send up exception
+                val message = "Unable to copy InputStream to memory."
+                throw IOException(message, e)
+            } finally {
+                try {
+                    resourceStream.close()
+                } catch (ignored: Exception) {
+                }
             }
         }
     }
