@@ -3,8 +3,6 @@ module dorkbox.utilities {
     exports dorkbox.urlHandler;
     exports dorkbox.util;
     exports dorkbox.util.classes;
-    exports dorkbox.util.crypto;
-    exports dorkbox.util.crypto.signers;
     exports dorkbox.util.entropy;
     exports dorkbox.util.exceptions;
     exports dorkbox.util.gwt;

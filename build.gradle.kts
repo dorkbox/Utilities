@@ -90,19 +90,7 @@ licensing {
             author("Lightweight Java Game Library Project")
             author("Riven")
         }
-        extra("Base64Fast", License.BSD_3) {
-            url(Extras.url)
-            url("https://migbase64.sourceforge.net/")
-            copyright(2004)
-            author("Mikael Grev, MiG InfoCom AB. (base64@miginfocom.com)")
-        }
-        extra("BCrypt", License.BSD_2) {
-            url(Extras.url)
-            url("https://www.mindrot.org/projects/jBCrypt")
-            copyright(2006)
-            author("Damien Miller (djm@mindrot.org)")
-            note("GWT modified version")
-        }
+
         extra("Modified hex conversion utility methods", License.APACHE_2) {
             url(Extras.url)
             url("https://netty.io")
@@ -169,43 +157,19 @@ dependencies {
 
 //    // https://github.com/MicroUtils/kotlin-logging  NO JPMS SUPPORT!
 //    api("io.github.microutils:kotlin-logging:3.0.4")
-    api("org.slf4j:slf4j-api:2.0.7")
+//    api("org.slf4j:slf4j-api:2.0.7")
 
-    api("org.tukaani:xz:1.9")
+    api("org.tukaani:xz:1.9") // LZMA support
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.1.0")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-//    compileOnly("com.esotericsoftware:kryo:5.3.0")
-//    compileOnly("de.javakaffee:kryo-serializers:0.45")
-
     compileOnly("io.netty:netty-buffer:4.1.94.Final")
-
-    val bcVersion = "1.70"
-    compileOnly("org.bouncycastle:bcprov-jdk15on:$bcVersion")
-    compileOnly("org.bouncycastle:bcpg-jdk15on:$bcVersion")
-    compileOnly("org.bouncycastle:bcmail-jdk15on:$bcVersion")
-    compileOnly("org.bouncycastle:bctls-jdk15on:$bcVersion")
-
-    compileOnly("org.lwjgl:lwjgl-xxhash:3.3.2")
-
     compileOnly("net.jodah:typetools:0.6.3")
 
-
-    // testing
-    testImplementation("org.bouncycastle:bcprov-jdk15on:$bcVersion")
-    testImplementation("org.bouncycastle:bcpg-jdk15on:$bcVersion")
-    testImplementation("org.bouncycastle:bcmail-jdk15on:$bcVersion")
-    testImplementation("org.bouncycastle:bctls-jdk15on:$bcVersion")
-
-    testImplementation("com.esotericsoftware:kryo:5.4.0")
-    testImplementation("de.javakaffee:kryo-serializers:0.45")
-
-    testImplementation("com.dorkbox:Serializers:2.7")
-
     testImplementation("junit:junit:4.13.2")
-    testImplementation("ch.qos.logback:logback-classic:1.4.5")
+//    testImplementation("ch.qos.logback:logback-classic:1.4.5")
 }
 repositories {
     mavenCentral()
