@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,153 +13,123 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.properties;
+package dorkbox.util.properties
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Properties;
+import java.awt.Color
+import java.io.*
+import java.util.*
 
-import dorkbox.util.FileUtil;
+class PropertiesProvider(propertiesFile: File) {
+    private val properties: Properties = SortedProperties()
+    private val propertiesFile: File
+    private var comments = "Settings and configuration file. Strings must be escape formatted!"
 
-public
-class PropertiesProvider {
+    constructor(propertiesFile: String) : this(File(propertiesFile))
 
-    private final Properties properties = new SortedProperties();
-    private final File propertiesFile;
-    private String comments = "Settings and configuration file. Strings must be escape formatted!";
+    init {
+        @Suppress("NAME_SHADOWING")
+        val propertiesFile = propertiesFile.normalize()
 
-    public
-    PropertiesProvider(String propertiesFile) {
-        this(new File(propertiesFile));
-    }
-
-    public
-    PropertiesProvider(File propertiesFile) {
-        if (propertiesFile == null) {
-            throw new NullPointerException("propertiesFile");
-        }
-
-        propertiesFile = FileUtil.INSTANCE.normalize(propertiesFile);
         // make sure the parent dir exists...
-        File parentFile = propertiesFile.getParentFile();
+        val parentFile = propertiesFile.parentFile
         if (parentFile != null && !parentFile.exists()) {
             if (!parentFile.mkdirs()) {
-                throw new RuntimeException("Unable to create directories for: " + propertiesFile);
+                throw RuntimeException("Unable to create directories for: $propertiesFile")
             }
         }
 
-        this.propertiesFile = propertiesFile;
-
-        _load();
+        this.propertiesFile = propertiesFile
+        _load()
     }
 
-    public
-    void setComments(String comments) {
-        this.comments = comments;
+    fun setComments(comments: String) {
+        this.comments = comments
     }
 
-    private
-    void _load() {
-        if (!this.propertiesFile.canRead() || !this.propertiesFile.exists()) {
+    private fun _load() {
+        if (!propertiesFile.canRead() || !propertiesFile.exists()) {
             // in this case, our properties file doesn't exist yet... create one!
-            _save();
+            _save()
         }
 
         try {
-            FileInputStream fis = new FileInputStream(this.propertiesFile);
-            this.properties.load(fis);
-            fis.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            val fis = FileInputStream(propertiesFile)
+            properties.load(fis)
+            fis.close()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
             // oops!
-            System.err.println("Properties cannot load!");
-            e.printStackTrace();
+            System.err.println("Properties cannot load!")
+            e.printStackTrace()
         }
     }
 
-
-    private
-    void _save() {
+    private fun _save() {
         try {
-            FileOutputStream fos = new FileOutputStream(this.propertiesFile);
-            this.properties.store(fos, this.comments);
-            fos.flush();
-            fos.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            System.err.println("Properties cannot save!");
-        } catch (IOException e) {
+            val fos = FileOutputStream(propertiesFile)
+            properties.store(fos, comments)
+            fos.flush()
+            fos.close()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+            System.err.println("Properties cannot save!")
+        } catch (e: IOException) {
             // oops!
-            System.err.println("Properties cannot save!");
-            e.printStackTrace();
+            System.err.println("Properties cannot save!")
+            e.printStackTrace()
         }
     }
 
-
-    public final synchronized
-    void remove(final String key) {
-        this.properties.remove(key);
-        _save();
+    @Synchronized
+    fun remove(key: String) {
+        properties.remove(key)
+        _save()
     }
 
-    @SuppressWarnings("AutoBoxing")
-    public final synchronized
-    void save(final String key, Object value) {
+    @Synchronized
+    fun save(key: String?, value: Any?) {
+        @Suppress("NAME_SHADOWING")
+        var value = value
         if (key == null || value == null) {
-            return;
+            return
         }
 
-        if (value instanceof Color) {
-            value = ((Color) value).getRGB();
+        if (value is Color) {
+            value = value.rgb
         }
 
-        this.properties.setProperty(key, value.toString());
-
-        _save();
+        properties.setProperty(key, value.toString())
+        _save()
     }
 
-    @SuppressWarnings({"unchecked", "AutoUnboxing"})
-    public synchronized
-    <T> T get(String key, Class<T> clazz) {
+    @Suppress("UNCHECKED_CAST")
+    @Synchronized
+    operator fun <T> get(key: String?, clazz: Class<T>?): T? {
         if (key == null || clazz == null) {
-            return null;
+            return null
         }
-
-        String property = this.properties.getProperty(key);
-        if (property == null) {
-            return null;
-        }
+        val property = properties.getProperty(key) ?: return null
 
         // special cases
-        try {
-            if (clazz.equals(Integer.class)) {
-                return (T) Integer.valueOf(Integer.parseInt(property));
+        return try {
+            if (clazz == Int::class.java) {
+                return Integer.valueOf(property.toInt()) as T
             }
-            if (clazz.equals(Long.class)) {
-                return (T) Long.valueOf(Long.parseLong(property));
+            if (clazz == Long::class.java) {
+                return java.lang.Long.valueOf(property.toLong()) as T
             }
-            if (clazz.equals(Color.class)) {
-                return (T) new Color(Integer.parseInt(property), true);
+            if (clazz == Color::class.java) {
+                Color(property.toInt(), true) as T
+            } else {
+                property as T
             }
-
-            else {
-                return (T) property;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Properties Loader for property: " + key + System.getProperty("line.separator") + e.getMessage());
+        } catch (e: Exception) {
+            throw RuntimeException("Properties Loader for property: " + key + System.getProperty("line.separator") + e.message)
         }
     }
 
-    @Override
-    public
-    String toString() {
-        return "PropertiesProvider [" + this.propertiesFile + "]";
+    override fun toString(): String {
+        return "PropertiesProvider [" + propertiesFile + "]"
     }
 }

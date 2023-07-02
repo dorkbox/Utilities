@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.properties;
+package dorkbox.util.properties
 
-import java.util.*;
+import java.util.*
 
-public
-class SortedProperties extends Properties {
+class SortedProperties : Properties() {
+    private val compare = Comparator<Any> { o1, o2 ->
+        o1.toString().compareTo(o2.toString())
+    }
 
-    private static final long serialVersionUID = 3988064683926999433L;
+    @Synchronized
+    override fun keys(): Enumeration<Any> {
+        val keysEnum = super.keys()
+        val vector: Vector<Any> = Vector<Any>(this.size)
 
-    private final Comparator<Object> compare = new Comparator<Object>() {
-        @Override
-        public
-        int compare(Object o1, Object o2) {
-            return o1.toString()
-                     .compareTo(o2.toString());
-        }
-    };
-
-    @Override
-    public synchronized
-    Enumeration<Object> keys() {
-        Enumeration<Object> keysEnum = super.keys();
-
-        Vector<Object> vector = new Vector<Object>(size());
-        for (; keysEnum.hasMoreElements(); ) {
-            vector.add(keysEnum.nextElement());
+        while (keysEnum.hasMoreElements()) {
+            vector.add(keysEnum.nextElement())
         }
 
-        Collections.sort(vector, this.compare);
+        Collections.sort(vector, compare)
+        return vector.elements()
+    }
 
-        return vector.elements();
+    companion object {
+        private const val serialVersionUID = 3988064683926999433L
+
+        /**
+         * Gets the version number.
+         */
+        val version = "1.42"
     }
 }

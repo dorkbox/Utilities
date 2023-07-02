@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,103 +13,90 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*
 
-public
-class DelayTimer {
-    private final String name;
-    private final boolean isDaemon;
-    private final Runnable listener;
-    private volatile Timer timer;
-    private long delay;
-
-    public
-    DelayTimer(Runnable listener) {
-        this(null, true, listener);
-    }
-
+/**
+ * Sometimes you want to make sure that this timer will complete, even if the calling thread has terminated.
+ */
+class DelayTimer(
     /**
-     * Sometimes you want to make sure that this timer will complete, even if the calling thread has terminated.
-     *
-     * @param name     the name of the thread (if you want to specify one)
-     * @param isDaemon true if you want this timer to be run on a daemon thread
-     * @param listener the callback listener to execute
+     * the name of the thread (if you want to specify one)
      */
-    public
-    DelayTimer(String name, boolean isDaemon, Runnable listener) {
-        this.name = name;
-        this.listener = listener;
-        this.isDaemon = isDaemon;
+    private val name: String,
+    /**
+     * true if you want this timer to be run on a daemon thread
+     */
+    private val isDaemon: Boolean,
+    /**
+     * the callback listener to execute
+     */
+    private val listener: Runnable) {
+
+    companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = "1.42"
     }
 
-    /**
-     * @return true if this timer is still waiting to run.
-     */
-    public synchronized
-    boolean isWaiting() {
-        return this.timer != null;
-    }
+    @Volatile
+    private var timer: Timer? = null
+
+    @get:Synchronized
+    var delay: Long = 0
+        private set
+
+    constructor(listener: Runnable) : this("Timer-", true, listener)
+
+    @get:Synchronized
+    val isWaiting: Boolean
+        /**
+         * @return true if this timer is still waiting to run.
+         */
+        get() = timer != null
 
     /**
      * Cancel the delay timer!
      */
-    public synchronized
-    void cancel() {
-        if (this.timer != null) {
-            this.timer.cancel();
-            this.timer.purge();
-            this.timer = null;
+    @Synchronized
+    fun cancel() {
+        if (timer != null) {
+            timer!!.cancel()
+            timer!!.purge()
+            timer = null
         }
     }
 
     /**
      * @param delay milliseconds to wait
      */
-    public synchronized
-    void delay(long delay) {
-        this.delay = delay;
-        cancel();
+    @Synchronized
+    fun delay(delay: Long) {
+        this.delay = delay
+        cancel()
 
         if (delay > 0) {
-            if (this.name != null) {
-                this.timer = new Timer(this.name, this.isDaemon);
-            }
-            else {
-                this.timer = new Timer(this.isDaemon);
-            }
-
-            TimerTask t = new TimerTask() {
-                @Override
-                public
-                void run() {
+            timer = Timer(name, isDaemon)
+            val t: TimerTask = object : TimerTask() {
+                override fun run() {
                     // timer can change if the callback calls delay() or cancel()
-                    Timer origTimer = DelayTimer.this.timer;
-
-                    DelayTimer.this.listener.run();
-
+                    val origTimer = timer
+                    listener.run()
                     if (origTimer != null) {
-                        origTimer.cancel();
-                        origTimer.purge();
-
-                        if (origTimer == DelayTimer.this.timer) {
-                            DelayTimer.this.timer = null;
+                        origTimer.cancel()
+                        origTimer.purge()
+                        if (origTimer === timer) {
+                            timer = null
                         }
                     }
                 }
-            };
-            this.timer.schedule(t, delay);
+            }
+            timer!!.schedule(t, delay)
+        } else {
+            listener.run()
+            timer = null
         }
-        else {
-            this.listener.run();
-            this.timer = null;
-        }
-    }
-
-    public synchronized
-    long getDelay() {
-        return this.delay;
     }
 }
