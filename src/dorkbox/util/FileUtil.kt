@@ -44,7 +44,7 @@ object FileUtil {
     /**
      * Gets the version number.
      */
-    val version = "1.42"
+    val version = Sys.version
 
     private val log: Logger = LoggerFactory.getLogger(FileUtil::class.java)
 

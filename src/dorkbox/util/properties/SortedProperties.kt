@@ -15,6 +15,7 @@
  */
 package dorkbox.util.properties
 
+import dorkbox.util.Sys
 import java.util.*
 
 class SortedProperties : Properties() {
@@ -41,6 +42,6 @@ class SortedProperties : Properties() {
         /**
          * Gets the version number.
          */
-        val version = "1.42"
+        val version = Sys.version
     }
 }

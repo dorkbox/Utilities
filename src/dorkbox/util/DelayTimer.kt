@@ -38,7 +38,7 @@ class DelayTimer(
         /**
          * Gets the version number.
          */
-        val version = "1.42"
+        val version = Sys.version
     }
 
     @Volatile
