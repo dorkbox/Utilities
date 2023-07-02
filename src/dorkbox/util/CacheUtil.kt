@@ -18,7 +18,6 @@ package dorkbox.util
 import dorkbox.os.OS.TEMP_DIR
 import dorkbox.util.FileUtil.copyFile
 import dorkbox.util.FileUtil.delete
-import dorkbox.util.FileUtil.getExtension
 import java.io.*
 import java.math.BigInteger
 import java.net.URL
@@ -71,10 +70,7 @@ class CacheUtil(private val tempDir: String = "cache") {
     /**
      * Checks to see if the specified URL is in the cache. NULL if it is not, otherwise specifies a location on disk.
      */
-    fun check(fileResource: URL?): File? {
-        if (fileResource == null) {
-            throw NullPointerException("fileResource")
-        }
+    fun check(fileResource: URL): File? {
         return check(fileResource.path)
     }
 
@@ -83,10 +79,7 @@ class CacheUtil(private val tempDir: String = "cache") {
      * specifies a location on disk.
      */
     @Throws(IOException::class)
-    fun check(fileStream: InputStream?): File? {
-        if (fileStream == null) {
-            throw NullPointerException("fileStream")
-        }
+    fun check(fileStream: InputStream): File? {
         return check(null, fileStream)
     }
 
@@ -95,17 +88,13 @@ class CacheUtil(private val tempDir: String = "cache") {
      * cacheName is NULL, it will use a HASH of the fileStream
      */
     @Throws(IOException::class)
-    fun check(cacheName: String?, fileStream: InputStream?): File? {
-        var cacheName = cacheName
-        if (fileStream == null) {
-            throw NullPointerException("fileStream")
-        }
-        if (cacheName == null) {
-            cacheName = createNameAsHash(fileStream)
-        }
-
+    fun check(cacheName: String?, fileStream: InputStream): File? {
         // if we already have this fileName, reuse it
-        val newFile = makeCacheFile(cacheName)
+        val newFile = if (cacheName == null) {
+            makeCacheFile(createNameAsHash(fileStream))
+        } else {
+            makeCacheFile(cacheName)
+        }
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         return if (newFile.canRead() && newFile.isFile) {
@@ -126,11 +115,11 @@ class CacheUtil(private val tempDir: String = "cache") {
      */
     @Throws(IOException::class)
     fun save(cacheName: String?, file: File): File {
-        var cacheName = cacheName
-        if (cacheName == null) {
-            cacheName = file.absolutePath
+        return if (cacheName == null) {
+            save(file.absolutePath, file.absolutePath)
+        } else {
+            save(cacheName, file.absolutePath)
         }
-        return save(cacheName, file.absolutePath)
     }
 
     /**
@@ -148,13 +137,12 @@ class CacheUtil(private val tempDir: String = "cache") {
      */
     @Throws(IOException::class)
     fun save(cacheName: String?, fileName: String): File {
-        var cacheName = cacheName
-        if (cacheName == null) {
-            cacheName = fileName
-        }
-
         // if we already have this fileName, reuse it
-        val newFile = makeCacheFile(cacheName)
+        val newFile = if (cacheName == null) {
+            makeCacheFile(fileName)
+        } else {
+            makeCacheFile(cacheName)
+        }
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile) {
@@ -195,13 +183,12 @@ class CacheUtil(private val tempDir: String = "cache") {
      */
     @Throws(IOException::class)
     fun save(cacheName: String?, fileResource: URL): File {
-        var cacheName = cacheName
-        if (cacheName == null) {
-            cacheName = fileResource.path
-        }
-
         // if we already have this fileName, reuse it
-        val newFile = makeCacheFile(cacheName)
+        val newFile =  if (cacheName == null) {
+            makeCacheFile(fileResource.path)
+        } else {
+            makeCacheFile(cacheName)
+        }
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile) {
@@ -230,13 +217,12 @@ class CacheUtil(private val tempDir: String = "cache") {
      */
     @Throws(IOException::class)
     fun save(cacheName: String?, fileStream: InputStream): File {
-        var cacheName = cacheName
-        if (cacheName == null) {
-            cacheName = createNameAsHash(fileStream)
-        }
-
         // if we already have this fileName, reuse it
-        val newFile = makeCacheFile(cacheName)
+        val newFile = if (cacheName == null) {
+            makeCacheFile(createNameAsHash(fileStream))
+        } else {
+            makeCacheFile(cacheName)
+        }
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         return if (newFile.canRead() && newFile.isFile) {
@@ -298,17 +284,28 @@ class CacheUtil(private val tempDir: String = "cache") {
      *
      * @return the file on disk represented by the file name
      */
-    fun create(cacheName: String?): File {
+    fun create(cacheName: String): File {
         return makeCacheFile(cacheName)
+    }
+
+    /**
+     * Gets the extension of a file (text after the last '.')
+     *
+     * @return "" if there is no extension
+     */
+    private fun getExtension(fileName: String): String {
+        val dot = fileName.lastIndexOf('.')
+        return if (dot > -1) {
+            fileName.substring(dot + 1)
+        } else {
+            ""
+        }
     }
 
     // creates the file that will be cached. It may, or may not already exist
     // must be called from synchronized block!
     // never returns null
-    private fun makeCacheFile(cacheName: String?): File {
-        if (cacheName == null) {
-            throw NullPointerException("cacheName")
-        }
+    private fun makeCacheFile(cacheName: String): File {
         val saveDir = File(TEMP_DIR, tempDir)
 
         // can be wimpy, only one at a time
