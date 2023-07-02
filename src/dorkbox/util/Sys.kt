@@ -29,6 +29,7 @@ object Sys {
     const val GIGABYTE = 1024 * MEGABYTE
     const val TERABYTE = 1024L * GIGABYTE
     val HEX_CHARS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F')
+
     fun convertStringToChars(string: String): CharArray {
         val charArray = string.toCharArray()
         eraseString(string)
@@ -255,53 +256,6 @@ object Sys {
         return concatBytes
     }
 
-    /**
-     * this saves the char array in UTF-16 format of bytes
-     */
-    @JvmStatic
-    fun charToBytes16(text: CharArray): ByteArray {
-        // NOTE: this saves the char array in UTF-16 format of bytes.
-        val bytes = ByteArray(text.size * 2)
-        for (i in text.indices) {
-            bytes[2 * i] = (text[i].code shr 8).toByte()
-            bytes[2 * i + 1] = text[i].code.toByte()
-        }
-        return bytes
-    }
-
-    fun intsToBytes(ints: IntArray): ByteArray {
-        val length = ints.size
-        val bytes = ByteArray(length)
-        for (i in 0 until length) {
-            val intValue = ints[i]
-            if (intValue < 0 || intValue > 255) {
-                System.err.println("WARNING: int at index $i($intValue) was not a valid byte value (0-255)")
-                return ByteArray(length)
-            }
-            bytes[i] = intValue.toByte()
-        }
-        return bytes
-    }
-
-    fun charToBytesRaw(chars: CharArray): ByteArray {
-        val length = chars.size
-        val bytes = ByteArray(length)
-        for (i in 0 until length) {
-            val charValue = chars[i]
-            bytes[i] = charValue.code.toByte()
-        }
-        return bytes
-    }
-
-    fun bytesToInts(bytes: ByteArray, startPosition: Int, length: Int): IntArray {
-        val ints = IntArray(length)
-        val endPosition = startPosition + length
-        for (i in startPosition until endPosition) {
-            ints[i] = bytes[i].toInt() and 0xFF
-        }
-        return ints
-    }
-
     @JvmOverloads
     fun bytesToHex(bytes: ByteArray, startPosition: Int = 0, length: Int = bytes.size, padding: Boolean = false): String {
         val endPosition = startPosition + length
@@ -451,20 +405,7 @@ object Sys {
         return bytes
     }
 
-    /**
-     * XOR two byte arrays together, and save result in originalArray
-     *
-     * @param originalArray this is the base of the XOR operation.
-     * @param keyArray      this is XOR'd into the original array, repeats if necessary.
-     */
-    fun xorArrays(originalArray: ByteArray, keyArray: ByteArray) {
-        var keyIndex = 0
-        val keyLength = keyArray.size
-        for (i in originalArray.indices) {
-            //XOR the data and start over if necessary
-            originalArray[i] = (originalArray[i].toInt() xor keyArray[keyIndex++ % keyLength].toInt()).toByte()
-        }
-    }
+
 
     fun encodeStringArray(array: List<String>): ByteArray {
         var length = 0
