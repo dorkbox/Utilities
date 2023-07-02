@@ -66,22 +66,6 @@ licensing {
             author("Sean Luke")
             author("Michael Lecuyer (portions Copyright 1993")
         }
-        extra("FileUtil (code from FilenameUtils.java for normalize + dependencies)", License.APACHE_2) {
-            url(Extras.url)
-            url("https://commons.apache.org/proper/commons-io/")
-            copyright(2013)
-            author("The Apache Software Foundation")
-            author("Kevin A. Burton")
-            author("Scott Sanders")
-            author("Daniel Rall")
-            author("Christoph.Reck")
-            author("Peter Donald")
-            author("Jeff Turner")
-            author("Matthew Hawthorne")
-            author("Martin Cooper")
-            author("Jeremias Maerki")
-            author("Stephen Colebourne")
-        }
         extra("FastThreadLocal", License.BSD_3) {
             url(Extras.url)
             url("https://github.com/LWJGL/lwjgl3/blob/5819c9123222f6ce51f208e022cb907091dd8023/modules/core/src/main/java/org/lwjgl/system/FastThreadLocal.java")

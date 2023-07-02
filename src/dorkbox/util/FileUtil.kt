@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,20 +18,7 @@ package dorkbox.util
 import dorkbox.os.OS
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.BufferedInputStream
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.FileReader
-import java.io.FileWriter
-import java.io.IOException
-import java.io.InputStream
-import java.io.PrintWriter
-import java.io.RandomAccessFile
-import java.io.Reader
+import java.io.*
 import java.nio.file.DirectoryIteratorException
 import java.util.*
 import java.util.zip.*
@@ -57,7 +44,7 @@ object FileUtil {
     /**
      * Gets the version number.
      */
-    val version = "1.41"
+    val version = "1.42"
 
     private val log: Logger = LoggerFactory.getLogger(FileUtil::class.java)
 
@@ -572,9 +559,9 @@ object FileUtil {
     @JvmStatic
     @Throws(IOException::class)
     fun copyFile(`in`: File, out: File): File {
-        val normalizedIn = normalize(`in`)!!.absolutePath
-        val normalizedout = normalize(out)!!.absolutePath
-        if (normalizedIn.equals(normalizedout, ignoreCase = true)) {
+        val normalizedIn = `in`.normalize().absolutePath
+        val normalizedOut = out.normalize().absolutePath
+        if (normalizedIn.equals(normalizedOut, ignoreCase = true)) {
             if (DEBUG) {
                 System.err.println("Source equals destination! $normalizedIn")
             }
@@ -662,8 +649,8 @@ object FileUtil {
      */
     @Throws(IOException::class)
     fun copyDirectory(src_: File, dest_: File, vararg namesToIgnore: String) {
-        val src = normalize(src_)
-        val dest = normalize(dest_)
+        val src = src_.normalize()
+        val dest = dest_.normalize()
 
         requireNotNull(src) { "Source must be valid" }
         requireNotNull(dest) { "Destination must be valid" }
@@ -785,7 +772,7 @@ object FileUtil {
                     var delete = true
                     val file2 = files[i]
                     val name2 = file2.name
-                    val name2Full = normalize(file2)!!.absolutePath
+                    val name2Full = file2.normalize().absolutePath
                     if (file2.isDirectory) {
                         for (name in namesToIgnore) {
                             if (name[0] == UNIX_SEPARATOR && name == name2) {
@@ -861,7 +848,7 @@ object FileUtil {
     /**
      * @return the contents of the file as a byte array
      */
-    fun toBytes(file: File): ByteArray? {
+    fun toBytes(file: File): ByteArray {
         return file.readBytes()
     }
 
@@ -869,7 +856,7 @@ object FileUtil {
      * Creates the directories in the specified location.
      */
     fun mkdir(location: File): String {
-        val path = normalize(location)!!.absoluteFile
+        val path = location.normalize().absoluteFile
         if (location.mkdirs()) {
             if (DEBUG) {
                 System.err.println("Created directory: $path")
@@ -890,7 +877,7 @@ object FileUtil {
      */
     @Throws(IOException::class)
     fun tempFile(fileName: String): File {
-        return normalize(File.createTempFile(fileName, null))!!.absoluteFile
+        return File.createTempFile(fileName, null).normalize().absoluteFile
     }
 
     /**
@@ -905,7 +892,7 @@ object FileUtil {
         if (!file.mkdir()) {
             throw IOException("Unable to create temp directory: $file")
         }
-        return normalize(file)!!.absolutePath
+        return file.normalize().absolutePath
     }
 
     /**
@@ -1045,16 +1032,15 @@ object FileUtil {
      */
     @Throws(IOException::class)
     private fun unjarzip1(inputStream: ZipInputStream, outputDir: File, extractManifest: Boolean) {
-
         inputStream.use {
-            var entry: ZipEntry
+            var entry: ZipEntry?
             while (inputStream.nextEntry.also { entry = it } != null) {
-                val name = entry.name
+                val name = entry!!.name
                 if (!extractManifest && name.startsWith("META-INF/")) {
                     continue
                 }
                 val file = File(outputDir, name)
-                if (entry.isDirectory) {
+                if (entry!!.isDirectory) {
                     mkdir(file.path)
                     continue
                 }
@@ -1068,7 +1054,7 @@ object FileUtil {
     }
 
     /**
-     * Parses the specified root directory for **ALL** files that are in it. All of the sub-directories are searched as well.
+     * Parses the specified root directory for **ALL** files that are in it. All the sub-directories are searched as well.
      *
      *
      * *This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.*
@@ -1081,7 +1067,7 @@ object FileUtil {
     }
 
     /**
-     * Parses the specified root directory for **ALL** files that are in it. All of the sub-directories are searched as well.
+     * Parses the specified root directory for **ALL** files that are in it. All the sub-directories are searched as well.
      *
      *
      * *This is different, in that it returns ALL FILES, instead of ones that just match a specific extension.*
@@ -1094,7 +1080,7 @@ object FileUtil {
     }
 
     /**
-     * Parses the specified root directory for files that end in the extension to match. All of the sub-directories are searched as well.
+     * Parses the specified root directory for files that end in the extension to match. All the sub-directories are searched as well.
      *
      * @return the list of all files in the root+sub-dirs that match the given extension.
      */
@@ -1104,7 +1090,7 @@ object FileUtil {
         val directories = LinkedList<File?>()
 
         @Suppress("NAME_SHADOWING")
-        val rootDirectory = normalize(rootDirectory) ?: throw IOException("Root directory was invalid!")
+        val rootDirectory = rootDirectory.normalize()
 
         if (!rootDirectory.exists()) {
             throw IOException("Location does not exist: " + rootDirectory.absolutePath)
@@ -1347,626 +1333,5 @@ object FileUtil {
             }
         }
         return file.setLastModified(timestamp)
-    }
-
-
-
-    //-----------------------------------------------------------------------
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps.
-     *
-     *
-     * THIS IS DIFFERENT in that it might not be a path that resolves to anything
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format of the system.
-     *
-     *
-     * A trailing slash will be retained.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows except
-     * for the separator character.
-     * <pre>
-     * /foo//               -->   /foo/
-     * /foo/./              -->   /foo/
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar/
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo/
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar/
-     * ~/../bar             -->   null
-    </pre> *
-     * (Note the file separator returned will be correct for Windows/Unix)
-     *
-     * @param filename the filename to normalize, null returns null
-     *
-     * @return the normalized filename, or null if invalid
-     */
-    fun normalizeRaw(filename: String): String? {
-        return doNormalize(filename, SYSTEM_SEPARATOR, true)
-    }
-
-
-
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps.
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format of the system.
-     *
-     *
-     * A trailing slash will be retained.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows except
-     * for the separator character.
-     * <pre>
-     * /foo//               -->   /foo/
-     * /foo/./              -->   /foo/
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar/
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo/
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar/
-     * ~/../bar             -->   null
-    </pre> *
-     * (Note the file separator returned will be correct for Windows/Unix)
-     *
-     * @param filename the file to normalize, null returns null
-     * @return the normalized file, or null if invalid
-     */
-    fun normalize(filename: String): File? {
-        val asString = doNormalize(File(filename).absolutePath, SYSTEM_SEPARATOR, true) ?: return null
-        return File(asString).absoluteFile
-    }
-
-
-
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps.
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format of the system.
-     *
-     *
-     * A trailing slash will be retained.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows except
-     * for the separator character.
-     * <pre>
-     * /foo//               -->   /foo/
-     * /foo/./              -->   /foo/
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar/
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo/
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar/
-     * ~/../bar             -->   null
-    </pre> *
-     * (Note the file separator returned will be correct for Windows/Unix)
-     *
-     * @param file the file to normalize, null returns null
-     * @return the normalized file, or null if invalid
-     */
-    fun normalize(file: File): File? {
-        val asString = doNormalize(file.absolutePath, SYSTEM_SEPARATOR, true) ?: return null
-        return File(asString).absoluteFile
-    }
-
-
-
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps.
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format specified.
-     *
-     *
-     * A trailing slash will be retained.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows except
-     * for the separator character.
-     * <pre>
-     * /foo//               -->   /foo/
-     * /foo/./              -->   /foo/
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar/
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo/
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar/
-     * ~/../bar             -->   null
-    </pre> *
-     * The output will be the same on both Unix and Windows including
-     * the separator character.
-     *
-     * @param filename      the filename to normalize, null returns null
-     * @param unixSeparator `true` if a unix separator should
-     * be used or `false` if a windows separator should be used.
-     * @return the normalized filename, or null if invalid
-     */
-    fun normalize(filename: String, unixSeparator: Boolean): String? {
-        val separator = if (unixSeparator) UNIX_SEPARATOR else WINDOWS_SEPARATOR
-        return doNormalize(filename, separator, true)
-    }
-
-
-
-    //-----------------------------------------------------------------------
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps,
-     * and removing any final directory separator.
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format of the system.
-     *
-     *
-     * A trailing slash will be removed.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows except
-     * for the separator character.
-     * <pre>
-     * /foo//               -->   /foo
-     * /foo/./              -->   /foo
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar
-     * ~/../bar             -->   null
-    </pre> *
-     * (Note the file separator returned will be correct for Windows/Unix)
-     *
-     * @param filename the filename to normalize, null returns null
-     * @return the normalized filename, or null if invalid
-     */
-    fun normalizeNoEndSeparator(filename: String): String? {
-        return doNormalize(filename, SYSTEM_SEPARATOR, false)
-    }
-
-
-
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Normalizes a path, removing double and single dot path steps,
-     * and removing any final directory separator.
-     *
-     *
-     * This method normalizes a path to a standard format.
-     * The input may contain separators in either Unix or Windows format.
-     * The output will contain separators in the format specified.
-     *
-     *
-     * A trailing slash will be removed.
-     * A double slash will be merged to a single slash (but UNC names are handled).
-     * A single dot path segment will be removed.
-     * A double dot will cause that path segment and the one before to be removed.
-     * If the double dot has no parent path segment to work with, `null`
-     * is returned.
-     *
-     *
-     * The output will be the same on both Unix and Windows including
-     * the separator character.
-     * <pre>
-     * /foo//               -->   /foo
-     * /foo/./              -->   /foo
-     * /foo/../bar          -->   /bar
-     * /foo/../bar/         -->   /bar
-     * /foo/../bar/../baz   -->   /baz
-     * //foo//./bar         -->   /foo/bar
-     * /../                 -->   null
-     * ../foo               -->   null
-     * foo/bar/..           -->   foo
-     * foo/../../bar        -->   null
-     * foo/../bar           -->   bar
-     * //server/foo/../bar  -->   //server/bar
-     * //server/../bar      -->   null
-     * C:\foo\..\bar        -->   C:\bar
-     * C:\..\bar            -->   null
-     * ~/foo/../bar/        -->   ~/bar
-     * ~/../bar             -->   null
-    </pre> *
-     *
-     * @param filename      the filename to normalize, null returns null
-     * @param unixSeparator `true` if a unix separator should
-     * be used or `false` if a windows separtor should be used.
-     * @return the normalized filename, or null if invalid
-     */
-    fun normalizeNoEndSeparator(filename: String, unixSeparator: Boolean): String? {
-        val separator = if (unixSeparator) UNIX_SEPARATOR else WINDOWS_SEPARATOR
-        return doNormalize(filename, separator, false)
-    }
-
-
-
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Internal method to perform the normalization.
-     *
-     * @param filename      the filename
-     * @param separator     The separator character to use
-     * @param keepSeparator true to keep the final separator
-     * @return the normalized filename
-     */
-    private fun doNormalize(filename: String, separator: Char, keepSeparator: Boolean): String? {
-        var size = filename.length
-        if (size == 0) {
-            return filename
-        }
-
-        val prefix = getPrefixLength(filename)
-        if (prefix < 0) {
-            return null
-        }
-
-        val array = CharArray(size + 2) // +1 for possible extra slash, +2 for arraycopy
-        filename.toCharArray(array, 0, 0, filename.length)
-
-        // fix separators throughout
-        val otherSeparator = if (separator == SYSTEM_SEPARATOR) OTHER_SEPARATOR else SYSTEM_SEPARATOR
-        for (i in array.indices) {
-            if (array[i] == otherSeparator) {
-                array[i] = separator
-            }
-        }
-
-        // add extra separator on the end to simplify code below
-        var lastIsDirectory = true
-        if (array[size - 1] != separator) {
-            array[size++] = separator
-            lastIsDirectory = false
-        }
-
-        // adjoining slashes
-        run {
-            var i = prefix + 1
-            while (i < size) {
-                if (array[i] == separator && array[i - 1] == separator) {
-                    System.arraycopy(array, i, array, i - 1, size - i)
-                    size--
-                    i--
-                }
-                i++
-            }
-        }
-
-        // dot slash
-        var i = prefix + 1
-        while (i < size) {
-            if (array[i] == separator && array[i - 1] == '.' && (i == prefix + 1 || array[i - 2] == separator)) {
-                if (i == size - 1) {
-                    lastIsDirectory = true
-                }
-                System.arraycopy(array, i + 1, array, i - 1, size - i)
-                size -= 2
-                i--
-            }
-            i++
-        }
-
-        i = prefix + 2
-        outer@ while (i < size) {
-            if (array[i] == separator && array[i - 1] == '.' && array[i - 2] == '.' && (i == prefix + 2 || array[i - 3] == separator)) {
-                if (i == prefix + 2) {
-                    return null
-                }
-                if (i == size - 1) {
-                    lastIsDirectory = true
-                }
-                var j: Int
-                j = i - 4
-                while (j >= prefix) {
-                    if (array[j] == separator) {
-                        // remove b/../ from a/b/../c
-                        System.arraycopy(array, i + 1, array, j + 1, size - i)
-                        size -= i - j
-                        i = j + 1
-                        i++
-                        continue@outer
-                    }
-                    j--
-                }
-                // remove a/../ from a/../c
-                System.arraycopy(array, i + 1, array, prefix, size - i)
-                size -= i + 1 - prefix
-                i = prefix + 1
-            }
-            i++
-        }
-
-        if (size <= 0) {  // should never be less than 0
-            return ""
-        }
-
-        if (size <= prefix) {  // should never be less than prefix
-            return String(array, 0, size)
-        }
-
-        return if (lastIsDirectory && keepSeparator) {
-            String(array, 0, size) // keep trailing separator
-        } else String(array, 0, size - 1)
-        // lose trailing separator
-    }
-
-
-
-    //-----------------------------------------------------------------------
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Returns the length of the filename prefix, such as `C:/` or `~/`.
-     *
-     *
-     * This method will handle a file in either Unix or Windows format.
-     *
-     *
-     * The prefix length includes the first slash in the full filename
-     * if applicable. Thus, it is possible that the length returned is greater
-     * than the length of the input string.
-     ````
-     Windows:
-     a\b\c.txt           --> ""          --> relative
-     \a\b\c.txt          --> "\"         --> current drive absolute
-     C:a\b\c.txt         --> "C:"        --> drive relative
-     C:\a\b\c.txt        --> "C:\"       --> absolute
-     \\server\a\b\c.txt  --> "\\server\" --> UNC
-
-     Unix:
-     a/b/c.txt           --> ""          --> relative
-     /a/b/c.txt          --> "/"         --> absolute
-     ~/a/b/c.txt         --> "~/"        --> current user
-     ~                   --> "~/"        --> current user (slash added)
-     ~user/a/b/c.txt     --> "~user/"    --> named user
-     ~user               --> "~user/"    --> named user (slash added)
-     ````
-     *
-     *
-     *
-     * The output will be the same irrespective of the machine that the code is running on.
-     * ie. both Unix and Windows prefixes are matched regardless.
-     *
-     * @param filename the filename to find the prefix in, null returns -1
-     * @return the length of the prefix, -1 if invalid or null
-     */
-    fun getPrefixLength(filename: String): Int {
-        val len = filename.length
-        if (len == 0) {
-            return 0
-        }
-
-        var ch0 = filename[0]
-        if (ch0 == ':') {
-            return -1
-        }
-
-        return if (len == 1) {
-            if (ch0 == '~') {
-                return 2 // return a length greater than the input
-            }
-            if (isSeparator(ch0)) 1 else 0
-        } else {
-            if (ch0 == '~') {
-                var posUnix = filename.indexOf(UNIX_SEPARATOR, 1)
-                var posWin = filename.indexOf(WINDOWS_SEPARATOR, 1)
-                if (posUnix == -1 && posWin == -1) {
-                    return len + 1 // return a length greater than the input
-                }
-                posUnix = if (posUnix == -1) posWin else posUnix
-                posWin = if (posWin == -1) posUnix else posWin
-                return Math.min(posUnix, posWin) + 1
-            }
-            val ch1 = filename[1]
-            if (ch1 == ':') {
-                ch0 = ch0.uppercaseChar()
-                if (ch0 >= 'A' && ch0 <= 'Z') {
-                    return if (len == 2 || isSeparator(filename[2]) == false) {
-                        2
-                    } else 3
-                }
-                -1
-            } else if (isSeparator(ch0) && isSeparator(ch1)) {
-                var posUnix = filename.indexOf(UNIX_SEPARATOR, 2)
-                var posWin = filename.indexOf(WINDOWS_SEPARATOR, 2)
-                if (posUnix == -1 && posWin == -1 || posUnix == 2 || posWin == 2) {
-                    return -1
-                }
-                posUnix = if (posUnix == -1) posWin else posUnix
-                posWin = if (posWin == -1) posUnix else posWin
-                Math.min(posUnix, posWin) + 1
-            } else {
-                if (isSeparator(ch0)) 1 else 0
-            }
-        }
-    }
-
-
-    //-----------------------------------------------------------------------
-    /*
-     * FilenameUtils.java (normalize + dependencies) - Apache 2.0 License
-     *   http://commons.apache.org/proper/commons-io/
-     *   Copyright 2013 ASF
-     *   Authors: Kevin A. Burton, Scott Sanders, Daniel Rall, Christoph.Reck,
-     *            Peter Donald, Jeff Turner, Matthew Hawthorne, Martin Cooper,
-     *            Jeremias Maerki, Stephen Colebourne
-     */
-    /**
-     * Checks if the character is a separator.
-     *
-     * @param ch the character to check
-     * @return true if it is a separator character
-     */
-    private fun isSeparator(ch: Char): Boolean {
-        return ch == UNIX_SEPARATOR || ch == WINDOWS_SEPARATOR
-    }
-
-    /**
-     * Gets the extension of a file (text after the last '.')
-     *
-     * @return "" if there is no extension
-     */
-    fun getExtension(fileName: String): String {
-        val dot = fileName.lastIndexOf('.')
-        return if (dot > -1) {
-            fileName.substring(dot + 1)
-        } else {
-            ""
-        }
-    }
-
-    /**
-     * Gets the name of a file that is before the extension (text before the last '.')
-     *
-     * @return non-null
-     */
-    fun getNameWithoutExtension(fileName: String): String {
-        val dot = fileName.lastIndexOf('.')
-        return if (dot > -1) {
-            fileName.substring(0, dot)
-        } else {
-            fileName
-        }
     }
 }
