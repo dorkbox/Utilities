@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,12 @@ import java.io.OutputStream
 
 object LZMA {
     // https://tukaani.org/xz/java.html
+
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     @Throws(IOException::class)
     fun encode(input: InputStream, output: OutputStream) {
         LZMAOutputStream(output, LZMA2Options(3), true).use { compressionStream ->

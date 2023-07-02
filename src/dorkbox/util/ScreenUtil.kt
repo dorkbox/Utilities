@@ -21,6 +21,11 @@ import java.awt.*
  * Screen utilities
  */
 object ScreenUtil {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
 
     /**
      * @return the screen bounds for the monitor at a specific point. Will return null if there is no screen at the point

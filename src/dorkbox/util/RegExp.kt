@@ -16,6 +16,11 @@
 package dorkbox.util
 
 object RegExp {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     private const val whitespace_chars = ("" /* dummy empty string for homogeneity */ + "\\u0009" // CHARACTER TABULATION
             + "\\u000A" // LINE FEED (LF)
             + "\\u000B" // LINE TABULATION

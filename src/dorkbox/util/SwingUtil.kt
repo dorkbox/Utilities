@@ -26,6 +26,11 @@ import javax.swing.*
 
 @Suppress("unused")
 object SwingUtil {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     init {/*
          * hack workaround for starting the Toolkit thread before any Timer stuff javax.swing.Timer uses the Event Dispatch Thread, which is not
          * created until the Toolkit thread starts up.  Using the Swing Timer before starting this stuff starts up may get unexpected

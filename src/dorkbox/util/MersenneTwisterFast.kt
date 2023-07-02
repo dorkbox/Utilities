@@ -1262,6 +1262,11 @@ open class MersenneTwisterFast {
     }
 
     companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = Sys.version
+
         // Serialization
         private const val serialVersionUID = -8219700664442619525L  // locked as of Version 15
 

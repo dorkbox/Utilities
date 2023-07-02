@@ -27,6 +27,11 @@ import java.net.URISyntaxException
  */
 @Suppress("unused")
 object FontUtil {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     /** Default location where all the fonts are stored  */
     @Volatile
     var FONTS_LOCATION = getProperty(FontUtil::class.java.canonicalName + ".FONTS_LOCATION", "resources/fonts")

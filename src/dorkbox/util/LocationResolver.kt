@@ -222,6 +222,11 @@ class LocationResolver {
     }
 
     companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = Sys.version
+
         private val SLASH_PATTERN = Pattern.compile("\\\\")
 
         private fun log(message: String) {

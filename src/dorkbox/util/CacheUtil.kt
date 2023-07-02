@@ -324,6 +324,11 @@ class CacheUtil(private val tempDir: String = "cache") {
     }
 
     companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = Sys.version
+
         private val digestLocal = ThreadLocal.withInitial {
             try {
                 return@withInitial MessageDigest.getInstance("SHA1")

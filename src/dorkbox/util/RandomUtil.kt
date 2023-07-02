@@ -19,6 +19,11 @@ package dorkbox.util
  * This class uses the MersenneTwisterFast, which is MOSTLY random.
  */
 object RandomUtil {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     private val random: FastThreadLocal<MersenneTwisterFast> = object : FastThreadLocal<MersenneTwisterFast>() {
         override fun initialValue(): MersenneTwisterFast {
             return MersenneTwisterFast()

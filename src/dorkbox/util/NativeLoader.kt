@@ -26,6 +26,11 @@ import java.security.PrivilegedAction
  * Loads the specified library, extracting it from the jar, if necessary
  */
 object NativeLoader {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     @Throws(IOException::class)
     fun extractLibrary(sourceFileName: String, destinationDirectory: String?, destinationName: String, version: String?): File {
         return try {

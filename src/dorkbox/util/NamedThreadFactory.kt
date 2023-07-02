@@ -45,6 +45,14 @@ class NamedThreadFactory(
     constructor(poolNamePrefix: String, group: ThreadGroup, threadPriority: Int, isDaemon: Boolean) : this(poolNamePrefix, group, threadPriority, isDaemon, {})
     constructor(poolNamePrefix: String, group: ThreadGroup, isDaemon: Boolean, actionOnNewThread: (Thread) -> Unit) : this(poolNamePrefix, group, Thread.NORM_PRIORITY, isDaemon, actionOnNewThread)
 
+    companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = Sys.version
+    }
+
+
 
     private val poolId = AtomicInteger()
 

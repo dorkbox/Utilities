@@ -24,6 +24,17 @@ import java.util.concurrent.*
 
 @Suppress("unused")
 object Sys {
+    /**
+     * Gets the version number.
+     */
+    val version = "1.42"
+
+    init {
+        // Add this project to the updates system, which verifies this class + UUID + version information
+        dorkbox.updates.Updates.add(Sys::class.java, "aebbb926aeb144739e9f3cab90ffaa72", version)
+    }
+
+
     const val KILOBYTE = 1024
     const val MEGABYTE = 1024 * KILOBYTE
     const val GIGABYTE = 1024 * MEGABYTE

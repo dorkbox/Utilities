@@ -32,6 +32,7 @@
 
 package dorkbox.util.sync
 
+import dorkbox.util.Sys
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
@@ -41,6 +42,13 @@ import java.util.concurrent.*
  * @param initialCount this is the initial count specified when the latch was created
  */
 open class AbstractLatch(val initialCount: Int, val trigger: Trigger) : Deferred<Unit> by trigger {
+    companion object {
+        /**
+         * Gets the version number.
+         */
+        val version = Sys.version
+    }
+
     /**
      * The current latch count affected by the count*() methods.
      *

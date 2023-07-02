@@ -17,6 +17,11 @@ package dorkbox.util
 
 object MathUtil {
     /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
+    /**
      * Checks to see if the string is an integer
      *
      * @return true if it's an integer, false otherwise

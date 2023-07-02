@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,16 @@
  */
 package dorkbox.util.entropy
 
+import dorkbox.util.Sys
 import dorkbox.util.exceptions.InitializationException
 import org.slf4j.LoggerFactory
 
 object Entropy {
+    /**
+     * Gets the version number.
+     */
+    val version = Sys.version
+
     private var provider: EntropyProvider? = null
 
     /**
