@@ -240,7 +240,19 @@ object Sys {
         throwException0<RuntimeException>(this)
     }
 
-
+    /**
+     * Gets the extension of a file (text after the last '.')
+     *
+     * @return "" if there is no extension
+     */
+    fun getExtension(fileName: String): String {
+        val dot = fileName.lastIndexOf('.')
+        return if (dot > -1) {
+            fileName.substring(dot + 1)
+        } else {
+            ""
+        }
+    }
 
 
     /**

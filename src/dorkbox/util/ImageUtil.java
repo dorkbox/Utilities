@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,7 +145,7 @@ class ImageUtil {
 
         // have to resize the file (and return the new path)
 
-        String extension = FileUtil.INSTANCE.getExtension(fileName);
+        String extension = Sys.INSTANCE.getExtension(fileName);
         if (extension.isEmpty()) {
             extension = "png"; // made up
         }

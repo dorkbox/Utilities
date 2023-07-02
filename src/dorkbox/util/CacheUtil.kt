@@ -288,20 +288,6 @@ class CacheUtil(private val tempDir: String = "cache") {
         return makeCacheFile(cacheName)
     }
 
-    /**
-     * Gets the extension of a file (text after the last '.')
-     *
-     * @return "" if there is no extension
-     */
-    private fun getExtension(fileName: String): String {
-        val dot = fileName.lastIndexOf('.')
-        return if (dot > -1) {
-            fileName.substring(dot + 1)
-        } else {
-            ""
-        }
-    }
-
     // creates the file that will be cached. It may, or may not already exist
     // must be called from synchronized block!
     // never returns null
@@ -310,7 +296,7 @@ class CacheUtil(private val tempDir: String = "cache") {
 
         // can be wimpy, only one at a time
         val hash = hashName(cacheName)
-        var extension = getExtension(cacheName)
+        var extension = Sys.getExtension(cacheName)
         if (extension.isEmpty()) {
             extension = "cache"
         }
