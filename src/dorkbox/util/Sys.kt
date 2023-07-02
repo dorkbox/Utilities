@@ -217,6 +217,21 @@ object Sys {
         return String.format("%.4g $text", value)
     }
 
+    private fun <T : Throwable> throwException0(t: Throwable) {
+        @Suppress("UNCHECKED_CAST")
+        throw t as T
+    }
+
+    /**
+     * Converts a Thrown exception, to bypasses the compiler checks for the checked exception. This uses type erasure to work.
+     */
+    fun Throwable.unchecked() {
+        throwException0<RuntimeException>(this)
+    }
+
+
+
+
     /**
      * Convert the contents of the input stream to a byte array.
      */
@@ -522,15 +537,5 @@ object Sys {
         System.err.println(builder.toString())
     }
 
-    /**
-     * Raises an exception, but bypasses the compiler checks for the checked exception. This uses type erasure to work
-     */
-    fun throwException(t: Throwable) {
-        throwException0<RuntimeException>(t)
-    }
 
-    private fun <T : Throwable> throwException0(t: Throwable) {
-        @Suppress("UNCHECKED_CAST")
-        throw t as T
-    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2023 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ import javax.imageio.stream.ImageInputStream;
 
 @SuppressWarnings({"unused", "Duplicates"})
 // deprecated. use kotlin.
-@Deprecated
 public
 class IO {
     /**
      * Convenient close for a Closeable.
      */
     @SuppressWarnings("Duplicates")
+    @Deprecated
     public static
     void close(final Closeable closeable) {
         if (closeable != null) {
@@ -48,6 +48,7 @@ class IO {
      * Convenient close for a Closeable.
      */
     @SuppressWarnings("Duplicates")
+    @Deprecated
     public static
     void closeQuietly(final Closeable closeable) {
         if (closeable != null) {
@@ -61,8 +62,9 @@ class IO {
     /**
      * Copy the contents of the input stream to the output stream.
      * <p>
-     * DOES NOT CLOSE THE STEAMS!
+     * DOES NOT CLOSE THE STREAMS!
      */
+    @Deprecated
     public static
     <T extends OutputStream> T copyStream(final InputStream inputStream, final T outputStream) throws IOException {
         byte[] buffer = new byte[4096];
@@ -79,8 +81,9 @@ class IO {
     /**
      * Copy the contents of the input stream to the output stream.
      * <p>
-     * DOES NOT CLOSE THE STEAMS!
+     * DOES NOT CLOSE THE STREAMS!
      */
+    @Deprecated
     public static
     <T extends OutputStream> T copyStream(final ImageInputStream inputStream, final T outputStream) throws IOException {
         return copyStream(4096, inputStream, outputStream);
@@ -89,8 +92,9 @@ class IO {
     /**
      * Copy the contents of the input stream to the output stream.
      * <p>
-     * DOES NOT CLOSE THE STEAMS!
+     * DOES NOT CLOSE THE STREAMS!
      */
+    @Deprecated
     public static
     <T extends OutputStream> T copyStream(final int bufferSize, final ImageInputStream inputStream, final T outputStream) throws IOException {
         byte[] buffer = new byte[bufferSize];
@@ -107,8 +111,9 @@ class IO {
     /**
      * Copy the contents of the input stream to a new output stream.
      * <p>
-     * DOES NOT CLOSE THE STEAMS!
+     * DOES NOT CLOSE THE STREAMS!
      */
+    @Deprecated
     public static
     ByteArrayOutputStream copyStream(final InputStream inputStream) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(4096);
@@ -126,8 +131,9 @@ class IO {
     /**
      * Copy the contents of the input stream to a new output stream.
      * <p>
-     * DOES NOT CLOSE THE STEAMS!
+     * DOES NOT CLOSE THE STREAMS!
      */
+    @Deprecated
     public static
     ByteArrayOutputStream copyStream(final ImageInputStream inputStream) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream(4096);

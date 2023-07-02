@@ -31,7 +31,7 @@ class CacheUtil(private val tempDir: String = "cache") {
      * Clears ALL saved files in the cache
      */
     fun clear() {
-        // deletes all of the files (recursively) in the specified location. If the directory is empty (no locked files), then the
+        // deletes all the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
         delete(File(TEMP_DIR, tempDir))
     }
