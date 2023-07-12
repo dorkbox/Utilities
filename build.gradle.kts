@@ -35,7 +35,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.42"
+    const val version = "1.43"
 
     // set as project.ext
     const val name = "Utilities"
