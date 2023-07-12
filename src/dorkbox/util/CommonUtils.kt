@@ -66,6 +66,12 @@ inline fun ignoreExceptions(vararg blocks: () -> Unit) {
     }
 }
 
+fun Mutex.safeUnlock() {
+    if (isLocked) {
+        unlock()
+    }
+}
+
 // From: https://elizarov.medium.com/phantom-of-the-coroutine-afc63b03a131
 suspend inline fun <T> Mutex.withReentrantLock(crossinline block: suspend () -> T): T {
     val key = ReentrantMutexContextKey(this)
