@@ -129,7 +129,6 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-    api("com.dorkbox:Collections:1.6")
     api("com.dorkbox:Executor:3.13")
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
@@ -150,13 +149,11 @@ dependencies {
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
     compileOnly("io.netty:netty-buffer:4.1.94.Final")
-    compileOnly("net.jodah:typetools:0.6.3")
+//    compileOnly("net.jodah:typetools:0.6.3")
 
     testImplementation("junit:junit:4.13.2")
 //    testImplementation("ch.qos.logback:logback-classic:1.4.5")
-}
-repositories {
-    mavenCentral()
+//    implementation(kotlin("stdlib-jdk8"))
 }
 
 publishToSonatype {

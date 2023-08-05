@@ -2,7 +2,6 @@ module dorkbox.utilities {
     exports dorkbox.exit;
     exports dorkbox.urlHandler;
     exports dorkbox.util;
-    exports dorkbox.util.classes;
     exports dorkbox.util.entropy;
     exports dorkbox.util.exceptions;
     exports dorkbox.util.gwt;
