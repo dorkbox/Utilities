@@ -141,7 +141,7 @@ dependencies {
 //    api("io.github.microutils:kotlin-logging:3.0.4")
 //    api("org.slf4j:slf4j-api:2.0.7")
 
-    api("org.tukaani:xz:1.9") // LZMA support
+
     compileOnly("com.fasterxml.uuid:java-uuid-generator:4.1.0")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
@@ -149,6 +149,8 @@ dependencies {
 
 //    compileOnly("io.netty:netty-buffer:4.1.96.Final")
 
+
+    testImplementation("com.dorkbox:Executor:3.13")
     testImplementation("junit:junit:4.13.2")
 //    testImplementation("ch.qos.logback:logback-classic:1.4.5")
 //    implementation(kotlin("stdlib-jdk8"))
