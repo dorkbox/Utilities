@@ -162,7 +162,7 @@ class ImageUtil {
         }
         else {
             // suck it out of a URL/Resource (with debugging if necessary)
-            final URL systemResource = LocationResolver.getResource(fileName);
+            final URL systemResource = LocationResolver.Companion.getResource(fileName);
             image = new ImageIcon(systemResource).getImage();
         }
 

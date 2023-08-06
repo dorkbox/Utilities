@@ -285,7 +285,6 @@ class LocationResolver {
          *
          * @return the URL for that given resource name
          */
-        @JvmStatic
         fun getResource(resourceName: String): URL? {
             var resourceName = resourceName
             try {

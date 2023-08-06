@@ -9,7 +9,6 @@ module dorkbox.utilities {
     exports dorkbox.util.sync;
     exports dorkbox.util.userManagement;
 
-    requires transitive dorkbox.executor;
     requires transitive dorkbox.updates;
     requires transitive dorkbox.os;
 

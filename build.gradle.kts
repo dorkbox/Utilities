@@ -127,9 +127,8 @@ tasks.jar.get().apply {
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    api("com.dorkbox:Executor:3.13")
     api("com.dorkbox:OS:1.6")
     api("com.dorkbox:Updates:1.1")
 
@@ -148,8 +147,7 @@ dependencies {
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
 
-    compileOnly("io.netty:netty-buffer:4.1.94.Final")
-//    compileOnly("net.jodah:typetools:0.6.3")
+//    compileOnly("io.netty:netty-buffer:4.1.96.Final")
 
     testImplementation("junit:junit:4.13.2")
 //    testImplementation("ch.qos.logback:logback-classic:1.4.5")

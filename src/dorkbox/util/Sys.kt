@@ -279,7 +279,6 @@ object Sys {
         return b
     }
 
-    @JvmStatic
     fun concatBytes(vararg arrayBytes: ByteArray): ByteArray {
         var length = 0
         for (bytes in arrayBytes) {

@@ -556,7 +556,6 @@ object FileUtil {
     /**
      * Copies a files from one location to another. Overwriting any existing file at the destination.
      */
-    @JvmStatic
     @Throws(IOException::class)
     fun copyFile(`in`: File, out: File): File {
         val normalizedIn = `in`.normalize().absolutePath
@@ -756,7 +755,6 @@ object FileUtil {
      *
      * @return true IFF the file/dir was deleted or didn't exist at first
      */
-    @JvmStatic
     fun delete(file: File, vararg namesToIgnore: String): Boolean {
         if (!file.exists()) {
             return true
