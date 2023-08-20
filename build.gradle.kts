@@ -129,7 +129,7 @@ tasks.jar.get().apply {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 
-    api("com.dorkbox:OS:1.6")
+    api("com.dorkbox:OS:1.8")
     api("com.dorkbox:Updates:1.1")
 
 
