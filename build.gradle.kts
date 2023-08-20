@@ -75,12 +75,6 @@ licensing {
             author("Riven")
         }
 
-        extra("Modified hex conversion utility methods", License.APACHE_2) {
-            url(Extras.url)
-            url("https://netty.io")
-            copyright(2014)
-            author("The Netty Project")
-        }
         extra("Retrofit", License.APACHE_2) {
             copyright(2020)
             description("A type-safe HTTP client for Android and Java")
