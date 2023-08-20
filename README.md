@@ -17,7 +17,7 @@ Maven Info
     <dependency>
       <groupId>com.dorkbox</groupId>
       <artifactId>Utilities</artifactId>
-      <version>1.45</version>
+      <version>1.46</version>
     </dependency>
 </dependencies>
 ```
@@ -27,7 +27,7 @@ Gradle Info
 ```
 dependencies {
     ...
-    compile "com.dorkbox:Utilities:1.45"
+    compile "com.dorkbox:Utilities:1.46"
 }
 ```
 

@@ -24,7 +24,7 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 
 plugins {
     id("com.dorkbox.GradleUtils") version "3.17"
-    id("com.dorkbox.Licensing") version "2.24"
+    id("com.dorkbox.Licensing") version "2.26"
     id("com.dorkbox.VersionUpdate") version "2.8"
     id("com.dorkbox.GradlePublish") version "1.18"
 
@@ -35,7 +35,7 @@ object Extras {
     // set for the project
     const val description = "Utilities for use within Java projects"
     const val group = "com.dorkbox"
-    const val version = "1.45"
+    const val version = "1.46"
 
     // set as project.ext
     const val name = "Utilities"
@@ -135,8 +135,6 @@ dependencies {
 //    api("io.github.microutils:kotlin-logging:3.0.4")
 //    api("org.slf4j:slf4j-api:2.0.7")
 
-
-    compileOnly("com.fasterxml.uuid:java-uuid-generator:4.1.0")
 
 //    api "com.koloboke:koloboke-api-jdk8:1.0.0"
 //    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
