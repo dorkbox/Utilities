@@ -117,22 +117,22 @@ object Sys {
     fun getTimePretty(nanoSeconds: Long): String {
         val unit: TimeUnit
         val text: String
-        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.DAYS
             text = "d"
-        } else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.HOURS
             text = "h"
-        } else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MINUTES
-            text = "min"
-        } else if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+            text = "m"
+        } else if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.SECONDS
             text = "s"
-        } else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MILLISECONDS
             text = "ms"
-        } else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MICROSECONDS
             text = "\u03bcs" // μs
         } else {
@@ -142,7 +142,16 @@ object Sys {
 
         // convert the unit into the largest time unit possible (since that is often what makes sense)
         val value = nanoSeconds.toDouble() / TimeUnit.NANOSECONDS.convert(1, unit)
-        return String.format("%.4g$text", value)
+
+        return if (value < 10) {
+            String.format("%.1g $text", value)
+        } else if (value < 100) {
+            String.format("%.2g $text", value)
+        } else if (value < 1000) {
+            String.format("%.3g $text", value)
+        } else {
+            String.format("%.4g $text", value)
+        }
     }
 
     /**
@@ -151,22 +160,22 @@ object Sys {
     fun getTimePrettyFull(nanoSeconds: Long): String {
         val unit: TimeUnit
         var text: String
-        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        if (TimeUnit.DAYS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.DAYS
             text = "day"
-        } else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.HOURS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.HOURS
             text = "hour"
-        } else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MINUTES.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MINUTES
             text = "minute"
-        } else if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.SECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.SECONDS
             text = "second"
-        } else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MILLISECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MILLISECONDS
             text = "milli-second"
-        } else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0) {
+        } else if (TimeUnit.MICROSECONDS.convert(nanoSeconds, TimeUnit.NANOSECONDS) > 0L) {
             unit = TimeUnit.MICROSECONDS
             text = "micro-second"
         } else {
@@ -179,7 +188,16 @@ object Sys {
         if (value > 1.0) {
             text += "s"
         }
-        return String.format("%.4g $text", value)
+
+        return if (value < 10) {
+            String.format("%.1g $text", value)
+        } else if (value < 100) {
+            String.format("%.2g $text", value)
+        } else if (value < 1000) {
+            String.format("%.3g $text", value)
+        } else {
+            String.format("%.4g $text", value)
+        }
     }
 
     private fun <T : Throwable> throwException0(t: Throwable) {
