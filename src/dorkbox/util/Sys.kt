@@ -26,7 +26,7 @@ object Sys {
     /**
      * Gets the version number.
      */
-    val version = "1.47"
+    val version = "1.48"
 
     init {
         // Add this project to the updates system, which verifies this class + UUID + version information
