@@ -138,11 +138,10 @@ class CacheUtil(private val tempDir: String = "cache") {
     @Throws(IOException::class)
     fun save(cacheName: String?, fileName: String): File {
         // if we already have this fileName, reuse it
-        val newFile = if (cacheName == null) {
-            makeCacheFile(fileName)
-        } else {
-            makeCacheFile(cacheName)
-        }
+        @Suppress("NAME_SHADOWING")
+        val cacheName = cacheName ?: fileName
+
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile) {
@@ -184,11 +183,10 @@ class CacheUtil(private val tempDir: String = "cache") {
     @Throws(IOException::class)
     fun save(cacheName: String?, fileResource: URL): File {
         // if we already have this fileName, reuse it
-        val newFile =  if (cacheName == null) {
-            makeCacheFile(fileResource.path)
-        } else {
-            makeCacheFile(cacheName)
-        }
+        @Suppress("NAME_SHADOWING")
+        val cacheName = cacheName ?: fileResource.path
+
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         if (newFile.canRead() && newFile.isFile) {
@@ -218,11 +216,10 @@ class CacheUtil(private val tempDir: String = "cache") {
     @Throws(IOException::class)
     fun save(cacheName: String?, fileStream: InputStream): File {
         // if we already have this fileName, reuse it
-        val newFile = if (cacheName == null) {
-            makeCacheFile(createNameAsHash(fileStream))
-        } else {
-            makeCacheFile(cacheName)
-        }
+        @Suppress("NAME_SHADOWING")
+        val cacheName = cacheName ?: createNameAsHash(fileStream)
+
+        val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
         return if (newFile.canRead() && newFile.isFile) {
@@ -239,13 +236,7 @@ class CacheUtil(private val tempDir: String = "cache") {
      * @return the full path of the resource copied to disk, or NULL if invalid
      */
     @Throws(IOException::class)
-    private fun makeFileViaStream(cacheName: String?, resourceStream: InputStream?): File {
-        if (resourceStream == null) {
-            throw NullPointerException("resourceStream")
-        }
-        if (cacheName == null) {
-            throw NullPointerException("cacheName")
-        }
+    private fun makeFileViaStream(cacheName: String, resourceStream: InputStream): File {
         val newFile = makeCacheFile(cacheName)
 
         // if this file already exists (via HASH), we just reuse what is saved on disk.
