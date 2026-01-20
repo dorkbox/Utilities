@@ -9,8 +9,12 @@ module dorkbox.utilities {
     exports dorkbox.util.sync;
     exports dorkbox.util.userManagement;
 
+    requires transitive java.desktop;
+
     requires transitive dorkbox.updates;
     requires transitive dorkbox.os;
+
+    requires com.fasterxml.uuid;
 
     requires transitive kotlin.stdlib;
     requires transitive kotlinx.coroutines.core;
