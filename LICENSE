@@ -1,7 +1,7 @@
  - Utilities - Utilities for use within Java projects
    [The Apache Software License, Version 2.0]
    https://git.dorkbox.com/dorkbox/Utilities
-   Copyright 2023
+   Copyright 2026
      Dorkbox LLC
 
    Extra license information
@@ -50,13 +50,13 @@
      - kotlinx.coroutines - Library support for Kotlin coroutines with multiplatform support
        [The Apache Software License, Version 2.0]
        https://github.com/Kotlin/kotlinx.coroutines
-       Copyright 2023
+       Copyright 2026
          JetBrains s.r.o.
 
      - Java Uuid Generator - A set of Java classes for working with UUIDs
        [The Apache Software License, Version 2.0]
        https://github.com/cowtowncoder/java-uuid-generator
-       Copyright 2023
+       Copyright 2026
          Tatu Saloranta (tatu.saloranta@iki.fi)
          Contributors. See source release-notes/CREDITS
 
