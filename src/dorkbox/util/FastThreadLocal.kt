@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ abstract class FastThreadLocal<T> {
      * @see ThreadLocal.set
      */
     fun set(value: T?) {
-        val id = Thread.currentThread().id.toInt()
+        val id = Thread.currentThread().threadId().toInt()
 
         synchronized(this) {
             val len = threadIDMap.size
@@ -99,7 +99,7 @@ abstract class FastThreadLocal<T> {
      * @see ThreadLocal.get
      */
     fun get(): T {
-        val id = Thread.currentThread().id.toInt()
+        val id = Thread.currentThread().threadId().toInt()
         val threadIDMap: Array<T?> = threadIDMap // It's OK if the array is resized after this access, will just use the old array.
         var value = if (threadIDMap.size <= id) null else threadIDMap[id]
 

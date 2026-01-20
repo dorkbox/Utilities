@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ package dorkbox.util.sync
 
 import dorkbox.util.Sys
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.InternalForInheritanceCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import java.util.concurrent.*
@@ -41,6 +42,7 @@ import java.util.concurrent.*
 /**
  * @param initialCount this is the initial count specified when the latch was created
  */
+@OptIn(InternalForInheritanceCoroutinesApi::class)
 open class AbstractLatch(val initialCount: Int, val trigger: Trigger) : Deferred<Unit> by trigger {
     companion object {
         /**

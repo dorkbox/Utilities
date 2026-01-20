@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1038,7 +1038,7 @@ object FileUtil {
                     continue
                 }
                 val file = File(outputDir, name)
-                if (entry!!.isDirectory) {
+                if (entry.isDirectory) {
                     mkdir(file.path)
                     continue
                 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -134,12 +134,12 @@ object FontUtil {
         while (true) {
             val fontCheck = Font(font.name, Font.PLAIN, size)
             val maxFontHeight = getMaxFontHeight(fontCheck)
-            lastAction = if (maxFontHeight < height && lastAction !== java.lang.Boolean.FALSE) {
+            lastAction = if (maxFontHeight < height && (lastAction == null || lastAction)) {
                 size++
-                java.lang.Boolean.TRUE
-            } else if (maxFontHeight > height && lastAction !== java.lang.Boolean.TRUE) {
+                true
+            } else if (maxFontHeight > height && (lastAction == null || !lastAction)) {
                 size--
-                java.lang.Boolean.FALSE
+                false
             } else {
                 // either we are the exact size, or we are ONE font size to big/small (depending on what our initial guess was)
                 return fontCheck

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,11 @@
 package dorkbox.util.sync
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.InternalForInheritanceCoroutinesApi
 import kotlinx.coroutines.Job
 import java.util.concurrent.atomic.*
 
+@OptIn(InternalForInheritanceCoroutinesApi::class)
 class Trigger(
     initial: Int, private val releaseLatchOnZero: Boolean = true,
     parent: Job? = null
