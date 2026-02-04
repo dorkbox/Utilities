@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,98 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.userManagement;
+package dorkbox.util.userManagement
 
-import java.io.Serializable;
-import java.util.*;
+import java.io.Serializable
+import java.util.*
 
 // TODO: this class needs to save itself to the database on changes
 /**
- * Plugable group object for user management
+ * Pluggable group object for user management
  */
-public final
-class Group implements Serializable {
+class Group internal constructor(val name: String, val uuid: UUID?) : Serializable {
+    private val users: MutableSet<UUID?> = HashSet<UUID?>()
 
-    private final UUID uuid;
-    private String name;
+    constructor(name: String) : this(name, UserManagement.UUID_GENERATOR.generate())
 
-    private Set<UUID> users = new HashSet<UUID>();
-
-    public
-    Group(final String name) {
-        this(name, UserManagement.UUID_GENERATOR.generate());
+    @Synchronized
+    fun addUser(user: UUID?) {
+        users.add(user)
     }
 
-    Group(final String name, final UUID uuid) {
-        this.name = name;
-        this.uuid = uuid;
+    @Synchronized
+    fun removeUser(user: UUID?) {
+        users.remove(user)
     }
 
-    public
-    UUID getUuid() {
-        return uuid;
+    @Synchronized
+    fun getUsers(): MutableCollection<UUID?> {
+        return Collections.unmodifiableCollection<UUID?>(users)
     }
 
-    public
-    String getName() {
-        return name;
-    }
+    @get:Synchronized
+    val isEmpty: Boolean
+        get() = users.isEmpty()
 
-    public synchronized
-    void addUser(UUID user) {
-        users.add(user);
-    }
-
-    public synchronized
-    void removeUser(UUID user) {
-        users.remove(user);
-    }
-
-    public synchronized
-    Collection<UUID> getUsers() {
-        return Collections.unmodifiableCollection(users);
-    }
-
-    public synchronized
-    boolean isEmpty() {
-        return users.isEmpty();
-    }
-
-    public synchronized
-    void remove() {
+    @Synchronized
+    fun remove() {
         // UserManagement.Groups.remove(this);
 
         // for (User user : users) {
         //     user.removeGroup(this);
         // }
 
-        users.clear();
+        users.clear()
     }
 
-    @Override
-    public
-    String toString() {
-        return "Group '" + name + '\'';
+    override fun toString(): String {
+        return "Group '$name'"
     }
 
-    @Override
-    public
-    boolean equals(final Object o) {
-        if (this == o) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+        if (other == null || javaClass != other.javaClass) {
+            return false
         }
 
-        final Group group = (Group) o;
+        val group = other as Group
 
-        return uuid != null ? uuid.equals(group.uuid) : group.uuid == null;
+        return if (uuid != null) (uuid == group.uuid) else group.uuid == null
     }
 
-    @Override
-    public
-    int hashCode() {
-        return uuid != null ? uuid.hashCode() : 0;
+    override fun hashCode(): Int {
+        return uuid?.hashCode() ?: 0
     }
 }

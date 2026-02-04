@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,411 +13,385 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
+package dorkbox.util
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.MediaTracker;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.Iterator;
-import java.util.concurrent.atomic.AtomicInteger;
+import dorkbox.os.OS
+import dorkbox.util.LocationResolver.Companion.getResource
+import org.slf4j.LoggerFactory
+import java.awt.*
+import java.awt.image.BufferedImage
+import java.io.*
+import java.util.concurrent.atomic.*
+import javax.imageio.ImageIO
+import javax.imageio.ImageReader
+import javax.imageio.stream.ImageInputStream
+import javax.swing.Icon
+import javax.swing.ImageIcon
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
-import org.slf4j.LoggerFactory;
-
-import dorkbox.os.OS;
-
-@SuppressWarnings("WeakerAccess")
-public
-class ImageUtil {
-
+@Suppress("unused")
+object ImageUtil {
     /**
      * @return returns an image, where the aspect ratio is kept, but the maximum size is maintained.
      */
-    public static
-    BufferedImage clampMaxImageSize(final BufferedImage image, final int size) {
-        int width = image.getWidth(null);
-        int height = image.getHeight(null);
+    fun clampMaxImageSize(image: BufferedImage, size: Int): BufferedImage {
+        var width = image.getWidth(null)
+        var height = image.getHeight(null)
 
         if (width <= size && height <= size) {
-            return image;
+            return image
         }
 
         // scale width/height
         if (width > size) {
-            double scaleRatio = (double) size / (double) width;
-            width = size;
-            height = (int) (height * scaleRatio);
+            val scaleRatio = size.toDouble() / width.toDouble()
+            width = size
+            height = (height * scaleRatio).toInt()
         }
 
         if (height > size) {
-            double scaleRatio = (double) size / (double) height;
-            height = size;
-            width = (int) (width * scaleRatio);
+            val scaleRatio = size.toDouble() / height.toDouble()
+            height = size
+            width = (width * scaleRatio).toInt()
         }
 
-        int type = image.getType();
+        var type = image.type
         if (type == 0) {
-            type = BufferedImage.TYPE_INT_ARGB;
+            type = BufferedImage.TYPE_INT_ARGB
         }
 
-        BufferedImage resizedImage = new BufferedImage(width, height, type);
-        Graphics2D g = resizedImage.createGraphics();
-        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+        val resizedImage = BufferedImage(width, height, type)
+        val g = resizedImage.createGraphics()
+        g.addRenderingHints(RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY))
+        g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
-        g.drawImage(image, 0, 0, width, height, null);
-        g.dispose();
+        g.drawImage(image, 0, 0, width, height, null)
+        g.dispose()
 
-        return resizedImage;
+        return resizedImage
     }
 
     /**
      * There are issues with scaled images on Windows. This correctly scales the image.
      */
-    public static
-    BufferedImage resizeImage(BufferedImage originalImage, int width, int height) {
-        int originalHeight = originalImage.getHeight();
-        int originalWidth = originalImage.getWidth();
-        double ratio = (double) originalWidth / (double) originalHeight;
+    fun resizeImage(originalImage: BufferedImage, width: Int, height: Int): BufferedImage {
+        var width = width
+        var height = height
+        val originalHeight = originalImage.height
+        val originalWidth = originalImage.width
+        val ratio = originalWidth.toDouble() / originalHeight.toDouble()
 
         if (width == -1 && height == -1) {
             // no resizing, so just use the original size.
-            width = originalWidth;
-            height = originalHeight;
+            width = originalWidth
+            height = originalHeight
         }
         else if (width == -1) {
-            width = (int) (height * ratio);
+            width = (height * ratio).toInt()
         }
         else if (height == -1) {
-            height = (int) (width / ratio);
+            height = (width / ratio).toInt()
         }
 
 
-        int type = originalImage.getType();
+        var type = originalImage.type
         if (type == 0) {
-            type = BufferedImage.TYPE_INT_ARGB;
+            type = BufferedImage.TYPE_INT_ARGB
         }
 
-        BufferedImage resizedImage = new BufferedImage(width, height, type);
-        Graphics2D g = resizedImage.createGraphics();
-        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+        val resizedImage = BufferedImage(width, height, type)
+        val g = resizedImage.createGraphics()
+        g.addRenderingHints(RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY))
+        g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
-        g.drawImage(originalImage, 0, 0, width, height, null);
-        g.dispose();
+        g.drawImage(originalImage, 0, 0, width, height, null)
+        g.dispose()
 
-        return resizedImage;
+        return resizedImage
     }
 
     /**
      * Resizes the image, as either a a FILE on disk, or as a RESOURCE name, and saves the new size as a file on disk. This new file will
      * replace any other file with the same name.
-     *
+     * 
      * @return the file string on disk that is the resized icon
      */
-    public static
-    String resizeFileOrResource(final int size, final String fileName) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(fileName);
+    @Throws(IOException::class)
+    fun resizeFileOrResource(size: Int, fileName: String): String {
+        val fileInputStream = FileInputStream(fileName)
 
-        Dimension imageSize = getImageSize(fileInputStream);
-        //noinspection NumericCastThatLosesPrecision
-        if (size == ((int) imageSize.getWidth()) && size == ((int) imageSize.getHeight())) {
+        val imageSize = getImageSize(fileInputStream)
+        if (size == (imageSize.getWidth().toInt()) && size == (imageSize.getHeight().toInt())) {
             // we can reuse this file.
-            return fileName;
+            return fileName
         }
 
         // have to resize the file (and return the new path)
-
-        String extension = Sys.INSTANCE.getExtension(fileName);
+        var extension = File(fileName).extension
         if (extension.isEmpty()) {
-            extension = "png"; // made up
+            extension = "png" // made up
         }
 
         // now have to resize this file.
-        File newFile = new File(OS.INSTANCE.getTEMP_DIR(), "temp_resize." + extension).getAbsoluteFile();
-        Image image;
+        val newFile: File = File(OS.TEMP_DIR, "temp_resize.$extension").getAbsoluteFile()
+        val image: Image
 
-        // is file sitting on drive
-        File iconTest = new File(fileName);
+        // is the file sitting on the drive
+        val iconTest = File(fileName)
         if (iconTest.isFile() && iconTest.canRead()) {
-            final String absolutePath = iconTest.getAbsolutePath();
-            image = new ImageIcon(absolutePath).getImage();
+            val absolutePath = iconTest.absolutePath
+            image = ImageIcon(absolutePath).getImage()
         }
         else {
             // suck it out of a URL/Resource (with debugging if necessary)
-            final URL systemResource = LocationResolver.Companion.getResource(fileName);
-            image = new ImageIcon(systemResource).getImage();
+            val systemResource = getResource(fileName)
+            image = ImageIcon(systemResource).getImage()
         }
 
-        ImageUtil.waitForImageLoad(image);
+        waitForImageLoad(image)
 
         // make whatever dirs we need to.
-        boolean mkdirs = newFile.getParentFile()
-                                .mkdirs();
+        val mkdirs = newFile.getParentFile().mkdirs()
 
         if (!mkdirs) {
-            throw new IOException("Unable to create directories for " + newFile.getParentFile());
+            throw IOException("Unable to create directories for " + newFile.getParentFile())
         }
 
         // if it's already there, we have to delete it
-        boolean delete = newFile.delete();
+        val delete = newFile.delete()
         if (!delete) {
-            throw new IOException("Temporary file already in use, cannot delete it " + newFile);
+            throw IOException("Temporary file already in use, cannot delete it $newFile")
         }
 
         // the smaller dimension have padding, so the larger dimension is the size of this image.
-        BufferedImage bufferedImage = getSquareBufferedImage(image);
+        val bufferedImage = getSquareBufferedImage(image)
 
         // now write out the new one
-        ImageIO.write(bufferedImage, extension, newFile);
+        ImageIO.write(bufferedImage, extension, newFile)
 
-        return newFile.getAbsolutePath();
+        return newFile.absolutePath
     }
 
 
     /**
      * Creates an image of the specified size, and saves the PNG to disk
-     *
+     * 
      * @param size the size of the image to create
      * @param color the color to use. NULL to create a transparent image
-     *
+     * 
      * @return the PNG File output the created image (size + color specified)
      */
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static
-    File createImage(final int size, final File fileToUse, final Color color) throws IOException {
+    @Throws(IOException::class)
+    fun createImage(size: Int, fileToUse: File, color: Color?): File {
         if (fileToUse.canRead() && fileToUse.isFile()) {
-            return fileToUse.getAbsoluteFile();
+            return fileToUse.getAbsoluteFile()
         }
 
         // make sure the directory exists
-        fileToUse.getParentFile().mkdirs();
+        fileToUse.getParentFile().mkdirs()
 
-        final BufferedImage image = createImageAsBufferedImage(size, color);
-        ImageIO.write(image, "png", fileToUse);
-        return fileToUse.getAbsoluteFile();
+        val image = createImageAsBufferedImage(size, color)
+        ImageIO.write(image, "png", fileToUse)
+        return fileToUse.getAbsoluteFile()
     }
 
     /**
      * Creates an image of the specified size.
-     *
+     * 
      * @param size the size of the image to create
      * @param color the color to use. NULL to create a transparent image
-     *
+     * 
      * @return a BufferedImage of the size + color specified.
      */
-    @SuppressWarnings("WeakerAccess")
-    public static
-    BufferedImage createImageAsBufferedImage(final int size, final Color color) {
-        return createImageAsBufferedImage(size, size, color);
+    fun createImageAsBufferedImage(size: Int, color: Color?): BufferedImage {
+        return createImageAsBufferedImage(size, size, color)
     }
 
     /**
      * Creates an image of the specified size.
-     *
+     * 
      * @param width the width of the image to create
      * @param height the height of the image to create
      * @param color the color to use. NULL to create a transparent image
-     *
+     * 
      * @return a BufferedImage of the size + color specified.
      */
-    @SuppressWarnings("WeakerAccess")
-    public static
-    BufferedImage createImageAsBufferedImage(final int width, final int height, final Color color) {
-        final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = image.createGraphics();
+    fun createImageAsBufferedImage(width: Int, height: Int, color: Color?): BufferedImage {
+        val image = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+        val g2d = image.createGraphics()
         if (color == null) {
-            g2d.setColor(new Color(0, 0, 0, 0));
-        } else {
-            g2d.setColor(color);
+            g2d.color = Color(0, 0, 0, 0)
         }
-        g2d.fillRect(0, 0, width, height);
-        g2d.dispose();
+        else {
+            g2d.color = color
+        }
+        g2d.fillRect(0, 0, width, height)
+        g2d.dispose()
 
-        return image;
+        return image
     }
 
     /**
      * This will always return a square image, with whatever value is smaller to have padding (so it will be centered), and the larger
      * dimension will be the size of the image.
-     *
+     * 
      * @return the image as a SQUARE Buffered Image
      */
-    public static
-    BufferedImage getSquareBufferedImage(Image image) {
-        int width = image.getWidth(null);
-        int height = image.getHeight(null);
+    fun getSquareBufferedImage(image: Image): BufferedImage {
+        val width = image.getWidth(null)
+        val height = image.getHeight(null)
 
-        int paddingX = 0;
-        int paddingY = 0;
+        var paddingX = 0
+        var paddingY = 0
 
-        int size = width;
+        var size = width
 
         if (width < height) {
-            size = height;
-            paddingX = (height - width) / 2;
-        } else {
-            paddingY = (width - height) / 2;
+            size = height
+            paddingX = (height - width) / 2
+        }
+        else {
+            paddingY = (width - height) / 2
         }
 
-        BufferedImage bimage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        val bimage = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
 
-        Graphics2D g = bimage.createGraphics();
-        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+        val g = bimage.createGraphics()
+        g.addRenderingHints(RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY))
+        g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
-        g.drawImage(image, paddingX, paddingY, null);
-        g.dispose();
+        g.drawImage(image, paddingX, paddingY, null)
+        g.dispose()
 
         // Return the buffered image
-        return bimage;
+        return bimage
     }
 
     /**
      * @return the image, unmodified, as a Buffered Image
      */
-    public static
-    BufferedImage getBufferedImage(Image image) {
-        if (image instanceof BufferedImage) {
-            return (BufferedImage) image;
+    fun getBufferedImage(image: Image): BufferedImage {
+        if (image is BufferedImage) {
+            return image
         }
 
-        BufferedImage bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+        val bimage = BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB)
 
-        Graphics2D g = bimage.createGraphics();
-        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+        val g = bimage.createGraphics()
+        g.addRenderingHints(RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY))
+        g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
+        g.drawImage(image, 0, 0, null)
+        g.dispose()
 
         // Return the buffered image
-        return bimage;
+        return bimage
     }
 
     /**
      * @return the icon, unmodified, as a Buffered Image
      */
-    public static
-    BufferedImage getBufferedImage(Icon icon) {
-        if (icon instanceof BufferedImage) {
-            return (BufferedImage) icon;
+    fun getBufferedImage(icon: Icon): BufferedImage {
+        if (icon is BufferedImage) {
+            return icon as BufferedImage
         }
 
-        BufferedImage bimage = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+        val bimage = BufferedImage(icon.iconWidth, icon.iconHeight, BufferedImage.TYPE_INT_ARGB)
 
-        Graphics2D g = bimage.createGraphics();
-        g.addRenderingHints(new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY));
-        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER));
+        val g = bimage.createGraphics()
+        g.addRenderingHints(RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY))
+        g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
 
-        icon.paintIcon(null, g, 0, 0);
-        g.dispose();
+        icon.paintIcon(null, g, 0, 0)
+        g.dispose()
 
-        return bimage;
+        return bimage
     }
 
     /**
      * Converts an image to a byte array
-     *
+     * 
      * @return the PNG File output the created buffered image, as a byte array
      */
-    public static
-    byte[] toBytes(final BufferedImage image) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "PNG", byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
+    @Throws(IOException::class)
+    fun toBytes(image: BufferedImage): ByteArray {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        ImageIO.write(image, "PNG", byteArrayOutputStream)
+        return byteArrayOutputStream.toByteArray()
     }
 
     /**
      * Reads the image size information from the specified file, without loading the entire file.
-     *
+     * 
      * @param fileStream the input stream of the file
-     *
+     * 
      * @return the image size dimensions. IOException if it could not be read
      */
-    public static
-    Dimension getImageSize(InputStream fileStream) throws IOException {
-        ImageInputStream in = null;
-        ImageReader reader = null;
+    @Throws(IOException::class)
+    fun getImageSize(fileStream: InputStream): Dimension {
+        var `in`: ImageInputStream? = null
+        var reader: ImageReader? = null
         try {
             // This will ONLY work for File, InputStream, and RandomAccessFile
-            in = ImageIO.createImageInputStream(fileStream);
+            `in` = ImageIO.createImageInputStream(fileStream)
 
-            final Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            val readers = ImageIO.getImageReaders(`in`)
             if (readers.hasNext()) {
-                reader = readers.next();
-                reader.setInput(in);
+                reader = readers.next()
+                reader!!.setInput(`in`)
 
-                return new Dimension(reader.getWidth(0), reader.getHeight(0));
+                return Dimension(reader.getWidth(0), reader.getHeight(0))
             }
-        } finally {
+        }
+        finally {
             // `ImageInputStream` is not a closeable in 1.6, so we do this manually.
-            if (in != null) {
+            if (`in` != null) {
                 try {
-                    in.close();
-                } catch (IOException ignored) {
+                    `in`.close()
+                }
+                catch (ignored: IOException) {
                 }
             }
 
             if (reader != null) {
-                reader.dispose();
+                reader.dispose()
             }
         }
 
-        throw new IOException("Unable to read file inputStream for image size data.");
+        throw IOException("Unable to read file inputStream for image size data.")
     }
 
 
-    private static final Object mediaTrackerLock = new Object();
-    private static final AtomicInteger imageTrackerIndex = new AtomicInteger(0);
-    private static MediaTracker tracker = null;
+    private val mediaTrackerLock = Any()
+    private val imageTrackerIndex = AtomicInteger(0)
+    private var tracker: MediaTracker? = null
 
     /**
      * Wait until the image is fully loaded and then init the graphics.
-     *
+     * 
      * @param image the image you want load immediately
      */
-    public static
-    void waitForImageLoad(final Image image) {
-        int imageId = imageTrackerIndex.getAndIncrement();
+    fun waitForImageLoad(image: Image?) {
+        val imageId = imageTrackerIndex.getAndIncrement()
 
         // make sure the image if fully loaded
-        synchronized (mediaTrackerLock) {
+        synchronized(mediaTrackerLock) {
             if (tracker == null) {
-                tracker = new MediaTracker(new Component() {});
+                tracker = MediaTracker(object : Component() {})
             }
-
-            tracker.addImage(image, imageId);
+            tracker!!.addImage(image, imageId)
         }
 
         try {
-            tracker.waitForID(imageId);
-            if (tracker.isErrorID(imageId)) {
-                LoggerFactory.getLogger(ImageUtil.class).error("Error loading image!");
+            tracker!!.waitForID(imageId)
+            if (tracker!!.isErrorID(imageId)) {
+                LoggerFactory.getLogger(ImageUtil::class.java).error("Error loading image!")
             }
         }
-        catch (InterruptedException ignored) {
-
-        } finally {
-            synchronized (mediaTrackerLock) {
-                tracker.removeImage(image);
+        catch (ignored: InterruptedException) {
+        }
+        finally {
+            synchronized(mediaTrackerLock) {
+                tracker!!.removeImage(image)
             }
         }
     }

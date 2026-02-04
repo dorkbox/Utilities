@@ -13,111 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.userManagement;
+package dorkbox.util.userManagement
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.io.Serializable
+import java.util.*
 
 // TODO: this class needs to save itself to the database on changes
-
-
-public
-class User implements Serializable {
-    /** Global, unique ID for this user. This is the only thing used to determine equality */
-    private final UUID uuid;
-
-    /** Random, per-user salt that is used for secure password hashing */
-    private final byte[] salt = new byte[256];
-
-    /**  user name assigned. Equality is determined by the UUID, so depending on use, the name does not have to be unique. */
-    protected String name;
-
-    /** This is the groups that this user is a member of */
-    private final Set<UUID> groups = new HashSet<UUID>();
-
-    public
-    User() {
-        uuid = UserManagement.UUID_GENERATOR.generate();
-        UserManagement.RANDOM.nextBytes(salt);
-    }
-
-    User(final UUID uuid, final byte[] salt) {
-        this.uuid = uuid;
-
-        // set the salt
-        for (int i = 0, saltLength = salt.length; i < saltLength; i++) {
-            this.salt[i] = salt[i];
-        }
-    }
-
+class User : Serializable {
     /**
      * @return the global, unique ID for this user. This is the only thing used to determine equality
      */
-    public final
-    UUID getUUID() {
-        return uuid;
-    }
+    /** Global, unique ID for this user. This is the only thing used to determine equality  */
+    val uUID: UUID
 
     /**
      * @return a random, per-user salt that is used for secure password hashing
      */
-    public final
-    byte[] getSalt() {
-        return salt;
-    }
-
-    /**
-     * @return an unmodifiable set of groups this user is a member of
-     */
-    public final
-    Set<UUID> getGroups() {
-        return Collections.unmodifiableSet(groups);
-    }
-
+    /** Random, per-user salt that is used for secure password hashing  */
+    val salt: ByteArray = ByteArray(256)
 
     /**
      * @return the user name assigned. Equality is determined by the UUID, so depending on use, the name does not have to be unique.
      */
-    public final
-    String getName() {
-        return name;
-    }
-
     /**
      * @param name the user name to be assigned. Equality is determined by the UUID, so depending on use, the name does not have to be unique.
      */
-    public final
-    void setName(final String name) {
-        this.name = name;
+    /**  user name assigned. Equality is determined by the UUID, so depending on use, the name does not have to be unique.  */
+    var name: String? = null
+
+    /** This is the groups that this user is a member of  */
+    val groups: MutableSet<UUID?> = HashSet<UUID?>()
+        /**
+         * @return an unmodifiable set of groups this user is a member of
+         */
+        get() = Collections.unmodifiableSet<UUID?>(field)
+
+    constructor() {
+        this.uUID = UserManagement.UUID_GENERATOR.generate()
+        UserManagement.RANDOM.nextBytes(salt)
     }
 
-    @Override
-    public final
-    boolean equals(final Object o) {
-        if (this == o) {
-            return true;
+    internal constructor(uuid: UUID, salt: ByteArray) {
+        this.uUID = uuid
+
+        // set the salt
+        var i = 0
+        val saltLength = salt.size
+        while (i < saltLength) {
+            this.salt[i] = salt[i]
+            i++
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
+    }
+
+
+    override fun equals(o: Any?): Boolean {
+        if (this === o) {
+            return true
+        }
+        if (o == null || javaClass != o.javaClass) {
+            return false
         }
 
-        final User user = (User) o;
+        val user = o as User
 
-        return uuid.equals(user.uuid);
+        return this.uUID == user.uUID
     }
 
-    @Override
-    public final
-    int hashCode() {
-        return uuid.hashCode();
+    override fun hashCode(): Int {
+        return uUID.hashCode()
     }
 
-    @Override
-    public final
-    String toString() {
-        return "User {" + uuid + ", '" + name + '\'' + '}';
+    override fun toString(): String {
+        return "User {" + this.uUID + ", '" + name + '\'' + '}'
     }
 }

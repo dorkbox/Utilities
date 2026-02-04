@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package dorkbox.util
 
 /**
  * Marker annotation for proguard
  */
-@Retention(RetentionPolicy.CLASS)
-@Target({ElementType.TYPE})
+@Retention(AnnotationRetention.BINARY)
+@Target(AnnotationTarget.CLASS)
 @Keep
-public @interface Keep {
-
-}
+annotation class Keep 

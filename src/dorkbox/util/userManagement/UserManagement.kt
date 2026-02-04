@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,112 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.util.userManagement;
+package dorkbox.util.userManagement
 
-import java.security.SecureRandom;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.uuid.Generators;
-import com.fasterxml.uuid.impl.RandomBasedGenerator;
-import com.fasterxml.uuid.impl.UUIDUtil;
+import com.fasterxml.uuid.Generators
+import com.fasterxml.uuid.impl.RandomBasedGenerator
+import com.fasterxml.uuid.impl.UUIDUtil
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.security.SecureRandom
+import java.util.*
 
 /**
  * todo: this class should load/save itself to the database
  */
-public final
 class UserManagement {
-    private static final Logger logger = LoggerFactory.getLogger(UserManagement.class.getSimpleName());
 
-    static final RandomBasedGenerator UUID_GENERATOR = Generators.randomBasedGenerator();
-    static final SecureRandom RANDOM = new SecureRandom();
+    companion object {
+        private val logger: Logger? = LoggerFactory.getLogger(UserManagement::class.java.getSimpleName())
 
-    public final Group ADMIN;
+        val UUID_GENERATOR: RandomBasedGenerator = Generators.randomBasedGenerator()
+        val RANDOM: SecureRandom = SecureRandom()
+    }
 
-    private Map<UUID, User> users = new HashMap<UUID, User>();
-    private Map<UUID, Group> groups = new HashMap<UUID, Group>();
+    val ADMIN: Group
 
-    public
-    UserManagement() {
+    private val users = mutableMapOf<UUID, User>()
+    private val groups = mutableMapOf<UUID, Group>()
+
+    init {
         // the "system/admin/root" group MUST always be all "0"
-        final byte[] buffer = new byte[16];
-        for (int i = 0, bufferLength = buffer.length; i < bufferLength; i++) {
-            buffer[i] = 0;
+        val buffer = ByteArray(16)
+        var i = 0
+        val bufferLength = buffer.size
+        while (i < bufferLength) {
+            buffer[i] = 0
+            i++
         }
 
-        UUID uuid = UUIDUtil.uuid(buffer);
-        ADMIN = new Group("System", uuid);
+        val uuid = UUIDUtil.uuid(buffer)
+        ADMIN = Group("System", uuid)
 
         // the "system/root" group MUST always be all "0"
-        groups.put(uuid, ADMIN);
+        groups[uuid] = ADMIN
     }
 
-    public
-    User authenticate(String user) {
-        return null;
+    fun authenticate(user: String?): User? {
+        return null
     }
 
 
-    // public
-    // byte[] generateUserNameHash(String username) {
-    //     return HashUtil.getSha256WithSalt(username, getSalt());
-    // }
-
-
-
-
-    /////////////////
-    /// user/group create/add/remove/get actions
-    /////////////////
-
-    public
-    User createUser() {
-        User user = new User();
-        addUser(user);
-        return user;
+    /**
+    * user/group create/add/remove/get actions
+    */
+    fun createUser(): User {
+        val user = User()
+        addUser(user)
+        return user
     }
 
-    private
-    void addUser(User user) {
+    private fun addUser(user: User) {
         // users.add(user);
     }
 
-    private
-    void removeUser(User user) {
-        users.remove(user);
+    private fun removeUser(user: User) {
+        users.remove(user.uUID)
     }
 
-    public
-    Map<UUID, User> getUsers() {
-        return Collections.unmodifiableMap(users);
+    fun getUsers(): Map<UUID, User> {
+        return users.toMap()
     }
 
-    public
-    User getUser(final UUID uuid) {
-        return users.get(uuid);
+    fun getUser(uuid: UUID): User? {
+        return users[uuid]
     }
 
-    public
-    Group createGroup(String groupName) {
-        Group group = new Group(groupName);
-        addGroup(group);
-        return group;
+    fun createGroup(groupName: String): Group {
+        val group = Group(groupName)
+        addGroup(group)
+        return group
     }
 
-    public
-    void addGroup(final Group group) {
+    fun addGroup(group: Group?) {
         // groups.add(group);
     }
 
-    public
-    void removeGroup(final Group group) {
-        if (group != ADMIN) {
-            groups.remove(group);
+    fun removeGroup(group: Group) {
+        if (group !== ADMIN) {
+            groups.remove(group.uuid)
         }
     }
 
@@ -401,24 +382,22 @@ class UserManagement {
     // Group getGroup(final UUID uuid) {
     //     return groups.();
     // }
-
-
-
     //    public synchronized final boolean isValidUser(String userName, char[] password) {
-//        String storedToken = properties.get(AdminActions.USER_PREFIX + userName, String.class);
-//        String storedPasswd = properties.get(AdminActions.USER_PWD_PREFIX + userName, String.class);
-//
-//        if (storedToken == null || storedToken.isEmpty()) {
-//            return false;
-//        } else {
-//            ifObject (!token.equals(storedToken)) {
-//                return false;
-//            }
-//        }
-//
-//        return false;
-//        // check to see if the password matches
-////        return SCrypt.check(password, storedPasswd);
-//    }
+    //        String storedToken = properties.get(AdminActions.USER_PREFIX + userName, String.class);
+    //        String storedPasswd = properties.get(AdminActions.USER_PWD_PREFIX + userName, String.class);
+    //
+    //        if (storedToken == null || storedToken.isEmpty()) {
+    //            return false;
+    //        } else {
+    //            ifObject (!token.equals(storedToken)) {
+    //                return false;
+    //            }
+    //        }
+    //
+    //        return false;
+    //        // check to see if the password matches
+    /**/       // return SCrypt.check(password, storedPasswd); */ //    }
+
+
 
 }
