@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,44 +14,46 @@
  * limitations under the License.
  */
 
-///////////////////////////////
-//////    PUBLISH TO SONATYPE / MAVEN CENTRAL
-////// TESTING : (to local maven repo) <'publish and release' - 'publishToMavenLocal'>
-////// RELEASE : (to sonatype/maven central), <'publish and release' - 'publishToSonatypeAndRelease'>
-///////////////////////////////
-
 gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show the stacktrace!
+gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "3.18"
-    id("com.dorkbox.Licensing") version "2.28"
-    id("com.dorkbox.VersionUpdate") version "2.8"
-    id("com.dorkbox.GradlePublish") version "1.20"
+    id("com.dorkbox.GradleUtils") version "4.8"
+    id("com.dorkbox.Licensing") version "3.1"
+    id("com.dorkbox.VersionUpdate") version "3.2"
+    id("com.dorkbox.GradlePublish") version "2.2"
 
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "2.3.0"
 }
 
-object Extras {
-    // set for the project
-    const val description = "Utilities for use within Java projects"
-    const val group = "com.dorkbox"
-    const val version = "1.48"
 
-    // set as project.ext
-    const val name = "Utilities"
-    const val id = "Utilities"
-    const val vendor = "Dorkbox LLC"
-    const val vendorUrl = "https://dorkbox.com"
-    const val url = "https://git.dorkbox.com/dorkbox/Utilities"
+GradleUtils.load {
+    group = "com.dorkbox"
+    id = "Utilities"
+
+    description = "Utilities for use within Java projects"
+    name = "Utilities"
+    version = "1.48"
+
+    vendor = "Dorkbox LLC"
+    vendorUrl = "https://dorkbox.com"
+
+    url = "https://git.dorkbox.com/dorkbox/Utilities"
+
+    issueManagement {
+        url = "${url}/issues"
+        nickname = "Gitea Issues"
+    }
+
+    developer {
+        id = "dorkbox"
+        name = vendor
+        email = "email@dorkbox.com"
+    }
 }
-
-///////////////////////////////
-/////  assign 'Extras'
-///////////////////////////////
-GradleUtils.load("$projectDir/../../gradle.properties", Extras)
 GradleUtils.defaults()
-GradleUtils.compileConfiguration(JavaVersion.VERSION_1_8)
-GradleUtils.jpms(JavaVersion.VERSION_1_9)
+GradleUtils.compileConfiguration(JavaVersion.VERSION_25)
+
 
 licensing {
     license(License.APACHE_2) {
@@ -103,33 +105,19 @@ licensing {
     }
 }
 
-tasks.jar.get().apply {
-    manifest {
-        // https://docs.oracle.com/javase/tutorial/deployment/jar/packageman.html
-        attributes["Name"] = Extras.name
-
-        attributes["Specification-Title"] = Extras.name
-        attributes["Specification-Version"] = Extras.version
-        attributes["Specification-Vendor"] = Extras.vendor
-
-        attributes["Implementation-Title"] = "${Extras.group}.${Extras.id}"
-        attributes["Implementation-Version"] = GradleUtils.now()
-        attributes["Implementation-Vendor"] = Extras.vendor
-    }
-}
 
 // NOTE: compileOnly is used because there are some classes/dependencies that ARE NOT necessary to be included, UNLESS the user
 //  is actually using that part of the library. If this happens, they will (or should) already be using the dependency)
 dependencies {
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-    api("com.dorkbox:OS:1.8")
+    api("com.dorkbox:OS:1.11")
     api("com.dorkbox:Updates:1.1")
 
 
     // https://github.com/cowtowncoder/java-uuid-generator
     // Java UUID class doesn't expose time/location versions, has a flawed compareTo() on 64bit, and is slow. This one is also thread safe.
-    api("com.fasterxml.uuid:java-uuid-generator:4.2.0")
+    api("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
 //    // https://github.com/MicroUtils/kotlin-logging  NO JPMS SUPPORT!
 //    api("io.github.microutils:kotlin-logging:3.0.4")
@@ -142,32 +130,8 @@ dependencies {
 //    compileOnly("io.netty:netty-buffer:4.1.96.Final")
 
 
-    testImplementation("com.dorkbox:Executor:3.13")
+    testImplementation("com.dorkbox:Executor:3.14")
     testImplementation("junit:junit:4.13.2")
 //    testImplementation("ch.qos.logback:logback-classic:1.4.5")
 //    implementation(kotlin("stdlib-jdk8"))
-}
-
-publishToSonatype {
-    groupId = Extras.group
-    artifactId = Extras.id
-    version = Extras.version
-
-    name = Extras.name
-    description = Extras.description
-    url = Extras.url
-
-    vendor = Extras.vendor
-    vendorUrl = Extras.vendorUrl
-
-    issueManagement {
-        url = "${Extras.url}/issues"
-        nickname = "Gitea Issues"
-    }
-
-    developer {
-        id = "dorkbox"
-        name = Extras.vendor
-        email = "email@dorkbox.com"
-    }
 }
