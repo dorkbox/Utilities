@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.exit;
+package dorkbox.exit
 
-public final class ExitError extends ExitBase {
+class ExitError : ExitBase {
+    constructor(exitCode: Int, message: String?) : super(exitCode, message)
 
-    private static final long serialVersionUID = 4291020084877555138L;
+    constructor(exitCode: Int, title: String?, message: String?) : super(exitCode, title, message)
 
-
-    public ExitError(int exitCode) {
-        super(exitCode);
-    }
-
-    public ExitError(int exitCode, String message) {
-        super(exitCode, message);
-    }
-
-    public ExitError(int exitCode, String title, String message) {
-        super(exitCode, title, message);
+    companion object {
+        private const val serialVersionUID = 4291020084877555138L
     }
 }

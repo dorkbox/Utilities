@@ -13,17 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.exit
+package dorkbox.urlHandler
 
 import java.io.IOException
 import java.io.NotSerializableException
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.net.URLStreamHandler
+import java.net.URLStreamHandlerFactory
 
-//package scope, as we don't want to accidentally let someone "catch" this error.
-open class ExitBase(val exitCode: Int, val title: String? = null, override val message: String? = null) : Error(),
-                                                                                                          Cloneable {
-    constructor(exitCode: Int, message: String?) : this(exitCode, null, message)
+class BoxHandlerFactory(private val transparentJar: BoxHandler) : URLStreamHandlerFactory, Cloneable {
+    override fun createURLStreamHandler(protocol: String): URLStreamHandler? {
+        // transparent jar handler.
+        return if (BoxHandler.protocol == protocol) {
+            this.transparentJar
+        }
+        else {
+            // use the default URLStreamHandlers
+            null
+        }
+    }
 
     @Throws(CloneNotSupportedException::class)
     public override fun clone(): Any {
@@ -38,9 +47,5 @@ open class ExitBase(val exitCode: Int, val title: String? = null, override val m
     @Throws(IOException::class)
     fun readObject(`in`: ObjectInputStream?) {
         throw NotSerializableException()
-    }
-
-    companion object {
-        private const val serialVersionUID = 546657685093303326L
     }
 }

@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package dorkbox.exit;
+package dorkbox.exit
 
-public final class ExitRestart extends ExitBase {
-
-    private static final long serialVersionUID = -3569173102400803538L;
-
-    public ExitRestart(int exitCode) {
-        super(exitCode);
+class ExitRestart(exitCode: Int) : ExitBase(exitCode) {
+    companion object {
+        private val serialVersionUID = -3569173102400803538L
     }
 }
