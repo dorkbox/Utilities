@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import dorkbox.os.OS.type
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.security.AccessController
-import java.security.PrivilegedAction
 
 /**
  * Loads the specified library, extracting it from the jar, if necessary
@@ -58,12 +56,10 @@ object NativeLoader {
             throw IOException("Error extracting library: $sourceFileName", e)
         }
     }
-
-    fun loadLibrary(file: File) {
-        // inject into the correct classloader
-        AccessController.doPrivileged(PrivilegedAction<Any?> {
-            System.load(file.absolutePath)
-            null
-        })
-    }
 }
+
+fun File.loadAsLibrary() {
+    // inject into the correct classloader
+    System.load(absolutePath)
+}
+

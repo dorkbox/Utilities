@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package dorkbox.util
 
-import dorkbox.util.ScreenUtil.showOnSameScreenAsMouse_Center
+import dorkbox.util.ScreenUtil.showOnSameScreenAsMouseInCenter
 import java.awt.*
 import java.awt.event.HierarchyEvent
 import java.awt.event.KeyEvent
@@ -96,7 +96,7 @@ object SwingUtil {
 
 //        // display available look and feels by name
 //        for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-//            System.err.println(info.getClassName());
+//            println(info.getClassName());
 //        }
 //
 //        // display all properties for the specified look and feel
@@ -192,7 +192,7 @@ object SwingUtil {
             button.invalidate()
             val height = button.preferredSize.getHeight().toInt()
 
-            // System.err.println(imageIcon.getIconHeight() + "x" + imageIcon.getIconHeight() + " icon \t>>>>>>>>> " + height + "px tall item")
+            // println(imageIcon.getIconHeight() + "x" + imageIcon.getIconHeight() + " icon \t>>>>>>>>> " + height + "px tall item")
             if (minHeight == 0) {
                 minHeight = height
             } else if (minHeight != height) {
@@ -484,7 +484,7 @@ object SwingUtil {
         }
 
         pane.selectInitialValue()
-        showOnSameScreenAsMouse_Center(dialog)
+        dialog.showOnSameScreenAsMouseInCenter()
         dialog.isVisible = true
         dialog.dispose()
 

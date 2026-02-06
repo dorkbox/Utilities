@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -230,7 +230,7 @@ class LocationResolver {
         private val SLASH_PATTERN = Pattern.compile("\\\\")
 
         private fun log(message: String) {
-            System.err.println(prefix() + message)
+            println(prefix() + message)
         }
 
         /**
@@ -247,13 +247,10 @@ class LocationResolver {
             // Can have %20 as spaces (in winxp at least). need to convert to proper path from URL
             return URLDecoder.decode(path, "UTF-8")
         }
+
         /**
          * Retrieve the location that this classfile was loaded from, or possibly null if the class was compiled on the fly
          */
-        /**
-         * Retrieve the location of the currently loaded jar, or possibly null if it was compiled on the fly
-         */
-        @JvmOverloads
         operator fun get(clazz: Class<*> = LocationResolver::class.java): File? {
             // Get the location of this class
             val pDomain = clazz.protectionDomain
@@ -467,7 +464,7 @@ class LocationResolver {
                 for (url in urLs) {
                     roots.add(Root(url))
                 }
-                System.err.println()
+                println()
                 log("SEARCHING: \"$path\"")
 
                 for (attempt in 1..6) {

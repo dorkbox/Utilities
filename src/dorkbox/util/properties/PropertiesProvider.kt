@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ class PropertiesProvider(propertiesFile: File) {
             e.printStackTrace()
         } catch (e: IOException) {
             // oops!
-            System.err.println("Properties cannot load!")
+            println("Properties cannot load!")
             e.printStackTrace()
         }
     }
@@ -73,10 +73,10 @@ class PropertiesProvider(propertiesFile: File) {
             fos.close()
         } catch (e: FileNotFoundException) {
             e.printStackTrace()
-            System.err.println("Properties cannot save!")
+            println("Properties cannot save!")
         } catch (e: IOException) {
             // oops!
-            System.err.println("Properties cannot save!")
+            println("Properties cannot save!")
             e.printStackTrace()
         }
     }

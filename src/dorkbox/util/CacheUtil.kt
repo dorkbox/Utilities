@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 package dorkbox.util
 
 import dorkbox.os.OS.TEMP_DIR
-import dorkbox.util.FileUtil.copyFile
-import dorkbox.util.FileUtil.delete
 import java.io.*
 import java.math.BigInteger
 import java.net.URL
@@ -32,7 +30,7 @@ class CacheUtil(private val tempDir: String = "cache") {
     fun clear() {
         // deletes all the files (recursively) in the specified location. If the directory is empty (no locked files), then the
         // directory is also deleted.
-        delete(File(TEMP_DIR, tempDir))
+        File(TEMP_DIR, tempDir).deleteRecursively()
     }
 
     /**
@@ -157,7 +155,7 @@ class CacheUtil(private val tempDir: String = "cache") {
             }
 
             // have to copy the resource to the cache
-            copyFile(iconTest, newFile)
+            iconTest.copyTo(newFile)
             newFile
         } else {
             // suck it out of a URL/Resource (with debugging if necessary)
@@ -287,7 +285,7 @@ class CacheUtil(private val tempDir: String = "cache") {
 
         // can be wimpy, only one at a time
         val hash = hashName(cacheName)
-        var extension = Sys.getExtension(cacheName)
+        var extension = File(cacheName).extension
         if (extension.isEmpty()) {
             extension = "cache"
         }

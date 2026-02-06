@@ -4,7 +4,6 @@ module dorkbox.utilities {
     exports dorkbox.util;
     exports dorkbox.util.entropy;
     exports dorkbox.util.exceptions;
-    exports dorkbox.util.gwt;
     exports dorkbox.util.properties;
     exports dorkbox.util.sync;
     exports dorkbox.util.userManagement;

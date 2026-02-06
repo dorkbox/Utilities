@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -419,9 +419,9 @@ open class MersenneTwisterFast {
         }
 
         y = mt!![mti++]
-        y = y xor y.ushr(11)                          // TEMPERING_SHIFT_U(y)
-        y = y xor (y shl 7 and TEMPERING_MASK_B)       // TEMPERING_SHIFT_S(y)
-        y = y xor (y shl 15 and TEMPERING_MASK_C)      // TEMPERING_SHIFT_T(y)
+        y = y xor y.ushr(11)                        // TEMPERING_SHIFT_U(y)
+        y = y xor (y shl 7 and TEMPERING_MASK_B)    // TEMPERING_SHIFT_S(y)
+        y = y xor (y shl 15 and TEMPERING_MASK_C)   // TEMPERING_SHIFT_T(y)
         y = y xor y.ushr(18)                        // TEMPERING_SHIFT_L(y)
 
         return y.ushr(16).toShort()

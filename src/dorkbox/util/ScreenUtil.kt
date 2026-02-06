@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,20 +93,20 @@ object ScreenUtil {
     /**
      * Shows the Container at the same monitor, in the CENTER, as the mouse
      */
-    fun showOnSameScreenAsMouse_Center(frame: Container) {
+    fun Container.showOnSameScreenAsMouseInCenter() {
         val mouseLocation = MouseInfo.getPointerInfo().location
         val monitorAtMouse = getMonitorAtLocation(mouseLocation)
         val bounds = monitorAtMouse!!.defaultConfiguration.bounds
-        frame.setLocation(bounds.x + bounds.width / 2 - frame.width / 2, bounds.y + bounds.height / 2 - frame.height / 2)
+        this.setLocation(bounds.x + bounds.width / 2 - this.width / 2, bounds.y + bounds.height / 2 - this.height / 2)
     }
 
     /**
      * Shows the Container at the same monitor as the mouse, at its default location
      */
-    fun showOnSameScreenAsMouse(frame: Container) {
+    fun Container.showOnSameScreenAsMouse() {
         val mouseLocation = MouseInfo.getPointerInfo().location
         val monitorAtMouse = getMonitorAtLocation(mouseLocation)!!
         val bounds = monitorAtMouse.defaultConfiguration.bounds
-        frame.setLocation(bounds.x, bounds.y)
+        this.setLocation(bounds.x, bounds.y)
     }
 }
