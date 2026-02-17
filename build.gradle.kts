@@ -18,7 +18,7 @@ gradle.startParameter.showStacktrace = ShowStacktrace.ALWAYS   // always show th
 gradle.startParameter.warningMode = WarningMode.All
 
 plugins {
-    id("com.dorkbox.GradleUtils") version "4.8"
+    id("com.dorkbox.GradleUtils") version "4.8.4"
     id("com.dorkbox.Licensing") version "3.1"
     id("com.dorkbox.VersionUpdate") version "3.2"
     id("com.dorkbox.GradlePublish") version "2.2"
@@ -33,7 +33,7 @@ GradleUtils.load {
 
     description = "Utilities for use within Java projects"
     name = "Utilities"
-    version = "1.48"
+    version = "2.0"
 
     vendor = "Dorkbox LLC"
     vendorUrl = "https://dorkbox.com"
@@ -111,8 +111,8 @@ licensing {
 dependencies {
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
 
-    api("com.dorkbox:OS:1.11")
-    api("com.dorkbox:Updates:1.1")
+    api("com.dorkbox:OS:2.0")
+    api("com.dorkbox:Updates:1.3")
 
 
     // https://github.com/cowtowncoder/java-uuid-generator
@@ -123,14 +123,7 @@ dependencies {
 //    api("io.github.microutils:kotlin-logging:3.0.4")
 //    api("org.slf4j:slf4j-api:2.0.7")
 
-
-//    api "com.koloboke:koloboke-api-jdk8:1.0.0"
-//    runtime "com.koloboke:koloboke-impl-jdk8:1.0.0"
-
-//    compileOnly("io.netty:netty-buffer:4.1.96.Final")
-
-
-    testImplementation("com.dorkbox:Executor:3.14")
+    testImplementation("com.dorkbox:Executor:4.0")
     testImplementation("junit:junit:4.13.2")
 //    testImplementation("ch.qos.logback:logback-classic:1.4.5")
 //    implementation(kotlin("stdlib-jdk8"))

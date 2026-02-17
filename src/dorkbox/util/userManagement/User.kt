@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 dorkbox, llc
+ * Copyright 2026 dorkbox, llc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,15 +66,15 @@ class User : Serializable {
     }
 
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o == null || javaClass != o.javaClass) {
+        if (other == null || javaClass != other.javaClass) {
             return false
         }
 
-        val user = o as User
+        val user = other as User
 
         return this.uUID == user.uUID
     }
